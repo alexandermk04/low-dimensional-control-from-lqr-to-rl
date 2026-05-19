@@ -74,18 +74,20 @@ class LQRBase:
 
         return np.array(x_traj), np.array(u_traj)
     
-    def visualize(self, x_traj, u_traj):
+    def visualize(self, x_traj, u_traj, dt=1):
+        time_sec = np.arange(x_traj.shape[0]) * dt
+
         plt.figure(figsize=(10, 5))
         plt.subplot(1, 2, 1)
-        plt.plot(x_traj[:, 0], label='x1')
-        plt.plot(x_traj[:, 1], label='x2')
-        plt.xlabel('Time')
+        plt.plot(time_sec, x_traj[:, 0], label='Position')
+        plt.plot(time_sec, x_traj[:, 1], label='Velocity')
+        plt.xlabel('Time (s)')
         plt.ylabel('State')
         plt.legend()
 
         plt.subplot(1, 2, 2)
-        plt.plot(u_traj[:, 0], label='u1')
-        plt.xlabel('Time')
+        plt.plot(time_sec, u_traj[:, 0], label='Acceleration')
+        plt.xlabel('Time (s)')
         plt.ylabel('Control')
         plt.legend()
 
@@ -93,6 +95,8 @@ class LQRBase:
 
 
 class LQRDiscrete(LQRBase):
+    dt: float
+
     A: np.ndarray
     B: np.ndarray
     Q: np.ndarray
@@ -104,6 +108,7 @@ class LQRDiscrete(LQRBase):
     x: np.ndarray
 
     def __init__(self, model: StateSpaceModel, Q, R, dt=0.01):
+        self.dt = dt
         
         A_d, B_d = continuous_to_discrete(model.A, model.B, dt=dt)
 
@@ -148,6 +153,7 @@ if __name__ == "__main__":
     # Hence: Ax + Bu = [velocity, acceleration]
     A = np.array([[0, 1], [0, 0]])
     B = np.array([[0], [1]])
+    # Position, velocity
     x_0 = np.array([10, 0])
 
     model = StateSpaceModel(A, B, x_0)
@@ -164,4 +170,4 @@ if __name__ == "__main__":
 
     x_traj, u_traj = lqr.simulate(n_steps=1000)
 
-    lqr.visualize(x_traj, u_traj)
+    lqr.visualize(x_traj, u_traj, dt=lqr.dt)
