@@ -129,7 +129,7 @@ class LQRDiscrete(LQRBase):
 
     # Optimal and robust control page 15
     def calculate_K(self):
-        K = - np.linalg.inv(self.R) @ self.B.T @ self.P
+        K = np.linalg.inv(self.R) @ self.B.T @ self.P
         return K
 
     def calculate_cost(self, x_t):
@@ -137,7 +137,7 @@ class LQRDiscrete(LQRBase):
         return cost
 
     def get_optimal_control(self, x_t):
-        return self.K @ x_t
+        return - self.K @ x_t
     
     def next_step(self): 
         u_t = self.get_optimal_control(self.x)
