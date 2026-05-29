@@ -50,3 +50,9 @@ octave-workspace
 *.bbl
 *.blg
 *.thm
+
+# Python binaries
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
