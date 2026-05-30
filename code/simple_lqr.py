@@ -35,15 +35,24 @@ class LQRBase:
     P: np.ndarray
     K: np.ndarray
 
+    x_0: np.ndarray
     x: np.ndarray
 
     def __init__(self, model: StateSpaceModel, Q, R):
         self.A = model.A
         self.B = model.B
+
+        self.x_0 = model.x_0
         self.x = model.x_0
 
         self.Q = Q
         self.R = R
+
+    def get_current_state(self):
+        return self.x
+    
+    def reset_state(self):
+        self.x = self.x_0
 
     def next_state(self):
         raise NotImplementedError
@@ -60,6 +69,7 @@ class LQRDiscrete(LQRBase):
     P: np.ndarray
     K: np.ndarray
 
+    x_0: np.ndarray
     x: np.ndarray
 
     def __init__(self, model: StateSpaceModel, Q, R, dt=0.01):
@@ -69,10 +79,14 @@ class LQRDiscrete(LQRBase):
 
         self.A = A_d
         self.B = B_d
+        self.x_0 = model.x_0
         self.x = model.x_0
 
         self.Q = Q
         self.R = R
+    
+    def get_cost(self, x_t, u_t):
+        return x_t.T @ self.Q @ x_t + u_t.T @ self.R @ u_t
     
     def next_state(self, K: np.ndarray) -> tuple[np.ndarray, np.ndarray]: 
         x_t = self.x
@@ -100,6 +114,17 @@ def simulate_model_based_discrete(lqr: LQRDiscrete, n_steps: int):
     u_traj = []
 
     K, cost = get_optimal_K_and_cost_discrete(lqr=lqr)
+
+    for _ in range(n_steps):
+        x_t, u_t = lqr.next_state(K=K)
+        x_traj.append(x_t)
+        u_traj.append(u_t)
+
+    return np.array(x_traj), np.array(u_traj)
+
+def simulate(lqr: LQRDiscrete, K: np.ndarray, n_steps: int):
+    x_traj = []
+    u_traj = []
 
     for _ in range(n_steps):
         x_t, u_t = lqr.next_state(K=K)
@@ -150,6 +175,8 @@ if __name__ == "__main__":
 
     lqr = LQRDiscrete(model, Q, R)
 
-    x_traj, u_traj = simulate_model_based_discrete(lqr=lqr, n_steps=1000)
+    K, cost = get_optimal_K_and_cost_discrete(lqr=lqr)
+
+    x_traj, u_traj = simulate(lqr=lqr, K=K, n_steps=1000)
 
     visualize(x_traj, u_traj, dt=lqr.dt)

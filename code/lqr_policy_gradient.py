@@ -1,7 +1,7 @@
 import numpy as np
 
 from scipy.linalg import solve_discrete_lyapunov
-from simple_lqr import LQRDiscrete, StateSpaceModel, visualize
+from simple_lqr import LQRDiscrete, StateSpaceModel, simulate, visualize
 
 # Global Convergence... Paper, page 5
 def calculate_gradient_model_based_discrete(lqr: LQRDiscrete, K_t: np.ndarray) -> np.ndarray:
@@ -34,19 +34,6 @@ def gradient_descent_discrete(lqr: LQRDiscrete, K_t: np.ndarray, stepsize: float
 
     return K
 
-def simulate_gradient_model_based_discrete(lqr: LQRDiscrete, K_0: np.ndarray, n_steps: int, gradient_lr: float, gradient_steps: int):
-    x_traj = []
-    u_traj = []
-
-    K = gradient_descent_discrete(lqr=lqr, K_t=K_0, stepsize=gradient_lr, steps=gradient_steps)
-
-    for _ in range(n_steps):
-        x_t, u_t = lqr.next_state(K=K)
-        x_traj.append(x_t)
-        u_traj.append(u_t)
-
-    return np.array(x_traj), np.array(u_traj)
-
 
 if __name__ == "__main__":
     # Double Integrator example implementation
@@ -74,6 +61,8 @@ if __name__ == "__main__":
     gradient_lr = 0.001
     gradient_steps = 10
 
-    x_traj, u_traj = simulate_gradient_model_based_discrete(lqr=lqr, K_0=K_0, n_steps=1000, gradient_lr=gradient_lr, gradient_steps=gradient_steps)
+    K = gradient_descent_discrete(lqr=lqr, K_t=K_0, stepsize=gradient_lr, steps=gradient_steps)
 
+    x_traj, u_traj = simulate(lqr=lqr, K=K, n_steps=1000)
+    
     visualize(x_traj, u_traj, dt=lqr.dt)
