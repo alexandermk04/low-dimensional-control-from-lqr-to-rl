@@ -2,6 +2,8 @@ import numpy as np
 
 from simple_lqr import StateSpaceModel, LQRDiscrete, simulate, visualize
 
+# TODO: Currently only implemented for scalar costs and sigmas
+
 def run_trajectory(lqr: LQRDiscrete, K: np.ndarray, l: int) -> tuple[np.float64, np.float64]:
     x_traj = []
     u_traj = []
@@ -62,8 +64,6 @@ def estimate_gradient(lqr: LQRDiscrete, K: np.ndarray, m: int, l: int, r: float,
     cost_gradient_estimate /= m
 
     sigma_estimate = sum(sig for sig in sigma_estimates) / m
-
-    # TODO: make the estimates work with matrices
 
     return cost_gradient_estimate, sigma_estimate
 
