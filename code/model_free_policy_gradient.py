@@ -1,8 +1,8 @@
 import numpy as np
 from dataclasses import dataclass
 
-from basetypes import StateSpaceModel, SimulationResultPlotType
-from visualization import visualize_result, visualize_result_single
+from basetypes import StateSpaceModel
+from visualization import visualize_result
 
 from simple_lqr import StateSpaceModel, LQRDiscrete, simulate
 
@@ -157,4 +157,3 @@ if __name__ == "__main__":
     result = simulate(lqr=lqr, K=ks[-1], n_steps=2500)
 
     visualize_result(result, dt=lqr.dt)
-    visualize_result_single(result, dt=lqr.dt, type=SimulationResultPlotType.POSITION)

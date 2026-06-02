@@ -26,8 +26,8 @@ def calculate_gradient_model_based_discrete(lqr: LQRDiscrete, K_t: np.ndarray) -
     # Initial state covariance
     sigma_0 = np.eye(lqr.A.shape[0])
 
-    # Expected cost using initial state covariance
-    expected_cost = np.trace(P_k @ sigma_0)
+    # Expected cost using current policy K_t
+    expected_cost = lqr.x_0.T @ P_k @ lqr.x_0 # SHOW: np.trace(P_k @ sigma_0)
 
     # Compute the state covariance under the current policy K_t
     sigma_k = solve_discrete_lyapunov(lya_a, sigma_0)

@@ -7,7 +7,7 @@ from scipy.signal import cont2discrete
 import matplotlib.pyplot as plt
 
 from basetypes import StateSpaceModel, SimulationResult
-from visualization import visualize_result, visualize_result_single
+from visualization import visualize_result
 
 
 def continuous_to_discrete(A, B, dt):
@@ -102,6 +102,9 @@ def get_optimal_K_and_cost_discrete(lqr: LQRDiscrete):
     return K, cost
 
 def simulate(lqr: LQRDiscrete, K: np.ndarray, n_steps: int):
+    # Reset lqr state to initial state before simulation
+    lqr.reset_state()
+
     x_traj = []
     u_traj = []
 

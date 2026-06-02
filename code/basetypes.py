@@ -11,9 +11,3 @@ class StateSpaceModel:
 class SimulationResult:
     x_traj: np.ndarray
     u_traj: np.ndarray
-
-@dataclass
-class SimulationResultPlotType:
-    POSITION = "position"
-    VELOCITY = "velocity"
-    ACCELERATION = "acceleration"
