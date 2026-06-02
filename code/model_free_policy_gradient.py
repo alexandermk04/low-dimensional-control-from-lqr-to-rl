@@ -1,8 +1,20 @@
 import numpy as np
+from dataclasses import dataclass
 
-from simple_lqr import StateSpaceModel, LQRDiscrete, simulate, visualize
+from basetypes import StateSpaceModel, SimulationResultPlotType
+from visualization import visualize_result, visualize_result_single
 
-# TODO: Currently only implemented for scalar costs and sigmas
+from simple_lqr import StateSpaceModel, LQRDiscrete, simulate
+
+@dataclass
+class ModelFreePolicyGradientSettings:
+    K_0: np.ndarray  # Initial policy
+    m: int  # Number of trajectories
+    l: int  # Length of steps in each trajectory
+    r: float  # Smoothing parameter
+    gradient_steps: int  # Number of gradient steps
+    gradient_lr: float  # Gradient step size
+
 
 def run_trajectory(lqr: LQRDiscrete, K: np.ndarray, l: int) -> tuple[np.float64, np.float64]:
     x_traj = []
@@ -25,7 +37,7 @@ def run_trajectory(lqr: LQRDiscrete, K: np.ndarray, l: int) -> tuple[np.float64,
 
     total_cost = sum(lqr.get_cost(x_t, u_t) for x_t, u_t in zip(x_traj, u_traj))
 
-    sigma = sum(x_t @ x_t.T for x_t in x_traj) 
+    sigma = sum(np.outer(x_t, x_t) for x_t in x_traj)
 
     return total_cost, sigma
 
@@ -65,34 +77,47 @@ def estimate_gradient(lqr: LQRDiscrete, K: np.ndarray, m: int, l: int, r: float,
 
     sigma_estimate = sum(sig for sig in sigma_estimates) / m
 
-    return cost_gradient_estimate, sigma_estimate
+    return cost_gradient_estimate, sigma_estimate, mean_cost
 
+def model_free_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePolicyGradientSettings):
+    K = settings.K_0
 
-def model_free_policy_gradient(lqr: LQRDiscrete, K_0: np.ndarray, m: int, l: int, r: float, steps: int, stepsize: float):
-    K = K_0
-
-    # TODO: Verify correctness
-    d = K.shape[0] * K.shape[1]
-
-    for _ in range(steps):
-        cost_gradient_estimate, sigma_estimate = estimate_gradient(lqr, K, m, l, r, d)
-
-        K = K - stepsize * cost_gradient_estimate
-
-    return K
-
-def model_free_natural_policy_gradient(lqr: LQRDiscrete, K_0: np.ndarray, m: int, l: int, r: float, steps: int, stepsize: float):
-    K = K_0
+    costs = []
+    ks = []
 
     # TODO: Verify correctness
     d = K.shape[0] * K.shape[1]
 
-    for _ in range(steps):
-        cost_gradient_estimate, sigma_estimate = estimate_gradient(lqr, K, m, l, r, d)
+    for _ in range(settings.gradient_steps):
+        cost_gradient_estimate, sigma_estimate, mean_cost = estimate_gradient(lqr, K, settings.m, settings.l, settings.r, d)
 
-        K = K - stepsize * cost_gradient_estimate * (1 / sigma_estimate)
+        K = K - settings.gradient_lr * cost_gradient_estimate
 
-    return K
+        # By section D.3, above lemma 29, the expected cost of the pertubed policy is used for the cost estimate
+        costs.append(mean_cost)
+        ks.append(K)
+
+    return ks, costs
+
+def model_free_natural_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePolicyGradientSettings):
+    K = settings.K_0
+
+    costs = []
+    ks = []
+
+    # TODO: Verify correctness
+    d = K.shape[0] * K.shape[1]
+
+    for _ in range(settings.gradient_steps):
+        cost_gradient_estimate, sigma_estimate, mean_cost = estimate_gradient(lqr, K, settings.m, settings.l, settings.r, d)
+
+        K = K - settings.gradient_lr * (cost_gradient_estimate @ np.linalg.inv(sigma_estimate))
+
+        # By section D.3, above lemma 29, the expected cost of the pertubed policy is used for the cost estimate
+        costs.append(mean_cost)
+        ks.append(K)
+
+    return ks, costs
 
 if __name__ == "__main__":
     # Double Integrator example implementation
@@ -117,16 +142,19 @@ if __name__ == "__main__":
     lqr = LQRDiscrete(model, Q, R)
 
     K_0 = np.array([[0.1, 0.5]])
-    gradient_lr = 1e-4
-    gradient_steps = 100
 
-    # Model-free parameters
-    m = 40  # Number of trajectories
-    l = 100  # Length of steps in each trajectory
-    r = 0.1  # Smoothing parameter
+    settings = ModelFreePolicyGradientSettings(
+        K_0=K_0, 
+        m=40,  # Number of trajectories
+        l=100,  # Length of steps in each trajectory
+        r=0.1,  # Smoothing parameter
+        gradient_steps=100,
+        gradient_lr=1e-4
+    )
 
-    K = model_free_natural_policy_gradient(lqr=lqr, K_0=K_0, m=m, l=l, r=r, steps=gradient_steps, stepsize=gradient_lr)
+    ks, costs = model_free_natural_policy_gradient(lqr=lqr, settings=settings)
 
-    x_traj, u_traj = simulate(lqr=lqr, K=K, n_steps=2500)
+    result = simulate(lqr=lqr, K=ks[-1], n_steps=2500)
 
-    visualize(x_traj, u_traj, dt=lqr.dt)
+    visualize_result(result, dt=lqr.dt)
+    visualize_result_single(result, dt=lqr.dt, type=SimulationResultPlotType.POSITION)

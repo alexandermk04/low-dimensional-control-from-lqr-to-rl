@@ -1,7 +1,18 @@
+from dataclasses import dataclass
 import numpy as np
 
 from scipy.linalg import solve_discrete_lyapunov
-from simple_lqr import LQRDiscrete, StateSpaceModel, simulate, visualize
+
+from basetypes import StateSpaceModel
+from visualization import visualize_result
+
+from simple_lqr import LQRDiscrete, simulate
+
+@dataclass
+class ModelBasedPolicyGradientSettings:
+    K_0: np.ndarray  # Initial policy
+    gradient_steps: int  # Number of gradient steps
+    gradient_lr: float  # Gradient step size
 
 # Global Convergence... Paper, page 5
 def calculate_gradient_model_based_discrete(lqr: LQRDiscrete, K_t: np.ndarray) -> np.ndarray:
@@ -15,6 +26,9 @@ def calculate_gradient_model_based_discrete(lqr: LQRDiscrete, K_t: np.ndarray) -
     # Initial state covariance
     sigma_0 = np.eye(lqr.A.shape[0])
 
+    # Expected cost using initial state covariance
+    expected_cost = np.trace(P_k @ sigma_0)
+
     # Compute the state covariance under the current policy K_t
     sigma_k = solve_discrete_lyapunov(lya_a, sigma_0)
 
@@ -22,17 +36,22 @@ def calculate_gradient_model_based_discrete(lqr: LQRDiscrete, K_t: np.ndarray) -
 
     grad = 2 * E_k @ sigma_k
 
-    return grad
+    return grad, expected_cost
 
 # Runs gradient descent for a defined number of steps, returns K after
-def gradient_descent_discrete(lqr: LQRDiscrete, K_t: np.ndarray, stepsize: float, steps: int) -> np.ndarray:
-    K = K_t
+def gradient_descent_discrete(lqr: LQRDiscrete, settings: ModelBasedPolicyGradientSettings) -> tuple[list[np.ndarray], list[float]]:
+    K = settings.K_0
 
-    for _ in range(steps):
-        new_K = calculate_gradient_model_based_discrete(lqr, K)
-        K = K - stepsize * new_K
+    costs = []
+    ks = []
 
-    return K
+    for _ in range(settings.gradient_steps):
+        grad, expected_cost = calculate_gradient_model_based_discrete(lqr, K)
+        K = K - settings.gradient_lr * grad
+        costs.append(expected_cost)
+        ks.append(K)
+
+    return ks, costs
 
 
 if __name__ == "__main__":
@@ -58,11 +77,15 @@ if __name__ == "__main__":
     lqr = LQRDiscrete(model, Q, R)
 
     K_0 = np.array([[0.1, 0.5]])
-    gradient_lr = 0.001
-    gradient_steps = 10
 
-    K = gradient_descent_discrete(lqr=lqr, K_t=K_0, stepsize=gradient_lr, steps=gradient_steps)
+    settings = ModelBasedPolicyGradientSettings(
+        K_0=K_0,
+        gradient_steps=100,
+        gradient_lr=0.001
+    )
 
-    x_traj, u_traj = simulate(lqr=lqr, K=K, n_steps=1000)
-    
-    visualize(x_traj, u_traj, dt=lqr.dt)
+    ks, costs = gradient_descent_discrete(lqr=lqr, settings=settings)
+
+    result = simulate(lqr=lqr, K=ks[-1], n_steps=1000)
+
+    visualize_result(result, dt=lqr.dt)
