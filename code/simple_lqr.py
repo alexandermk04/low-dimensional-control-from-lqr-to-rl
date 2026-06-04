@@ -95,7 +95,12 @@ def get_optimal_K_and_cost_discrete(lqr: LQRDiscrete):
 
     P = solve_discrete_are(lqr.A, lqr.B, lqr.Q, lqr.R)
 
-    K = np.linalg.inv(lqr.R) @ lqr.B.T @ P
+    # SHOW: K = np.linalg.inv(lqr.R) @ lqr.B.T @ P
+
+    part_1 = np.linalg.inv(lqr.B.T @ P @ lqr.B + lqr.R)
+
+    # SHOW: Minus was here for both papers, but our convention is u(t) = - K @ x(t), so we don't need the minus here
+    K = part_1 @ lqr.B.T @ P @ lqr.A
 
     cost = lqr.x_0.T @ P @ lqr.x_0
 

@@ -5,7 +5,6 @@ from visualization import visualize_multiple_results
 
 from simple_lqr import (
     StateSpaceModel,
-    SimulationResult,
     LQRDiscrete,
     simulate,
     get_optimal_K_and_cost_discrete as baseline_solution,
