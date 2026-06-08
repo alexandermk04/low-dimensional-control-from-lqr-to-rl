@@ -41,10 +41,12 @@ def run_trajectory(lqr: LQRDiscrete, K: np.ndarray, l: int) -> tuple[np.float64,
 
     return total_cost, sigma
 
-def estimate_gradient(lqr: LQRDiscrete, K: np.ndarray, m: int, l: int, r: float, d: int) -> np.ndarray:
+def estimate_gradient(lqr: LQRDiscrete, K: np.ndarray, m: int, l: int, r: float) -> np.ndarray:
     pertubations = []
     cost_estimates = []
     sigma_estimates = []
+
+    d = K.shape[0] * K.shape[1]
 
     for _ in range(m):
 
@@ -83,18 +85,16 @@ def model_free_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePolicyGradie
     K = settings.K_0
 
     costs = []
-    ks = []
-
-    # TODO: Verify correctness
-    d = K.shape[0] * K.shape[1]
+    ks = [K]
 
     for _ in range(settings.gradient_steps):
-        cost_gradient_estimate, sigma_estimate, mean_cost = estimate_gradient(lqr, K, settings.m, settings.l, settings.r, d)
-
-        K = K - settings.gradient_lr * cost_gradient_estimate
+        cost_gradient_estimate, sigma_estimate, mean_cost = estimate_gradient(lqr, K, settings.m, settings.l, settings.r)
 
         # By section D.3, above lemma 29, the expected cost of the pertubed policy is used for the cost estimate
         costs.append(mean_cost)
+
+        K = K - settings.gradient_lr * cost_gradient_estimate
+
         ks.append(K)
 
     return ks, costs
@@ -103,18 +103,16 @@ def model_free_natural_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePoli
     K = settings.K_0
 
     costs = []
-    ks = []
-
-    # TODO: Verify correctness
-    d = K.shape[0] * K.shape[1]
+    ks = [K]
 
     for _ in range(settings.gradient_steps):
-        cost_gradient_estimate, sigma_estimate, mean_cost = estimate_gradient(lqr, K, settings.m, settings.l, settings.r, d)
-
-        K = K - settings.gradient_lr * (cost_gradient_estimate @ np.linalg.inv(sigma_estimate))
+        cost_gradient_estimate, sigma_estimate, mean_cost = estimate_gradient(lqr, K, settings.m, settings.l, settings.r)
 
         # By section D.3, above lemma 29, the expected cost of the pertubed policy is used for the cost estimate
         costs.append(mean_cost)
+
+        K = K - settings.gradient_lr * (cost_gradient_estimate @ np.linalg.inv(sigma_estimate))
+
         ks.append(K)
 
     return ks, costs

@@ -43,12 +43,13 @@ def gradient_descent_discrete(lqr: LQRDiscrete, settings: ModelBasedPolicyGradie
     K = settings.K_0
 
     costs = []
-    ks = []
+    ks = [K]
 
     for _ in range(settings.gradient_steps):
         grad, expected_cost = calculate_gradient_model_based_discrete(lqr, K)
-        K = K - settings.gradient_lr * grad
         costs.append(expected_cost)
+
+        K = K - settings.gradient_lr * grad
         ks.append(K)
 
     return ks, costs

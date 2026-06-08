@@ -9,6 +9,11 @@ from simple_lqr import (
     simulate,
     get_optimal_K_and_cost_discrete as baseline_solution,
 )
+
+from model_free_policy_gradient import (
+    estimate_gradient
+)
+
 from visualization import visualize_result
 
 from policy_evaluation import visualize_Ks
@@ -142,7 +147,58 @@ def structured_policy_iteration(lqr: LQRDiscrete, settings: StructuredPolicySett
 
         K_t = K_plus
 
-    print(f"Converged after {i + 1} iterations")
+    print(f"Converged after {i} iterations")
+    return ks, costs
+
+
+@dataclass
+class MFStructuredPolicySettings:
+    K_0: np.ndarray  # Initial policy
+    beta: float # linesearch parameter
+    lambda_: float # regularization parameter for low-rank structure
+    stepsize: float # fixed stepsize as mentioned in paper
+    epsilon: float # stopping criterion for convergence
+    m: int  # Number of trajectories
+    l: int  # Length of steps in each trajectory
+    r: float  # Smoothing parameter
+
+def caculate_next_K_mf(
+        K_t: np.ndarray,
+        grad_K: np.ndarray,
+        lambda_: float,
+        stepsize: float
+    ) -> np.ndarray:
+
+    K_plus = prox_grad_nuclear_norm(K_t, grad_K, stepsize, lambda_=lambda_)
+
+    return K_plus
+
+def structured_policy_iteration_mf(lqr: LQRDiscrete, settings: MFStructuredPolicySettings) -> tuple[list[np.ndarray], list[float]]:
+    K_t = settings.K_0
+
+    ks = [K_t]
+    # TODO: Costs
+    costs = []
+    
+    # Initial state covariance
+    sigma_0 = np.eye(lqr.A.shape[0])
+
+    i = 0
+
+    while True:
+        i += 1
+        grad_K, _, _ = estimate_gradient(lqr, K_t, settings.m, settings.l, settings.r)
+
+        K_plus = caculate_next_K_mf(K_t, grad_K, settings.lambda_, stepsize=settings.stepsize)
+
+        ks.append(K_plus)
+
+        if np.linalg.norm(K_plus - K_t, ord='fro') < settings.epsilon:
+            break
+
+        K_t = K_plus
+
+    print(f"Converged after {i} iterations")
     return ks, costs
 
 
@@ -170,14 +226,18 @@ if __name__ == "__main__":
 
     K_0 = np.array([[0.1, 0.5]])
 
-    settings = StructuredPolicySettings(
+    settings = MFStructuredPolicySettings(
         K_0=K_0,
         beta=0.5,
         lambda_=0.1,
-        epsilon=1e-3
+        stepsize=1e-4,
+        epsilon=1e-3, # SHOW: 1e-3 doesn't exactly display convergence
+        m=100,
+        l=100,
+        r=0.1
     )
 
-    ks, costs = structured_policy_iteration(lqr=lqr, settings=settings)
+    ks, costs = structured_policy_iteration_mf(lqr=lqr, settings=settings)
 
     result = simulate(lqr=lqr, K=ks[-1], n_steps=1000)
 
