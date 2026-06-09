@@ -6,7 +6,7 @@ from scipy.signal import cont2discrete
 
 import matplotlib.pyplot as plt
 
-from basetypes import StateSpaceModel, SimulationResult
+from basetypes import StateSpaceModel, SimulationResult, StepResult
 from visualization import visualize_result
 from noise import (
     ParametricNoiseSettings,
@@ -56,9 +56,6 @@ class LQRBase:
 
         self.noise = False
         self.setup_noise(noise_settings)
-
-    def get_current_state(self):
-        return self.x
     
     def reset(self):
         self.x = self.x_0
@@ -66,6 +63,10 @@ class LQRBase:
 
     def setup_noise(self, noise_settings: LQRNoiseSettings | None):
         if noise_settings is None:
+            self.parametric_noise = None
+            self.control_noise = None
+            self.measurement_noise = None
+            self.disturbance_noise = None
             return
         self.parametric_noise = noise_settings.parametric_noise
         self.control_noise = noise_settings.control_noise
@@ -75,7 +76,7 @@ class LQRBase:
     def apply_noise(self):
         self.noise = True
 
-    def next_state(self):
+    def next_state(self, K: np.ndarray) -> StepResult:
         raise NotImplementedError
 
 
@@ -98,22 +99,26 @@ class LQRDiscrete(LQRBase):
         self.noise = False
         self.setup_noise(noise_settings)
     
-    def get_cost(self, x_t, u_t):
-        return x_t.T @ self.Q @ x_t + u_t.T @ self.R @ u_t
-    
-    def next_state(self, K: np.ndarray) -> tuple[np.ndarray, np.ndarray]: 
+    def next_state(self, K: np.ndarray) -> StepResult:
         if self.noise:
             x_t = self.x
 
+            # Observation
+            y_t = x_t
             if self.measurement_noise is not None:
-                noise = self.measurement_noise.sample_measurement_noise(x_t)
-                x_t = x_t + noise
-            u_t = - K @ x_t
+                noise = self.measurement_noise.sample_measurement_noise(y_t)
+                y_t = y_t + noise
 
+            # Control input based on the observation
+            u_t = - K @ y_t
+
+            # The actual control input applied
+            v_t = u_t
             if self.control_noise is not None:
                 control_noise = self.control_noise.sample_control_noise(u_t)
-                u_t = u_t + control_noise
+                v_t = v_t + control_noise
             
+            # Parametric noise applied to state space
             A = self.A
             B = self.B
             if self.parametric_noise is not None:
@@ -121,15 +126,19 @@ class LQRDiscrete(LQRBase):
                 A = A + noise_A
                 B = B + noise_B
 
-            x_next = A @ x_t + B @ u_t
+            # Here we use the actual state, with our control
+            x_next = A @ x_t + B @ v_t
 
+            # Disturbance noise also lives in the state space, not the measured space
             if self.disturbance_noise is not None:
                 disturbance_noise = self.disturbance_noise.sample_disturbance(x_next)
                 x_next = x_next + disturbance_noise
 
             self.x = x_next
 
-            return x_t, u_t
+            cost = x_t.T @ self.Q @ x_t + u_t.T @ self.R @ u_t
+
+            return StepResult(y_t, v_t, x_t, u_t, cost)
         
         else:
             x_t = self.x
@@ -137,7 +146,9 @@ class LQRDiscrete(LQRBase):
 
             self.x = self.A @ x_t + self.B @ u_t
 
-        return x_t, u_t
+            cost = x_t.T @ self.Q @ x_t + u_t.T @ self.R @ u_t
+
+            return StepResult(x_t, u_t, x_t, u_t, cost)
     
 
 def get_optimal_K_and_cost_discrete(lqr: LQRDiscrete):
@@ -164,9 +175,9 @@ def simulate(lqr: LQRDiscrete, K: np.ndarray, n_steps: int):
     u_traj = []
 
     for _ in range(n_steps):
-        x_t, u_t = lqr.next_state(K=K)
-        x_traj.append(x_t)
-        u_traj.append(u_t)
+        res = lqr.next_state(K=K)
+        x_traj.append(res.x_t)
+        u_traj.append(res.u_t)
 
     results = SimulationResult(x_traj=np.array(x_traj), u_traj=np.array(u_traj))
 

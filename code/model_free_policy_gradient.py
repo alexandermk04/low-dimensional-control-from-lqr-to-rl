@@ -24,27 +24,28 @@ class ModelFreePolicyGradientSettings:
 
 
 def run_trajectory(lqr: LQRDiscrete, K: np.ndarray, l: int) -> tuple[np.float64, np.float64]:
-    x_traj = []
-    u_traj = []
+    y_traj = []
+    v_traj = []
+    costs = []
 
     total_cost = 0.0
 
     for _ in range(l):
-        x_t, u_t = lqr.next_state(K)
+        res = lqr.next_state(K)
 
         # TODO: Determine if this threshold is sufficient
-        if np.linalg.norm(x_t) > 1e6:
+        if np.linalg.norm(res.y_t) > 1e6:
             # If the system becomes unstable, add high cost and terminate the trajectory early
             print("Trajectory diverged, terminating early.")
             total_cost += 1e10
             break
 
-        x_traj.append(x_t)
-        u_traj.append(u_t)
+        y_traj.append(res.y_t)
+        v_traj.append(res.v_t)
+        costs.append(res.cost)
 
-    total_cost = sum(lqr.get_cost(x_t, u_t) for x_t, u_t in zip(x_traj, u_traj))
-
-    sigma = sum(np.outer(x_t, x_t) for x_t in x_traj)
+    total_cost = sum(costs)
+    sigma = sum(np.outer(y_t, y_t) for y_t in y_traj)
 
     return total_cost, sigma
 

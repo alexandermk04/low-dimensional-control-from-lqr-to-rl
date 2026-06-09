@@ -3,6 +3,14 @@ import matplotlib.pyplot as plt
 
 from visualization import visualize_multiple_results
 
+from noise import (
+    ParametricNoiseSettings,
+    ControlNoiseSettings,
+    MeasurementNoiseSettings,
+    DisturbanceNoiseSettings,
+    LQRNoiseSettings
+)
+
 from simple_lqr import (
     StateSpaceModel,
     LQRDiscrete,

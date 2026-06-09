@@ -232,9 +232,9 @@ if __name__ == "__main__":
     R = np.array([[1]])
 
     # Noise
-    parametric_noise = ParametricNoiseSettings(noise_std=0.05, time_invariant=False)
-    control_noise = ControlNoiseSettings(noise_std=0.05, time_invariant=False)
-    measurement_noise = MeasurementNoiseSettings(noise_std=0.01, time_invariant=False)
+    parametric_noise = ParametricNoiseSettings(noise_std=0.01, time_invariant=False)
+    control_noise = ControlNoiseSettings(noise_std=0.01)
+    measurement_noise = MeasurementNoiseSettings(noise_std=0.01)
     disturbance_noise = DisturbanceNoiseSettings(noise_std=0.01, disturbance_type='gaussian')
 
     noise_settings = LQRNoiseSettings(
