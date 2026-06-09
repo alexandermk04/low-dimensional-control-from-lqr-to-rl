@@ -31,3 +31,5 @@
 - natural gradient, adding epsilon times identity before inverting it in case of problems (1e-3)
 - gradients start visually with different K_0s, investigate -> why does model based explode?
 - fill in registration form
+
+=> QUESTION: Where do I apply the noise? Only when simulating in the end, or already inside the sampling as well?

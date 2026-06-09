@@ -18,6 +18,14 @@ from visualization import visualize_result
 
 from policy_evaluation import visualize_Ks
 
+from noise import (
+    ParametricNoiseSettings,
+    ControlNoiseSettings,
+    MeasurementNoiseSettings,
+    DisturbanceNoiseSettings,
+    LQRNoiseSettings
+)
+
 
 # All implementation adapted from Structured Policy Iteration paper
 
@@ -158,6 +166,7 @@ class MFStructuredPolicySettings:
     lambda_: float # regularization parameter for low-rank structure
     stepsize: float # fixed stepsize as mentioned in paper
     epsilon: float # stopping criterion for convergence
+    limit: int # maximum number of iterations to prevent infinite loop in case of non-convergence
     m: int  # Number of trajectories
     l: int  # Length of steps in each trajectory
     r: float  # Smoothing parameter
@@ -185,7 +194,7 @@ def structured_policy_iteration_mf(lqr: LQRDiscrete, settings: MFStructuredPolic
 
     i = 0
 
-    while True:
+    while i < settings.limit:
         i += 1
         grad_K, _, _ = estimate_gradient(lqr, K_t, settings.m, settings.l, settings.r)
 
@@ -222,7 +231,20 @@ if __name__ == "__main__":
     # Penalizes gigantic control input
     R = np.array([[1]])
 
-    lqr = LQRDiscrete(model, Q, R)
+    # Noise
+    parametric_noise = ParametricNoiseSettings(noise_std=0.05, time_invariant=False)
+    control_noise = ControlNoiseSettings(noise_std=0.05, time_invariant=False)
+    measurement_noise = MeasurementNoiseSettings(noise_std=0.01, time_invariant=False)
+    disturbance_noise = DisturbanceNoiseSettings(noise_std=0.01, disturbance_type='gaussian')
+
+    noise_settings = LQRNoiseSettings(
+        #parametric_noise=parametric_noise,
+        #control_noise=control_noise,
+        measurement_noise=measurement_noise,
+        #disturbance_noise=disturbance_noise
+    )
+
+    lqr = LQRDiscrete(model, Q, R, noise_settings=noise_settings, dt=0.01)
 
     K_0 = np.array([[0.1, 0.5]])
 
@@ -231,7 +253,8 @@ if __name__ == "__main__":
         beta=0.5,
         lambda_=0.1,
         stepsize=1e-4,
-        epsilon=1e-3, # SHOW: 1e-3 doesn't exactly display convergence
+        epsilon=1e-3, # SHOW: 1e-4 doesn't exactly display convergence
+        limit=1000,
         m=100,
         l=100,
         r=0.1
@@ -239,7 +262,7 @@ if __name__ == "__main__":
 
     ks, costs = structured_policy_iteration_mf(lqr=lqr, settings=settings)
 
-    result = simulate(lqr=lqr, K=ks[-1], n_steps=1000)
+    result = simulate(lqr=lqr, K=ks[-1], n_steps=2500)
 
     visualize_result(result, dt=lqr.dt)
 

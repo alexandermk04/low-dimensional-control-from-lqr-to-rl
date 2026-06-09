@@ -5,6 +5,13 @@ from basetypes import StateSpaceModel
 from visualization import visualize_result
 
 from simple_lqr import StateSpaceModel, LQRDiscrete, simulate
+from noise import (
+    ParametricNoiseSettings,
+    ControlNoiseSettings,
+    MeasurementNoiseSettings,
+    DisturbanceNoiseSettings,
+    LQRNoiseSettings
+)
 
 @dataclass
 class ModelFreePolicyGradientSettings:
@@ -51,7 +58,8 @@ def estimate_gradient(lqr: LQRDiscrete, K: np.ndarray, m: int, l: int, r: float)
     for _ in range(m):
 
         # Reset the state of the LQR system to the initial state before each trajectory
-        lqr.reset_state()
+        lqr.reset()
+        lqr.apply_noise()
 
         # Sample a random matrix with K's shape
         U = np.random.randn(*K.shape)
@@ -137,13 +145,26 @@ if __name__ == "__main__":
     # Penalizes gigantic control input
     R = np.array([[1]])
 
-    lqr = LQRDiscrete(model, Q, R)
+    # Noise
+    parametric_noise = ParametricNoiseSettings(noise_std=0.05, time_invariant=False)
+    control_noise = ControlNoiseSettings(noise_std=0.05, time_invariant=False)
+    measurement_noise = MeasurementNoiseSettings(noise_std=0.01, time_invariant=False)
+    disturbance_noise = DisturbanceNoiseSettings(noise_std=0.01, disturbance_type='gaussian')
+
+    noise_settings = LQRNoiseSettings(
+        #parametric_noise=parametric_noise,
+        #control_noise=control_noise,
+        measurement_noise=measurement_noise,
+        #disturbance_noise=disturbance_noise
+    )
+
+    lqr = LQRDiscrete(model, Q, R, noise_settings=noise_settings)
 
     K_0 = np.array([[0.1, 0.5]])
 
     settings = ModelFreePolicyGradientSettings(
         K_0=K_0, 
-        m=40,  # Number of trajectories
+        m=100,  # Number of trajectories
         l=100,  # Length of steps in each trajectory
         r=0.1,  # Smoothing parameter
         gradient_steps=100,

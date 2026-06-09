@@ -8,7 +8,13 @@ import matplotlib.pyplot as plt
 
 from basetypes import StateSpaceModel, SimulationResult
 from visualization import visualize_result
-
+from noise import (
+    ParametricNoiseSettings,
+    ControlNoiseSettings,
+    MeasurementNoiseSettings,
+    DisturbanceNoiseSettings,
+    LQRNoiseSettings
+)
 
 def continuous_to_discrete(A, B, dt):
     # TODO: Add documentation zoh
@@ -32,7 +38,13 @@ class LQRBase:
     x_0: np.ndarray
     x: np.ndarray
 
-    def __init__(self, model: StateSpaceModel, Q, R):
+    noise: bool
+    parametric_noise: ParametricNoiseSettings | None
+    control_noise: ControlNoiseSettings | None
+    measurement_noise: MeasurementNoiseSettings | None
+    disturbance_noise: DisturbanceNoiseSettings | None
+
+    def __init__(self, model: StateSpaceModel, Q, R, noise_settings: LQRNoiseSettings = None):
         self.A = model.A
         self.B = model.B
 
@@ -42,11 +54,26 @@ class LQRBase:
         self.Q = Q
         self.R = R
 
+        self.noise = False
+        self.setup_noise(noise_settings)
+
     def get_current_state(self):
         return self.x
     
-    def reset_state(self):
+    def reset(self):
         self.x = self.x_0
+        self.noise = False
+
+    def setup_noise(self, noise_settings: LQRNoiseSettings | None):
+        if noise_settings is None:
+            return
+        self.parametric_noise = noise_settings.parametric_noise
+        self.control_noise = noise_settings.control_noise
+        self.measurement_noise = noise_settings.measurement_noise
+        self.disturbance_noise = noise_settings.disturbance_noise
+
+    def apply_noise(self):
+        self.noise = True
 
     def next_state(self):
         raise NotImplementedError
@@ -55,18 +82,7 @@ class LQRBase:
 class LQRDiscrete(LQRBase):
     dt: float
 
-    A: np.ndarray
-    B: np.ndarray
-    Q: np.ndarray
-    R: np.ndarray
-
-    P: np.ndarray
-    K: np.ndarray
-
-    x_0: np.ndarray
-    x: np.ndarray
-
-    def __init__(self, model: StateSpaceModel, Q, R, dt=0.01):
+    def __init__(self, model: StateSpaceModel, Q, R, noise_settings: LQRNoiseSettings = None, dt=0.01):
         self.dt = dt
         
         A_d, B_d = continuous_to_discrete(model.A, model.B, dt=dt)
@@ -78,15 +94,48 @@ class LQRDiscrete(LQRBase):
 
         self.Q = Q
         self.R = R
+
+        self.noise = False
+        self.setup_noise(noise_settings)
     
     def get_cost(self, x_t, u_t):
         return x_t.T @ self.Q @ x_t + u_t.T @ self.R @ u_t
     
     def next_state(self, K: np.ndarray) -> tuple[np.ndarray, np.ndarray]: 
-        x_t = self.x
-        u_t = - K @ x_t
+        if self.noise:
+            x_t = self.x
 
-        self.x = self.A @ x_t + self.B @ u_t
+            if self.measurement_noise is not None:
+                noise = self.measurement_noise.sample_measurement_noise(x_t)
+                x_t = x_t + noise
+            u_t = - K @ x_t
+
+            if self.control_noise is not None:
+                control_noise = self.control_noise.sample_control_noise(u_t)
+                u_t = u_t + control_noise
+            
+            A = self.A
+            B = self.B
+            if self.parametric_noise is not None:
+                noise_A, noise_B = self.parametric_noise.sample_parametric_noise(A, B)
+                A = A + noise_A
+                B = B + noise_B
+
+            x_next = A @ x_t + B @ u_t
+
+            if self.disturbance_noise is not None:
+                disturbance_noise = self.disturbance_noise.sample_disturbance(x_next)
+                x_next = x_next + disturbance_noise
+
+            self.x = x_next
+
+            return x_t, u_t
+        
+        else:
+            x_t = self.x
+            u_t = - K @ x_t
+
+            self.x = self.A @ x_t + self.B @ u_t
 
         return x_t, u_t
     
@@ -108,7 +157,8 @@ def get_optimal_K_and_cost_discrete(lqr: LQRDiscrete):
 
 def simulate(lqr: LQRDiscrete, K: np.ndarray, n_steps: int):
     # Reset lqr state to initial state before simulation
-    lqr.reset_state()
+    lqr.reset()
+    lqr.apply_noise()
 
     x_traj = []
     u_traj = []
@@ -143,10 +193,23 @@ if __name__ == "__main__":
     # Penalizes gigantic control input
     R = np.array([[1]])
 
-    lqr = LQRDiscrete(model, Q, R)
+    # Noise
+    parametric_noise = ParametricNoiseSettings(noise_std=0.05, time_invariant=False)
+    control_noise = ControlNoiseSettings(noise_std=0.05)
+    measurement_noise = MeasurementNoiseSettings(noise_std=0.01)
+    disturbance_noise = DisturbanceNoiseSettings(noise_std=0.05, disturbance_type='gaussian')
+
+    noise_settings = LQRNoiseSettings(
+        #parametric_noise=parametric_noise,
+        #control_noise=control_noise,
+        measurement_noise=measurement_noise,
+        #disturbance_noise=disturbance_noise
+    )
+
+    lqr = LQRDiscrete(model, Q, R, noise_settings=noise_settings, dt=0.01)
 
     K, cost = get_optimal_K_and_cost_discrete(lqr=lqr)
 
-    results = simulate(lqr=lqr, K=K, n_steps=1000)
+    results = simulate(lqr=lqr, K=K, n_steps=2500)
 
     visualize_result(results, dt=lqr.dt)
