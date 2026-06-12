@@ -133,10 +133,10 @@ if __name__ == "__main__":
 
     simulation_dict = {
         'Pure': simulate(lqr=lqr, K=pure_k[-1], n_steps=STEPS),
-        'Parametric': simulate(lqr=lqr_param, K=parametric_ks[-1], n_steps=STEPS),
-        'Control': simulate(lqr=lqr_control, K=control_ks[-1], n_steps=STEPS),
-        'Measurement': simulate(lqr=lqr_measurement, K=measurement_ks[-1], n_steps=STEPS),
-        'Disturbance': simulate(lqr=lqr_disturbance, K=disturbance_ks[-1], n_steps=STEPS)
+        #'Parametric': simulate(lqr=lqr_param, K=parametric_ks[-1], n_steps=STEPS),
+        #'Control': simulate(lqr=lqr_control, K=control_ks[-1], n_steps=STEPS),
+        #'Measurement': simulate(lqr=lqr_measurement, K=measurement_ks[-1], n_steps=STEPS),
+        #'Disturbance': simulate(lqr=lqr_disturbance, K=disturbance_ks[-1], n_steps=STEPS)
     }
 
     visualize_multiple_results(simulation_dict, dt=lqr.dt)
