@@ -1,27 +1,43 @@
 \chapter{Introduction}\label{introduction}
 
 
-The introduction describes the problem, why it is important, the main
-ideas of the thesis, what are the main contributions of the
-thesis, etc. The introduction is the most important part of your thesis because it answers the question of why you are researching your topic at all. The introduction does not only motivate your thesis, it also justifies it. 
-Compared to the rest of your thesis, it is a very short text, but this text should be extremely well-written and clear. It deserves a lot of polishing. If the introduction is boring or not well written, a reader (and your supervisor who will finally grade your thesis) will most likely not have fun reading your work. The introduction (together with abstract and title) is the ``bait'' to get your reader, your supervisor and your reviewer hooked.
+% The introduction describes the problem, why it is important, the main
+% ideas of the thesis, what are the main contributions of the
+% thesis, etc. The introduction is the most important part of your thesis because it answers the question of why you are researching your topic at all. The introduction does not only motivate your thesis, it also justifies it. 
+% Compared to the rest of your thesis, it is a very short text, but this text should be extremely well-written and clear. It deserves a lot of polishing. If the introduction is boring or not well written, a reader (and your supervisor who will finally grade your thesis) will most likely not have fun reading your work. The introduction (together with abstract and title) is the ``bait'' to get your reader, your supervisor and your reviewer hooked.
 
-The introduction should be a short version of the whole thesis, with a focus on motivation. A good introduction is structured as follows:
+% The introduction should be a short version of the whole thesis, with a focus on motivation. A good introduction is structured as follows:
 
-\begin{enumerate}
-\item It should start with a brief motivational problem outline to set the stage, e.g., ``It is important to build intelligent robots. A popular method to build intelligent robots is X. However, X has problem Y.''
+% \begin{enumerate}
+% \item It should start with a brief motivational problem outline to set the stage, e.g., ``It is important to build intelligent robots. A popular method to build intelligent robots is X. However, X has problem Y.''
 
-\item It should then contain a specific formulation of your research question (RQ). For a good description of how to formulate a research question, consider \url{https://www.scribbr.com/research-process/research-questions/}. E.g.: ``Problem Y has not yet been addressed sufficiently by other researchers, so how can we extend X to address Y?''
+% \item It should then contain a specific formulation of your research question (RQ). For a good description of how to formulate a research question, consider \url{https://www.scribbr.com/research-process/research-questions/}. E.g.: ``Problem Y has not yet been addressed sufficiently by other researchers, so how can we extend X to address Y?''
 
-\item In addition to your research question, you can (but don't have to) state a specific hypothesis: 
-``I hypothesize that we can address Y by extending X with Z.'' It is important that you also say how you plan to validate your hypothesis. For example, if you do an empirical investigation, write something like ``I will validate my hypothesis by measuring ... with experiment ...''. If you write a more formal thesis, you might want to prove a certain theorem, so you could write ``I will validate my hypothesis by proving that ...''
+% \item In addition to your research question, you can (but don't have to) state a specific hypothesis: 
+% ``I hypothesize that we can address Y by extending X with Z.'' It is important that you also say how you plan to validate your hypothesis. For example, if you do an empirical investigation, write something like ``I will validate my hypothesis by measuring ... with experiment ...''. If you write a more formal thesis, you might want to prove a certain theorem, so you could write ``I will validate my hypothesis by proving that ...''
 
-\item The RQ and hypothesis should be followed by a very brief (one-two sentences) summary of how you want to address the question, i.e., the methods and evaluation metrics you want to use, highlighting your research contributions with respect to the state of the art. 
-Herein, you should also refer to the individual sections in your paper to give the reader a brief outline. 
-``The review of the related work in Section 2 of this paper shows that method Q has not yet been investigated as a solution to problem X. As a novel contribution, I will address this hypothesis / RQ by implementing Z using method Q, as described in Section 3. I will evaluate the results by measuring V, as described in Section 4.'' (Note that you might not have a Section 4 if you do not conduct empirical research  but focus on theory instead.)
+% \item The RQ and hypothesis should be followed by a very brief (one-two sentences) summary of how you want to address the question, i.e., the methods and evaluation metrics you want to use, highlighting your research contributions with respect to the state of the art. 
+% Herein, you should also refer to the individual sections in your paper to give the reader a brief outline. 
+% ``The review of the related work in Section 2 of this paper shows that method Q has not yet been investigated as a solution to problem X. As a novel contribution, I will address this hypothesis / RQ by implementing Z using method Q, as described in Section 3. I will evaluate the results by measuring V, as described in Section 4.'' (Note that you might not have a Section 4 if you do not conduct empirical research  but focus on theory instead.)
 
-\item You should conclude with a sentence like this: ``I conclude in Section 5, by highlighting that extending X with Z indeed achieves Y, but only if W holds.'' 
+% \item You should conclude with a sentence like this: ``I conclude in Section 5, by highlighting that extending X with Z indeed achieves Y, but only if W holds.'' 
 
-\end{enumerate}
-It does not matter whether you use ``I'' or ``We''. It does matter, however, that you use the same pronoun consistently.
+% \end{enumerate}
+% It does not matter whether you use ``I'' or ``We''. It does matter, however, that you use the same pronoun consistently.
 
+% My part
+Undoubtedly, the field of robotics has seen rapid advancements in the capabilities of neural network based implementations over the recent years.
+An increase in global compute power~\cite{TODO_compute}, fueled by the so-called ``AI race'' of LLMs, has allowed researchers around the world to create even more extensive model architectures for more complex use cases~\cite{TODO_llm_example}.
+Transferring these structures now to physical bodies, however, shows the limits of this approach, and prompts the idea of cheap design.
+As mentioned by N.~Ay~\cite{TODO_ay_geometric}, the core idea is to maintain an ``embodied universal approximator'', while reducing the overall complexity of the model, which can be defined based on the specific case.
+The most straightforward approach is inducing the underlying physical dynamics of the embodiment into the architecture, which is often of lower-dimensionality than the actual sensors and actuators.
+Recent papers focusing on algorithms for the LQR~\cite{TODO_lqr}, apply this approach by offering implementations for enforcing low-rank controllers, leading to lower complexity in relation to parameterization.
+Still, this approach has yet to be extended~\cite{TODO_extension} to more complex embodiments, and is missing a crucial part required for implementation: Robustness.
+This leaves us with the question: \emph{Is it possible to train a controller of low-dimensionality for an embodied agent, which is performant yet robust?}
+
+To answer it, we will first explain the core concepts and collect existing approaches for the LQR setting in section~\ref{preliminaries} and \ref{background}.
+In section~\ref{lqr}, we will compare these implementations using the double integrator problem for LQR with respect to general performance, as well as robustness.
+Building on that, we will artificially inflate our inputs and outputs via matrix-multiplication in section~\ref{inflation} and introduce additionally stable-baseline models into the comparison.
+For section~\ref{perception}, we will completely move away from LQR, and extend the setting to a perception-based implementation.
+Here we will compare different models with varying parameter complexity in regards to robustness, applying the concepts we learned from our earlier experiments.
+Finally, we will conclude by analyzing whether we indeed achieved our goal of constructing a robust controller, and stating how our approach can be applied to more complex settings.
