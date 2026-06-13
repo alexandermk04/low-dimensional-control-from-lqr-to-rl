@@ -37,8 +37,11 @@ def run_trajectory(lqr: LQRDiscrete, K: np.ndarray, l: int) -> tuple[np.float64,
         if np.linalg.norm(res.y_t) > 1e6:
             # If the system becomes unstable, add high cost and terminate the trajectory early
             print("Trajectory diverged, terminating early.")
+            total_cost = sum(costs)
+            sigma = sum(np.outer(y_t, y_t) for y_t in y_traj)
             total_cost += 1e10
-            break
+
+            return total_cost, sigma
 
         y_traj.append(res.y_t)
         v_traj.append(res.v_t)
@@ -81,9 +84,9 @@ def estimate_gradient(lqr: LQRDiscrete, K: np.ndarray, m: int, l: int, r: float)
 
     # Centering the cost estimates by subtracting the mean to reduce variance
     mean_cost = np.mean(cost_estimates)
-    centered_costs = cost_estimates - mean_cost
+    costs = cost_estimates - mean_cost
 
-    cost_gradient_estimate = sum((d / (r ** 2)) * C * U for C, U in zip(centered_costs, pertubations))
+    cost_gradient_estimate = sum((d / (r ** 2)) * C * U for C, U in zip(costs, pertubations))
     cost_gradient_estimate /= m
 
     sigma_estimate = sum(sig for sig in sigma_estimates) / m
@@ -120,7 +123,8 @@ def model_free_natural_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePoli
         # By section D.3, above lemma 29, the expected cost of the pertubed policy is used for the cost estimate
         costs.append(mean_cost)
 
-        K = K - settings.gradient_lr * (cost_gradient_estimate @ np.linalg.inv(sigma_estimate))
+        # SHOW: Use a pseudoinverse with truncation to remain stable for inflated inputs
+        K = K - settings.gradient_lr * (cost_gradient_estimate @ np.linalg.pinv(sigma_estimate, rcond=1e-6))
 
         ks.append(K)
 
