@@ -183,6 +183,7 @@ def caculate_next_K_mf(
     return K_plus
 
 def structured_policy_iteration_mf(lqr: LQRDiscrete, settings: MFStructuredPolicySettings) -> tuple[list[np.ndarray], list[float]]:
+
     K_t = settings.K_0
 
     ks = [K_t]

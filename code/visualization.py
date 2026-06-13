@@ -52,21 +52,23 @@ def visualize_multiple_results(results: dict[str, SimulationResult], metadata: d
     plt.xlabel('Time (s)')
     plt.ylabel('Control')
     plt.legend()
-    plt.show()
 
     # For adding run metadata
+    plt.subplot(2, 2, 4)
+    plt.axis('off')
+
     text_content = ""
     for key, value in metadata.items():
             text_content += f"{key}: {value}\n"
     plt.text(0.5, 0.5, text_content, 
                  fontsize=12, 
                  horizontalalignment='center', 
-                 verticalalignment='center',
-                 #transform=plt.gca().transAxes,
-                 #bbox=dict(boxstyle='round,pad=1', facecolor='whitesmoke', alpha=0.8, edgecolor='gray')
+                 verticalalignment='center'
                  )
 
     plt.tight_layout()
 
     if save_to is not None:
         plt.savefig(f"../../Visualizations/{save_to}.png")
+    else:
+        plt.show()
