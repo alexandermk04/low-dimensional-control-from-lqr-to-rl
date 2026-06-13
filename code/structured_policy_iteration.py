@@ -203,11 +203,12 @@ def structured_policy_iteration_mf(lqr: LQRDiscrete, settings: MFStructuredPolic
         ks.append(K_plus)
 
         if np.linalg.norm(K_plus - K_t, ord='fro') < settings.epsilon:
-            break
+            print(f"Converged after {i} iterations")
+            return ks, costs
 
         K_t = K_plus
 
-    print(f"Converged after {i} iterations")
+    print(f"Ended after {i} iterations")
     return ks, costs
 
 

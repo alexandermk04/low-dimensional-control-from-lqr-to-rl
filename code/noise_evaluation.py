@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     GRADIENT_STEPS = 200
     TRAJECTORIES = 100
-    ROLLOUT_LENGTH = 200 # SHOW: 100 underestimates the cost
+    ROLLOUT_LENGTH = 200 
     SMOOTHING_PARAM = 0.01
 
     mf_nat_settings = ModelFreePolicyGradientSettings(
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         l=ROLLOUT_LENGTH,  # Length of steps in each trajectory
         r=SMOOTHING_PARAM,  # Smoothing parameter
         gradient_steps=GRADIENT_STEPS,
-        gradient_lr=0.001 # SHOW: 0.01 becomes unstable
+        gradient_lr=0.001 
     )
 
     mf_structured_settings = MFStructuredPolicySettings(
@@ -87,7 +87,7 @@ if __name__ == "__main__":
         beta=0.5,
         lambda_=0.1,
         stepsize=1e-4,
-        epsilon=1e-3, # SHOW: 1e-4 doesn't exactly display convergence
+        epsilon=1e-3, 
         limit=1000,
         m=TRAJECTORIES,
         l=ROLLOUT_LENGTH,
