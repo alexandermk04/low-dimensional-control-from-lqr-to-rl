@@ -187,7 +187,6 @@ def structured_policy_iteration_mf(lqr: LQRDiscrete, settings: MFStructuredPolic
     K_t = settings.K_0
 
     ks = [K_t]
-    # TODO: Costs
     costs = []
     
     # Initial state covariance
@@ -197,11 +196,12 @@ def structured_policy_iteration_mf(lqr: LQRDiscrete, settings: MFStructuredPolic
 
     while i < settings.limit:
         i += 1
-        grad_K, _, _ = estimate_gradient(lqr, K_t, settings.m, settings.l, settings.r)
+        grad_K, _, mean_cost = estimate_gradient(lqr, K_t, settings.m, settings.l, settings.r)
 
         K_plus = caculate_next_K_mf(K_t, grad_K, settings.lambda_, stepsize=settings.stepsize)
 
         ks.append(K_plus)
+        costs.append(mean_cost)
 
         if np.linalg.norm(K_plus - K_t, ord='fro') < settings.epsilon:
             print(f"Converged after {i} iterations")

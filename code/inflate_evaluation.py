@@ -2,6 +2,7 @@ import numpy as np
 import time
 
 from visualization import visualize_multiple_results
+from policy_evaluation import visualize_costs
 
 from noise import (
     ParametricNoiseSettings,
@@ -15,6 +16,7 @@ from simple_lqr import (
     StateSpaceModel,
     LQRDiscrete,
     simulate,
+    true_cost,
     get_optimal_K_and_cost_discrete as baseline_solution,
 )
 
@@ -72,6 +74,7 @@ class InflationExperiment:
             "Inflated Output Dim": inflated_output_dim,
             "Gradient Steps": nat_settings.gradient_steps,
             "Gradient LR": nat_settings.gradient_lr,
+            "Gradient LR Structured": structured_settings.stepsize,
             "Trajectories per Gradient Step": nat_settings.m,
             "Rollout Length": nat_settings.l,
             "Smoothing Parameter": nat_settings.r,
@@ -94,12 +97,17 @@ class InflationExperiment:
             noise_settings=noise_settings, dt=self.dt,
         )
 
-        base_k, _ = baseline_solution(base_lqr)
+        base_k, base_cost = baseline_solution(base_lqr)
         print(f"[{label}] Baseline solution done")
         full_ks, _ = model_free_natural_policy_gradient(lqr, self.nat_settings)
         print(f"[{label}] Full-rank calculation done")
         low_ks, _ = structured_policy_iteration_mf(lqr=lqr, settings=self.structured_settings)
         print(f"[{label}] Low-rank calculation done")
+
+        cost_trajectories = {
+            'Full-rank': [true_cost(lqr, self.U_2 @ K @ self.U_1) for K in full_ks],
+            'Low-rank': [true_cost(lqr, self.U_2 @ K @ self.U_1) for K in low_ks],
+        }
 
         simulation_dict = {
             f"Baseline {label}": simulate(lqr=base_lqr, K=base_k, n_steps=self.sim_steps),
@@ -111,9 +119,16 @@ class InflationExperiment:
         if not visualize:
             date_str = time.strftime("%Y-%m-%d %H:%M:%S")
             file_name = f"Run_{label}_{date_str}"
-        
-        metadata = {**self.base_metadata, **(extra_metadata or {})}   
-        visualize_multiple_results(simulation_dict, metadata=metadata, save_to=file_name, dt=self.dt)
+
+        metadata = {**self.base_metadata, **(extra_metadata or {})}
+        visualize_multiple_results(
+            simulation_dict,
+            metadata=metadata,
+            cost_trajectories=cost_trajectories,
+            baseline_cost=base_cost,
+            save_to=file_name,
+            dt=self.dt,
+        )
 
 
     def run_pure(self, visualize: bool = True):
@@ -169,8 +184,8 @@ if __name__ == "__main__":
     # Position, velocity
     x_0 = np.array([10, 0])
 
-    INFLATED_INPUT_DIM = 20
-    INFLATED_OUTPUT_DIM = 15
+    INFLATED_INPUT_DIM = 50
+    INFLATED_OUTPUT_DIM = 25
 
     model = StateSpaceModel(A, B, x_0)
 
@@ -188,18 +203,16 @@ if __name__ == "__main__":
 
     # SHOW: Different starting policies
     # Currently starting with the optimal LQR
-    true_lqr = LQRDiscrete(model, Q, R, dt=0.01)
-    K_start, _ = baseline_solution(true_lqr)
-    print(f"Optimal LQR K: {K_start}")
-
+    #true_lqr = LQRDiscrete(model, Q, R, dt=0.01)
+    #K_start, _ = baseline_solution(true_lqr)
     K_start = np.array([[0.1, 0.5]])
-    print(f"Suboptimal K: {K_start}")
 
     K_0 = np.linalg.pinv(U_2) @ K_start @ np.linalg.pinv(U_1)
     K_0 = 0.95 * K_0
 
-    LIMIT = 500
-    GRADIENT_LR = 1e-5
+    LIMIT = 1000
+    GRADIENT_LR = 1e-2
+    GRADIENT_LR_STRUCTURED = 1e-5
     TRAJECTORIES = 100
     ROLLOUT_LENGTH = 200
     SMOOTHING_PARAM = 0.1
@@ -217,8 +230,8 @@ if __name__ == "__main__":
     mf_structured_settings = MFStructuredPolicySettings(
         K_0=K_0,
         beta=0.5,
-        lambda_=5,
-        stepsize=GRADIENT_LR,
+        lambda_=20,
+        stepsize=GRADIENT_LR_STRUCTURED,
         epsilon=1e-3,
         limit=LIMIT,
         m=TRAJECTORIES,
@@ -241,7 +254,7 @@ if __name__ == "__main__":
         sim_steps=STEPS,
     )
 
-    VISUALIZE = False
+    VISUALIZE = True
 
     try:
         experiment.run_pure(VISUALIZE)

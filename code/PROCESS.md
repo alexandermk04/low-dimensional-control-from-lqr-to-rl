@@ -12,3 +12,4 @@
 ## Testing performance of Full-rank vs. low-rank
 - Started with optimal policy, full rank better
 - Moved to previously tested -> now SPI much better
+- Increased LR for normal, now quite similar, but diverges from time to time

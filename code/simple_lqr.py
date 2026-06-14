@@ -166,6 +166,20 @@ def get_optimal_K_and_cost_discrete(lqr: LQRDiscrete):
 
     return K, cost
 
+def true_cost(lqr: LQRDiscrete, K: np.ndarray) -> float:
+    
+    x_0 = lqr.x_0
+
+    A_cl = lqr.A - lqr.B @ K
+
+    if np.max(np.abs(np.linalg.eigvals(A_cl))) >= 1:
+        return np.inf
+
+    P = solve_discrete_lyapunov(A_cl.T, lqr.Q + K.T @ lqr.R @ K)
+
+    return float(x_0 @ P @ x_0)
+
+
 def simulate(lqr: LQRDiscrete, K: np.ndarray, n_steps: int):
     # Reset lqr state to initial state before simulation
     lqr.reset()
