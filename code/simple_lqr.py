@@ -98,6 +98,12 @@ class LQRDiscrete(LQRBase):
 
         self.noise = False
         self.setup_noise(noise_settings)
+
+    def effective_gain(self, K: np.ndarray) -> np.ndarray:
+        return K
+    
+    def project_gradient(self, grad_K: np.ndarray) -> np.ndarray:
+        return grad_K
     
     def next_state(self, K: np.ndarray) -> StepResult:
         if self.noise:

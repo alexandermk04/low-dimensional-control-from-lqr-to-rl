@@ -6,6 +6,7 @@ from visualization import visualize_spi
 from simple_lqr import (
     StateSpaceModel,
     LQRDiscrete,
+    simulate,
     true_cost,
     get_optimal_K_and_cost_discrete as baseline_solution,
 )
@@ -13,12 +14,14 @@ from simple_lqr import (
 from inflated_lqr import LQRInflated
 
 from structured_policy_iteration import (
+    StructuredPolicySettings,
+    structured_policy_iteration,
     MFStructuredPolicySettings,
     structured_policy_iteration_mf
 )
 
 
-class InflationExperiment:
+class SPIInflationExperiment:
 
     def __init__(
         self,
@@ -30,7 +33,8 @@ class InflationExperiment:
         K_0: np.ndarray,
         inflated_input_dim: int,
         inflated_output_dim: int,
-        structured_settings: MFStructuredPolicySettings,
+        structured_settings: StructuredPolicySettings,
+        mf_structured_settings: MFStructuredPolicySettings,
         dt: float = 0.01,
         sim_steps: int = 2500,
     ):
@@ -49,6 +53,7 @@ class InflationExperiment:
         self.K_0 = K_0
 
         self.structured_settings = structured_settings
+        self.mf_structured_settings = mf_structured_settings
 
     def run_comparison(
         self,
@@ -66,12 +71,34 @@ class InflationExperiment:
 
         base_k, base_cost = baseline_solution(base_lqr)
         print(f"[{label}] Baseline solution done")
-        low_ks, _ = structured_policy_iteration_mf(lqr=lqr, settings=self.structured_settings)
-        print(f"[{label}] Low-rank calculation done")
+        #ks, _ = structured_policy_iteration(lqr=lqr, settings=self.structured_settings)
+        print(f"[{label}] Model-based calculation done")
+        mf_ks, _ = structured_policy_iteration_mf(lqr=lqr, settings=self.mf_structured_settings)
+        print(f"[{label}] Model-free calculation done")
 
-        cost_list = [true_cost(lqr, self.U_2 @ K @ self.U_1) for K in low_ks]
+        #true_cost_spi = [true_cost(lqr, self.U_2 @ K @ self.U_1) for K in ks]
+        true_cost_spi_mf = [true_cost(lqr, self.U_2 @ K @ self.U_1) for K in mf_ks]
 
-        rank_list = [np.linalg.matrix_rank(K) for K in low_ks]
+        print(true_cost_spi_mf)
+
+        cost_dict = {
+            #"SPI (Model-Based)": true_cost_spi,
+            "SPI (Model-Free)": true_cost_spi_mf,
+        }
+
+        #rank_list = [np.linalg.matrix_rank(K) for K in ks]
+        rank_list_mf = [np.linalg.matrix_rank(K) for K in mf_ks]
+
+        rank_dict = {
+            #"SPI (Model-Based)": rank_list,
+            "SPI (Model-Free)": rank_list_mf,
+        }
+
+        simulation_dict = {
+            "Baseline LQR": simulate(base_lqr, base_k, n_steps=self.sim_steps),
+            #"SPI (Model-Based)": simulate(lqr, ks[-1], n_steps=self.sim_steps),
+            "SPI (Model-Free)": simulate(lqr, mf_ks[-1], n_steps=self.sim_steps),
+        }
 
         file_name = None
         if not visualize:
@@ -79,15 +106,17 @@ class InflationExperiment:
             file_name = f"Run_{label}_{date_str}"
 
         visualize_spi(
-            k_ranks=rank_list,
-            cost_list=cost_list,
+            k_ranks=rank_dict,
+            cost_trajectories=cost_dict,
             baseline_cost=base_cost,
+            simulation_dict=simulation_dict,
+            dt=self.dt,
             save_to=file_name
         )
 
 
     def run_pure(self, visualize: bool = True):
-        self.run_comparison("Pure", noise_settings=None, visualize=visualize)
+        self.run_comparison("Pure", visualize=visualize)
  
 
 
@@ -101,8 +130,8 @@ if __name__ == "__main__":
     # Position, velocity
     x_0 = np.array([10, 0])
 
-    INFLATED_INPUT_DIM = 2
-    INFLATED_OUTPUT_DIM = 1
+    INFLATED_INPUT_DIM = 50
+    INFLATED_OUTPUT_DIM = 25
 
     model = StateSpaceModel(A, B, x_0)
 
@@ -132,33 +161,46 @@ if __name__ == "__main__":
     # Normaliza N, such that we can control size of the full-rank component
     N = N / np.linalg.norm(N, ord='fro')
 
-    #ALPHA = 0.5
-    #K_0 = K_low_rank + ALPHA * N
+    ALPHA = 1.0
+    K_0 = K_low_rank + ALPHA * N
 
-    K_0 = K_start
 
-    LIMIT = 3000
+    LIMIT = 100
     TRAJECTORIES = 100
     ROLLOUT_LENGTH = 200
     SMOOTHING_PARAM = 0.5
+    MAX_LINESEARCH_ITER = 10
 
     # ------ Important parameters ------
     BETA = 0.5
     LAMBDA = 3000
+    EPSILON = 1e-3
+    STEPSIZE = 3.7e-5
     # -------------
+
+    structured_settings = StructuredPolicySettings(
+        K_0=K_0,
+        beta=BETA,
+        lambda_=LAMBDA,
+        epsilon=EPSILON,
+        limit=LIMIT,
+        max_linesearch_iter=MAX_LINESEARCH_ITER
+    )
 
     mf_structured_settings = MFStructuredPolicySettings(
         K_0=K_0,
-        beta=0.5,
-        lambda_=100,
-        epsilon=1e-3,
+        beta=BETA,
+        lambda_=LAMBDA,
+        epsilon=EPSILON,
         limit=LIMIT,
         m=TRAJECTORIES,
         l=ROLLOUT_LENGTH,
-        r=SMOOTHING_PARAM
+        r=SMOOTHING_PARAM,
+        max_linesearch_iter=MAX_LINESEARCH_ITER,
+        stepsize=STEPSIZE
     )
 
-    experiment = InflationExperiment(
+    experiment = SPIInflationExperiment(
         model=model,
         Q=Q,
         R=R,
@@ -167,7 +209,8 @@ if __name__ == "__main__":
         K_0=K_0,
         inflated_input_dim=INFLATED_INPUT_DIM,
         inflated_output_dim=INFLATED_OUTPUT_DIM,
-        structured_settings=mf_structured_settings,
+        structured_settings=structured_settings,
+        mf_structured_settings=mf_structured_settings,
         dt=0.01,
     )
 

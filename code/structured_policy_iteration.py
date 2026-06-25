@@ -36,12 +36,16 @@ class StructuredPolicySettings:
     beta: float # linesearch parameter
     lambda_: float # regularization parameter for low-rank structure
     epsilon: float # stopping criterion for convergence
+    limit: int # maximum number of iterations to prevent infinite loop in case of non-convergence
+    max_linesearch_iter: int 
 
 def solve_lyapunov(lqr: LQRDiscrete, K_t: np.ndarray, sigma_0: np.ndarray) -> np.ndarray:
     
-    lya_a = lqr.A - lqr.B @ K_t
+    K_eff = lqr.effective_gain(K_t)
 
-    lya_q = lqr.Q + K_t.T @ lqr.R @ K_t
+    lya_a = lqr.A - lqr.B @ K_eff
+
+    lya_q = lqr.Q + K_eff.T @ lqr.R @ K_eff
     
     P_k = solve_discrete_lyapunov(lya_a.T, lya_q)
 
@@ -87,7 +91,7 @@ def linesearch_criterion_satisfied(
     ) -> bool:
 
     # Check stability (with minus, due to our convention for u(t) = - K @ x(t))
-    spectral_radius = np.max(np.abs(np.linalg.eigvals(lqr.A - lqr.B @ K_plus)))
+    spectral_radius = np.max(np.abs(np.linalg.eigvals(lqr.A - lqr.B @ lqr.effective_gain(K_plus))))
 
     if spectral_radius >= 1:
         return False
@@ -105,8 +109,7 @@ def caculate_next_K(
         lqr: LQRDiscrete,
         K_t: np.ndarray,
         sigma_0: np.ndarray,
-        beta: float,
-        lambda_: float,
+        settings: StructuredPolicySettings
     ) -> np.ndarray:
 
     P_k, sigma_k = solve_lyapunov(lqr, K_t, sigma_0=sigma_0)
@@ -114,12 +117,13 @@ def caculate_next_K(
     grad_K = compute_gradient(lqr, K_t, P_k, sigma_k)
 
     # Paper suggests O(1/lambda) for initial stepsize
-    stepsize = 1 / lambda_
+    stepsize = 1 / settings.lambda_ * 0.5 # TODO: better here
 
     f_K = np.linalg.trace(sigma_0 @ P_k)
 
-    while True:
-        K_plus = prox_grad_nuclear_norm(K_t, grad_K, stepsize, lambda_=lambda_)
+    linsearch_iter = 0
+    while linsearch_iter < settings.max_linesearch_iter:
+        K_plus = prox_grad_nuclear_norm(K_t, grad_K, stepsize, lambda_=settings.lambda_)
 
         P_plus, _ = solve_lyapunov(lqr, K_plus, sigma_0=sigma_0)
         f_K_plus = np.linalg.trace(sigma_0 @ P_plus)
@@ -128,7 +132,8 @@ def caculate_next_K(
             break
         
         # TODO: Check if is correct to descrease AFTER first iteration, or if should be before
-        stepsize *= beta
+        linsearch_iter += 1
+        stepsize *= settings.beta
 
     return K_plus
 
@@ -145,18 +150,21 @@ def structured_policy_iteration(lqr: LQRDiscrete, settings: StructuredPolicySett
 
     i = 0
 
-    while True:
+    while i < settings.limit:
         i += 1
-        K_plus = caculate_next_K(lqr, K_t, sigma_0, settings.beta, settings.lambda_)
+        print(f"Iteration {i}")
+        K_plus = caculate_next_K(lqr, K_t, sigma_0, settings)
 
         ks.append(K_plus)
 
         if np.linalg.norm(K_plus - K_t, ord='fro') < settings.epsilon:
+            print(f"Converged after {i} iterations")
             break
 
         K_t = K_plus
 
-    print(f"Converged after {i} iterations")
+    print(f"Ended after {i} iterations")
+
     return ks, costs
 
 
@@ -167,9 +175,11 @@ class MFStructuredPolicySettings:
     lambda_: float # regularization parameter for low-rank structure
     epsilon: float # stopping criterion for convergence
     limit: int # maximum number of iterations to prevent infinite loop in case of non-convergence
+    max_linesearch_iter: int
     m: int  # Number of trajectories
     l: int  # Length of steps in each trajectory
     r: float  # Smoothing parameter
+    stepsize: float = None  # Fixed stepsize disables linesearch
 
 def caculate_next_K_mf(
         lqr: LQRDiscrete,
@@ -181,17 +191,22 @@ def caculate_next_K_mf(
     # Paper suggests O(1/lambda) for initial stepsize
     step = 1.0 / settings.lambda_
 
-    rng_state = np.random.get_state()
+    linesearch_enabled = True
+    if settings.stepsize is not None:
+        linesearch_enabled = False
+        step = settings.stepsize
+
     _, _, f_K = estimate_gradient(lqr, K_t, settings.m, settings.l, settings.r)
 
-    while True:
-        np.random.set_state(rng_state)
+    linsearch_iter = 0
+    while linsearch_iter < settings.max_linesearch_iter:
         K_plus = prox_grad_nuclear_norm(K_t, grad_K, step, lambda_=settings.lambda_)
 
-        # TODO: set noise seed
-        # SHOW: Not in paper, but due to instability
+        if not linesearch_enabled:
+            return K_plus
+
         _, _, f_K_plus = estimate_gradient(lqr, K_plus, m=settings.m, l=settings.l, r=settings.r)
-        print(f"Line search step: {step}, f_K: {f_K}, f_K_plus: {f_K_plus}")
+        #print(f"Line search step: {step}, f_K: {f_K}, f_K_plus: {f_K_plus}")
 
         # Sufficient decrease condition via estimated cost
         G_K = 1/step * (K_t - K_plus)
@@ -200,13 +215,14 @@ def caculate_next_K_mf(
 
         part_2 = step/2 * (np.linalg.norm(G_K, 'fro') ** 2)
 
-        print(f"Line search criterion: f_K_plus <= {part_1 + part_2} ?")
+        #print(f"Line search criterion: f_K_plus <= {part_1 + part_2} ?")
         if f_K_plus <= part_1 + part_2:
             break
         
         # TODO: Check if is correct to descrease AFTER first iteration, or if should be before
+        linsearch_iter += 1
         step *= settings.beta
-        print(f"Line search step decreased to {step}")
+        #print(f"Line search step decreased to {step}")
 
     return K_plus
 
@@ -221,13 +237,14 @@ def structured_policy_iteration_mf(lqr: LQRDiscrete, settings: MFStructuredPolic
 
     while i < settings.limit:
         i += 1
+        print(f"Iteration {i}")
         grad_K, _, mean_cost = estimate_gradient(lqr, K_t, settings.m, settings.l, settings.r)
 
         K_plus = caculate_next_K_mf(lqr, K_t, grad_K, settings)
 
         ks.append(K_plus)
         costs.append(mean_cost)
-        print(f"Iteration {i}, cost estimate: {mean_cost}")
+        #print(f"Iteration {i}, cost estimate: {mean_cost}")
 
         if np.linalg.norm(K_plus - K_t, ord='fro') < settings.epsilon:
             print(f"Converged after {i} iterations")

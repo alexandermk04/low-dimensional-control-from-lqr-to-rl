@@ -94,26 +94,48 @@ def visualize_multiple_results(
 
 
 def visualize_spi(
-    k_ranks: list[int],
-    cost_list: list[float],
+    k_ranks: dict[str, list[int]],
+    cost_trajectories: dict[str, list[float]],
     baseline_cost: float,
+    simulation_dict: dict[str, SimulationResult],
+    dt=1,
     save_to: str = None,
 ):
-    plt.figure(figsize=(18, 10))
+    plt.figure(figsize=(15, 8))
 
-    plt.subplot(2, 1, 1)
+    plt.subplot(2, 2, 1)
     plt.title('Rank of K over SPI Iterations')
-    plt.plot(k_ranks, label='Rank of K')
+    for label, ranks in k_ranks.items():
+        plt.plot(ranks, label=f'{label}')
     plt.xlabel('SPI Iteration')
     plt.ylabel('Rank')
     plt.legend()
 
-    plt.subplot(2, 1, 2)
+    plt.subplot(2, 2, 2)
     plt.title('True Cost over SPI Iterations')
-    plt.semilogy(cost_list, label='True Cost')
+    for label, costs in cost_trajectories.items():
+        plt.semilogy(costs, label=f'{label}')
     plt.axhline(y=baseline_cost, color='r', linestyle='--', label='Optimal Cost')
     plt.xlabel('SPI Iteration')
     plt.ylabel('Cost')
+    plt.legend()
+
+    plt.subplot(2, 2, 3)
+    plt.title('Position Trajectories')
+    for label, result in simulation_dict.items():
+        time_sec = np.arange(result.x_traj.shape[0]) * dt
+        plt.plot(time_sec, result.x_traj[:, 0], label=f'{label}')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Position')
+    plt.legend()
+
+    plt.subplot(2, 2, 4)
+    plt.title('Velocity Trajectories')
+    for label, result in simulation_dict.items():
+        time_sec = np.arange(result.x_traj.shape[0]) * dt
+        plt.plot(time_sec, result.x_traj[:, 1], label=f'{label}')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Velocity')
     plt.legend()
 
     plt.tight_layout()

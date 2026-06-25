@@ -38,6 +38,12 @@ class LQRInflated(LQRDiscrete):
         assert self.U_1.shape[1] == self.A.shape[0], "U_1 must have the same number of columns as A has rows"
         assert self.U_2.shape[0] == self.B.shape[1], "U_2 must have the same number of rows as B has columns"
 
+    def effective_gain(self, K: np.ndarray) -> np.ndarray:
+        return self.U_2 @ K @ self.U_1
+    
+    def project_gradient(self, grad_K: np.ndarray) -> np.ndarray:
+        return self.U_2.T @ grad_K @ self.U_1.T
+
     def next_state(self, K: np.ndarray) -> StepResult:
         if self.noise:
             x_t = self.x
