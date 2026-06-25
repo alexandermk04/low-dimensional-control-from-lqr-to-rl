@@ -74,7 +74,8 @@ class InflationExperiment:
             "Inflated Output Dim": inflated_output_dim,
             "Gradient Steps": nat_settings.gradient_steps,
             "Gradient LR": nat_settings.gradient_lr,
-            "Gradient LR Structured": structured_settings.stepsize,
+            "Lambda SPI": structured_settings.lambda_,
+            "Beta SPI": structured_settings.beta,
             "Trajectories per Gradient Step": nat_settings.m,
             "Rollout Length": nat_settings.l,
             "Smoothing Parameter": nat_settings.r,
@@ -99,20 +100,25 @@ class InflationExperiment:
 
         base_k, base_cost = baseline_solution(base_lqr)
         print(f"[{label}] Baseline solution done")
-        full_ks, _ = model_free_natural_policy_gradient(lqr, self.nat_settings)
+        #full_ks, _ = model_free_natural_policy_gradient(lqr=lqr, settings=self.nat_settings)
         print(f"[{label}] Full-rank calculation done")
         low_ks, _ = structured_policy_iteration_mf(lqr=lqr, settings=self.structured_settings)
         print(f"[{label}] Low-rank calculation done")
 
         cost_trajectories = {
-            'Full-rank': [true_cost(lqr, self.U_2 @ K @ self.U_1) for K in full_ks],
+            #'Full-rank': [true_cost(lqr, self.U_2 @ K @ self.U_1) for K in full_ks],
             'Low-rank': [true_cost(lqr, self.U_2 @ K @ self.U_1) for K in low_ks],
         }
 
         simulation_dict = {
             f"Baseline {label}": simulate(lqr=base_lqr, K=base_k, n_steps=self.sim_steps),
-            f"Full-rank {label}": simulate(lqr=lqr, K=full_ks[-1], n_steps=self.sim_steps),
+            #f"Full-rank {label}": simulate(lqr=lqr, K=full_ks[-1], n_steps=self.sim_steps),
             f"Low-rank {label}": simulate(lqr=lqr, K=low_ks[-1], n_steps=self.sim_steps),
+        }
+
+        ranks_dict = {
+            #f"MatrixRank Full {label}": np.linalg.matrix_rank(full_ks[-1]),
+            f"MatrixRank Low {label}": np.linalg.matrix_rank(low_ks[-1]),
         }
 
         file_name = None
@@ -120,7 +126,7 @@ class InflationExperiment:
             date_str = time.strftime("%Y-%m-%d %H:%M:%S")
             file_name = f"Run_{label}_{date_str}"
 
-        metadata = {**self.base_metadata, **(extra_metadata or {})}
+        metadata = {**self.base_metadata, **(extra_metadata or {}), **ranks_dict}
         visualize_multiple_results(
             simulation_dict,
             metadata=metadata,
@@ -184,8 +190,8 @@ if __name__ == "__main__":
     # Position, velocity
     x_0 = np.array([10, 0])
 
-    INFLATED_INPUT_DIM = 50
-    INFLATED_OUTPUT_DIM = 25
+    INFLATED_INPUT_DIM = 10
+    INFLATED_OUTPUT_DIM = 5
 
     model = StateSpaceModel(A, B, x_0)
 
@@ -200,22 +206,32 @@ if __name__ == "__main__":
     U_2_full, _ = np.linalg.qr(np.random.randn(INFLATED_OUTPUT_DIM, model.B.shape[1]))
     U_2 = U_2_full.T
 
+    #U_1 = np.eye(2)
+    #U_2 = np.eye(1)
 
-    # SHOW: Different starting policies
-    # Currently starting with the optimal LQR
-    #true_lqr = LQRDiscrete(model, Q, R, dt=0.01)
-    #K_start, _ = baseline_solution(true_lqr)
+    # SHOW: Construct a full rank stable K_0
     K_start = np.array([[0.1, 0.5]])
+    K_low_rank = np.linalg.pinv(U_2) @ K_start @ np.linalg.pinv(U_1)
 
-    K_0 = np.linalg.pinv(U_2) @ K_start @ np.linalg.pinv(U_1)
-    K_0 = 0.95 * K_0
+    G = np.random.randn(INFLATED_OUTPUT_DIM, INFLATED_INPUT_DIM)
+
+    # Create matrix N such that U_2 @ N @ U_1 = 0
+    N = G - np.linalg.pinv(U_2) @ (U_2 @ G @ U_1) @ np.linalg.pinv(U_1)
+
+    # Normaliza N, such that we can control size of the full-rank component
+    N = N / np.linalg.norm(N, ord='fro')
+
+    ALPHA = 0.5
+    K_0 = K_low_rank + ALPHA * N
+
+    #K_0 = K_start
+
 
     LIMIT = 1000
     GRADIENT_LR = 1e-2
-    GRADIENT_LR_STRUCTURED = 1e-5
     TRAJECTORIES = 100
     ROLLOUT_LENGTH = 200
-    SMOOTHING_PARAM = 0.1
+    SMOOTHING_PARAM = 0.5
     STEPS = 2500
 
     mf_nat_settings = ModelFreePolicyGradientSettings(
@@ -230,8 +246,7 @@ if __name__ == "__main__":
     mf_structured_settings = MFStructuredPolicySettings(
         K_0=K_0,
         beta=0.5,
-        lambda_=20,
-        stepsize=GRADIENT_LR_STRUCTURED,
+        lambda_=100,
         epsilon=1e-3,
         limit=LIMIT,
         m=TRAJECTORIES,

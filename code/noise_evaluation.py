@@ -82,41 +82,43 @@ if __name__ == "__main__":
         gradient_lr=0.001 
     )
 
-    mf_structured_settings = MFStructuredPolicySettings(
-        K_0=K_0,
-        beta=0.5,
-        lambda_=0.1,
-        stepsize=1e-4,
-        epsilon=1e-3, 
-        limit=1000,
-        m=TRAJECTORIES,
-        l=ROLLOUT_LENGTH,
-        r=SMOOTHING_PARAM
-    )
+    # mf_structured_settings = MFStructuredPolicySettings(
+    #     K_0=K_0,
+    #     beta=0.5,
+    #     lambda_=0.1,
+    #     stepsize=1e-4,
+    #     epsilon=1e-3, 
+    #     limit=1000,
+    #     m=TRAJECTORIES,
+    #     l=ROLLOUT_LENGTH,
+    #     r=SMOOTHING_PARAM
+    # )
+
+    base_K, base_cost = baseline_solution(lqr)
 
     # Model Free
-    # pure_k, pure_cost = model_free_natural_policy_gradient(lqr, mf_nat_settings)
-    # print("Pure Calculation Done")
-    # parametric_ks, parametric_costs = model_free_natural_policy_gradient(lqr_param, mf_nat_settings)
-    # print("Parametric Calculation Done")
-    # control_ks, control_costs = model_free_natural_policy_gradient(lqr_control, mf_nat_settings)
-    # print("Control Calculation Done")
-    # measurement_ks, measurement_costs = model_free_natural_policy_gradient(lqr_measurement, mf_nat_settings)
-    # print("Measurement Calculation Done")
-    # disturbance_ks, disturbance_costs = model_free_natural_policy_gradient(lqr_disturbance, mf_nat_settings)
-    # print("Disturbance Calculation Done")
-
-    # Structured Policy Iteration
-    pure_k, pure_cost = structured_policy_iteration_mf(lqr=lqr, settings=mf_structured_settings)
+    pure_k, pure_cost = model_free_natural_policy_gradient(lqr, mf_nat_settings)
     print("Pure Calculation Done")
-    parametric_ks, parametric_costs = structured_policy_iteration_mf(lqr=lqr_param, settings=mf_structured_settings)
+    parametric_ks, parametric_costs = model_free_natural_policy_gradient(lqr_param, mf_nat_settings)
     print("Parametric Calculation Done")
-    control_ks, control_costs = structured_policy_iteration_mf(lqr=lqr_control, settings=mf_structured_settings)
+    control_ks, control_costs = model_free_natural_policy_gradient(lqr_control, mf_nat_settings)
     print("Control Calculation Done")
-    measurement_ks, measurement_costs = structured_policy_iteration_mf(lqr=lqr_measurement, settings=mf_structured_settings)
+    measurement_ks, measurement_costs = model_free_natural_policy_gradient(lqr_measurement, mf_nat_settings)
     print("Measurement Calculation Done")
-    disturbance_ks, disturbance_costs = structured_policy_iteration_mf(lqr=lqr_disturbance, settings=mf_structured_settings)
+    disturbance_ks, disturbance_costs = model_free_natural_policy_gradient(lqr_disturbance, mf_nat_settings)
     print("Disturbance Calculation Done")
+
+    # # Structured Policy Iteration
+    # pure_k, pure_cost = structured_policy_iteration_mf(lqr=lqr, settings=mf_structured_settings)
+    # print("Pure Calculation Done")
+    # parametric_ks, parametric_costs = structured_policy_iteration_mf(lqr=lqr_param, settings=mf_structured_settings)
+    # print("Parametric Calculation Done")
+    # control_ks, control_costs = structured_policy_iteration_mf(lqr=lqr_control, settings=mf_structured_settings)
+    # print("Control Calculation Done")
+    # measurement_ks, measurement_costs = structured_policy_iteration_mf(lqr=lqr_measurement, settings=mf_structured_settings)
+    # print("Measurement Calculation Done")
+    # disturbance_ks, disturbance_costs = structured_policy_iteration_mf(lqr=lqr_disturbance, settings=mf_structured_settings)
+    # print("Disturbance Calculation Done")
 
     STEPS = 2500
 
@@ -128,4 +130,12 @@ if __name__ == "__main__":
         'Disturbance': simulate(lqr=lqr_disturbance, K=disturbance_ks[-1], n_steps=STEPS)
     }
 
-    visualize_multiple_results(simulation_dict, dt=lqr.dt)
+    cost_dict = {
+        'Pure': pure_cost,
+        'Parametric': parametric_costs,
+        'Control': control_costs,
+        'Measurement': measurement_costs,
+        'Disturbance': disturbance_costs
+    }
+
+    visualize_multiple_results(simulation_dict, cost_dict, base_cost, dt=lqr.dt)

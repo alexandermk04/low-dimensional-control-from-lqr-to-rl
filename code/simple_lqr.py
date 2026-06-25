@@ -192,8 +192,8 @@ def simulate(lqr: LQRDiscrete, K: np.ndarray, n_steps: int):
         res = lqr.next_state(K=K)
         
         # Add the ACTUAL observation/actuation
-        x_traj.append(res.y_t)
-        u_traj.append(res.v_t)
+        x_traj.append(res.x_t)
+        u_traj.append(res.u_t)
 
     results = SimulationResult(x_traj=np.array(x_traj), u_traj=np.array(u_traj))
 

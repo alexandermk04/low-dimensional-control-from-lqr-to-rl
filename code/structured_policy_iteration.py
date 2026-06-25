@@ -7,6 +7,7 @@ from simple_lqr import (
     StateSpaceModel,
     LQRDiscrete,
     simulate,
+    true_cost,
     get_optimal_K_and_cost_discrete as baseline_solution,
 )
 
@@ -14,7 +15,7 @@ from model_free_policy_gradient import (
     estimate_gradient
 )
 
-from visualization import visualize_result
+from visualization import visualize_result, visualize_multiple_results
 
 from policy_evaluation import visualize_Ks
 
@@ -164,7 +165,6 @@ class MFStructuredPolicySettings:
     K_0: np.ndarray  # Initial policy
     beta: float # linesearch parameter
     lambda_: float # regularization parameter for low-rank structure
-    stepsize: float # fixed stepsize as mentioned in paper
     epsilon: float # stopping criterion for convergence
     limit: int # maximum number of iterations to prevent infinite loop in case of non-convergence
     m: int  # Number of trajectories
@@ -172,13 +172,41 @@ class MFStructuredPolicySettings:
     r: float  # Smoothing parameter
 
 def caculate_next_K_mf(
+        lqr: LQRDiscrete,
         K_t: np.ndarray,
         grad_K: np.ndarray,
-        lambda_: float,
-        stepsize: float
+        settings: MFStructuredPolicySettings
     ) -> np.ndarray:
 
-    K_plus = prox_grad_nuclear_norm(K_t, grad_K, stepsize, lambda_=lambda_)
+    # Paper suggests O(1/lambda) for initial stepsize
+    step = 1.0 / settings.lambda_
+
+    rng_state = np.random.get_state()
+    _, _, f_K = estimate_gradient(lqr, K_t, settings.m, settings.l, settings.r)
+
+    while True:
+        np.random.set_state(rng_state)
+        K_plus = prox_grad_nuclear_norm(K_t, grad_K, step, lambda_=settings.lambda_)
+
+        # TODO: set noise seed
+        # SHOW: Not in paper, but due to instability
+        _, _, f_K_plus = estimate_gradient(lqr, K_plus, m=settings.m, l=settings.l, r=settings.r)
+        print(f"Line search step: {step}, f_K: {f_K}, f_K_plus: {f_K_plus}")
+
+        # Sufficient decrease condition via estimated cost
+        G_K = 1/step * (K_t - K_plus)
+
+        part_1 = f_K - step * np.linalg.trace(grad_K.T @ G_K)
+
+        part_2 = step/2 * (np.linalg.norm(G_K, 'fro') ** 2)
+
+        print(f"Line search criterion: f_K_plus <= {part_1 + part_2} ?")
+        if f_K_plus <= part_1 + part_2:
+            break
+        
+        # TODO: Check if is correct to descrease AFTER first iteration, or if should be before
+        step *= settings.beta
+        print(f"Line search step decreased to {step}")
 
     return K_plus
 
@@ -188,9 +216,6 @@ def structured_policy_iteration_mf(lqr: LQRDiscrete, settings: MFStructuredPolic
 
     ks = [K_t]
     costs = []
-    
-    # Initial state covariance
-    sigma_0 = np.eye(lqr.A.shape[0])
 
     i = 0
 
@@ -198,10 +223,11 @@ def structured_policy_iteration_mf(lqr: LQRDiscrete, settings: MFStructuredPolic
         i += 1
         grad_K, _, mean_cost = estimate_gradient(lqr, K_t, settings.m, settings.l, settings.r)
 
-        K_plus = caculate_next_K_mf(K_t, grad_K, settings.lambda_, stepsize=settings.stepsize)
+        K_plus = caculate_next_K_mf(lqr, K_t, grad_K, settings)
 
         ks.append(K_plus)
         costs.append(mean_cost)
+        print(f"Iteration {i}, cost estimate: {mean_cost}")
 
         if np.linalg.norm(K_plus - K_t, ord='fro') < settings.epsilon:
             print(f"Converged after {i} iterations")
@@ -242,7 +268,7 @@ if __name__ == "__main__":
     noise_settings = LQRNoiseSettings(
         #parametric_noise=parametric_noise,
         #control_noise=control_noise,
-        measurement_noise=measurement_noise,
+        #measurement_noise=measurement_noise,
         #disturbance_noise=disturbance_noise
     )
 
@@ -253,23 +279,26 @@ if __name__ == "__main__":
     settings = MFStructuredPolicySettings(
         K_0=K_0,
         beta=0.5,
-        lambda_=0.1,
-        stepsize=1e-4,
-        epsilon=1e-3, # SHOW: 1e-4 doesn't exactly display convergence
+        lambda_=100,
+        epsilon=1e-3,
         limit=1000,
         m=100,
-        l=100,
-        r=0.1
+        l=200,
+        r=0.5
     )
 
+    base_K, base_cost = baseline_solution(lqr)
     ks, costs = structured_policy_iteration_mf(lqr=lqr, settings=settings)
 
-    result = simulate(lqr=lqr, K=ks[-1], n_steps=2500)
+    cost_dict = {
+        "Structured Policy Iteration (Model-Free)": [true_cost(lqr, K) for K in ks],
+    }
 
-    visualize_result(result, dt=lqr.dt)
+    simulation_dict = {
+        "Baseline LQR": simulate(lqr=lqr, K=base_K, n_steps=2500),
+        "Structured Policy Iteration (Model-Free)": simulate(lqr=lqr, K=ks[-1], n_steps=2500),
+    }
 
-    # Compare to baseline solution
-    baseline_K, baseline_cost = baseline_solution(lqr)
-    visualize_Ks(baseline_K, {'Structured Policy Iteration': ks})
 
+    visualize_multiple_results(simulation_dict, cost_dict, base_cost, dt=lqr.dt)
 

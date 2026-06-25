@@ -91,3 +91,34 @@ def visualize_multiple_results(
         plt.savefig(f"../../Visualizations/{save_to}.png")
     else:
         plt.show()
+
+
+def visualize_spi(
+    k_ranks: list[int],
+    cost_list: list[float],
+    baseline_cost: float,
+    save_to: str = None,
+):
+    plt.figure(figsize=(18, 10))
+
+    plt.subplot(2, 1, 1)
+    plt.title('Rank of K over SPI Iterations')
+    plt.plot(k_ranks, label='Rank of K')
+    plt.xlabel('SPI Iteration')
+    plt.ylabel('Rank')
+    plt.legend()
+
+    plt.subplot(2, 1, 2)
+    plt.title('True Cost over SPI Iterations')
+    plt.semilogy(cost_list, label='True Cost')
+    plt.axhline(y=baseline_cost, color='r', linestyle='--', label='Optimal Cost')
+    plt.xlabel('SPI Iteration')
+    plt.ylabel('Cost')
+    plt.legend()
+
+    plt.tight_layout()
+
+    if save_to is not None:
+        plt.savefig(f"../../Visualizations/{save_to}.png")
+    else:
+        plt.show()

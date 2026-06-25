@@ -2,9 +2,12 @@ import numpy as np
 from dataclasses import dataclass
 
 from basetypes import StateSpaceModel
-from visualization import visualize_result
+from visualization import visualize_result, visualize_multiple_results
 
-from simple_lqr import StateSpaceModel, LQRDiscrete, simulate
+from simple_lqr import (
+    StateSpaceModel, LQRDiscrete, simulate,
+    true_cost, get_optimal_K_and_cost_discrete as baseline_solution,
+)
 from noise import (
     ParametricNoiseSettings,
     ControlNoiseSettings,
@@ -22,35 +25,37 @@ class ModelFreePolicyGradientSettings:
     gradient_steps: int  # Number of gradient steps
     gradient_lr: float  # Gradient step size
 
+DIVERGENCE_THRESHOLD = 1e5
+DIVERGENCE_PENALTY = 1e10
+
 
 def run_trajectory(lqr: LQRDiscrete, K: np.ndarray, l: int) -> tuple[np.float64, np.float64]:
     y_traj = []
     v_traj = []
     costs = []
+    sigma = np.zeros((K.shape[1], K.shape[1]))
 
     total_cost = 0.0
 
     for _ in range(l):
         res = lqr.next_state(K)
 
-        # TODO: Determine if this threshold is sufficient
-        if np.linalg.norm(res.y_t) > 1e6:
-            # If the system becomes unstable, add high cost and terminate the trajectory early
-            print("Trajectory diverged, terminating early.")
-            total_cost = sum(costs)
-            sigma = sum(np.outer(y_t, y_t) for y_t in y_traj)
-            total_cost += 1e10
+        diverged = (
+            not np.isfinite(res.cost) 
+            or not np.all(np.isfinite(res.y_t))
+            or np.linalg.norm(res.y_t) > DIVERGENCE_THRESHOLD
+        )
 
+        if diverged:
+            total_cost = sum(costs) + DIVERGENCE_PENALTY
             return total_cost, sigma
 
         y_traj.append(res.y_t)
         v_traj.append(res.v_t)
         costs.append(res.cost)
+        sigma += np.outer(res.y_t, res.y_t)
 
-    total_cost = sum(costs)
-    sigma = sum(np.outer(y_t, y_t) for y_t in y_traj)
-
-    return total_cost, sigma
+    return sum(costs), sigma
 
 def estimate_gradient(lqr: LQRDiscrete, K: np.ndarray, m: int, l: int, r: float) -> np.ndarray:
     pertubations = []
@@ -74,13 +79,22 @@ def estimate_gradient(lqr: LQRDiscrete, K: np.ndarray, m: int, l: int, r: float)
 
         pertubations.append(U)
 
-        K_i = K + U
+        # SHOW: Two point estimator
+        K_i_plus = K + U
+        K_i_minus = K - U
 
-        # Run a trajectory with K_i policy
-        cost_estimate, sigma_estimate = run_trajectory(lqr, K_i, l)
+        # Run a trajectory with K_i_plus policy
+        rng_state = np.random.get_state()
+        cost_estimate_plus, sigma_estimate_plus = run_trajectory(lqr, K_i_plus, l)
 
-        cost_estimates.append(cost_estimate)
-        sigma_estimates.append(sigma_estimate)
+        # Run a trajectory with K_i_minus policy
+        np.random.set_state(rng_state)
+        cost_estimate_minus, sigma_estimate_minus = run_trajectory(lqr, K_i_minus, l)
+
+        # TODO: Check validity
+        overall_cost_estimate = (cost_estimate_plus + cost_estimate_minus)/2
+        cost_estimates.append(overall_cost_estimate)
+        sigma_estimates.append(sigma_estimate_plus + sigma_estimate_minus)
 
     # Centering the cost estimates by subtracting the mean to reduce variance
     mean_cost = np.mean(cost_estimates)
@@ -152,14 +166,14 @@ if __name__ == "__main__":
 
     # Noise
     parametric_noise = ParametricNoiseSettings(noise_std=0.05, time_invariant=False)
-    control_noise = ControlNoiseSettings(noise_std=0.05, time_invariant=False)
-    measurement_noise = MeasurementNoiseSettings(noise_std=0.01, time_invariant=False)
+    control_noise = ControlNoiseSettings(noise_std=0.05)
+    measurement_noise = MeasurementNoiseSettings(noise_std=0.01)
     disturbance_noise = DisturbanceNoiseSettings(noise_std=0.01, disturbance_type='gaussian')
 
     noise_settings = LQRNoiseSettings(
         #parametric_noise=parametric_noise,
         #control_noise=control_noise,
-        measurement_noise=measurement_noise,
+        #measurement_noise=measurement_noise,
         #disturbance_noise=disturbance_noise
     )
 
@@ -176,8 +190,16 @@ if __name__ == "__main__":
         gradient_lr=1e-4
     )
 
-    ks, costs = model_free_natural_policy_gradient(lqr=lqr, settings=settings)
+    base_K, base_cost = baseline_solution(lqr)
+    ks, _ = model_free_natural_policy_gradient(lqr=lqr, settings=settings)
 
-    result = simulate(lqr=lqr, K=ks[-1], n_steps=2500)
+    cost_dict = {
+        "Model-Free Natural Policy Gradient": [true_cost(lqr, K) for K in ks],
+    }
 
-    visualize_result(result, dt=lqr.dt)
+    simulation_dict = {
+        "Model-Free Natural Policy Gradient": simulate(lqr=lqr, K=ks[-1], n_steps=2500),
+        "Baseline Solution": simulate(lqr=lqr, K=base_K, n_steps=2500),
+    }
+
+    visualize_multiple_results(simulation_dict, cost_dict, base_cost, dt=lqr.dt)
