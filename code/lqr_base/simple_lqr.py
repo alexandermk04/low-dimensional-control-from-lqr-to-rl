@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 from basetypes import StateSpaceModel, SimulationResult, StepResult
 from visualization import visualize_result
-from noise import (
+from lqr_base.noise import (
     ParametricNoiseSettings,
     ControlNoiseSettings,
     MeasurementNoiseSettings,

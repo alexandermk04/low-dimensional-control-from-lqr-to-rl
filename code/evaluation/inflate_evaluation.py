@@ -2,9 +2,9 @@ import numpy as np
 import time
 
 from visualization import visualize_multiple_results
-from policy_evaluation import visualize_costs
+from evaluation.policy_gradient_evaluation import visualize_costs
 
-from noise import (
+from lqr_base.noise import (
     ParametricNoiseSettings,
     ControlNoiseSettings,
     MeasurementNoiseSettings,
@@ -12,7 +12,7 @@ from noise import (
     LQRNoiseSettings
 )
 
-from simple_lqr import (
+from lqr_base.simple_lqr import (
     StateSpaceModel,
     LQRDiscrete,
     simulate,
@@ -20,16 +20,16 @@ from simple_lqr import (
     get_optimal_K_and_cost_discrete as baseline_solution,
 )
 
-from inflated_lqr import LQRInflated
+from lqr_base.inflated_lqr import LQRInflated
 
 from basetypes import SimulationResult
 
-from model_free_policy_gradient import (
+from lqr_solvers.mf_policy_gradient import (
     ModelFreePolicyGradientSettings,
     model_free_natural_policy_gradient
 )
 
-from structured_policy_iteration import (
+from lqr_solvers.structured_policy_iteration import (
     MFStructuredPolicySettings,
     structured_policy_iteration_mf
 )

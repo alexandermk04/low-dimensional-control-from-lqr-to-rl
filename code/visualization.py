@@ -4,6 +4,48 @@ import matplotlib.pyplot as plt
 from basetypes import SimulationResult
 
 
+def relative_cost_error(cost_estimate, baseline_cost):
+    return (cost_estimate - baseline_cost) / baseline_cost
+
+def feedback_control_distance(K, K_baseline):
+    return np.linalg.norm(K - K_baseline, ord='fro')
+
+def visualize_costs(baseline_cost, costs_dict: dict[str, list[float]]):
+    plt.figure(figsize=(10, 5))
+
+    plt.subplot(1, 2, 1)
+    for label, costs in costs_dict.items():
+        plt.semilogy(costs, label=label)
+    plt.axhline(y=baseline_cost, color='r', linestyle='--', label='Baseline Cost')
+    plt.xlabel('Gradient Step')
+    plt.ylabel('Cost')
+    plt.title('Estimated Costs At Different Gradient Steps')
+    plt.legend()
+
+    plt.subplot(1, 2, 2)
+    for label, costs in costs_dict.items():
+        relative_errors = [relative_cost_error(cost, baseline_cost) for cost in costs]
+        plt.semilogy(relative_errors, label=label)
+    plt.xlabel('Gradient Step')
+    plt.ylabel('Relative Cost Error')
+    plt.title('Relative Cost Error At Different Gradient Steps')
+    plt.legend()
+    plt.show()
+
+def visualize_Ks(K_baseline, k_dict: dict[str, list[np.ndarray]]):
+    plt.figure(figsize=(10, 5))
+
+    for label, Ks in k_dict.items():
+        distances = [feedback_control_distance(K, K_baseline) for K in Ks]
+        plt.plot(distances, label=label)
+    
+    plt.xlabel('Gradient Step')
+    plt.ylabel('Distance to Baseline K')
+    plt.title('Distance of Estimated K to Baseline K at Different Gradient Steps')
+    plt.legend()
+    plt.show()
+
+
 def visualize_result(result: SimulationResult, dt=1):
     time_sec = np.arange(result.x_traj.shape[0]) * dt
 

@@ -1,74 +1,26 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 from visualization import visualize_multiple_results
 
-from noise import (
-    ParametricNoiseSettings,
-    ControlNoiseSettings,
-    MeasurementNoiseSettings,
-    DisturbanceNoiseSettings,
-    LQRNoiseSettings
-)
-
-from simple_lqr import (
+from lqr_base.simple_lqr import (
     StateSpaceModel,
     LQRDiscrete,
     simulate,
     get_optimal_K_and_cost_discrete as baseline_solution,
 )
 
-from lqr_policy_gradient import (
+from lqr_solvers.mb_policy_gradient import (
     ModelBasedPolicyGradientSettings,
     gradient_descent_discrete as model_based_gradient
 )
 
-from model_free_policy_gradient import (
+from lqr_solvers.mf_policy_gradient import (
     ModelFreePolicyGradientSettings,
     model_free_policy_gradient, 
     model_free_natural_policy_gradient
 )
 
-def relative_cost_error(cost_estimate, baseline_cost):
-    return (cost_estimate - baseline_cost) / baseline_cost
-
-def feedback_control_distance(K, K_baseline):
-    return np.linalg.norm(K - K_baseline, ord='fro')
-
-def visualize_costs(baseline_cost, costs_dict: dict[str, list[float]]):
-    plt.figure(figsize=(10, 5))
-
-    plt.subplot(1, 2, 1)
-    for label, costs in costs_dict.items():
-        plt.semilogy(costs, label=label)
-    plt.axhline(y=baseline_cost, color='r', linestyle='--', label='Baseline Cost')
-    plt.xlabel('Gradient Step')
-    plt.ylabel('Cost')
-    plt.title('Estimated Costs At Different Gradient Steps')
-    plt.legend()
-
-    plt.subplot(1, 2, 2)
-    for label, costs in costs_dict.items():
-        relative_errors = [relative_cost_error(cost, baseline_cost) for cost in costs]
-        plt.semilogy(relative_errors, label=label)
-    plt.xlabel('Gradient Step')
-    plt.ylabel('Relative Cost Error')
-    plt.title('Relative Cost Error At Different Gradient Steps')
-    plt.legend()
-    plt.show()
-
-def visualize_Ks(K_baseline, k_dict: dict[str, list[np.ndarray]]):
-    plt.figure(figsize=(10, 5))
-
-    for label, Ks in k_dict.items():
-        distances = [feedback_control_distance(K, K_baseline) for K in Ks]
-        plt.plot(distances, label=label)
-    
-    plt.xlabel('Gradient Step')
-    plt.ylabel('Distance to Baseline K')
-    plt.title('Distance of Estimated K to Baseline K at Different Gradient Steps')
-    plt.legend()
-    plt.show()
+from visualization import visualize_costs, visualize_Ks
 
 def compare_all():
 

@@ -6,7 +6,7 @@ from scipy.linalg import solve_discrete_lyapunov
 from basetypes import StateSpaceModel
 from visualization import visualize_result
 
-from simple_lqr import LQRDiscrete, simulate
+from lqr_base.simple_lqr import LQRDiscrete, simulate
 
 @dataclass
 class ModelBasedPolicyGradientSettings:

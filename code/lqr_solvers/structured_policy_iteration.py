@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from scipy.linalg import solve_discrete_lyapunov
 
-from simple_lqr import (
+from lqr_base.simple_lqr import (
     StateSpaceModel,
     LQRDiscrete,
     simulate,
@@ -11,15 +11,15 @@ from simple_lqr import (
     get_optimal_K_and_cost_discrete as baseline_solution,
 )
 
-from model_free_policy_gradient import (
+from lqr_solvers.mf_policy_gradient import (
     estimate_gradient
 )
 
 from visualization import visualize_result, visualize_multiple_results
 
-from policy_evaluation import visualize_Ks
+from evaluation.policy_gradient_evaluation import visualize_Ks
 
-from noise import (
+from lqr_base.noise import (
     ParametricNoiseSettings,
     ControlNoiseSettings,
     MeasurementNoiseSettings,

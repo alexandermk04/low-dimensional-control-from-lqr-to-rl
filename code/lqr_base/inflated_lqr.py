@@ -2,13 +2,13 @@ import numpy as np
 
 from basetypes import StepResult
 
-from simple_lqr import (
+from lqr_base.simple_lqr import (
     continuous_to_discrete,
     StateSpaceModel,
     LQRDiscrete
 )
 
-from noise import (
+from lqr_base.noise import (
     LQRNoiseSettings,
 )
 

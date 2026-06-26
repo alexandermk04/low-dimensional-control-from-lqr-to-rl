@@ -4,11 +4,11 @@ from dataclasses import dataclass
 from basetypes import StateSpaceModel
 from visualization import visualize_result, visualize_multiple_results
 
-from simple_lqr import (
+from lqr_base.simple_lqr import (
     StateSpaceModel, LQRDiscrete, simulate,
     true_cost, get_optimal_K_and_cost_discrete as baseline_solution,
 )
-from noise import (
+from lqr_base.noise import (
     ParametricNoiseSettings,
     ControlNoiseSettings,
     MeasurementNoiseSettings,

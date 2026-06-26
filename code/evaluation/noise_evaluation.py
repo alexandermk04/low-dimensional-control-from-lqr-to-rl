@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 from visualization import visualize_multiple_results
 
-from noise import (
+from lqr_base.noise import (
     ParametricNoiseSettings,
     ControlNoiseSettings,
     MeasurementNoiseSettings,
@@ -11,19 +11,19 @@ from noise import (
     LQRNoiseSettings
 )
 
-from simple_lqr import (
+from lqr_base.simple_lqr import (
     StateSpaceModel,
     LQRDiscrete,
     simulate,
     get_optimal_K_and_cost_discrete as baseline_solution,
 )
 
-from model_free_policy_gradient import (
+from lqr_solvers.mf_policy_gradient import (
     ModelFreePolicyGradientSettings,
     model_free_natural_policy_gradient
 )
 
-from structured_policy_iteration import (
+from lqr_solvers.structured_policy_iteration import (
     MFStructuredPolicySettings,
     structured_policy_iteration_mf
 )

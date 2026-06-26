@@ -3,7 +3,7 @@ import time
 
 from visualization import visualize_spi
 
-from simple_lqr import (
+from lqr_base.simple_lqr import (
     StateSpaceModel,
     LQRDiscrete,
     simulate,
@@ -11,9 +11,9 @@ from simple_lqr import (
     get_optimal_K_and_cost_discrete as baseline_solution,
 )
 
-from inflated_lqr import LQRInflated
+from lqr_base.inflated_lqr import LQRInflated
 
-from structured_policy_iteration import (
+from lqr_solvers.structured_policy_iteration import (
     StructuredPolicySettings,
     structured_policy_iteration,
     MFStructuredPolicySettings,
