@@ -27,6 +27,7 @@ def visualize_multiple_results(
     results: dict[str, SimulationResult],
     cost_trajectories: dict[str, list[float]],
     baseline_cost: float,
+    ranks_dict: dict[str, int] = None,
     metadata: dict[str, str] = None,
     save_to: str = None,
     dt=1,
@@ -65,14 +66,22 @@ def visualize_multiple_results(
     plt.subplot(2, 3, 4)
     plt.title('True Cost')
     for label, costs in cost_trajectories.items():
-        plt.semilogy(costs, label=f'{label}')
-    plt.axhline(y=baseline_cost, color='r', linestyle='--', label='Optimal Cost')
+        plt.semilogy((costs - baseline_cost)/baseline_cost, label=f'{label}')
+    plt.axhline(y=0, color='r', linestyle='--', label='Optimal Cost')
     plt.xlabel('Gradient Step')
     plt.ylabel('Cost')
     plt.legend()
 
-    # For adding run metadata
     plt.subplot(2, 3, 5)
+    plt.title('Rank of K over SPI Iterations')
+    for label, ranks in ranks_dict.items():
+        plt.plot(ranks, label=f'{label}')
+    plt.xlabel('Iteration')
+    plt.ylabel('Rank')
+    plt.legend() 
+
+    # For adding run metadata
+    plt.subplot(2, 3, 6)
     plt.axis('off')
 
     if metadata:
@@ -109,13 +118,13 @@ def visualize_spi(
         plt.plot(ranks, label=f'{label}')
     plt.xlabel('SPI Iteration')
     plt.ylabel('Rank')
-    plt.legend()
+    plt.legend() 
 
     plt.subplot(2, 2, 2)
     plt.title('True Cost over SPI Iterations')
     for label, costs in cost_trajectories.items():
-        plt.semilogy(costs, label=f'{label}')
-    plt.axhline(y=baseline_cost, color='r', linestyle='--', label='Optimal Cost')
+        plt.semilogy((costs - baseline_cost)/baseline_cost, label=f'{label}')
+    plt.axhline(y=0, color='r', linestyle='--', label='Optimal Cost')
     plt.xlabel('SPI Iteration')
     plt.ylabel('Cost')
     plt.legend()

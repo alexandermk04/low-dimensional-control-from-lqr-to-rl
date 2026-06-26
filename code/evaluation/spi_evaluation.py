@@ -79,8 +79,6 @@ class SPIInflationExperiment:
         #true_cost_spi = [true_cost(lqr, self.U_2 @ K @ self.U_1) for K in ks]
         true_cost_spi_mf = [true_cost(lqr, self.U_2 @ K @ self.U_1) for K in mf_ks]
 
-        print(true_cost_spi_mf)
-
         cost_dict = {
             #"SPI (Model-Based)": true_cost_spi,
             "SPI (Model-Free)": true_cost_spi_mf,
@@ -130,8 +128,8 @@ if __name__ == "__main__":
     # Position, velocity
     x_0 = np.array([10, 0])
 
-    INFLATED_INPUT_DIM = 50
-    INFLATED_OUTPUT_DIM = 25
+    INFLATED_INPUT_DIM = 100
+    INFLATED_OUTPUT_DIM = 50
 
     model = StateSpaceModel(A, B, x_0)
 

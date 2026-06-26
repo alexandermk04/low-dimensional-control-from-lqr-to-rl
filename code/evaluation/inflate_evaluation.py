@@ -100,25 +100,25 @@ class InflationExperiment:
 
         base_k, base_cost = baseline_solution(base_lqr)
         print(f"[{label}] Baseline solution done")
-        #full_ks, _ = model_free_natural_policy_gradient(lqr=lqr, settings=self.nat_settings)
+        full_ks, _ = model_free_natural_policy_gradient(lqr=lqr, settings=self.nat_settings)
         print(f"[{label}] Full-rank calculation done")
         low_ks, _ = structured_policy_iteration_mf(lqr=lqr, settings=self.structured_settings)
         print(f"[{label}] Low-rank calculation done")
 
         cost_trajectories = {
-            #'Full-rank': [true_cost(lqr, self.U_2 @ K @ self.U_1) for K in full_ks],
+            'Full-rank': [true_cost(lqr, self.U_2 @ K @ self.U_1) for K in full_ks],
             'Low-rank': [true_cost(lqr, self.U_2 @ K @ self.U_1) for K in low_ks],
         }
 
         simulation_dict = {
             f"Baseline {label}": simulate(lqr=base_lqr, K=base_k, n_steps=self.sim_steps),
-            #f"Full-rank {label}": simulate(lqr=lqr, K=full_ks[-1], n_steps=self.sim_steps),
+            f"Full-rank {label}": simulate(lqr=lqr, K=full_ks[-1], n_steps=self.sim_steps),
             f"Low-rank {label}": simulate(lqr=lqr, K=low_ks[-1], n_steps=self.sim_steps),
         }
 
         ranks_dict = {
-            #f"MatrixRank Full {label}": np.linalg.matrix_rank(full_ks[-1]),
-            f"MatrixRank Low {label}": np.linalg.matrix_rank(low_ks[-1]),
+            f"MatrixRank Full {label}": np.linalg.matrix_rank(full_ks),
+            f"MatrixRank Low {label}": np.linalg.matrix_rank(low_ks),
         }
 
         file_name = None
@@ -126,12 +126,13 @@ class InflationExperiment:
             date_str = time.strftime("%Y-%m-%d %H:%M:%S")
             file_name = f"Run_{label}_{date_str}"
 
-        metadata = {**self.base_metadata, **(extra_metadata or {}), **ranks_dict}
+        metadata = {**self.base_metadata, **(extra_metadata or {})}
         visualize_multiple_results(
             simulation_dict,
             metadata=metadata,
             cost_trajectories=cost_trajectories,
             baseline_cost=base_cost,
+            ranks_dict=ranks_dict,
             save_to=file_name,
             dt=self.dt,
         )
@@ -227,7 +228,7 @@ if __name__ == "__main__":
     #K_0 = K_start
 
 
-    LIMIT = 1000
+    LIMIT = 500
     GRADIENT_LR = 1e-2
     TRAJECTORIES = 100
     ROLLOUT_LENGTH = 200
@@ -246,12 +247,14 @@ if __name__ == "__main__":
     mf_structured_settings = MFStructuredPolicySettings(
         K_0=K_0,
         beta=0.5,
-        lambda_=100,
+        lambda_=3000,
         epsilon=1e-3,
         limit=LIMIT,
         m=TRAJECTORIES,
         l=ROLLOUT_LENGTH,
-        r=SMOOTHING_PARAM
+        r=SMOOTHING_PARAM,
+        max_linesearch_iter=10,
+        stepsize=3.7e-5
     )
 
     experiment = InflationExperiment(

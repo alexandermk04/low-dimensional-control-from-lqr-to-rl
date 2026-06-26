@@ -8,11 +8,8 @@
 
 ### SPI
 - Orthonormal lifts on the inflation matrices instead of completely random
-- Implement rollout based linesearch
-- Divergence protection not good enough
-- Initialize with values such that lambda * stepsize is aroun 0.1 - 0.5
-- get the same rng state for both cost evaluations
-- two-point estimator
+- Implement rollout based linesearch, better with fixed LR
+- two-point estimator is really important!!!
 
 ## Testing performance of Full-rank vs. low-rank
 - Started with optimal policy, full rank better
@@ -23,7 +20,6 @@
 - fix normal SPI
 - start close to optimum
 -...
-
 
 ## Findings regarding divergence of SPI
 - paper mentions system of (3, 3) dimensions with lambda = 3000
