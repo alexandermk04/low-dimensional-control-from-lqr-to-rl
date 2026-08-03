@@ -1,19 +1,8 @@
 import numpy as np
 from dataclasses import dataclass
 
-from basetypes import StateSpaceModel
-from visualization import visualize_result, visualize_multiple_results
-
 from lqr_base.simple_lqr import (
-    StateSpaceModel, LQRDiscrete, simulate,
-    true_cost, get_optimal_K_and_cost_discrete as baseline_solution,
-)
-from lqr_base.noise import (
-    ParametricNoiseSettings,
-    ControlNoiseSettings,
-    MeasurementNoiseSettings,
-    DisturbanceNoiseSettings,
-    LQRNoiseSettings
+    LQRDiscrete
 )
 
 @dataclass
@@ -143,63 +132,3 @@ def model_free_natural_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePoli
         ks.append(K)
 
     return ks, costs
-
-if __name__ == "__main__":
-    # Double Integrator example implementation
-
-    # x' = Ax + Bu; x = [position, velocity], u = [acceleration]
-    # Hence: Ax + Bu = [velocity, acceleration]
-    A = np.array([[0, 1], [0, 0]])
-    B = np.array([[0], [1]])
-    # Position, velocity
-    x_0 = np.array([10, 0])
-
-    model = StateSpaceModel(A, B, x_0)
-
-    # Write identity matrices out, to easily modify them
-
-    # Q[0, 0] penalizes position error, Q[1, 1] penalizes high velocities
-    Q = np.array([[1, 0], [0, 1]])
-
-    # Penalizes gigantic control input
-    R = np.array([[1]])
-
-    # Noise
-    parametric_noise = ParametricNoiseSettings(noise_std=0.05, time_invariant=False)
-    control_noise = ControlNoiseSettings(noise_std=0.05)
-    measurement_noise = MeasurementNoiseSettings(noise_std=0.01)
-    disturbance_noise = DisturbanceNoiseSettings(noise_std=0.01, disturbance_type='gaussian')
-
-    noise_settings = LQRNoiseSettings(
-        #parametric_noise=parametric_noise,
-        #control_noise=control_noise,
-        #measurement_noise=measurement_noise,
-        #disturbance_noise=disturbance_noise
-    )
-
-    lqr = LQRDiscrete(model, Q, R, noise_settings=noise_settings)
-
-    K_0 = np.array([[0.1, 0.5]])
-
-    settings = ModelFreePolicyGradientSettings(
-        K_0=K_0, 
-        m=100,  # Number of trajectories
-        l=100,  # Length of steps in each trajectory
-        r=0.1,  # Smoothing parameter
-        gradient_steps=100,
-        gradient_lr=1e-4
-    )
-
-    base_K, base_cost = baseline_solution(lqr)
-    ks, _ = model_free_natural_policy_gradient(lqr=lqr, settings=settings)
-
-    cost_dict = {
-        "Model-Free Natural Policy Gradient": [true_cost(lqr, K) for K in ks],
-    }
-
-    simulation_dict = {
-        "Model-Free Natural Policy Gradient": simulate(lqr=lqr, K=ks[-1], n_steps=2500),
-        "Baseline Solution": simulate(lqr=lqr, K=base_K, n_steps=2500),
-    }
-
-    visualize_multiple_results(simulation_dict, cost_dict, base_cost, dt=lqr.dt)

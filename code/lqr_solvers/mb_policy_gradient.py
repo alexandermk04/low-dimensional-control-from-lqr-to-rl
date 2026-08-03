@@ -4,9 +4,8 @@ import numpy as np
 from scipy.linalg import solve_discrete_lyapunov
 
 from basetypes import StateSpaceModel
-from visualization import visualize_result
 
-from lqr_base.simple_lqr import LQRDiscrete, simulate
+from lqr_base.simple_lqr import LQRDiscrete
 
 @dataclass
 class ModelBasedPolicyGradientSettings:
@@ -53,40 +52,3 @@ def gradient_descent_discrete(lqr: LQRDiscrete, settings: ModelBasedPolicyGradie
         ks.append(K)
 
     return ks, costs
-
-
-if __name__ == "__main__":
-    # Double Integrator example implementation
-
-    # x' = Ax + Bu; x = [position, velocity], u = [acceleration]
-    # Hence: Ax + Bu = [velocity, acceleration]
-    A = np.array([[0, 1], [0, 0]])
-    B = np.array([[0], [1]])
-    # Position, velocity
-    x_0 = np.array([10, 0])
-
-    model = StateSpaceModel(A, B, x_0)
-
-    # Write identity matrices out, to easily modify them
-
-    # Q[0, 0] penalizes position error, Q[1, 1] penalizes high velocities
-    Q = np.array([[1, 0], [0, 1]])
-
-    # Penalizes gigantic control input
-    R = np.array([[1]])
-
-    lqr = LQRDiscrete(model, Q, R)
-
-    K_0 = np.array([[0.1, 0.5]])
-
-    settings = ModelBasedPolicyGradientSettings(
-        K_0=K_0,
-        gradient_steps=100,
-        gradient_lr=0.001
-    )
-
-    ks, costs = gradient_descent_discrete(lqr=lqr, settings=settings)
-
-    result = simulate(lqr=lqr, K=ks[-1], n_steps=1000)
-
-    visualize_result(result, dt=lqr.dt)
