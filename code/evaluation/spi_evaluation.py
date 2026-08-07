@@ -67,6 +67,7 @@ class SPIInflationExperiment:
             "Q": self.Q,
             "R": self.R,
             "max_initial_state": np.array([10, 1]),
+            "resample_initial_state": False,
             "noise_settings": None,
             "dt": 0.01
         }

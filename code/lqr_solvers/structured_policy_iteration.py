@@ -282,6 +282,7 @@ if __name__ == "__main__":
         Q=Q,
         R=R,
         noise_settings=None,
+        resample_initial_state=False,
         max_initial_state=max_initial_state,
         dt=0.1,
     )

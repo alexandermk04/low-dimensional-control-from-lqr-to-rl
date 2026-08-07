@@ -32,6 +32,7 @@ class LQRBaseSettings:
     Q: np.ndarray
     R: np.ndarray
     max_initial_state: np.ndarray
+    resample_initial_state: bool
     noise_settings: LQRNoiseSettings | None
 
 @dataclass
@@ -52,6 +53,7 @@ class LQRBase:
     x_0: np.ndarray | None = None
 
     max_initial_state: np.ndarray
+    resample_initial_state: bool
     initialized: bool = False
 
     noise: bool
@@ -68,6 +70,7 @@ class LQRBase:
         self.R = settings.R
 
         self.max_initial_state = settings.max_initial_state
+        self.resample_initial_state = settings.resample_initial_state
         self.x_0 = None
         self.initialized = False
 
@@ -78,7 +81,8 @@ class LQRBase:
         return np.random.uniform(-self.max_initial_state, self.max_initial_state)
 
     def reset(self):
-        self.x_0 = self.sample_initial_state()
+        if self.resample_initial_state or self.x_0 is None:
+            self.x_0 = self.sample_initial_state()
         self.x = self.x_0.copy()
         self.noise = False
         self.initialized = True
@@ -113,10 +117,13 @@ class LQRDiscrete(LQRBase):
         self.A = A_d
         self.B = B_d
 
-        self.max_initial_state = settings.max_initial_state
-
         self.Q = settings.Q
         self.R = settings.R
+
+        self.max_initial_state = settings.max_initial_state
+        self.resample_initial_state = settings.resample_initial_state
+        self.x_0 = None
+        self.initialized = False
 
         self.noise = False
         self.setup_noise(settings.noise_settings)
@@ -183,7 +190,7 @@ class LQRDiscrete(LQRBase):
     
 
 def get_optimal_K_and_cost_discrete(lqr: LQRDiscrete):
-    
+
     lqr.reset()
 
     P = solve_discrete_are(lqr.A, lqr.B, lqr.Q, lqr.R)
@@ -274,6 +281,7 @@ if __name__ == "__main__":
         Q=Q,
         R=R,
         max_initial_state=np.array([10, 1]),
+        resample_initial_state=False,
         noise_settings=noise_settings,
         dt=0.01
     )

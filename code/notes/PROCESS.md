@@ -33,3 +33,23 @@ diverges for steps larger than 3.7e-4
 - try laplacian systems with (3, 3), (20, 20), (10^3, 10^3)
 - start with stepsize 1/lambda, beta 1/2, epsilon 10-6
 - evaluate based on cardinality
+
+## 3rd of August:
+- Extending the base clases to using the settings parameters
+- Random initialization of initial state, instead of fixed
+- SPI behaves weirdly for random initial states
+
+## 4th of August:
+- Check whether policy gradients work with random initial position
+- If not, we revert and just use a fixed starting point
+
+## 5th of August:
+- Reset initial state of LQR before each iteration in the solvers
+-> Is already reset inside the estimate_gradient function before each trajectory run
+-> model based also now included
+=> still doesn't seem to converge in the gradient only versions, needs revision of literature
+
+## 7th of August:
+- Include setting for random sample vs. stable initial state
+- document functions, etc.
+- write preliminaries

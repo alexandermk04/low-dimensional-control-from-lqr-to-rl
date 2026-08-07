@@ -38,6 +38,7 @@ def compare_all():
         Q=Q,
         R=R,
         max_initial_state=np.array([10, 1]),
+        resample_initial_state=False,
         noise_settings=None,
         dt=0.01
     )
@@ -82,6 +83,11 @@ def compare_all():
     mf_nat_ks, mf_nat_costs = model_free_natural_policy_gradient(lqr=lqr, settings=mf_nat_settings)
     print("Natural model-free done.")
 
+    print(f"Baseline cost: {baseline_cost}")
+    print(f"Model-based cost: {mb_costs[-1]}")
+    print(f"Model-free cost: {mf_costs[-1]}")
+    print(f"Natural model-free cost: {mf_nat_costs[-1]}")
+
     costs_dict = {
         'Model-Based': mb_costs,
         'Model-Free': mf_costs,
@@ -94,7 +100,7 @@ def compare_all():
         'Baseline': simulate(lqr=lqr, K=baseline_k, n_steps=STEPS),
         'Model-Based': simulate(lqr=lqr, K=mb_ks[-1], n_steps=STEPS),
         'Model-Free': simulate(lqr=lqr, K=mf_ks[-1], n_steps=STEPS),
-        #'Model-Free Natural': simulate(lqr=lqr, K=mf_nat_ks[-1], n_steps=STEPS)
+        'Model-Free Natural': simulate(lqr=lqr, K=mf_nat_ks[-1], n_steps=STEPS)
     }
 
     visualize_multiple_results(results=simulation_dict,

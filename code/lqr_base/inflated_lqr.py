@@ -31,6 +31,8 @@ class LQRInflated(LQRDiscrete):
         self.B = B_d
 
         self.max_initial_state = settings.max_initial_state
+        self.resample_initial_state = settings.resample_initial_state
+        self.x_0 = None
         self.initialized = False
 
         self.Q = settings.Q
