@@ -15,12 +15,13 @@ from lqr_base.noise import (
 from lqr_base.simple_lqr import (
     StateSpaceModel,
     LQRDiscrete,
+    LQRDiscreteSettings,
     simulate,
     true_cost,
     get_optimal_K_and_cost_discrete as baseline_solution,
 )
 
-from lqr_base.inflated_lqr import LQRInflated
+from lqr_base.inflated_lqr import LQRInflated, LQRInflatedSettings
 
 from basetypes import SimulationResult
 
@@ -89,14 +90,40 @@ class InflationExperiment:
         extra_metadata: dict | None = None,
         visualize: bool = True,
     ):
+
+        base_settings = LQRDiscreteSettings(
+            model=self.model,
+            Q=self.Q,
+            R=self.R,
+            max_initial_state=np.array([10, 1]),
+            resample_initial_state=False,
+            noise_settings=noise_settings,
+            dt=self.dt
+        )
         
         base_lqr = LQRDiscrete(
-            self.model, self.Q, self.R, noise_settings=noise_settings, dt=self.dt
+            settings=base_settings
         )
+
+        base_lqr.reset()
+
+        lqr_settings = LQRInflatedSettings(
+            model=self.model,
+            Q=self.Q,
+            R=self.R,
+            max_initial_state=np.array([10, 1]),
+            resample_initial_state=False,
+            noise_settings=noise_settings,
+            dt=self.dt,
+            U_1=self.U_1,
+            U_2=self.U_2
+        )
+
         lqr = LQRInflated(
-            self.model, self.Q, self.R, self.U_1, self.U_2,
-            noise_settings=noise_settings, dt=self.dt,
+            settings=lqr_settings
         )
+
+        lqr.reset()
 
         base_k, base_cost = baseline_solution(base_lqr)
         print(f"[{label}] Baseline solution done")
@@ -194,7 +221,7 @@ if __name__ == "__main__":
     INFLATED_INPUT_DIM = 10
     INFLATED_OUTPUT_DIM = 5
 
-    model = StateSpaceModel(A, B, x_0)
+    model = StateSpaceModel(A, B)
 
     # Write identity matrices out, to easily modify them
     # Q[0, 0] penalizes position error, Q[1, 1] penalizes high velocities

@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 import numpy as np
 
+SEED = 2024
+
 @dataclass
 class StateSpaceModel:
     A: np.ndarray

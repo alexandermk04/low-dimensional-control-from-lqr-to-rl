@@ -7,6 +7,7 @@ from lqr_base.simple_lqr import (
     LQRDiscrete,
     LQRDiscreteSettings,
     simulate,
+    true_cost,
     get_optimal_K_and_cost_discrete as baseline_solution,
 )
 
@@ -76,17 +77,17 @@ def compare_all():
 
     baseline_k, baseline_cost = baseline_solution(lqr=lqr)
     print("Baseline done.")
-    mb_ks, mb_costs = model_based_gradient(lqr=lqr, settings=mb_settings)
+    mb_ks, _ = model_based_gradient(lqr=lqr, settings=mb_settings)
     print("Model-based done.")
-    mf_ks, mf_costs = model_free_policy_gradient(lqr=lqr, settings=mf_settings)
+    mf_ks, _ = model_free_policy_gradient(lqr=lqr, settings=mf_settings)
     print("Model-free done.")
-    mf_nat_ks, mf_nat_costs = model_free_natural_policy_gradient(lqr=lqr, settings=mf_nat_settings)
+    mf_nat_ks, _ = model_free_natural_policy_gradient(lqr=lqr, settings=mf_nat_settings)
     print("Natural model-free done.")
 
     costs_dict = {
-        'Model-Based': mb_costs,
-        'Model-Free': mf_costs,
-        'Model-Free Natural': mf_nat_costs
+        'Model-Based': [true_cost(lqr, K) for K in mb_ks],
+        'Model-Free': [true_cost(lqr, K) for K in mf_ks],
+        'Model-Free Natural': [true_cost(lqr, K) for K in mf_nat_ks]
     }
 
     STEPS = 2500

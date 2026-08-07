@@ -6,7 +6,7 @@ from scipy.signal import cont2discrete
 
 import matplotlib.pyplot as plt
 
-from basetypes import StateSpaceModel, SimulationResult, StepResult
+from basetypes import StateSpaceModel, SimulationResult, StepResult, SEED
 from visualization import visualize_result
 from lqr_base.noise import (
     ParametricNoiseSettings,
@@ -82,6 +82,8 @@ class LQRBase:
 
     def reset(self):
         if self.resample_initial_state or self.x_0 is None:
+            if self.x_0 is None:
+                np.random.seed(SEED)
             self.x_0 = self.sample_initial_state()
         self.x = self.x_0.copy()
         self.noise = False
@@ -241,55 +243,3 @@ def simulate(lqr: LQRDiscrete, K: np.ndarray, n_steps: int):
     results = SimulationResult(x_traj=np.array(x_traj), u_traj=np.array(u_traj))
 
     return results
-    
-
-if __name__ == "__main__":
-    # Double Integrator example implementation
-
-    # x' = Ax + Bu; x = [position, velocity], u = [acceleration]
-    # Hence: Ax + Bu = [velocity, acceleration]
-    A = np.array([[0, 1], [0, 0]])
-    B = np.array([[0], [1]])
-    # Position, velocity
-    x_0 = np.array([10, 0])
-
-    model = StateSpaceModel(A, B, x_0)
-
-    # Write identity matrices out, to easily modify them
-
-    # Q[0, 0] penalizes position error, Q[1, 1] penalizes high velocities
-    Q = np.array([[1, 0], [0, 1]])
-
-    # Penalizes gigantic control input
-    R = np.array([[1]])
-
-    # Noise
-    parametric_noise = ParametricNoiseSettings(noise_std=0.05, time_invariant=False)
-    control_noise = ControlNoiseSettings(noise_std=0.05)
-    measurement_noise = MeasurementNoiseSettings(noise_std=0.01)
-    disturbance_noise = DisturbanceNoiseSettings(noise_std=0.05, disturbance_type='gaussian')
-
-    noise_settings = LQRNoiseSettings(
-        #parametric_noise=parametric_noise,
-        #control_noise=control_noise,
-        measurement_noise=measurement_noise,
-        #disturbance_noise=disturbance_noise
-    )
-
-    settings = LQRDiscreteSettings(
-        model=model,
-        Q=Q,
-        R=R,
-        max_initial_state=np.array([10, 1]),
-        resample_initial_state=False,
-        noise_settings=noise_settings,
-        dt=0.01
-    )
-
-    lqr = LQRDiscrete(settings=settings)
-
-    K, cost = get_optimal_K_and_cost_discrete(lqr=lqr)
-
-    results = simulate(lqr=lqr, K=K, n_steps=2500)
-
-    visualize_result(results, dt=lqr.dt)

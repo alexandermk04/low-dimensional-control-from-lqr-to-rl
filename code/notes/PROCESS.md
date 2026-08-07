@@ -51,6 +51,10 @@ diverges for steps larger than 3.7e-4
 
 ## 7th of August:
 - Include setting for random sample vs. stable initial state
+-> Good seeds with success: 2022
+-> Mentions in the paper that model free approach is hard to implement
 - Open TODO: Fix cost estimation throughout - currently uses sometimes finite horizon estimates, should use infinite, model based calculations
+- TODO: fix model based SPI for inflated settings
+- TODO: Fix colors in cost plots
 - document functions, etc.
 - write preliminaries
