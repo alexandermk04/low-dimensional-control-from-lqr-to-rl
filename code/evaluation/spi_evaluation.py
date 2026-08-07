@@ -6,12 +6,13 @@ from visualization import visualize_spi
 from lqr_base.simple_lqr import (
     StateSpaceModel,
     LQRDiscrete,
+    LQRDiscreteSettings,
     simulate,
     true_cost,
     get_optimal_K_and_cost_discrete as baseline_solution,
 )
 
-from lqr_base.inflated_lqr import LQRInflated
+from lqr_base.inflated_lqr import LQRInflated, LQRInflatedSettings
 
 from lqr_solvers.structured_policy_iteration import (
     StructuredPolicySettings,
@@ -60,14 +61,36 @@ class SPIInflationExperiment:
         label: str,
         visualize: bool = True,
     ):
+
+        settings = {
+            "model": self.model,
+            "Q": self.Q,
+            "R": self.R,
+            "max_initial_state": np.array([10, 1]),
+            "noise_settings": None,
+            "dt": 0.01
+        }
+
+        discrete_settings = LQRDiscreteSettings(
+            **settings
+        )
         
         base_lqr = LQRDiscrete(
-            self.model, self.Q, self.R, dt=self.dt
+            settings=discrete_settings
         )
+
+        inflated_settings = LQRInflatedSettings(
+            **settings,
+            U_1=self.U_1,
+            U_2=self.U_2
+        )
+
         lqr = LQRInflated(
-            self.model, self.Q, self.R, self.U_1, self.U_2,
-            dt=self.dt,
+            settings=inflated_settings
         )
+
+        base_lqr.reset()
+        lqr.reset()
 
         base_k, base_cost = baseline_solution(base_lqr)
         print(f"[{label}] Baseline solution done")
@@ -131,7 +154,7 @@ if __name__ == "__main__":
     INFLATED_INPUT_DIM = 100
     INFLATED_OUTPUT_DIM = 50
 
-    model = StateSpaceModel(A, B, x_0)
+    model = StateSpaceModel(A, B)
 
     # Write identity matrices out, to easily modify them
     # Q[0, 0] penalizes position error, Q[1, 1] penalizes high velocities
@@ -214,8 +237,5 @@ if __name__ == "__main__":
 
     VISUALIZE = True
 
-    try:
-        experiment.run_pure(VISUALIZE)
-    except Exception as e:
-        print(f"Error during pure run: {e}")
+    experiment.run_pure(VISUALIZE)
 

@@ -114,13 +114,14 @@ def visualize_multiple_results(
     plt.ylabel('Cost')
     plt.legend()
 
-    plt.subplot(2, 3, 5)
-    plt.title('Rank of K over SPI Iterations')
-    for label, ranks in ranks_dict.items():
-        plt.plot(ranks, label=f'{label}')
-    plt.xlabel('Iteration')
-    plt.ylabel('Rank')
-    plt.legend() 
+    if ranks_dict is not None:
+        plt.subplot(2, 3, 5)
+        plt.title('Rank of K over SPI Iterations')
+        for label, ranks in ranks_dict.items():
+            plt.plot(ranks, label=f'{label}')
+        plt.xlabel('Iteration')
+        plt.ylabel('Rank')
+        plt.legend() 
 
     # For adding run metadata
     plt.subplot(2, 3, 6)

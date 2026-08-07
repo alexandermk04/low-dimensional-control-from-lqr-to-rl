@@ -26,6 +26,19 @@ def continuous_to_discrete(A, B, dt):
 
     return A_d, B_d
 
+@dataclass
+class LQRBaseSettings:
+    model: StateSpaceModel
+    Q: np.ndarray
+    R: np.ndarray
+    max_initial_state: np.ndarray
+    noise_settings: LQRNoiseSettings | None
+
+@dataclass
+class LQRDiscreteSettings(LQRBaseSettings):
+    dt: float
+
+
 class LQRBase:
     A: np.ndarray
     B: np.ndarray
@@ -35,8 +48,11 @@ class LQRBase:
     P: np.ndarray
     K: np.ndarray
 
-    x_0: np.ndarray
     x: np.ndarray
+    x_0: np.ndarray | None = None
+
+    max_initial_state: np.ndarray
+    initialized: bool = False
 
     noise: bool
     parametric_noise: ParametricNoiseSettings | None
@@ -44,22 +60,28 @@ class LQRBase:
     measurement_noise: MeasurementNoiseSettings | None
     disturbance_noise: DisturbanceNoiseSettings | None
 
-    def __init__(self, model: StateSpaceModel, Q, R, noise_settings: LQRNoiseSettings = None):
-        self.A = model.A
-        self.B = model.B
+    def __init__(self, settings: LQRBaseSettings):
+        self.A = settings.model.A
+        self.B = settings.model.B
 
-        self.x_0 = model.x_0
-        self.x = model.x_0
+        self.Q = settings.Q
+        self.R = settings.R
 
-        self.Q = Q
-        self.R = R
+        self.max_initial_state = settings.max_initial_state
+        self.x_0 = None
+        self.initialized = False
 
         self.noise = False
-        self.setup_noise(noise_settings)
-    
+        self.setup_noise(settings.noise_settings)
+
+    def sample_initial_state(self):
+        return np.random.uniform(-self.max_initial_state, self.max_initial_state)
+
     def reset(self):
-        self.x = self.x_0
+        self.x_0 = self.sample_initial_state()
+        self.x = self.x_0.copy()
         self.noise = False
+        self.initialized = True
 
     def setup_noise(self, noise_settings: LQRNoiseSettings | None):
         if noise_settings is None:
@@ -83,21 +105,21 @@ class LQRBase:
 class LQRDiscrete(LQRBase):
     dt: float
 
-    def __init__(self, model: StateSpaceModel, Q, R, noise_settings: LQRNoiseSettings = None, dt=0.01):
-        self.dt = dt
-        
-        A_d, B_d = continuous_to_discrete(model.A, model.B, dt=dt)
+    def __init__(self, settings: LQRDiscreteSettings):
+        self.dt = settings.dt
+
+        A_d, B_d = continuous_to_discrete(settings.model.A, settings.model.B, dt=settings.dt)
 
         self.A = A_d
         self.B = B_d
-        self.x_0 = model.x_0
-        self.x = model.x_0
 
-        self.Q = Q
-        self.R = R
+        self.max_initial_state = settings.max_initial_state
+
+        self.Q = settings.Q
+        self.R = settings.R
 
         self.noise = False
-        self.setup_noise(noise_settings)
+        self.setup_noise(settings.noise_settings)
 
     def effective_gain(self, K: np.ndarray) -> np.ndarray:
         return K
@@ -106,6 +128,9 @@ class LQRDiscrete(LQRBase):
         return grad_K
     
     def next_state(self, K: np.ndarray) -> StepResult:
+        if not self.initialized:
+            raise ValueError("LQRDiscrete must be initialized before calling next_state. Call reset() first.")
+
         if self.noise:
             x_t = self.x
 
@@ -158,6 +183,8 @@ class LQRDiscrete(LQRBase):
     
 
 def get_optimal_K_and_cost_discrete(lqr: LQRDiscrete):
+    
+    lqr.reset()
 
     P = solve_discrete_are(lqr.A, lqr.B, lqr.Q, lqr.R)
 
@@ -173,6 +200,9 @@ def get_optimal_K_and_cost_discrete(lqr: LQRDiscrete):
     return K, cost
 
 def true_cost(lqr: LQRDiscrete, K: np.ndarray) -> float:
+
+    if not lqr.initialized:
+        raise ValueError("LQR must be reset first to sample x_O.")
     
     x_0 = lqr.x_0
 
@@ -182,8 +212,8 @@ def true_cost(lqr: LQRDiscrete, K: np.ndarray) -> float:
         return np.inf
 
     P = solve_discrete_lyapunov(A_cl.T, lqr.Q + K.T @ lqr.R @ K)
-
-    return float(x_0 @ P @ x_0)
+    cost = (x_0.T @ P @ x_0).flatten()[0]
+    return float(cost)
 
 
 def simulate(lqr: LQRDiscrete, K: np.ndarray, n_steps: int):
@@ -239,7 +269,16 @@ if __name__ == "__main__":
         #disturbance_noise=disturbance_noise
     )
 
-    lqr = LQRDiscrete(model, Q, R, noise_settings=noise_settings, dt=0.01)
+    settings = LQRDiscreteSettings(
+        model=model,
+        Q=Q,
+        R=R,
+        max_initial_state=np.array([10, 1]),
+        noise_settings=noise_settings,
+        dt=0.01
+    )
+
+    lqr = LQRDiscrete(settings=settings)
 
     K, cost = get_optimal_K_and_cost_discrete(lqr=lqr)
 

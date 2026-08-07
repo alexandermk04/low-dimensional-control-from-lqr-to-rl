@@ -6,6 +6,7 @@ from scipy.linalg import solve_discrete_lyapunov
 from lqr_base.simple_lqr import (
     StateSpaceModel,
     LQRDiscrete,
+    LQRDiscreteSettings,
     simulate,
     true_cost,
     get_optimal_K_and_cost_discrete as baseline_solution,
@@ -264,9 +265,9 @@ if __name__ == "__main__":
     A = np.array([[0, 1], [0, 0]])
     B = np.array([[0], [1]])
     # Position, velocity
-    x_0 = np.array([10, 0])
+    max_initial_state = np.array([[10], [11]])
 
-    model = StateSpaceModel(A, B, x_0)
+    model = StateSpaceModel(A, B)
 
     # Write identity matrices out, to easily modify them
 
@@ -276,32 +277,31 @@ if __name__ == "__main__":
     # Penalizes gigantic control input
     R = np.array([[1]])
 
-    # Noise
-    parametric_noise = ParametricNoiseSettings(noise_std=0.01, time_invariant=False)
-    control_noise = ControlNoiseSettings(noise_std=0.01)
-    measurement_noise = MeasurementNoiseSettings(noise_std=0.01)
-    disturbance_noise = DisturbanceNoiseSettings(noise_std=0.01, disturbance_type='gaussian')
-
-    noise_settings = LQRNoiseSettings(
-        #parametric_noise=parametric_noise,
-        #control_noise=control_noise,
-        #measurement_noise=measurement_noise,
-        #disturbance_noise=disturbance_noise
+    settings = LQRDiscreteSettings(
+        model=model,
+        Q=Q,
+        R=R,
+        noise_settings=None,
+        max_initial_state=max_initial_state,
+        dt=0.1,
     )
 
-    lqr = LQRDiscrete(model, Q, R, noise_settings=noise_settings, dt=0.01)
+    lqr = LQRDiscrete(settings)
+    lqr.reset()
 
     K_0 = np.array([[0.1, 0.5]])
 
     settings = MFStructuredPolicySettings(
         K_0=K_0,
         beta=0.5,
-        lambda_=100,
+        lambda_=3000,
         epsilon=1e-3,
         limit=1000,
         m=100,
         l=200,
-        r=0.5
+        r=0.5,
+        max_linesearch_iter=10,
+        stepsize=3.7e-5
     )
 
     base_K, base_cost = baseline_solution(lqr)
@@ -311,8 +311,10 @@ if __name__ == "__main__":
         "Structured Policy Iteration (Model-Free)": [true_cost(lqr, K) for K in ks],
     }
 
+    lqr.reset()
+
     simulation_dict = {
-        "Baseline LQR": simulate(lqr=lqr, K=base_K, n_steps=2500),
+        #"Baseline LQR": simulate(lqr=lqr, K=base_K, n_steps=2500),
         "Structured Policy Iteration (Model-Free)": simulate(lqr=lqr, K=ks[-1], n_steps=2500),
     }
 

@@ -39,6 +39,8 @@ def calculate_gradient_model_based_discrete(lqr: LQRDiscrete, K_t: np.ndarray) -
 
 # Runs gradient descent for a defined number of steps, returns K after
 def gradient_descent_discrete(lqr: LQRDiscrete, settings: ModelBasedPolicyGradientSettings) -> tuple[list[np.ndarray], list[float]]:
+    lqr.reset()
+
     K = settings.K_0
 
     costs = []

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import numpy as np
 
 from basetypes import StepResult
@@ -5,34 +6,41 @@ from basetypes import StepResult
 from lqr_base.simple_lqr import (
     continuous_to_discrete,
     StateSpaceModel,
-    LQRDiscrete
+    LQRDiscrete,
+    LQRDiscreteSettings,
 )
 
 from lqr_base.noise import (
     LQRNoiseSettings,
 )
 
+@dataclass
+class LQRInflatedSettings(LQRDiscreteSettings):
+    U_1: np.ndarray
+    U_2: np.ndarray
+
 class LQRInflated(LQRDiscrete):
     dt: float
 
-    def __init__(self, model: StateSpaceModel, Q, R, U_1, U_2, noise_settings: LQRNoiseSettings = None, dt=0.01):
-        self.dt = dt
-        
-        A_d, B_d = continuous_to_discrete(model.A, model.B, dt=dt)
+    def __init__(self, settings: LQRInflatedSettings):
+        self.dt = settings.dt
+
+        A_d, B_d = continuous_to_discrete(settings.model.A, settings.model.B, dt=settings.dt)
 
         self.A = A_d
         self.B = B_d
-        self.x_0 = model.x_0
-        self.x = model.x_0
 
-        self.Q = Q
-        self.R = R
-        self.U_1 = U_1
-        self.U_2 = U_2
+        self.max_initial_state = settings.max_initial_state
+        self.initialized = False
+
+        self.Q = settings.Q
+        self.R = settings.R
+        self.U_1 = settings.U_1
+        self.U_2 = settings.U_2
         self.validate_dimensions()
 
         self.noise = False
-        self.setup_noise(noise_settings)
+        self.setup_noise(settings.noise_settings)
 
     def validate_dimensions(self):
         assert self.U_1.shape[1] == self.A.shape[0], "U_1 must have the same number of columns as A has rows"
@@ -45,6 +53,9 @@ class LQRInflated(LQRDiscrete):
         return self.U_2.T @ grad_K @ self.U_1.T
 
     def next_state(self, K: np.ndarray) -> StepResult:
+        if not self.initialized:
+            raise ValueError("LQRInflated must be initialized before calling next_state. Call reset() first.")
+
         if self.noise:
             x_t = self.x
             y_t = self.U_1 @ x_t

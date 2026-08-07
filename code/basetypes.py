@@ -5,7 +5,6 @@ import numpy as np
 class StateSpaceModel:
     A: np.ndarray
     B: np.ndarray
-    x_0: np.ndarray
 
 @dataclass
 class StepResult:

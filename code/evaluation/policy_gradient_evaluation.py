@@ -5,6 +5,7 @@ from visualization import visualize_multiple_results
 from lqr_base.simple_lqr import (
     StateSpaceModel,
     LQRDiscrete,
+    LQRDiscreteSettings,
     simulate,
     get_optimal_K_and_cost_discrete as baseline_solution,
 )
@@ -26,14 +27,22 @@ def compare_all():
 
     A = np.array([[0, 1], [0, 0]])
     B = np.array([[0], [1]])
-    x_0 = np.array([10, 0])
 
-    model = StateSpaceModel(A, B, x_0)
+    model = StateSpaceModel(A, B)
 
     Q = np.array([[1, 0], [0, 1]])
     R = np.array([[1]])
 
-    lqr = LQRDiscrete(model, Q, R)
+    settings = LQRDiscreteSettings(
+        model=model,
+        Q=Q,
+        R=R,
+        max_initial_state=np.array([10, 1]),
+        noise_settings=None,
+        dt=0.01
+    )
+
+    lqr = LQRDiscrete(settings=settings)
 
     K_0 = np.array([[0.1, 0.5]])
 
@@ -65,9 +74,13 @@ def compare_all():
     )
 
     baseline_k, baseline_cost = baseline_solution(lqr=lqr)
+    print("Baseline done.")
     mb_ks, mb_costs = model_based_gradient(lqr=lqr, settings=mb_settings)
+    print("Model-based done.")
     mf_ks, mf_costs = model_free_policy_gradient(lqr=lqr, settings=mf_settings)
+    print("Model-free done.")
     mf_nat_ks, mf_nat_costs = model_free_natural_policy_gradient(lqr=lqr, settings=mf_nat_settings)
+    print("Natural model-free done.")
 
     costs_dict = {
         'Model-Based': mb_costs,
@@ -75,25 +88,19 @@ def compare_all():
         'Model-Free Natural': mf_nat_costs
     }
 
-    k_dict = {
-        'Model-Based': mb_ks,
-        'Model-Free': mf_ks,
-        'Model-Free Natural': mf_nat_ks
-    }
-
-    visualize_costs(baseline_cost, costs_dict)
-    visualize_Ks(baseline_k, k_dict)
-
     STEPS = 2500
 
     simulation_dict = {
         'Baseline': simulate(lqr=lqr, K=baseline_k, n_steps=STEPS),
         'Model-Based': simulate(lqr=lqr, K=mb_ks[-1], n_steps=STEPS),
         'Model-Free': simulate(lqr=lqr, K=mf_ks[-1], n_steps=STEPS),
-        'Model-Free Natural': simulate(lqr=lqr, K=mf_nat_ks[-1], n_steps=STEPS)
+        #'Model-Free Natural': simulate(lqr=lqr, K=mf_nat_ks[-1], n_steps=STEPS)
     }
 
-    visualize_multiple_results(simulation_dict, dt=lqr.dt)
+    visualize_multiple_results(results=simulation_dict,
+                               cost_trajectories=costs_dict,
+                               baseline_cost=baseline_cost,
+                                dt=lqr.dt)
 
 if __name__ == "__main__":
     compare_all()
