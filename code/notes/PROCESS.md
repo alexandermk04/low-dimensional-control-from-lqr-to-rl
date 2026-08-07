@@ -51,5 +51,6 @@ diverges for steps larger than 3.7e-4
 
 ## 7th of August:
 - Include setting for random sample vs. stable initial state
+- Open TODO: Fix cost estimation throughout - currently uses sometimes finite horizon estimates, should use infinite, model based calculations
 - document functions, etc.
 - write preliminaries

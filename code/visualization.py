@@ -108,8 +108,9 @@ def visualize_multiple_results(
     plt.subplot(2, 3, 4)
     plt.title('True Cost')
     for label, costs in cost_trajectories.items():
-        plt.semilogy((costs - baseline_cost)/baseline_cost, label=f'{label}')
-    plt.axhline(y=0, color='r', linestyle='--', label='Optimal Cost')
+        print(f"[{label}] Final cost: {costs[-1]}")
+        plt.semilogy(costs, label=f'{label}')
+    plt.axhline(y=baseline_cost, color='r', linestyle='--', label='Optimal Cost')
     plt.xlabel('Gradient Step')
     plt.ylabel('Cost')
     plt.legend()
@@ -166,8 +167,8 @@ def visualize_spi(
     plt.subplot(2, 2, 2)
     plt.title('True Cost over SPI Iterations')
     for label, costs in cost_trajectories.items():
-        plt.semilogy((costs - baseline_cost)/baseline_cost, label=f'{label}')
-    plt.axhline(y=0, color='r', linestyle='--', label='Optimal Cost')
+        plt.semilogy(costs, label=f'{label}')
+    plt.axhline(y=baseline_cost, color='r', linestyle='--', label='Optimal Cost')
     plt.xlabel('SPI Iteration')
     plt.ylabel('Cost')
     plt.legend()

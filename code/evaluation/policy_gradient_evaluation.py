@@ -83,11 +83,6 @@ def compare_all():
     mf_nat_ks, mf_nat_costs = model_free_natural_policy_gradient(lqr=lqr, settings=mf_nat_settings)
     print("Natural model-free done.")
 
-    print(f"Baseline cost: {baseline_cost}")
-    print(f"Model-based cost: {mb_costs[-1]}")
-    print(f"Model-free cost: {mf_costs[-1]}")
-    print(f"Natural model-free cost: {mf_nat_costs[-1]}")
-
     costs_dict = {
         'Model-Based': mb_costs,
         'Model-Free': mf_costs,
