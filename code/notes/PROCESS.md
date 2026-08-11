@@ -59,5 +59,6 @@ diverges for steps larger than 3.7e-4
 - TODO: Investigate convergence behavior with certain seeds
 - TODO: Fix noise implementation for model-based solvers
 - TODO: Check, whether diabling noise on reset of state is wanted behavior
+- TODO: Integrate ZOH integration for gymnasium environment
 - document functions, etc.
 - write preliminaries

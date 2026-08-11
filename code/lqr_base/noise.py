@@ -1,8 +1,45 @@
+"""The four noise channels an LQR system in this repository can be exposed to.
+
+Which point a channel attacks is the whole difference between them:
+
+- **measurement** - additive, corrupts what the controller sees
+- **control** - *multiplicative*, scaled by the commanded input, so a large
+  control action is a noisier control action.
+- **parametric** - perturbs the model matrices themselves, optionally set
+  once per system (``time_invariant=True``) to model a mis-identified model
+- **disturbance** - additive on the successor state, i.e. an external force.
+
+Notes
+-----
+Noise is only injected while the runtime flag ``LQRBase.noise`` is set, which
+happens in :meth:`LQRBase.apply_noise` and is cleared by :meth:`LQRBase.reset`.
+
+All channels draw from the global :mod:`numpy.random` state, so seeding that
+state makes a whole experiment reproducible.
+"""
+
 import numpy as np
 from dataclasses import dataclass
 
 
 class ParametricNoiseSettings:
+    """Perturbation of the model matrices ``A`` and ``B``.
+
+    Parameters
+    ----------
+    noise_std : float
+        Standard deviation of the zero-mean Gaussian added to every entry of
+        ``A`` and ``B``.
+    time_invariant : bool
+        If ``True``, one perturbation is drawn and then reused for the rest of
+        the object's life
+
+    Attributes
+    ----------
+    sampled_A, sampled_B : np.ndarray or None
+        Cached perturbations, only populated when ``time_invariant`` is set.
+    """
+
     noise_std: float
     time_invariant: bool
 
@@ -16,9 +53,24 @@ class ParametricNoiseSettings:
         self.sampled_B = None
 
     def sample_parametric_noise(self, A: np.ndarray, B: np.ndarray):
+        """Draw perturbations shaped like ``A`` and ``B``.
+
+        Parameters
+        ----------
+        A : np.ndarray
+            State matrix of shape ``(n, n)``; only its shape is used.
+        B : np.ndarray
+            Input matrix of shape ``(n, m)``; only its shape is used.
+
+        Returns
+        -------
+        tuple[np.ndarray, np.ndarray]
+            ``(noise_A, noise_B)``, to be *added* to the matrices by the caller.
+            With ``time_invariant=True`` the same pair is returned on every call.
+        """
         if self.time_invariant and self.sampled_A is not None and self.sampled_B is not None:
             return self.sampled_A, self.sampled_B
-        
+
         noise_A = np.random.normal(0, self.noise_std, size=A.shape)
         noise_B = np.random.normal(0, self.noise_std, size=B.shape)
 
@@ -29,34 +81,99 @@ class ParametricNoiseSettings:
         return noise_A, noise_B
 
 class ControlNoiseSettings:
+    """Multiplicative noise on the commanded control input.
+
+    Parameters
+    ----------
+    noise_std : float
+        Standard deviation of the relative error.
+    """
+
     control_noise_std: float
 
     def __init__(self, noise_std: float):
         self.control_noise_std = noise_std
 
     def sample_control_noise(self, u: np.ndarray):
-        
+        """Draw the additive term that realises a relative control error.
+
+        Parameters
+        ----------
+        u : np.ndarray
+            Commanded control input.
+
+        Returns
+        -------
+        np.ndarray
+            ``u * eps`` with ``eps ~ N(0, noise_std)`` drawn elementwise, so
+            that ``u + result = u * (1 + eps)``.
+        """
+
         control_noise = np.random.normal(0, self.control_noise_std, size=u.shape)
-        
+
         # Scaled noise based on the control input magnitude
         scaled_noise = u * control_noise
 
         return scaled_noise
 
 class MeasurementNoiseSettings:
+    """Additive noise on the observation handed to the policy.
+
+    Parameters
+    ----------
+    noise_std : float
+        Standard deviation of the zero-mean Gaussian added to each entry of
+        the observation.
+    """
+
     measurement_noise_std: float
 
     def __init__(self, noise_std: float):
         self.measurement_noise_std = noise_std
 
     def sample_measurement_noise(self, x: np.ndarray):
-        
+        """Draw the additive measurement error.
+
+        Parameters
+        ----------
+        x : np.ndarray
+            The clean observation.
+
+        Returns
+        -------
+        np.ndarray
+            Noise of the same shape as the observation, to be added by the caller.
+        """
+
         measurement_noise = np.random.normal(0, self.measurement_noise_std, size=x.shape)
 
         return measurement_noise
 
 
 class DisturbanceNoiseSettings:
+    """External disturbance added to the successor state.
+
+    Parameters
+    ----------
+    noise_std : float
+        Magnitude of the disturbance - the standard deviation for the random
+        types, and the amplitude for ``"sinusoidal"``.
+    disturbance_type : {"gaussian", "sinusoidal", "constant"}
+        - ``"gaussian"``  - newly drawn noise every step.
+        - ``"sinusoidal"`` - a deterministic ``std * sin(0.1 * k)`` applied
+          equally to every state entry, where ``k`` counts calls. Models a
+          slow periodic drift.
+        - ``"constant"``  - one random offset, drawn lazily on first use and
+          held forever. Models a steady bias such as a wind.
+
+    Attributes
+    ----------
+    const_val : np.ndarray or None
+        Cached offset for the ``"constant"`` type.
+    step_count : int
+        Call counter driving the ``"sinusoidal"`` phase.
+    """
+
     disturbance_noise_std: float
     disturbance_type: str
 
@@ -70,6 +187,23 @@ class DisturbanceNoiseSettings:
         self.step_count = 0
 
     def sample_disturbance(self, x: np.ndarray):
+        """Draw the disturbance to add to the successor state.
+
+        Parameters
+        ----------
+        x : np.ndarray
+            The successor state; only its shape is used.
+
+        Returns
+        -------
+        np.ndarray
+            Disturbance of the same shape.
+
+        Raises
+        ------
+        ValueError
+            If ``disturbance_type`` is not one of the three supported values.
+        """
         if self.disturbance_type == "gaussian":
             disturbance = np.random.normal(0, self.disturbance_noise_std, size=x.shape)
             return disturbance
@@ -87,16 +221,31 @@ class DisturbanceNoiseSettings:
 
 @dataclass
 class LQRNoiseSettings:
+    """Bundle of the noise channels active on one LQR system.
+
+    Every field defaults to ``None``, meaning that channel is switched off, so
+    an experiment can isolate a single source of noise.
+
+    Passing ``None`` in place of the whole bundle disables all four.
+
+    Attributes
+    ----------
+    parametric_noise : ParametricNoiseSettings or None
+    control_noise : ControlNoiseSettings or None
+    measurement_noise : MeasurementNoiseSettings or None
+    disturbance_noise : DisturbanceNoiseSettings or None
+    """
+
     parametric_noise: ParametricNoiseSettings | None
     control_noise: ControlNoiseSettings | None
     measurement_noise: MeasurementNoiseSettings | None
     disturbance_noise: DisturbanceNoiseSettings | None
 
     def __init__(
-        self, 
-        parametric_noise: ParametricNoiseSettings | None = None, 
-        control_noise: ControlNoiseSettings | None = None, 
-        measurement_noise: MeasurementNoiseSettings | None = None, 
+        self,
+        parametric_noise: ParametricNoiseSettings | None = None,
+        control_noise: ControlNoiseSettings | None = None,
+        measurement_noise: MeasurementNoiseSettings | None = None,
         disturbance_noise: DisturbanceNoiseSettings | None = None
     ):
         self.parametric_noise = parametric_noise
