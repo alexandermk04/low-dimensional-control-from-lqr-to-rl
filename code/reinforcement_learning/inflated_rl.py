@@ -1,4 +1,17 @@
-# Example from: https://github.com/DLR-RM/stable-baselines3
+"""Train PPO on the double integrator
+
+A minimal Stable-Baselines3 script.
+
+Run it from ``code/`` with::
+
+    python -m reinforcement_learning.inflated_rl
+
+Notes
+-----
+
+The training loop is adapted from the Stable-Baselines3 README:
+https://github.com/DLR-RM/stable-baselines3
+"""
 
 import gymnasium as gym
 

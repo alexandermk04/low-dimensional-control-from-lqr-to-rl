@@ -56,5 +56,8 @@ diverges for steps larger than 3.7e-4
 - Open TODO: Fix cost estimation throughout - currently uses sometimes finite horizon estimates, should use infinite, model based calculations
 - TODO: fix model based SPI for inflated settings
 - TODO: Fix colors in cost plots
+- TODO: Investigate convergence behavior with certain seeds
+- TODO: Fix noise implementation for model-based solvers
+- TODO: Check, whether diabling noise on reset of state is wanted behavior
 - document functions, etc.
 - write preliminaries
