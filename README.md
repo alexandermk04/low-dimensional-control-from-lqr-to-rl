@@ -263,6 +263,5 @@ The PDFs live outside this repository, in a sibling `Material/` folder.
 
 - `calculate_gradient_model_based_discrete` and `estimate_gradient` are annotated
   `-> np.ndarray` but return tuples.
-- `caculate_next_K` and `caculate_next_K_mf` are misspelled.
 - `spi_evaluation.py` hard-codes `dt=0.01` when building its systems, independently of the
   `dt` passed to the experiment class.
