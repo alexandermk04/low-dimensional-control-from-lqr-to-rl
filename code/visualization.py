@@ -1,3 +1,6 @@
+"""Plotting helpers shared by the scripts in :mod:`evaluation`.
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -5,12 +8,58 @@ from basetypes import SimulationResult
 
 
 def relative_cost_error(cost_estimate, baseline_cost):
+    """Suboptimality of a cost relative to the analytic optimum.
+
+    Parameters
+    ----------
+    cost_estimate : float
+        Cost achieved by the policy under evaluation.
+    baseline_cost : float
+        Optimal cost from
+        :func:`~lqr_base.simple_lqr.get_optimal_K_and_cost_discrete`.
+
+    Returns
+    -------
+    float
+        ``(cost_estimate - baseline_cost) / baseline_cost``. 
+    """
     return (cost_estimate - baseline_cost) / baseline_cost
 
 def feedback_control_distance(K, K_baseline):
+    """Frobenius distance between a gain and the optimal one.
+
+    Parameters
+    ----------
+    K : np.ndarray
+        Gain under evaluation. Must live in the same space as ``K_baseline``.
+    K_baseline : np.ndarray
+        Optimal gain of the same shape.
+
+    Returns
+    -------
+    float
+        ``||K - K_baseline||_F``.
+    """
     return np.linalg.norm(K - K_baseline, ord='fro')
 
 def visualize_costs(baseline_cost, costs_dict: dict[str, list[float]]):
+    """Plot absolute and relative cost against the iteration count.
+
+    Two panels side by side: the raw cost curves with the optimum drawn in, and
+    the same curves as relative error.
+
+    Parameters
+    ----------
+    baseline_cost : float
+        Optimal cost, drawn as a dashed horizontal reference.
+    costs_dict : dict[str, list[float]]
+        Legend label to cost-per-iteration series.
+
+    Returns
+    -------
+    None
+        Shows the figure.
+    """
     plt.figure(figsize=(10, 5))
 
     plt.subplot(1, 2, 1)
@@ -33,12 +82,27 @@ def visualize_costs(baseline_cost, costs_dict: dict[str, list[float]]):
     plt.show()
 
 def visualize_Ks(K_baseline, k_dict: dict[str, list[np.ndarray]]):
+    """Plot how far each solver's gain sits from the optimum over time.
+
+    Parameters
+    ----------
+    K_baseline : np.ndarray
+        Optimal gain.
+    k_dict : dict[str, list[np.ndarray]]
+        Legend label to the sequence of gains produced by that solver. Each
+        gain must be comparable to ``K_baseline``.
+
+    Returns
+    -------
+    None
+        Shows the figure.
+    """
     plt.figure(figsize=(10, 5))
 
     for label, Ks in k_dict.items():
         distances = [feedback_control_distance(K, K_baseline) for K in Ks]
         plt.plot(distances, label=label)
-    
+
     plt.xlabel('Gradient Step')
     plt.ylabel('Distance to Baseline K')
     plt.title('Distance of Estimated K to Baseline K at Different Gradient Steps')
@@ -47,6 +111,20 @@ def visualize_Ks(K_baseline, k_dict: dict[str, list[np.ndarray]]):
 
 
 def visualize_result(result: SimulationResult, dt=1):
+    """Plot a single double-integrator trajectory.
+
+    Parameters
+    ----------
+    result : SimulationResult
+        Trajectory from :func:`~lqr_base.simple_lqr.simulate`.
+    dt : float, optional
+        Sampling interval, used to label the x-axis in seconds.
+
+    Returns
+    -------
+    None
+        Shows the figure.
+    """
     time_sec = np.arange(result.x_traj.shape[0]) * dt
 
     plt.figure(figsize=(10, 5))
@@ -74,6 +152,31 @@ def visualize_multiple_results(
     save_to: str = None,
     dt=1,
 ):
+    """Six-panel overview comparing several solvers on one problem.
+
+    Parameters
+    ----------
+    results : dict[str, SimulationResult]
+        Legend label to trajectory, one per policy being compared.
+    cost_trajectories : dict[str, list[float]]
+        Legend label to the true cost after each solver iteration. 
+    baseline_cost : float
+        Optimal cost, drawn as a dashed reference line.
+    ranks_dict : dict[str, int], optional
+        Legend label to a rank-per-iteration series.
+    metadata : dict[str, str], optional
+        Key/value pairs rendered into the sixth panel.
+    save_to : str, optional
+        Filename stem. When given, the figure is written to
+        ``../../Visualizations/<save_to>.png`` instead of being shown.
+    dt : float, optional
+        Sampling interval, for labelling the time axes in seconds.
+
+    Returns
+    -------
+    None
+        Shows or saves the figure.
+    """
 
     plt.figure(figsize=(18, 10))
 
@@ -121,7 +224,7 @@ def visualize_multiple_results(
             plt.plot(ranks, label=f'{label}')
         plt.xlabel('Iteration')
         plt.ylabel('Rank')
-        plt.legend() 
+        plt.legend()
 
     # For adding run metadata
     plt.subplot(2, 3, 6)
@@ -153,6 +256,28 @@ def visualize_spi(
     dt=1,
     save_to: str = None,
 ):
+    """Four-panel figure focused on structured policy iteration.
+
+    Parameters
+    ----------
+    k_ranks : dict[str, list[int]]
+        Legend label to the numerical rank of the gain after each iteration.
+    cost_trajectories : dict[str, list[float]]
+        Legend label to the true cost after each iteration.
+    baseline_cost : float
+        Optimal cost, drawn as a dashed reference line.
+    simulation_dict : dict[str, SimulationResult]
+        Legend label to trajectory, shown as position and velocity.
+    dt : float, optional
+        Sampling interval.
+    save_to : str, optional
+        Filename stem; see :func:`visualize_multiple_results`.
+
+    Returns
+    -------
+    None
+        Shows or saves the figure.
+    """
     plt.figure(figsize=(15, 8))
 
     plt.subplot(2, 2, 1)
@@ -161,7 +286,7 @@ def visualize_spi(
         plt.plot(ranks, label=f'{label}')
     plt.xlabel('SPI Iteration')
     plt.ylabel('Rank')
-    plt.legend() 
+    plt.legend()
 
     plt.subplot(2, 2, 2)
     plt.title('True Cost over SPI Iterations')
