@@ -1,3 +1,11 @@
+"""
+Compares the S-PI variants against the baseline LQR solution.
+
+Run it from ``code/`` with::
+
+    python -m evaluation.spi_evaluation
+"""
+
 import numpy as np
 import time
 
@@ -23,6 +31,29 @@ from lqr_solvers.structured_policy_iteration import (
 
 
 class SPIInflationExperiment:
+    """S-PI on an inflated LQR system.
+
+    Parameters
+    ----------
+    model : StateSpaceModel
+        Continuous-time plant.
+    Q, R : np.ndarray
+        Cost weights.
+    U_1, U_2 : np.ndarray
+        Observation lift and actuation projection.
+    K_0 : np.ndarray
+        Initial gain in the inflated space; must be stabilizing.
+    inflated_input_dim, inflated_output_dim : int
+        Dimensions of the lifted spaces.
+    structured_settings : StructuredPolicySettings
+        Hyperparameters for the model-based solver.
+    mf_structured_settings : MFStructuredPolicySettings
+        Hyperparameters for the model-free solver.
+    dt : float, optional
+        Sampling interval. Defaults to ``0.01``.
+    sim_steps : int, optional
+        Length of the final trajectory rollouts. Defaults to ``2500``.
+    """
 
     def __init__(
         self,
@@ -61,6 +92,21 @@ class SPIInflationExperiment:
         label: str,
         visualize: bool = True,
     ):
+        """Run S-PI on the inflated system and plot rank against cost.
+
+        Parameters
+        ----------
+        label : str
+            Short name for the condition, used in the saved filename.
+        visualize : bool, optional
+            ``True`` shows the figure; ``False`` saves it as
+            ``Run_<label>_<timestamp>.png``.
+
+        Returns
+        -------
+        None
+            Shows or saves the four-panel S-PI figure.
+        """
 
         settings = {
             "model": self.model,
@@ -138,6 +184,13 @@ class SPIInflationExperiment:
 
 
     def run_pure(self, visualize: bool = True):
+        """Run the noise-free condition.
+
+        Parameters
+        ----------
+        visualize : bool, optional
+            See :meth:`run_comparison`.
+        """
         self.run_comparison("Pure", visualize=visualize)
  
 

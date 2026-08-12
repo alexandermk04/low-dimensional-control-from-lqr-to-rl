@@ -1,3 +1,10 @@
+"""Full-rank versus low-rank control in an inflated observation/action space.
+
+Run it from ``code/`` with::
+
+    python -m evaluation.inflate_evaluation
+"""
+
 import numpy as np
 import time
 
@@ -37,6 +44,36 @@ from lqr_solvers.structured_policy_iteration import (
 
 
 class InflationExperiment:
+    """One inflated problem, runnable under each noise channel in turn.
+
+    Parameters
+    ----------
+    model : StateSpaceModel
+        Continuous-time plant.
+    Q, R : np.ndarray
+        Cost weights on the true state and the true input.
+    U_1 : np.ndarray
+        Observation lift of shape ``(inflated_input_dim, n)``.
+    U_2 : np.ndarray
+        Actuation projection of shape ``(m, inflated_output_dim)``.
+    K_0 : np.ndarray
+        Initial gain in the inflated space. Must be stabilizing.
+    inflated_input_dim, inflated_output_dim : int
+        Dimensions of the lifted spaces.
+    nat_settings : ModelFreePolicyGradientSettings
+        Hyperparameters for the full-rank solver.
+    structured_settings : MFStructuredPolicySettings
+        Hyperparameters for the low-rank solver.
+    dt : float, optional
+        Sampling interval. Defaults to ``0.01``.
+    sim_steps : int, optional
+        Length of the final trajectory rollouts. Defaults to ``2500``.
+
+    Attributes
+    ----------
+    base_metadata : dict
+        Hyperparameters rendered into every figure's text panel.
+    """
 
     def __init__(
         self,
@@ -90,6 +127,28 @@ class InflationExperiment:
         extra_metadata: dict | None = None,
         visualize: bool = True,
     ):
+        """Run baseline, full-rank and low-rank under one noise condition.
+
+        Parameters
+        ----------
+        label : str
+            Short name for this condition, used in legends and in the saved
+            filename.
+        noise_settings : LQRNoiseSettings or None, optional
+            Noise to expose both the baseline and the inflated system to.
+            ``None`` runs clean.
+        extra_metadata : dict or None, optional
+            Condition-specific entries merged over ``base_metadata`` for the
+            figure's text panel.
+        visualize : bool, optional
+            ``True`` shows the figure; ``False`` saves it as
+            ``Run_<label>_<timestamp>.png``.
+
+        Returns
+        -------
+        None
+            Shows or saves the six-panel comparison figure.
+        """
 
         base_settings = LQRDiscreteSettings(
             model=self.model,
@@ -133,8 +192,8 @@ class InflationExperiment:
         print(f"[{label}] Low-rank calculation done")
 
         cost_trajectories = {
-            'Full-rank': [true_cost(lqr, self.U_2 @ K @ self.U_1) for K in full_ks],
-            'Low-rank': [true_cost(lqr, self.U_2 @ K @ self.U_1) for K in low_ks],
+            'Full-rank': [true_cost(lqr, lqr.effective_gain(K)) for K in full_ks],
+            'Low-rank': [true_cost(lqr, lqr.effective_gain(K)) for K in low_ks],
         }
 
         simulation_dict = {
@@ -166,9 +225,27 @@ class InflationExperiment:
 
 
     def run_pure(self, visualize: bool = True):
+        """Run the comparison with no noise.
+
+        Parameters
+        ----------
+        visualize : bool, optional
+            See :meth:`run_comparison`.
+        """
         self.run_comparison("Pure", noise_settings=None, visualize=visualize)
 
     def run_parametric(self, noise_std: float, time_invariant: bool = False, visualize: bool = True):
+        """Run the comparison with parametric perturbation.
+
+        Parameters
+        ----------
+        noise_std : float
+            Standard deviation of the perturbation on ``A`` and ``B``.
+        time_invariant : bool, optional
+            ``False`` (default) redraws every step, ``True`` freezes one perturbation.
+        visualize : bool, optional
+            See :meth:`run_comparison`.
+        """
         parametric_noise = ParametricNoiseSettings(noise_std=noise_std, time_invariant=time_invariant)
         noise_settings = LQRNoiseSettings(parametric_noise=parametric_noise)
         extra_metadata = {"Parametric Noise Std": noise_std}
@@ -178,6 +255,15 @@ class InflationExperiment:
         )
 
     def run_control(self, noise_std: float, visualize: bool = True):
+        """Run the comparison with multiplicative control noise.
+
+        Parameters
+        ----------
+        noise_std : float
+            Relative error on the commanded input.
+        visualize : bool, optional
+            See :meth:`run_comparison`.
+        """
         control_noise = ControlNoiseSettings(noise_std=noise_std)
         noise_settings = LQRNoiseSettings(control_noise=control_noise)
         extra_metadata = {"Control Noise Std": noise_std}
@@ -187,6 +273,15 @@ class InflationExperiment:
         )
 
     def run_measurement(self, noise_std: float, visualize: bool = True):
+        """Run the comparison with additive sensor noise.
+
+        Parameters
+        ----------
+        noise_std : float
+            Standard deviation added to each observation entry.
+        visualize : bool, optional
+            See :meth:`run_comparison`.
+        """
         measurement_noise = MeasurementNoiseSettings(noise_std=noise_std)
         noise_settings = LQRNoiseSettings(measurement_noise=measurement_noise)
         extra_metadata = {"Measurement Noise Std": noise_std}
@@ -196,6 +291,17 @@ class InflationExperiment:
         )
 
     def run_disturbance(self, noise_std: float, disturbance_type: str = "gaussian", visualize: bool = True):
+        """Run the comparison with an external disturbance acting on the plant.
+
+        Parameters
+        ----------
+        noise_std : float
+            Magnitude of the disturbance on the successor state.
+        disturbance_type : {"gaussian", "sinusoidal", "constant"}, optional
+            See :class:`~lqr_base.noise.DisturbanceNoiseSettings`.
+        visualize : bool, optional
+            See :meth:`run_comparison`.
+        """
         disturbance_noise = DisturbanceNoiseSettings(noise_std=noise_std, disturbance_type=disturbance_type)
         noise_settings = LQRNoiseSettings(disturbance_noise=disturbance_noise)
         extra_metadata = {

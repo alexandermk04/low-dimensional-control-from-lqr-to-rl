@@ -1,3 +1,10 @@
+"""Compare the three unstructured policy-gradient solvers on one problem.
+
+Run it from ``code/`` with::
+
+    python -m evaluation.policy_gradient_evaluation
+"""
+
 import numpy as np
 
 from visualization import visualize_multiple_results
@@ -25,6 +32,13 @@ from lqr_solvers.mf_policy_gradient import (
 from visualization import visualize_costs, visualize_Ks
 
 def compare_all():
+    """Run all three solvers on the double integrator and plot the comparison.
+
+    Returns
+    -------
+    None
+        Shows the figure.
+    """
 
     A = np.array([[0, 1], [0, 0]])
     B = np.array([[0], [1]])
