@@ -108,6 +108,13 @@
 \pdfcompresslevel=2                     % 0 = no compression, 9 = strongest compression
 \fi
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Self-included packages, not from base
+\usepackage{amsmath, amssymb, mathtools}
+\usepackage{xcolor}
+\usepackage[capitalise,nameinlink]{cleveref}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Configurationen:
 
@@ -158,6 +165,20 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Provides TODOs within the margin:
 \newcommand{\TODO}[1]{\marginpar{\emph{\small{{\bf TODO: } #1}}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Own commands
+
+% Needs citations command
+\newcommand{\needcite}[1]{\textcolor{red}{\textsuperscript{[CITE: #1]}}}
+
+% Macros for notation
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\T}{^{\top}}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\spr}{\rho}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Document:

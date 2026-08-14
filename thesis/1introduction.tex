@@ -1,4 +1,4 @@
-\chapter{Introduction}\label{introduction}
+\chapter{Introduction}\label{chap:introduction}
 
 
 % The introduction describes the problem, why it is important, the main
@@ -27,22 +27,22 @@
 
 % My part
 Over the recent years, the field of robotics has seen rapid advancements in the capabilities of neural-network-based implementations.
-An increase in global compute power~\cite{TODO_compute}, fueled by the so-called ``AI race'' of LLMs, has allowed researchers around the world to create even more extensive model architectures for more complex use cases~\cite{TODO_llm_example}.
+An increase in global compute power\needcite{TODO compute}, fueled by the so-called ``AI race'' of LLMs, has allowed researchers around the world to create even more extensive model architectures for more complex use cases~\needcite{TODO llm example}.
 Transferring these structuresto physical bodies requires more space and on-device compute, often the limiting factors of embodiment. 
 To bridge this gap between powerful models and limited resources, the approach of cheap design has become more common.
-As mentioned by N.~Ay~\cite{TODO_ay_geometric}, the core idea is to maintain an ``embodied universal approximator'', while reducing the overall complexity of the model, which can be defined based on the specific case.
+As mentioned by N.~Ay\needcite{TODO ay geometric}, the core idea is to maintain an ``embodied universal approximator'', while reducing the overall complexity of the model, which can be defined based on the specific case.
 The most straightforward approach is inducing the underlying physical dynamics of the embodiment into the architecture, which is often of lower dimensionality than the actual sensors and actuators.
-Recent papers focusing on algorithms for the LQR~\cite{TODO_lqr}, apply this approach by offering implementations for enforcing low-rank controllers, leading to lower complexity in relation to parameterization.
-Still, this low-dimensional approach has yet to be extended~\cite{TODO_extension} to more complex embodiments, and is missing a crucial part required for implementation: Robustness.
+Recent papers focusing on algorithms for the LQR\needcite{TODO lqr}, apply this approach by offering implementations for enforcing low-rank controllers, leading to lower complexity in relation to parameterization.
+Still, this low-dimensional approach has yet to be extended\needcite{TODO extension} to more complex embodiments, and is missing a crucial part required for implementation: Robustness.
 This leaves us with the question: \emph{Is it possible to train a low-dimensional controller for an embodied agent, that is performant yet robust?}
 
 As robustness is a wide topic, in our case, we use it when referring to sensor- and actuator noise, as well as parametric uncertainties of the underlying model and 
 external disturbances. When talking about performance, we mean reducing cost as much as possible in relation to an optimal controller. In the end, we want to show
 in which cases low-dimensional controllers are a viable alternative, and can thus reduce costs for hardware implementations.
 
-To answer our question, we will first explain the core concepts and collect existing approaches for the LQR setting in section~\ref{preliminaries} and \ref{background}.
-In section~\ref{lqr}, we will compare these implementations using the double integrator problem for LQR with respect to general performance, as well as robustness.
-Building on that, we will artificially inflate our inputs and outputs via matrix multiplication in section~\ref{inflation} and additionally introduce deep RL baseline models into the comparison.
-For section~\ref{perception}, we will completely move away from LQR, and extend the setting to a perception-based implementation.
+To answer our question, we will first explain the core concepts and collect existing approaches for the LQR setting in section~\ref{chap:preliminaries} and \ref{chap:background}.
+In section~\ref{chap:lqr}, we will compare these implementations using the double integrator problem for LQR with respect to general performance, as well as robustness.
+Building on that, we will artificially inflate our inputs and outputs via matrix multiplication in section~\ref{chap:inflation} and additionally introduce deep RL baseline models into the comparison.
+For section~\ref{chap:perception}, we will completely move away from LQR, and extend the setting to a perception-based implementation.
 Here we will compare different models with varying parameter complexity in regard to robustness, applying the concepts we learned from our earlier experiments.
 Finally, we will conclude by analyzing whether we indeed achieved our goal of constructing a robust controller, and stating how our approach can be applied to more complex settings.
