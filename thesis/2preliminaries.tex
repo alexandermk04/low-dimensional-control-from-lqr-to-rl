@@ -1,9 +1,381 @@
-\chapter{Preliminaries}\label{preliminaries}
+\chapter{Preliminaries}
+\label{chap:preliminaries}
+ 
+Before turning to the experiments, this chapter revisits the concepts that all
+later parts of this thesis build on. \Cref{sec:statespace} introduces linear
+state-space models and their discretization, \cref{sec:doubleintegrator}
+shows them on the double integrator that serves as our running example
+throughout, and \cref{sec:stability,sec:lqr} recall the stability notions and
+the linear quadratic regulator. \Cref{sec:uncertainty,sec:robustness} define the
+perturbation models and the robustness metrics used to evaluate every
+controller we construct.
 
-\section{Control Theory Basics}
+\section{Linear State-Space Models}
+\label{sec:statespace}
+ 
+In control theory, the evolution of an agent and together with its environment is
+described by a \emph{state-space model}: a rule that assigns to every point of
+a state space the instantaneous rate at which the system moves through it.
+Throughout this thesis we restrict attention to the class of
+\emph{linear time-invariant} (LTI) systems, for which this rule is linear in
+both the state and the input and does not itself depend on
+time\needcite{ControlSystemsTheoryAndDesign.pdf}.
+ 
+A continuous-time LTI system is given by
 
-Information about state space models, LQR, etc.
+\begin{subequations}
+\label{eq:ss_cont}
+\begin{align}
+    \dot{x}(t) &= A_c\, x(t) + B_c\, u(t), \qquad x(0) = x_0, \label{eq:ss_cont_state}\\
+    y(t)       &= C\, x(t) + D\, u(t), \label{eq:ss_cont_output}
+\end{align}
+\end{subequations}
 
+where $x(t) \in \R^{n}$ is the \emph{state vector}, $u(t) \in \R^{m}$ the
+\emph{input vector} chosen by the agent, and $y(t) \in \R^{p}$ the
+\emph{output vector}, i.e.\ the output observed and thus available to the
+feedback controller. Accordingly, $A_c \in \R^{n \times n}$ is called the
+\emph{system matrix}, $B_c \in \R^{n \times m}$ the \emph{input matrix},
+$C \in \R^{p \times n}$ the \emph{output matrix}, and $D \in \R^{p \times m}$
+the \emph{feedthrough matrix}.
+ 
+The two equations in \eqref{eq:ss_cont} play fundamentally different roles, and
+it is helpful explaining their distinction.
+\Cref{eq:ss_cont_state} is a differential equation: it does not compute the
+state, which is assumed to be known at every instant, but prescribes its
+\emph{rate of change}. The pair $(A_c, B_c)$ therefore governs how the system
+\emph{behaves}, with $A_c$ describing its autonomous dynamics and
+$B_c$ describing how the input of the agent influences them. \Cref{eq:ss_cont_output}, in contrast, 
+contains no derivative at all. It is an instantaneous readout, and the pair $(C, D)$ therefore
+describes how the system is \emph{observed} rather than how it evolves. We set
+$D = 0$ throughout, which is the standard assumption for systems in which the
+actuator has no direct instantaneous influence on the sensor\needcite{either same notes or textbook}.
+ 
+Given an input signal $u(\cdot)$, the trajectory of \eqref{eq:ss_cont_state} is
+obtained by integration and is given in closed form by the variation-of-constants
+formula
+
+\begin{equation}
+    \label{eq:variation_of_constants}
+    x(t) = e^{A_c t} x_0 + \int_{0}^{t} e^{A_c (t - s)} B_c\, u(s)\, \mathrm{d}s ,
+\end{equation}
+
+where $e^{A_c t}$ denotes the matrix exponential\needcite{same textbook}. This
+makes the interpretation of $A_c$ precise: in the scalar case
+$\dot{x} = a x$ yields $x(t) = e^{at} x_0$, so $a$ is a growth \emph{rate}
+rather than a value. \Cref{eq:variation_of_constants} generalises this, with the
+eigenvalues of $A_c$ acting as growth rates along the corresponding
+eigendirections.
+ 
+\paragraph{Full state measurement.}
+Generally, we assume that the state is fully
+measurable and therefore set $C = I_n$, which reduces
+\eqref{eq:ss_cont_output} to $y(t) = x(t)$. However, when we introduce disturbances
+through noise, this will no longer be the case. More details on this will be
+given in \cref{sec:uncertainty}. The distinction between $u = -Kx$ and $u = -Ky$ is
+therefore critical, since the former admits an exact solution while the
+latter does not; we return to this point in \cref{sec:lqr}.
+ 
+% -----------------------------------------------------------------------------
+\subsection{Discretization}
+\label{subsec:discretization}
+ 
+Digital controllers, as in our case, do not act continuously: they sample the output at a fixed
+rate and hold the computed controlinput constant until the next sampling point. The
+learning algorithms studied in this thesis operate on such sampled trajectories
+as well, so our model has to reflect this. The standard approach is the
+\emph{zero-order hold} (ZOH)\needcite{find reference}. Fixing a sampling period $h > 0$ and writing
+$x_k \coloneqq x(kh)$, the input is assumed to be piecewise constant,
+
+\begin{equation}
+    \label{eq:zoh_input}
+    u(t) = u_k \qquad \text{for } t \in [kh,\, (k+1)h), \quad k \in \mathbb{N}_0 .
+\end{equation}
+
+Substituting \eqref{eq:zoh_input} into \eqref{eq:variation_of_constants} over a
+single sampling interval and applying the change of variables
+$\tau = (k+1)h - s$ yields the discrete-time model
+
+\begin{equation}
+    \label{eq:ss_disc}
+    x_{k+1} = A_d\, x_k + B_d\, u_k ,
+\end{equation}
+
+with
+
+\begin{equation}
+    \label{eq:zoh_matrices}
+    A_d = e^{A_c h},
+    \qquad
+    B_d = \left( \int_{0}^{h} e^{A_c \tau} \, \mathrm{d}\tau \right) B_c .
+\end{equation}
+
+Two clarifications need to be made. First, \eqref{eq:ss_disc} is not an approximation: it
+reproduces the continuous-time trajectory exactly at the sampling
+instants, provided the input is genuinely piecewise constant. This distinguishes
+ZOH from other schemes such as the forward Euler discretization
+$A_d \approx I + h A_c$, $B_d \approx h B_c$, which is only first-order
+accurate.\footnote{For the double integrator of
+\cref{sec:doubleintegrator} the two approaches happen to agree on $A_d$ but
+\emph{not} on $B_d$, where forward Euler gives $[0,\ h]^{\top}$ instead of the
+correct $[h^2/2,\ h]^{\top}$.} Second, the left-hand side of \eqref{eq:ss_disc} is the actual next
+state rather than a derivative. The identity
+$(x_{k+1} - x_k)/h \approx \dot{x}(kh)$ recovers the continuous picture, and the
+identity block contained in $A_d$ but not in $A_c$ is exactly the state carried
+over from the previous step.
+ 
+Unless stated otherwise, all experiments in this thesis are carried out in
+discrete time with sampling period $h = 0.01$, and
+we drop the subscript $d$ in the following, writing simply $A$ and $B$.
+ 
+\section{The Double Integrator}
+\label{sec:doubleintegrator}
+ 
+To make the comparisons across all chapters
+meaningful, all experiments are built on a single system: the
+\emph{double integrator}, a frictionless point mass of mass $m$ moving along a
+line under an applied force $u$\needcite{find some reference}. Its dynamics are Newton's second law,
+
+\begin{equation}
+    \label{eq:newton}
+    m \, \ddot{p}(t) = u(t),
+\end{equation}
+
+where $p(t)$ denotes the position of the mass. We simplify by using $m = 1$, so that
+force and acceleration coincide numerically. Choosing position and velocity as
+the state, $x = [\,p,\ v\,]^{\top} \in \R^{2}$, the second-order equation
+\eqref{eq:newton} decomposes into the first-order system
+
+\begin{equation}
+    \label{eq:di_first_order}
+    \dot{p}(t) = v(t),
+    \qquad
+    \dot{v}(t) = u(t),
+\end{equation}
+
+in which the first equation is the definition of velocity and the second is
+\eqref{eq:newton} itself. In the notation of \eqref{eq:ss_cont} this gives
+
+\begin{equation}
+    \label{eq:di_cont_matrices}
+    A_c = \begin{bmatrix} 0 & 1 \\ 0 & 0 \end{bmatrix},
+    \qquad
+    B_c = \begin{bmatrix} 0 \\ 1 \end{bmatrix},
+    \qquad
+    C = I_2, \qquad D = 0 .
+\end{equation}
+
+The entry $(A_c)_{12} = 1$ should be read as stated in \cref{sec:statespace}:
+the rate of change of position is given by the current velocity.
+ 
+Because $A_c^{2} = 0$, the matrix exponential in
+\eqref{eq:zoh_matrices} truncates after two terms, $e^{A_c h} = I + A_c h$, and
+the discretization is available in closed form:
+
+\begin{equation}
+    \label{eq:di_disc_matrices}
+    A_d = \begin{bmatrix} 1 & h \\ 0 & 1 \end{bmatrix},
+    \qquad
+    B_d = \begin{bmatrix} h^{2}/2 \\ h \end{bmatrix}.
+\end{equation}
+
+This system is the minimal nontrivial choice for our purposes. It is
+second-order, so the state is not directly actuated and the controller must
+account for momentum; it is controllable for every $h > 0$; and it is not
+open-loop stable, since $A_c$ has a double eigenvalue at the origin and $A_d$
+correspondingly a double eigenvalue at $1$. The last property matters for the
+learning experiments: an uncontrolled or badly initialised policy diverges, so
+the assumption of a known stabilising initial gain (\cref{sec:lqr}) is a real
+restriction. These properties are made precise in
+\cref{sec:stability}.
+
+
+\section{Stability, Controllability and Observability}
+\label{sec:stability}
+
+Now that we have defined our system, before we can optimze over it, it
+is important to clear up different characteristics of the same.
+
+\subsection{Stability}
+\label{subsec:stability}
+
+The first of these is stability, which guarantees that changes in the system
+don't become to drastic, and thus cause some kind of failure. Mathematically, stability
+is defined the following way\needcite{Astrom \& Wittenmark,
+"Computer-Controlled Systems", p.77}:
+
+For a discrete-time state-space equation x(k+1) = f(x(k), k), and solutions x_0(k), x(k),
+as well as initial conditions x_0(k_0), x(k_0):
+
+The solution x_0(k) is stable if for a given epsilon > 0, there exists a delta(epsilon, k_0) > 0
+such that all solutions with norm(x(k_0) - x_0(k_0)) < epsilon for all k >= k_0.
+
+This then produces the for us relevant notion of Asymptotic stability of linear systems\needcite{Astrom \& Wittenmark,
+"Computer-Controlled Systems", p.77}:
+
+Theorem 3.1: A discrete-time linear time-invariant system is asymptotically stable, if and only if
+all eigenvalues of the system are strictly inside the unit disk"
+
+One of the relevant findings here is, that stability is dependent on the whole system, not any specific
+step.
+
+\subsection{Controllability}
+\label{subsec:controllability}
+
+Whether a system is controllable or not indicates if, independently from the controller,
+it is possible to reach any state inside its state space in a given time. Are more formal definition
+is given in \needcite{ControlSystemsTheoryAndDesign}:
+
+Definition 3.1
+The system (3.1) is said to be controllable if for any initial state x(0) = x0, time tf > 0
+and final state xf there exists a control input u(t), 0 ≤ t ≤ tf , such that the solution of
+(3.1) satisfies x(tf ) = xf . Otherwise, the system is said to be uncontrollable.
+
+To check whether a given system is actually controllable, we need to compute a controllability
+matrix \needcite{ControlSystemsTheoryAndDesign}:
+
+C(A,b) = [b Ab A2b...An−1b] (needs to be adapted to B as matrix)
+
+and then verify it is full rank. Given by Corrollary 3.1 in \needcite{ControlSystemsTheoryAndDesign},
+the system is thus controllable.
+
+Applying this to our Double Integrator example:
+
+... 
+
+we can indeed see that it an controllable system.
+
+\subsection{Observability}
+\label{subsec:observability}
+
+Finally, we need to take a look at observability. Before we assumed, that we can actually
+observe the state of the system we're modeling. However, it is much more realistic, that we
+only collect a recording of it (for example through sensors), and need to estimate the, for us,
+hidden real state of the system. The notion of observability describes whether we can determine
+this state only from our control input u(t) and our recorded response of the system y(t)
+\needcite{ControlSystemsTheoryAndDesign}:
+
+Definition 4.1
+The system with state space model (4.1) is said to be observable if for any tf > 0 the
+initial state x(0) can be uniquely determined from the time history of the input u(t) and
+the output y(t) in the time interval 0 ≤ t ≤ tf . Otherwise, the system is said to be
+unobservable.
+
+Again, together with the previously constructed controllability matrix, we can derive a matrix,
+called observability matrix:
+
+O(c,A) = CT (AT ,cT ) = [c cA...cAn−1]^T
+
+and make use of the following theorem\needcite{ControlSystemsTheoryAndDesign}:
+
+Theorem 4.2
+The system (4.1) is observable if and only if the observability matrix O(c,A) has full rank.
+
+Checking this for our double integrator, we can again see that it is observable.
+
+...
+
+If we however can't uniquely determine x(t) from our observation, we make use of an estimation x^(t).
+The difference between both is called estimation error, and follows the dynamics:
+
+x˜.(t) = A˜x(t), ˜x(0) = x(0)− ˆx(0)
+
+The reduction of this error thus depends on the eigenvalues of A.
+Here again stability becomes important: if our system is unstable, the error goes to infinity\needcite{ControlSystemsTheoryAndDesign}
+and makes it impossible to correctly estimate our system state. Any applied optimizer for a controller only
+estimating the state will thus fail as a consequence.
+
+The topic of observability will become later important in \cref{sec:uncertainty}, where we intentionally
+introduce noise to make y(t) != x(t). We will revisit observability and its implications there again.
+ 
+\section{The Linear Quadratic Regulator}
+\label{sec:lqr}
+
+TODO
+ 
+\section{Uncertainty and Disturbance Models}
+\label{sec:uncertainty}
+
+Until now, we assumed that we can fully observe the system, and that its behavior
+are governed by the same dynamics we know. However, in reality, there are influences on such
+systems which we don't clearly know of. Especially for embodied agents this is important, as
+the world is a messy place.
+
+We will thus introduce four different disturbances to be included in the model, commonly known
+as noise.
+
+\subsection{Measurement Noise}
+\label{subsec:measurementnoise}
+
+This is the one mainly dealt with in relation to observability - with this we model
+that sensors can't capture the real model state cleanly, and are noisy. So capturing the same
+state twice would lead to slightly different observations y(t). Let n_m(t) denote the measurement
+noise at timestep t. Then:
+
+n_m(t) sampled from Normal(0, std) with shape x(t), std in \R+
+
+y(t) = x(t) + n_m(t)
+
+TODO: include note in relation to observability
+
+\subsection{Control Noise}
+\label{subsec:controlnoise}
+
+Control noise, as the name says, acts on the applied control input. The realism comes from the
+difference between the programmed motion of an actuator and the actually enacted action. This
+variation is captured by this noise. Here we deal (other than the additive noise on the measurement)
+with multiplicative noise, which scales with the received control input. In practice this means that
+the applied control input v(t) is calculated by:
+
+n_c(t) sampled from Normal(0, std) with shape u(t)
+
+v(t) = u(t) * (1 + n_c(t))
+
+When applying this to an input, the next step then becomes:
+
+x(t+1) = A @ x_t + B @ v_t
+
+\subsection{Parametric Uncertainty}
+\label{subsec:paremetricuncertainty}
+
+This acts directly on the matrices of the model. Here, we either decide to keep it time invariant,
+meaning n_p(t) = n_p(0) for all t, or resample on each iteration. With the latter, we simulate an
+ever changing system, while the former is a formalization of us following a slightly mismodeled system.
+As well as the first one, this again is additive noise, so doesn't scale with the values of A or B.
+
+Applied, it influences the system in the following way:
+
+n_p_A(t) = Normal(0, std) with shape A
+n_p_B(t) = Normal(0, std) with shape b
+
+x(t+1) = (A + n_p_A(t)) @ x_t + (B + n_p_B(t)) @ v_t
+
+\subsection{External Disturbance}
+\label{subsec:externaldisturbance}
+
+This noise not only influences our observability, but interacts with the system directly.
+Here we model external influences, like constant wind pushing our agent in a specific direction
+or periodic disturbances, for example rain hitting it with some frequency.
+
+In practice, depending on the type, the noise is drawn the following way:
+
+Gaussian: n_d(t) = Normal(0, std) with shape x(t)
+
+Sinusoidal: n_d(t) = std * np.sin(0.1 * t) * 1_vector
+
+Constant: n_d(0) = Normal(0, std) with shape x(t), n_d(t) = n_d(0)
+
+With it, the following state is calculated in this way:
+
+x(t+1) = A @ x_t + B @ v_t + n_d(t)
+ 
+\section{Robustness Metrics}
+\label{sec:robustness}
+
+TODO: How do I define robustness, what are interesting metrics to report, per section
+ 
 \section{Notation}
+\label{sec:notation}
 
-Which letters I will use in what context
+
+TODO: Which letters I will use in what context, tbd
