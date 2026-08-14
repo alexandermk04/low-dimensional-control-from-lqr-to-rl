@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import numpy as np
 
 # Global seed for the initial state sampling of the LQR, can be changed
-SEED = 2024
+SEED = 2023
 
 @dataclass
 class StateSpaceModel:

@@ -156,16 +156,13 @@ def estimate_gradient(lqr: LQRDiscrete, K: np.ndarray, m: int, l: int, r: float)
     three-tuple.
     """
     pertubations = []
+    cost_differences = []
     cost_estimates = []
     sigma_estimates = []
 
     d = K.shape[0] * K.shape[1]
 
     for _ in range(m):
-
-        # Reset the state of the LQR system to the initial state before each trajectory
-        lqr.reset()
-        lqr.apply_noise()
 
         # Sample a random matrix with K's shape
         U = np.random.randn(*K.shape)
@@ -182,22 +179,37 @@ def estimate_gradient(lqr: LQRDiscrete, K: np.ndarray, m: int, l: int, r: float)
 
         # Run a trajectory with K_i_plus policy
         rng_state = np.random.get_state()
+
+        # Reset the state of the LQR system to the initial state before each trajectory
+        lqr.reset()
+        lqr.apply_noise()
+
         cost_estimate_plus, sigma_estimate_plus = run_trajectory(lqr, K_i_plus, l)
 
         # Run a trajectory with K_i_minus policy
         np.random.set_state(rng_state)
+
+
+        # Reset the state of the LQR system to the initial state before each trajectory
+        lqr.reset()
+        lqr.apply_noise()
+
         cost_estimate_minus, sigma_estimate_minus = run_trajectory(lqr, K_i_minus, l)
 
-        # TODO: Check validity
+        cost_differences.append(cost_estimate_plus - cost_estimate_minus)
+
         overall_cost_estimate = (cost_estimate_plus + cost_estimate_minus)/2
         cost_estimates.append(overall_cost_estimate)
+
         sigma_estimates.append(sigma_estimate_plus + sigma_estimate_minus)
 
-    # Centering the cost estimates by subtracting the mean to reduce variance
-    mean_cost = np.mean(cost_estimates)
-    costs = cost_estimates - mean_cost
+    # Centering the cost differences by subtracting the mean to reduce variance
+    mean_cost_diffs = np.mean(cost_differences)
+    centered_cost_diffs = cost_differences - mean_cost_diffs
 
-    cost_gradient_estimate = sum((d / (r ** 2)) * C * U for C, U in zip(costs, pertubations))
+    mean_cost = np.mean(cost_estimates)
+
+    cost_gradient_estimate = sum((d / (r ** 2)) * C * U for C, U in zip(centered_cost_diffs, pertubations))
     cost_gradient_estimate /= m
 
     sigma_estimate = sum(sig for sig in sigma_estimates) / m
@@ -226,7 +238,7 @@ def model_free_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePolicyGradie
     costs = []
     ks = [K]
 
-    for _ in range(settings.gradient_steps):
+    for i in range(settings.gradient_steps):
         cost_gradient_estimate, sigma_estimate, mean_cost = estimate_gradient(lqr, K, settings.m, settings.l, settings.r)
 
         # By section D.3, above lemma 29, the expected cost of the pertubed policy is used for the cost estimate
@@ -235,6 +247,8 @@ def model_free_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePolicyGradie
         K = K - settings.gradient_lr * cost_gradient_estimate
 
         ks.append(K)
+
+        print(f"Step {i} done.")
 
     return ks, costs
 
@@ -270,7 +284,7 @@ def model_free_natural_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePoli
     costs = []
     ks = [K]
 
-    for _ in range(settings.gradient_steps):
+    for i in range(settings.gradient_steps):
         cost_gradient_estimate, sigma_estimate, mean_cost = estimate_gradient(lqr, K, settings.m, settings.l, settings.r)
 
         # By section D.3, above lemma 29, the expected cost of the pertubed policy is used for the cost estimate
@@ -280,5 +294,7 @@ def model_free_natural_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePoli
         K = K - settings.gradient_lr * (cost_gradient_estimate @ np.linalg.pinv(sigma_estimate, rcond=1e-6))
 
         ks.append(K)
+
+        print(f"Step {i} done.")
 
     return ks, costs
