@@ -21,7 +21,7 @@ References
        All of the implementation below is adapted from this paper.
 
 """
-
+from tqdm import tqdm
 import numpy as np
 from dataclasses import dataclass
 
@@ -331,22 +331,29 @@ def structured_policy_iteration(lqr: LQRDiscrete, settings: StructuredPolicySett
     # Initial state covariance
     sigma_0 = np.eye(lqr.A.shape[0])
 
-    i = 0
+    progress_bar = tqdm(range(settings.limit), desc="Structured Policy Iteration", unit="step")
 
-    while i < settings.limit:
-        i += 1
-        print(f"Iteration {i}")
+    for i in progress_bar:
+
         K_plus = calculate_next_K(lqr, K_t, sigma_0, settings)
 
         ks.append(K_plus)
 
+        progress_bar.set_postfix({
+            "True Cost": f"{true_cost(lqr, lqr.effective_gain(K_plus)):.3e}",
+            "Matrix Rank": f"{np.linalg.matrix_rank(K_plus)}",
+        })
+
         if np.linalg.norm(K_plus - K_t, ord='fro') < settings.epsilon:
-            print(f"Converged after {i} iterations")
+            progress_bar.set_description(f"Structured Policy Iteration: Converged.")
+            progress_bar.n = i + 1
+            progress_bar.refresh()
             break
 
         K_t = K_plus
 
-    print(f"Ended after {i} iterations")
+    progress_bar.set_description(f"Structured Policy Iteration: Ended.")
+    progress_bar.refresh()
 
     return ks, costs
 
@@ -482,9 +489,10 @@ def structured_policy_iteration_mf(lqr: LQRDiscrete, settings: MFStructuredPolic
 
     i = 0
 
-    while i < settings.limit:
-        i += 1
-        print(f"Iteration {i}")
+    progress_bar = tqdm(range(settings.limit), desc="Structured Policy Iteration (Model-Free)", unit="step")
+
+    for i in progress_bar:
+
         grad_K, _, f_K = estimate_gradient(lqr, K_t, settings.m, settings.l, settings.r)
 
         K_plus = calculate_next_K_mf(lqr, K_t, grad_K, f_K, settings)
@@ -493,13 +501,22 @@ def structured_policy_iteration_mf(lqr: LQRDiscrete, settings: MFStructuredPolic
         costs.append(f_K)
         #print(f"Iteration {i}, cost estimate: {mean_cost}")
 
+        progress_bar.set_postfix({
+            "True Cost": f"{true_cost(lqr, lqr.effective_gain(K_plus)):.3e}",
+            "Matrix Rank": f"{np.linalg.matrix_rank(K_plus)}",
+        })
+
         if np.linalg.norm(K_plus - K_t, ord='fro') < settings.epsilon:
-            print(f"Converged after {i} iterations")
+            progress_bar.set_description(f"Structured Policy Iteration (Model-Free): Converged.")
+            progress_bar.n = i + 1
+            progress_bar.refresh()
             return ks, costs
 
         K_t = K_plus
+    
+    progress_bar.set_description(f"Structured Policy Iteration (Model-Free): Ended.")
+    progress_bar.refresh()
 
-    print(f"Ended after {i} iterations")
     return ks, costs
 
 

@@ -14,11 +14,13 @@ References
        https://arxiv.org/abs/1801.05039
 """
 
+from tqdm import tqdm
 import numpy as np
 from dataclasses import dataclass
 
 from lqr_base.simple_lqr import (
-    LQRDiscrete
+    LQRDiscrete,
+    true_cost,
 )
 
 @dataclass
@@ -238,7 +240,9 @@ def model_free_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePolicyGradie
     costs = []
     ks = [K]
 
-    for i in range(settings.gradient_steps):
+    progress_bar = tqdm(range(settings.gradient_steps), desc="Model-Free Policy Gradient", unit="step")
+
+    for _ in progress_bar:
         cost_gradient_estimate, sigma_estimate, mean_cost = estimate_gradient(lqr, K, settings.m, settings.l, settings.r)
 
         # By section D.3, above lemma 29, the expected cost of the pertubed policy is used for the cost estimate
@@ -248,7 +252,9 @@ def model_free_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePolicyGradie
 
         ks.append(K)
 
-        print(f"Step {i} done.")
+        progress_bar.set_postfix({
+            "True Cost": f"{true_cost(lqr, lqr.effective_gain(K)):.3e}"
+        })
 
     return ks, costs
 
@@ -284,7 +290,9 @@ def model_free_natural_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePoli
     costs = []
     ks = [K]
 
-    for i in range(settings.gradient_steps):
+    progress_bar = tqdm(range(settings.gradient_steps), desc="Model-Free Natural Policy Gradient", unit="step")
+
+    for _ in progress_bar:
         cost_gradient_estimate, sigma_estimate, mean_cost = estimate_gradient(lqr, K, settings.m, settings.l, settings.r)
 
         # By section D.3, above lemma 29, the expected cost of the pertubed policy is used for the cost estimate
@@ -295,6 +303,8 @@ def model_free_natural_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePoli
 
         ks.append(K)
 
-        print(f"Step {i} done.")
+        progress_bar.set_postfix({
+            "True Cost": f"{true_cost(lqr, lqr.effective_gain(K)):.3e}"
+        })
 
     return ks, costs

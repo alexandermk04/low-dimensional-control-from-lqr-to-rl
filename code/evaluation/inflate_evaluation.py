@@ -186,6 +186,8 @@ class InflationExperiment:
 
         base_k, base_cost = baseline_solution(base_lqr)
         print(f"[{label}] Baseline solution done")
+        print(f"[{label}] Baseline cost: {base_cost:.3e}")
+        
         full_ks, _ = model_free_natural_policy_gradient(lqr=lqr, settings=self.nat_settings)
         print(f"[{label}] Full-rank calculation done")
         low_ks, _ = structured_policy_iteration_mf(lqr=lqr, settings=self.structured_settings)

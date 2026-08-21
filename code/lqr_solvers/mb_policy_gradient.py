@@ -15,12 +15,13 @@ References
 
 from dataclasses import dataclass
 import numpy as np
+from tqdm import tqdm
 
 from scipy.linalg import solve_discrete_lyapunov
 
 from basetypes import StateSpaceModel
 
-from lqr_base.simple_lqr import LQRDiscrete
+from lqr_base.simple_lqr import LQRDiscrete, true_cost
 
 @dataclass
 class ModelBasedPolicyGradientSettings:
@@ -118,11 +119,17 @@ def gradient_descent_discrete(lqr: LQRDiscrete, settings: ModelBasedPolicyGradie
     costs = []
     ks = [K]
 
-    for _ in range(settings.gradient_steps):
+    progress_bar = tqdm(range(settings.gradient_steps), desc="Model-Based Policy Gradient", unit="step")
+
+    for _ in progress_bar:
         grad, expected_cost = calculate_gradient_model_based_discrete(lqr, K)
         costs.append(expected_cost)
 
         K = K - settings.gradient_lr * grad
         ks.append(K)
+
+        progress_bar.set_postfix({
+            "True Cost": f"{true_cost(lqr, lqr.effective_gain(K)):.3e}"
+        })
 
     return ks, costs

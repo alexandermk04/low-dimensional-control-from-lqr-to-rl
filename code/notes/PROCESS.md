@@ -62,3 +62,6 @@ diverges for steps larger than 3.7e-4
 - TODO: Integrate ZOH integration for gymnasium environment
 - document functions, etc.
 - write preliminaries
+
+## 21st of August
+- added tqdm to watch the progress of true cost evaluation during iterations
