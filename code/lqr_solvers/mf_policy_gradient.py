@@ -18,6 +18,8 @@ from tqdm import tqdm
 import numpy as np
 from dataclasses import dataclass
 
+from seeding import rng
+
 from lqr_base.simple_lqr import (
     LQRDiscrete,
     true_cost,
@@ -49,6 +51,7 @@ class ModelFreePolicyGradientSettings:
     r: float  # Smoothing parameter
     gradient_steps: int  # Number of gradient steps
     gradient_lr: float  # Gradient step size
+    seed_seq: np.random.SeedSequence  # Seed sequence for reproducibility
 
 # Observation norm beyond which a rollout is treated as diverged.
 DIVERGENCE_THRESHOLD = 1e5
@@ -104,7 +107,7 @@ def run_trajectory(lqr: LQRDiscrete, K: np.ndarray, l: int) -> tuple[np.float64,
 
     return sum(costs), sigma
 
-def estimate_gradient(lqr: LQRDiscrete, K: np.ndarray, m: int, l: int, r: float) -> tuple[np.ndarray, np.ndarray, float]:
+def estimate_gradient(lqr: LQRDiscrete, K: np.ndarray, m: int, l: int, r: float, rngen: np.random.Generator) -> tuple[np.ndarray, np.ndarray, float]:
     """Estimate the policy gradient by random search around ``K``.
 
     Draws ``m`` random perturbations ``U`` of fixed Frobenius norm ``r``, and
@@ -123,6 +126,8 @@ def estimate_gradient(lqr: LQRDiscrete, K: np.ndarray, m: int, l: int, r: float)
         Steps per rollout.
     r : float
         Perturbation radius in Frobenius norm.
+    rngen : np.random.Generator
+        The seeded generator for reproducibility
 
     Returns
     -------
@@ -167,7 +172,7 @@ def estimate_gradient(lqr: LQRDiscrete, K: np.ndarray, m: int, l: int, r: float)
     for _ in range(m):
 
         # Sample a random matrix with K's shape
-        U = np.random.randn(*K.shape)
+        U = rngen.standard_normal(K.shape)
 
         # Normalize to have unit frobenius norm
         U /= np.linalg.norm(U, ord='fro')
@@ -179,25 +184,13 @@ def estimate_gradient(lqr: LQRDiscrete, K: np.ndarray, m: int, l: int, r: float)
         K_i_plus = K + U
         K_i_minus = K - U
 
-        # Run a trajectory with K_i_plus policy
-        rng_state = np.random.get_state()
-
-        # Reset the state of the LQR system to the initial state before each trajectory
         lqr.reset()
-        lqr.apply_noise()
-
         cost_estimate_plus, sigma_estimate_plus = run_trajectory(lqr, K_i_plus, l)
 
-        # Run a trajectory with K_i_minus policy
-        np.random.set_state(rng_state)
-
-
-        # Reset the state of the LQR system to the initial state before each trajectory
         lqr.reset()
-        lqr.apply_noise()
-
         cost_estimate_minus, sigma_estimate_minus = run_trajectory(lqr, K_i_minus, l)
 
+        # Calculate values for this perturbation pair
         cost_differences.append(cost_estimate_plus - cost_estimate_minus)
 
         overall_cost_estimate = (cost_estimate_plus + cost_estimate_minus)/2
@@ -235,7 +228,10 @@ def model_free_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePolicyGradie
     costs : list[float]
         Estimated cost at each step, of length ``gradient_steps``. 
     """
+    lqr.reset()
     K = settings.K_0
+
+    rngen = rng(settings.seed_seq)
 
     costs = []
     ks = [K]
@@ -243,7 +239,7 @@ def model_free_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePolicyGradie
     progress_bar = tqdm(range(settings.gradient_steps), desc="Model-Free Policy Gradient", unit="step")
 
     for _ in progress_bar:
-        cost_gradient_estimate, sigma_estimate, mean_cost = estimate_gradient(lqr, K, settings.m, settings.l, settings.r)
+        cost_gradient_estimate, sigma_estimate, mean_cost = estimate_gradient(lqr, K, settings.m, settings.l, settings.r, rngen)
 
         # By section D.3, above lemma 29, the expected cost of the pertubed policy is used for the cost estimate
         costs.append(mean_cost)
@@ -285,7 +281,10 @@ def model_free_natural_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePoli
     an enormous step. This was one of the crucial changes to
     fix inflated runs into running stably.
     """
+    lqr.reset()
     K = settings.K_0
+
+    rngen = rng(settings.seed_seq)
 
     costs = []
     ks = [K]
@@ -293,7 +292,7 @@ def model_free_natural_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePoli
     progress_bar = tqdm(range(settings.gradient_steps), desc="Model-Free Natural Policy Gradient", unit="step")
 
     for _ in progress_bar:
-        cost_gradient_estimate, sigma_estimate, mean_cost = estimate_gradient(lqr, K, settings.m, settings.l, settings.r)
+        cost_gradient_estimate, sigma_estimate, mean_cost = estimate_gradient(lqr, K, settings.m, settings.l, settings.r, rngen)
 
         # By section D.3, above lemma 29, the expected cost of the pertubed policy is used for the cost estimate
         costs.append(mean_cost)

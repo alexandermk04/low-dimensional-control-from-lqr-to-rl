@@ -8,9 +8,6 @@ Throughout the repository the feedback convention is ``u = -K x``.
 from dataclasses import dataclass
 import numpy as np
 
-# Global seed for the initial state sampling of the LQR, can be changed
-SEED = 2023
-
 @dataclass
 class StateSpaceModel:
     """Continuous-time linear system ``x' = A x + B u``.

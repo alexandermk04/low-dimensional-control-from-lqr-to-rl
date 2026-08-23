@@ -79,7 +79,8 @@ class LQRInflated(LQRDiscrete):
         Sampling interval used for the discretization.
     """
 
-    dt: float
+    U_1: np.ndarray
+    U_2: np.ndarray
 
     def __init__(self, settings: LQRInflatedSettings):
         """Discretize the model, store the lifts and check their shapes.
@@ -96,26 +97,11 @@ class LQRInflated(LQRDiscrete):
             If the lift shapes do not match the plant, via
             :meth:`validate_dimensions`.
         """
-        self.dt = settings.dt
+        super().__init__(settings)
 
-        A_d, B_d = continuous_to_discrete(settings.model.A, settings.model.B, dt=settings.dt)
-
-        self.A = A_d
-        self.B = B_d
-
-        self.max_initial_state = settings.max_initial_state
-        self.resample_initial_state = settings.resample_initial_state
-        self.x_0 = None
-        self.initialized = False
-
-        self.Q = settings.Q
-        self.R = settings.R
         self.U_1 = settings.U_1
         self.U_2 = settings.U_2
         self.validate_dimensions()
-
-        self.noise = False
-        self.setup_noise(settings.noise_settings)
 
     def validate_dimensions(self):
         """Check that the lifts compose with the plant.
@@ -197,12 +183,12 @@ class LQRInflated(LQRDiscrete):
             y_t = self.U_1 @ x_t
 
             if self.measurement_noise is not None:
-                noise = self.measurement_noise.sample_measurement_noise(y_t)
+                noise = self.measurement_noise.sample_measurement_noise(y_t, self.noise_rng)
                 y_t = y_t + noise
             v_t = - K @ y_t
 
             if self.control_noise is not None:
-                control_noise = self.control_noise.sample_control_noise(v_t)
+                control_noise = self.control_noise.sample_control_noise(v_t, self.noise_rng)
                 v_t = v_t + control_noise
 
             u_t = self.U_2 @ v_t
@@ -211,7 +197,7 @@ class LQRInflated(LQRDiscrete):
             A = self.A
             B = self.B
             if self.parametric_noise is not None:
-                noise_A, noise_B = self.parametric_noise.sample_parametric_noise(A, B)
+                noise_A, noise_B = self.parametric_noise.sample_parametric_noise(A, B, self.noise_rng)
                 A = A + noise_A
                 B = B + noise_B
 
@@ -220,7 +206,7 @@ class LQRInflated(LQRDiscrete):
 
             # Disturbance noise also lives in the state space, not the measured space
             if self.disturbance_noise is not None:
-                disturbance_noise = self.disturbance_noise.sample_disturbance(x_next)
+                disturbance_noise = self.disturbance_noise.sample_disturbance(x_next, self.noise_rng)
                 x_next = x_next + disturbance_noise
 
             self.x = x_next

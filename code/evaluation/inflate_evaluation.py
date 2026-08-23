@@ -8,6 +8,7 @@ Run it from ``code/`` with::
 import numpy as np
 import time
 
+from seeding import SEED, create_seed_sequences, rng
 from visualization import visualize_multiple_results
 from evaluation.policy_gradient_evaluation import visualize_costs
 
@@ -30,8 +31,6 @@ from lqr_base.simple_lqr import (
 
 from lqr_base.inflated_lqr import LQRInflated, LQRInflatedSettings
 
-from basetypes import SimulationResult
-
 from lqr_solvers.mf_policy_gradient import (
     ModelFreePolicyGradientSettings,
     model_free_natural_policy_gradient
@@ -52,16 +51,6 @@ class InflationExperiment:
         Continuous-time plant.
     Q, R : np.ndarray
         Cost weights on the true state and the true input.
-    U_1 : np.ndarray
-        Observation lift of shape ``(inflated_input_dim, n)``.
-    U_2 : np.ndarray
-        Actuation projection of shape ``(m, inflated_output_dim)``.
-    K_0 : np.ndarray
-        Initial gain in the inflated space. Must be stabilizing.
-    inflated_input_dim, inflated_output_dim : int
-        Dimensions of the lifted spaces.
-    nat_settings : ModelFreePolicyGradientSettings
-        Hyperparameters for the full-rank solver.
     structured_settings : MFStructuredPolicySettings
         Hyperparameters for the low-rank solver.
     dt : float, optional
@@ -80,13 +69,8 @@ class InflationExperiment:
         model: StateSpaceModel,
         Q: np.ndarray,
         R: np.ndarray,
-        U_1: np.ndarray,
-        U_2: np.ndarray,
-        K_0: np.ndarray,
         inflated_input_dim: int,
         inflated_output_dim: int,
-        nat_settings: ModelFreePolicyGradientSettings,
-        structured_settings: MFStructuredPolicySettings,
         dt: float = 0.01,
         sim_steps: int = 2500,
     ):
@@ -99,25 +83,11 @@ class InflationExperiment:
         self.inflated_input_dim = inflated_input_dim
         self.inflated_output_dim = inflated_output_dim
 
-        self.U_1 = U_1
-        self.U_2 = U_2
-
-        self.K_0 = K_0
-
-        self.nat_settings = nat_settings
-        self.structured_settings = structured_settings
-
         self.base_metadata = {
             "Inflated Input Dim": inflated_input_dim,
             "Inflated Output Dim": inflated_output_dim,
-            "Gradient Steps": nat_settings.gradient_steps,
-            "Gradient LR": nat_settings.gradient_lr,
-            "Lambda SPI": structured_settings.lambda_,
-            "Beta SPI": structured_settings.beta,
-            "Trajectories per Gradient Step": nat_settings.m,
-            "Rollout Length": nat_settings.l,
-            "Smoothing Parameter": nat_settings.r,
             "Simulation Steps": sim_steps,
+            "Seed": SEED,
         }
 
     def run_comparison(
@@ -150,6 +120,8 @@ class InflationExperiment:
             Shows or saves the six-panel comparison figure.
         """
 
+        base_seeds = create_seed_sequences(["base"])
+
         base_settings = LQRDiscreteSettings(
             model=self.model,
             Q=self.Q,
@@ -157,6 +129,7 @@ class InflationExperiment:
             max_initial_state=np.array([10, 1]),
             resample_initial_state=False,
             noise_settings=noise_settings,
+            seed_seq=base_seeds["base"],
             dt=self.dt
         )
         
@@ -164,7 +137,65 @@ class InflationExperiment:
             settings=base_settings
         )
 
-        base_lqr.reset()
+        seeds = create_seed_sequences(["lqr", "matrices", "mf_nat", "mf_spi"])
+
+        mat_rng = rng(seeds["matrices"])
+
+        U_1, _ = np.linalg.qr(mat_rng.standard_normal((INFLATED_INPUT_DIM, model.A.shape[0])))
+        U_2_full, _ = np.linalg.qr(mat_rng.standard_normal((INFLATED_OUTPUT_DIM, model.B.shape[1])))
+        U_2 = U_2_full.T
+    
+        # Construct a full rank stable K_0
+        K_start = np.array([[0.1, 0.5]])
+        K_low_rank = np.linalg.pinv(U_2) @ K_start @ np.linalg.pinv(U_1)
+    
+        G = mat_rng.standard_normal((INFLATED_OUTPUT_DIM, INFLATED_INPUT_DIM))
+    
+        # Create matrix N such that U_2 @ N @ U_1 = 0
+        N = G - np.linalg.pinv(U_2) @ (U_2 @ G @ U_1) @ np.linalg.pinv(U_1)
+    
+        # Normaliza N, such that we can control size of the full-rank component
+        N = N / np.linalg.norm(N, ord='fro')
+    
+        ALPHA = 0.5
+        K_0 = K_low_rank + ALPHA * N
+    
+        limit = 500
+        gradient_lr = 1e-2
+        trajectories = 100
+        rollout_length = 200
+        smoothing_param = 0.5
+    
+        mf_nat_settings = ModelFreePolicyGradientSettings(
+            K_0=K_0,
+            m=trajectories,  # Number of trajectories
+            l=rollout_length,  # Length of steps in each trajectory
+            r=smoothing_param,  # Smoothing parameter
+            gradient_steps=limit,
+            gradient_lr=gradient_lr,
+            seed_seq=seeds["mf_nat"]
+        )
+
+        beta = 0.5
+        lambda_ = 3000
+        epsilon = 1e-3
+        stepsize = 3.7e-5
+        max_linesearch_iter = 10
+    
+        mf_structured_settings = MFStructuredPolicySettings(
+            K_0=K_0,
+            beta=beta,
+            lambda_=lambda_,
+            epsilon=epsilon,
+            limit=limit,
+            m=trajectories,
+            l=rollout_length,
+            r=smoothing_param,
+            max_linesearch_iter=max_linesearch_iter,
+            stepsize=stepsize,
+            seed_seq=seeds["mf_spi"]
+        )
+
 
         lqr_settings = LQRInflatedSettings(
             model=self.model,
@@ -173,24 +204,35 @@ class InflationExperiment:
             max_initial_state=np.array([10, 1]),
             resample_initial_state=False,
             noise_settings=noise_settings,
+            seed_seq=seeds["lqr"],
             dt=self.dt,
-            U_1=self.U_1,
-            U_2=self.U_2
+            U_1=U_1,
+            U_2=U_2
         )
 
         lqr = LQRInflated(
             settings=lqr_settings
         )
 
-        lqr.reset()
+        settings_metadata = {
+            "Gradient Steps": limit,
+            "Gradient LR": gradient_lr,
+            "Lambda SPI": lambda_,
+            "Beta SPI": beta,
+            "Trajectories per Gradient Step": trajectories,
+            "Rollout Length": rollout_length,
+            "Smoothing Parameter": smoothing_param,
+        }
 
         base_k, base_cost = baseline_solution(base_lqr)
         print(f"[{label}] Baseline solution done")
         print(f"[{label}] Baseline cost: {base_cost:.3e}")
         
-        full_ks, _ = model_free_natural_policy_gradient(lqr=lqr, settings=self.nat_settings)
+        full_ks, _ = model_free_natural_policy_gradient(lqr=lqr, settings=mf_nat_settings)
         print(f"[{label}] Full-rank calculation done")
-        low_ks, _ = structured_policy_iteration_mf(lqr=lqr, settings=self.structured_settings)
+
+        lqr.reset_seeding()
+        low_ks, _ = structured_policy_iteration_mf(lqr=lqr, settings=mf_structured_settings)
         print(f"[{label}] Low-rank calculation done")
 
         cost_trajectories = {
@@ -212,9 +254,9 @@ class InflationExperiment:
         file_name = None
         if not visualize:
             date_str = time.strftime("%Y-%m-%d %H:%M:%S")
-            file_name = f"Run_{label}_{date_str}"
+            file_name = f"Run_{label}_{date_str}_seed_{SEED}"
 
-        metadata = {**self.base_metadata, **(extra_metadata or {})}
+        metadata = {**self.base_metadata, **settings_metadata, **(extra_metadata or {})}
         visualize_multiple_results(
             simulation_dict,
             metadata=metadata,
@@ -338,76 +380,19 @@ if __name__ == "__main__":
     # Penalizes gigantic control input
     R = np.array([[1]])
 
-    U_1, _ = np.linalg.qr(np.random.randn(INFLATED_INPUT_DIM, model.A.shape[0]))
-    U_2_full, _ = np.linalg.qr(np.random.randn(INFLATED_OUTPUT_DIM, model.B.shape[1]))
-    U_2 = U_2_full.T
-
-    #U_1 = np.eye(2)
-    #U_2 = np.eye(1)
-
-    # SHOW: Construct a full rank stable K_0
-    K_start = np.array([[0.1, 0.5]])
-    K_low_rank = np.linalg.pinv(U_2) @ K_start @ np.linalg.pinv(U_1)
-
-    G = np.random.randn(INFLATED_OUTPUT_DIM, INFLATED_INPUT_DIM)
-
-    # Create matrix N such that U_2 @ N @ U_1 = 0
-    N = G - np.linalg.pinv(U_2) @ (U_2 @ G @ U_1) @ np.linalg.pinv(U_1)
-
-    # Normaliza N, such that we can control size of the full-rank component
-    N = N / np.linalg.norm(N, ord='fro')
-
-    ALPHA = 0.5
-    K_0 = K_low_rank + ALPHA * N
-
-    #K_0 = K_start
-
-
-    LIMIT = 500
-    GRADIENT_LR = 1e-2
-    TRAJECTORIES = 100
-    ROLLOUT_LENGTH = 200
-    SMOOTHING_PARAM = 0.5
     STEPS = 2500
-
-    mf_nat_settings = ModelFreePolicyGradientSettings(
-        K_0=K_0,
-        m=TRAJECTORIES,  # Number of trajectories
-        l=ROLLOUT_LENGTH,  # Length of steps in each trajectory
-        r=SMOOTHING_PARAM,  # Smoothing parameter
-        gradient_steps=LIMIT,
-        gradient_lr=GRADIENT_LR
-    )
-
-    mf_structured_settings = MFStructuredPolicySettings(
-        K_0=K_0,
-        beta=0.5,
-        lambda_=3000,
-        epsilon=1e-3,
-        limit=LIMIT,
-        m=TRAJECTORIES,
-        l=ROLLOUT_LENGTH,
-        r=SMOOTHING_PARAM,
-        max_linesearch_iter=10,
-        stepsize=3.7e-5
-    )
 
     experiment = InflationExperiment(
         model=model,
         Q=Q,
         R=R,
-        U_1=U_1,
-        U_2=U_2,
-        K_0=K_0,
         inflated_input_dim=INFLATED_INPUT_DIM,
         inflated_output_dim=INFLATED_OUTPUT_DIM,
-        nat_settings=mf_nat_settings,
-        structured_settings=mf_structured_settings,
         dt=0.01,
         sim_steps=STEPS,
     )
 
-    VISUALIZE = True
+    VISUALIZE = False
 
     try:
         experiment.run_pure(VISUALIZE)

@@ -8,6 +8,8 @@ Run it from ``code/`` with::
 import numpy as np
 import time
 
+from seeding import create_seed_sequences, SEED
+
 from visualization import visualize_multiple_results
 
 from lqr_base.noise import (
@@ -42,10 +44,6 @@ class NoiseExperiment:
         Continuous-time plant.
     Q, R : np.ndarray
         Cost weights on the state and the input.
-    K_0 : np.ndarray
-        Initial gain of shape ``(m, n)``.
-    nat_settings : ModelFreePolicyGradientSettings
-        Hyperparameters for the natural policy gradient.
     max_initial_state : np.ndarray, optional
         Bound on the sampled initial state. Defaults to ``[10, 1]``.
     dt : float, optional
@@ -64,8 +62,6 @@ class NoiseExperiment:
         model: StateSpaceModel,
         Q: np.ndarray,
         R: np.ndarray,
-        K_0: np.ndarray,
-        nat_settings: ModelFreePolicyGradientSettings,
         max_initial_state: np.ndarray | None = None,
         dt: float = 0.01,
         sim_steps: int = 2500,
@@ -76,20 +72,13 @@ class NoiseExperiment:
         self.dt = dt
         self.sim_steps = sim_steps
 
-        self.K_0 = K_0
-        self.nat_settings = nat_settings
-
         if max_initial_state is None:
             max_initial_state = np.array([10, 1])
         self.max_initial_state = max_initial_state
 
         self.base_metadata = {
-            "Gradient Steps": nat_settings.gradient_steps,
-            "Gradient LR": nat_settings.gradient_lr,
-            "Trajectories per Gradient Step": nat_settings.m,
-            "Rollout Length": nat_settings.l,
-            "Smoothing Parameter": nat_settings.r,
             "Simulation Steps": sim_steps,
+            "Seed": SEED,
         }
 
     def run_comparison(
@@ -130,20 +119,58 @@ class NoiseExperiment:
             "dt": self.dt,
         }
 
+        # Create seperately to get same seq for both lqrs
+        base_seeds = create_seed_sequences(["base"])
+
         base_lqr = LQRDiscrete(
-            settings=LQRDiscreteSettings(**settings, noise_settings=None)
+            settings=LQRDiscreteSettings(
+                **settings,
+                seed_seq=base_seeds["base"],
+                noise_settings=None
+            )
         )
+
+        seeds = create_seed_sequences(["lqr", "mf_natural"])
 
         lqr = LQRDiscrete(
-            settings=LQRDiscreteSettings(**settings, noise_settings=noise_settings)
+            settings=LQRDiscreteSettings(
+                **settings,
+                seed_seq=seeds["lqr"],
+                noise_settings=noise_settings
+                )
         )
 
-        base_lqr.reset()
-        lqr.reset()
+        # Solver Settings
+        K_0 = np.array([[0.1, 0.5]])
+        
+        gradient_steps = 200
+        trajectories = 100
+        rollout_length = 200
+        smoothing_param = 0.01
+        gradient_lr = 0.001
+    
+        mf_nat_settings = ModelFreePolicyGradientSettings(
+            K_0=K_0,
+            m=trajectories,  # Number of trajectories
+            l=rollout_length,  # Length of steps in each trajectory
+            r=smoothing_param,  # Smoothing parameter
+            gradient_steps=gradient_steps,
+            gradient_lr=gradient_lr,
+            seed_seq=seeds["mf_natural"]
+        )
 
+        settings_metadata = {
+            "Gradient Steps": gradient_steps,
+            "Gradient LR": gradient_lr,
+            "Trajectories per Gradient Step": trajectories,
+            "Rollout Length": rollout_length,
+            "Smoothing Parameter": smoothing_param,
+        }
+        
+        # Solving
         base_k, base_cost = baseline_solution(base_lqr)
         print(f"[{label}] Baseline solution done")
-        ks, _ = model_free_natural_policy_gradient(lqr=lqr, settings=self.nat_settings)
+        ks, _ = model_free_natural_policy_gradient(lqr=lqr, settings=mf_nat_settings)
         print(f"[{label}] Natural policy gradient done")
 
         cost_trajectories = {
@@ -158,9 +185,10 @@ class NoiseExperiment:
         file_name = None
         if not visualize:
             date_str = time.strftime("%Y-%m-%d %H:%M:%S")
-            file_name = f"Run_{label}_{date_str}"
+            file_name = f"Run_{label}_{date_str}_seed_{SEED}"
 
-        metadata = {**self.base_metadata, **(extra_metadata or {})}
+        metadata = {**self.base_metadata, **settings_metadata, **(extra_metadata or {})}
+
         visualize_multiple_results(
             simulation_dict,
             metadata=metadata,
@@ -282,29 +310,12 @@ if __name__ == "__main__":
     # Penalizes gigantic control input
     R = np.array([[1]])
 
-    K_0 = np.array([[0.1, 0.5]])
-
-    GRADIENT_STEPS = 200
-    TRAJECTORIES = 100
-    ROLLOUT_LENGTH = 200
-    SMOOTHING_PARAM = 0.01
     STEPS = 2500
-
-    mf_nat_settings = ModelFreePolicyGradientSettings(
-        K_0=K_0,
-        m=TRAJECTORIES,  # Number of trajectories
-        l=ROLLOUT_LENGTH,  # Length of steps in each trajectory
-        r=SMOOTHING_PARAM,  # Smoothing parameter
-        gradient_steps=GRADIENT_STEPS,
-        gradient_lr=0.001
-    )
 
     experiment = NoiseExperiment(
         model=model,
         Q=Q,
         R=R,
-        K_0=K_0,
-        nat_settings=mf_nat_settings,
         dt=0.01,
         sim_steps=STEPS,
     )

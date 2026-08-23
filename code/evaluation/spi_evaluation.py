@@ -9,6 +9,8 @@ Run it from ``code/`` with::
 import numpy as np
 import time
 
+from seeding import create_seed_sequences, rng, SEED
+
 from visualization import visualize_spi
 
 from lqr_base.simple_lqr import (
@@ -39,16 +41,8 @@ class SPIInflationExperiment:
         Continuous-time plant.
     Q, R : np.ndarray
         Cost weights.
-    U_1, U_2 : np.ndarray
-        Observation lift and actuation projection.
-    K_0 : np.ndarray
-        Initial gain in the inflated space; must be stabilizing.
     inflated_input_dim, inflated_output_dim : int
         Dimensions of the lifted spaces.
-    structured_settings : StructuredPolicySettings
-        Hyperparameters for the model-based solver.
-    mf_structured_settings : MFStructuredPolicySettings
-        Hyperparameters for the model-free solver.
     dt : float, optional
         Sampling interval. Defaults to ``0.01``.
     sim_steps : int, optional
@@ -60,13 +54,8 @@ class SPIInflationExperiment:
         model: StateSpaceModel,
         Q: np.ndarray,
         R: np.ndarray,
-        U_1: np.ndarray,
-        U_2: np.ndarray,
-        K_0: np.ndarray,
         inflated_input_dim: int,
         inflated_output_dim: int,
-        structured_settings: StructuredPolicySettings,
-        mf_structured_settings: MFStructuredPolicySettings,
         dt: float = 0.01,
         sim_steps: int = 2500,
     ):
@@ -78,14 +67,6 @@ class SPIInflationExperiment:
 
         self.inflated_input_dim = inflated_input_dim
         self.inflated_output_dim = inflated_output_dim
-
-        self.U_1 = U_1
-        self.U_2 = U_2
-
-        self.K_0 = K_0
-
-        self.structured_settings = structured_settings
-        self.mf_structured_settings = mf_structured_settings
 
     def run_comparison(
         self,
@@ -118,36 +99,101 @@ class SPIInflationExperiment:
             "dt": 0.01
         }
 
+        base_seeds = create_seed_sequences(["base"])
+
         discrete_settings = LQRDiscreteSettings(
-            **settings
+            **settings,
+            seed_seq=base_seeds["base"]
         )
-        
+
         base_lqr = LQRDiscrete(
             settings=discrete_settings
         )
 
+        # LQR first to sample same seq as in base
+        seeds = create_seed_sequences(["lqr", "matrices", "mf_structured"])       
+
+        mat_rng = rng(seeds["matrices"])
+
+        U_1, _ = np.linalg.qr(mat_rng.standard_normal((INFLATED_INPUT_DIM, model.A.shape[0])))
+        U_2_full, _ = np.linalg.qr(mat_rng.standard_normal((INFLATED_OUTPUT_DIM, model.B.shape[1])))
+        U_2 = U_2_full.T
+
         inflated_settings = LQRInflatedSettings(
             **settings,
-            U_1=self.U_1,
-            U_2=self.U_2
+            seed_seq=seeds["lqr"],
+            U_1=U_1,
+            U_2=U_2
         )
 
         lqr = LQRInflated(
             settings=inflated_settings
         )
-
-        base_lqr.reset()
-        lqr.reset()
+    
+        # Construct a full rank stable K_0
+        K_start = np.array([[0.1, 0.5]])
+        K_low_rank = np.linalg.pinv(U_2) @ K_start @ np.linalg.pinv(U_1)
+    
+        G = mat_rng.standard_normal((INFLATED_OUTPUT_DIM, INFLATED_INPUT_DIM))
+    
+        # Create matrix N such that U_2 @ N @ U_1 = 0
+        N = G - np.linalg.pinv(U_2) @ (U_2 @ G @ U_1) @ np.linalg.pinv(U_1)
+    
+        # Normaliza N, such that we can control size of the full-rank component
+        N = N / np.linalg.norm(N, ord='fro')
+    
+        ALPHA = 1.0
+        K_0 = K_low_rank + ALPHA * N
+    
+        # Create the settings
+        LIMIT = 100
+        TRAJECTORIES = 100
+        ROLLOUT_LENGTH = 200
+        SMOOTHING_PARAM = 0.5
+        MAX_LINESEARCH_ITER = 10
+    
+        # ------ Important parameters ------
+        BETA = 0.5
+        LAMBDA = 3000
+        EPSILON = 1e-3
+        STEPSIZE = 3.7e-5
+        # -------------
+    
+        structured_settings = StructuredPolicySettings(
+            K_0=K_0,
+            beta=BETA,
+            lambda_=LAMBDA,
+            epsilon=EPSILON,
+            limit=LIMIT,
+            max_linesearch_iter=MAX_LINESEARCH_ITER
+        )
+    
+        mf_structured_settings = MFStructuredPolicySettings(
+            K_0=K_0,
+            beta=BETA,
+            lambda_=LAMBDA,
+            epsilon=EPSILON,
+            limit=LIMIT,
+            m=TRAJECTORIES,
+            l=ROLLOUT_LENGTH,
+            r=SMOOTHING_PARAM,
+            max_linesearch_iter=MAX_LINESEARCH_ITER,
+            stepsize=STEPSIZE,
+            seed_seq=seeds["mf_structured"]
+        )
 
         base_k, base_cost = baseline_solution(base_lqr)
         print(f"[{label}] Baseline solution done")
-        #ks, _ = structured_policy_iteration(lqr=lqr, settings=self.structured_settings)
-        print(f"[{label}] Model-based calculation done")
-        mf_ks, _ = structured_policy_iteration_mf(lqr=lqr, settings=self.mf_structured_settings)
+
+        #ks, _ = structured_policy_iteration(lqr=lqr, settings=structured_settings)
+        #print(f"[{label}] Model-based calculation done")
+        # lqr.reset_seeding()
+
+        mf_ks, _ = structured_policy_iteration_mf(lqr=lqr, settings=mf_structured_settings)
         print(f"[{label}] Model-free calculation done")
 
-        #true_cost_spi = [true_cost(lqr, self.U_2 @ K @ self.U_1) for K in ks]
-        true_cost_spi_mf = [true_cost(lqr, self.U_2 @ K @ self.U_1) for K in mf_ks]
+        #true_cost_spi = [true_cost(lqr, U_2 @ K @ U_1) for K in ks]
+        true_cost_spi_mf = [true_cost(lqr, U_2 @ K @ U_1) for K in mf_ks]
 
         cost_dict = {
             #"SPI (Model-Based)": true_cost_spi,
@@ -171,13 +217,14 @@ class SPIInflationExperiment:
         file_name = None
         if not visualize:
             date_str = time.strftime("%Y-%m-%d %H:%M:%S")
-            file_name = f"Run_{label}_{date_str}"
+            file_name = f"Run_{label}_{date_str}_seed_{SEED}"
 
         visualize_spi(
             k_ranks=rank_dict,
             cost_trajectories=cost_dict,
             baseline_cost=base_cost,
             simulation_dict=simulation_dict,
+            seed=SEED,
             dt=self.dt,
             save_to=file_name
         )
@@ -217,75 +264,12 @@ if __name__ == "__main__":
     # Penalizes gigantic control input
     R = np.array([[1]])
 
-    U_1, _ = np.linalg.qr(np.random.randn(INFLATED_INPUT_DIM, model.A.shape[0]))
-    U_2_full, _ = np.linalg.qr(np.random.randn(INFLATED_OUTPUT_DIM, model.B.shape[1]))
-    U_2 = U_2_full.T
-
-    #U_1 = np.eye(2)
-    #U_2 = np.eye(1)
-
-    # SHOW: Construct a full rank stable K_0
-    K_start = np.array([[0.1, 0.5]])
-    K_low_rank = np.linalg.pinv(U_2) @ K_start @ np.linalg.pinv(U_1)
-
-    G = np.random.randn(INFLATED_OUTPUT_DIM, INFLATED_INPUT_DIM)
-
-    # Create matrix N such that U_2 @ N @ U_1 = 0
-    N = G - np.linalg.pinv(U_2) @ (U_2 @ G @ U_1) @ np.linalg.pinv(U_1)
-
-    # Normaliza N, such that we can control size of the full-rank component
-    N = N / np.linalg.norm(N, ord='fro')
-
-    ALPHA = 1.0
-    K_0 = K_low_rank + ALPHA * N
-
-
-    LIMIT = 100
-    TRAJECTORIES = 100
-    ROLLOUT_LENGTH = 200
-    SMOOTHING_PARAM = 0.5
-    MAX_LINESEARCH_ITER = 10
-
-    # ------ Important parameters ------
-    BETA = 0.5
-    LAMBDA = 3000
-    EPSILON = 1e-3
-    STEPSIZE = 3.7e-5
-    # -------------
-
-    structured_settings = StructuredPolicySettings(
-        K_0=K_0,
-        beta=BETA,
-        lambda_=LAMBDA,
-        epsilon=EPSILON,
-        limit=LIMIT,
-        max_linesearch_iter=MAX_LINESEARCH_ITER
-    )
-
-    mf_structured_settings = MFStructuredPolicySettings(
-        K_0=K_0,
-        beta=BETA,
-        lambda_=LAMBDA,
-        epsilon=EPSILON,
-        limit=LIMIT,
-        m=TRAJECTORIES,
-        l=ROLLOUT_LENGTH,
-        r=SMOOTHING_PARAM,
-        max_linesearch_iter=MAX_LINESEARCH_ITER,
-        stepsize=STEPSIZE
-    )
-
     experiment = SPIInflationExperiment(
         model=model,
         Q=Q,
         R=R,
-        U_1=U_1,
-        U_2=U_2,
-        K_0=K_0,
         inflated_input_dim=INFLATED_INPUT_DIM,
         inflated_output_dim=INFLATED_OUTPUT_DIM,
-        structured_settings=structured_settings,
-        mf_structured_settings=mf_structured_settings,
         dt=0.01,
     )
 

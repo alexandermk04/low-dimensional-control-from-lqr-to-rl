@@ -65,3 +65,8 @@ diverges for steps larger than 3.7e-4
 
 ## 21st of August
 - added tqdm to watch the progress of true cost evaluation during iterations
+
+## 23rd of August
+- added seeding to improve reproducibility and comparability
+- TODO: Need to reset seeding before each simulation run, to get exactly the same results here (for noise)
+- !!Finding: SPI needs only a tiny fraction of the iterations to reduce the matrix to low rank and lower the costs - overiterating makes it worse, until divergence

@@ -253,6 +253,7 @@ def visualize_spi(
     cost_trajectories: dict[str, list[float]],
     baseline_cost: float,
     simulation_dict: dict[str, SimulationResult],
+    seed: int,
     dt=1,
     save_to: str = None,
 ):
@@ -279,6 +280,7 @@ def visualize_spi(
         Shows or saves the figure.
     """
     plt.figure(figsize=(15, 8))
+    plt.suptitle(f'SPI Results (Seed: {seed})', fontsize=16)
 
     plt.subplot(2, 2, 1)
     plt.title('Rank of K over SPI Iterations')

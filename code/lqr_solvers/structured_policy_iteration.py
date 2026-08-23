@@ -27,6 +27,8 @@ from dataclasses import dataclass
 
 from scipy.linalg import solve_discrete_lyapunov
 
+from seeding import rng
+
 from lqr_base.simple_lqr import (
     StateSpaceModel,
     LQRDiscrete,
@@ -322,6 +324,7 @@ def structured_policy_iteration(lqr: LQRDiscrete, settings: StructuredPolicySett
     costs : list[float]
         Currently always empty, will either be added or removed in the future (TODO).
     """
+    lqr.reset()
     K_t = settings.K_0
 
     ks = [K_t]
@@ -398,13 +401,15 @@ class MFStructuredPolicySettings:
     m: int  # Number of trajectories
     l: int  # Length of steps in each trajectory
     r: float  # Smoothing parameter
-    stepsize: float = None  # Fixed stepsize disables linesearch
+    stepsize: float | None  # Fixed stepsize disables linesearch
+    seed_seq: np.random.SeedSequence # Seed sequence for reproducibility
 
 def calculate_next_K_mf(
         lqr: LQRDiscrete,
         K_t: np.ndarray,
         f_K: float,
         grad_K: np.ndarray,
+        rngen: np.random.Generator,
         settings: MFStructuredPolicySettings
     ) -> np.ndarray:
     """One model-free S-PI iteration.
@@ -419,6 +424,8 @@ def calculate_next_K_mf(
         Estimated cost at ``K_t``.
     grad_K : np.ndarray
         Estimated gradient at ``K_t``.
+    rngen : np.random.Generator
+        Random number generator for reproducibility.
     settings : MFStructuredPolicySettings
         Hyperparameters.
 
@@ -443,7 +450,7 @@ def calculate_next_K_mf(
         if not linesearch_enabled:
             return K_plus
 
-        _, _, f_K_plus = estimate_gradient(lqr, K_plus, m=settings.m, l=settings.l, r=settings.r)
+        _, _, f_K_plus = estimate_gradient(lqr, K_plus, m=settings.m, l=settings.l, r=settings.r, rngen=rngen)
         #print(f"Line search step: {step}, f_K: {f_K}, f_K_plus: {f_K_plus}")
 
         # Sufficient decrease condition via estimated cost
@@ -481,8 +488,9 @@ def structured_policy_iteration_mf(lqr: LQRDiscrete, settings: MFStructuredPolic
     costs : list[float]
         Rollout cost estimate per iteration.
     """
-
+    lqr.reset()
     K_t = settings.K_0
+    rngen = rng(settings.seed_seq)
 
     ks = [K_t]
     costs = []
@@ -493,9 +501,9 @@ def structured_policy_iteration_mf(lqr: LQRDiscrete, settings: MFStructuredPolic
 
     for i in progress_bar:
 
-        grad_K, _, f_K = estimate_gradient(lqr, K_t, settings.m, settings.l, settings.r)
+        grad_K, _, f_K = estimate_gradient(lqr, K_t, settings.m, settings.l, settings.r, rngen=rngen)
 
-        K_plus = calculate_next_K_mf(lqr, K_t, grad_K, f_K, settings)
+        K_plus = calculate_next_K_mf(lqr, K_t, grad_K, f_K, rngen=rngen, settings=settings)
 
         ks.append(K_plus)
         costs.append(f_K)
@@ -518,69 +526,3 @@ def structured_policy_iteration_mf(lqr: LQRDiscrete, settings: MFStructuredPolic
     progress_bar.refresh()
 
     return ks, costs
-
-
-if __name__ == "__main__":
-    # Double Integrator example implementation
-
-    # x' = Ax + Bu; x = [position, velocity], u = [acceleration]
-    # Hence: Ax + Bu = [velocity, acceleration]
-    A = np.array([[0, 1], [0, 0]])
-    B = np.array([[0], [1]])
-    # Position, velocity
-    max_initial_state = np.array([[10], [11]])
-
-    model = StateSpaceModel(A, B)
-
-    # Write identity matrices out, to easily modify them
-
-    # Q[0, 0] penalizes position error, Q[1, 1] penalizes high velocities
-    Q = np.array([[1, 0], [0, 1]])
-
-    # Penalizes gigantic control input
-    R = np.array([[1]])
-
-    settings = LQRDiscreteSettings(
-        model=model,
-        Q=Q,
-        R=R,
-        noise_settings=None,
-        resample_initial_state=False,
-        max_initial_state=max_initial_state,
-        dt=0.1,
-    )
-
-    lqr = LQRDiscrete(settings)
-    lqr.reset()
-
-    K_0 = np.array([[0.1, 0.5]])
-
-    settings = MFStructuredPolicySettings(
-        K_0=K_0,
-        beta=0.5,
-        lambda_=3000,
-        epsilon=1e-3,
-        limit=1000,
-        m=100,
-        l=200,
-        r=0.5,
-        max_linesearch_iter=10,
-        stepsize=3.7e-5
-    )
-
-    base_K, base_cost = baseline_solution(lqr)
-    ks, costs = structured_policy_iteration_mf(lqr=lqr, settings=settings)
-
-    cost_dict = {
-        "Structured Policy Iteration (Model-Free)": [true_cost(lqr, K) for K in ks],
-    }
-
-    lqr.reset()
-
-    simulation_dict = {
-        #"Baseline LQR": simulate(lqr=lqr, K=base_K, n_steps=2500),
-        "Structured Policy Iteration (Model-Free)": simulate(lqr=lqr, K=ks[-1], n_steps=2500),
-    }
-
-
-    visualize_multiple_results(simulation_dict, cost_dict, base_cost, dt=lqr.dt)

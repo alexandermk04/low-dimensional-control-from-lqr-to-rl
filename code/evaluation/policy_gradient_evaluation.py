@@ -9,6 +9,8 @@ import numpy as np
 
 from visualization import visualize_multiple_results
 
+from seeding import create_seed_sequences, SEED
+
 from lqr_base.simple_lqr import (
     StateSpaceModel,
     LQRDiscrete,
@@ -48,6 +50,8 @@ def compare_all():
     Q = np.array([[1, 0], [0, 1]])
     R = np.array([[1]])
 
+    seeds = create_seed_sequences(['system', 'model_free', 'model_free_natural'])
+
     settings = LQRDiscreteSettings(
         model=model,
         Q=Q,
@@ -55,6 +59,7 @@ def compare_all():
         max_initial_state=np.array([10, 1]),
         resample_initial_state=False,
         noise_settings=None,
+        seed_seq=seeds['system'],
         dt=0.01
     )
 
@@ -77,7 +82,8 @@ def compare_all():
         l=ROLLOUT_LENGTH,  # Length of steps in each trajectory
         r=0.1,  # Smoothing parameter
         gradient_steps=GRADIENT_STEPS,
-        gradient_lr=1e-4
+        gradient_lr=1e-4,
+        seed_seq=seeds['model_free']
     )
 
     mf_nat_settings = ModelFreePolicyGradientSettings(
@@ -86,15 +92,22 @@ def compare_all():
         l=ROLLOUT_LENGTH,  # Length of steps in each trajectory
         r=0.1,  # Smoothing parameter
         gradient_steps=GRADIENT_STEPS,
-        gradient_lr=0.001 # SHOW: 0.01 becomes unstable
+        gradient_lr=0.001, # SHOW: 0.01 becomes unstable
+        seed_seq=seeds['model_free_natural']
     )
 
     baseline_k, baseline_cost = baseline_solution(lqr=lqr)
     print("Baseline done.")
+
+    lqr.reset_seeding()  # Reset the random number generators to ensure fair comparison
     mb_ks, _ = model_based_gradient(lqr=lqr, settings=mb_settings)
     print("Model-based done.")
+
+    lqr.reset_seeding()  # Reset the random number generators to ensure fair comparison
     mf_ks, _ = model_free_policy_gradient(lqr=lqr, settings=mf_settings)
     print("Model-free done.")
+
+    lqr.reset_seeding()  # Reset the random number generators to ensure fair comparison
     mf_nat_ks, _ = model_free_natural_policy_gradient(lqr=lqr, settings=mf_nat_settings)
     print("Natural model-free done.")
 
@@ -113,10 +126,17 @@ def compare_all():
         'Model-Free Natural': simulate(lqr=lqr, K=mf_nat_ks[-1], n_steps=STEPS)
     }
 
-    visualize_multiple_results(results=simulation_dict,
-                               cost_trajectories=costs_dict,
-                               baseline_cost=baseline_cost,
-                                dt=lqr.dt)
+    metadata = {
+        "Seed": SEED
+    }
+
+    visualize_multiple_results(
+        results=simulation_dict,
+        cost_trajectories=costs_dict,
+        baseline_cost=baseline_cost,
+        metadata=metadata,
+        dt=lqr.dt
+    )
 
 if __name__ == "__main__":
     compare_all()

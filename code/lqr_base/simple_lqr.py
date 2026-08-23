@@ -14,9 +14,6 @@ Conventions
 -----------
 - Feedback is ``u = -K x``.
 - ``reset()`` must be called before stepping. It samples (or restores) ``x_0``
-  and clears the noise flag.
-- Noise is off by default and must be switched on per rollout via
-  :meth:`LQRBase.apply_noise`. See :mod:`lqr_base.noise`.
 """
 
 from dataclasses import dataclass
@@ -25,7 +22,8 @@ from scipy.linalg import solve_discrete_are, solve_discrete_lyapunov
 
 from scipy.signal import cont2discrete
 
-from basetypes import StateSpaceModel, SimulationResult, StepResult, SEED
+from basetypes import StateSpaceModel, SimulationResult, StepResult
+from seeding import SEED
 from lqr_base.noise import (
     ParametricNoiseSettings,
     ControlNoiseSettings,
@@ -80,7 +78,7 @@ class LQRBaseSettings:
         from ``[-max_initial_state, max_initial_state]``.
     resample_initial_state : bool
         If ``False``, one ``x_0`` is drawn (seeded with
-        :data:`basetypes.SEED`) and reused by every subsequent ``reset()``, so
+        :data:`seeding.SEED`) and reused by every subsequent ``reset()``, so
         all solvers see the same problem. If ``True``, every ``reset()`` draws
         a fresh one.
     noise_settings : LQRNoiseSettings or None
@@ -93,6 +91,7 @@ class LQRBaseSettings:
     max_initial_state: np.ndarray
     resample_initial_state: bool
     noise_settings: LQRNoiseSettings | None
+    seed_seq: np.random.SeedSequence
 
 @dataclass
 class LQRDiscreteSettings(LQRBaseSettings):
@@ -129,8 +128,7 @@ class LQRBase:
         Whether :meth:`reset` has been called. Guards :meth:`next_state`.
     noise : bool
         Runtime flag. When ``False`` the step is deterministic even if noise
-        settings are present. Cleared by :meth:`reset`, set by
-        :meth:`apply_noise`.
+        settings are present.
     parametric_noise, control_noise, measurement_noise, disturbance_noise
         The individual channels, or ``None`` when disabled.
 
@@ -154,6 +152,11 @@ class LQRBase:
     measurement_noise: MeasurementNoiseSettings | None
     disturbance_noise: DisturbanceNoiseSettings | None
 
+    state_rng: np.random.Generator
+    state_rng_bit_state: dict
+    noise_rng: np.random.Generator
+    noise_rng_bit_state: dict
+
     def __init__(self, settings: LQRBaseSettings):
         """Store the plant and cost weights and wire up the noise channels.
 
@@ -173,6 +176,13 @@ class LQRBase:
         self.x_0 = None
         self.initialized = False
 
+        # Seeding
+        children = settings.seed_seq.spawn(2)
+        self.state_rng = np.random.default_rng(children[0])
+        self.state_rng_bit_state = self.state_rng.bit_generator.state
+        self.noise_rng = np.random.default_rng(children[1])
+        self.noise_rng_bit_state = self.noise_rng.bit_generator.state
+
         self.noise = False
         self.setup_noise(settings.noise_settings)
 
@@ -185,25 +195,34 @@ class LQRBase:
             A sample from ``U(-max_initial_state, max_initial_state)``, shaped
             like ``max_initial_state``.
         """
-        return np.random.uniform(-self.max_initial_state, self.max_initial_state)
+        initial =  self.state_rng.uniform(-self.max_initial_state, self.max_initial_state)
+        return initial
+
+    def reset_seeding(self):
+        """Reset the random number generators to their initial state.
+        """
+        self.state_rng.bit_generator.state = self.state_rng_bit_state
+        self.noise_rng.bit_generator.state = self.noise_rng_bit_state
 
     def reset(self):
-        """Return the system to its initial state and disable noise.
+        """Return the system to its initial state.
 
-        Must be called before :meth:`next_state`. On the very first call the
-        global RNG is seeded with :data:`basetypes.SEED` before sampling, so a
-        fixed-``x_0`` experiment is reproducible across runs.
+        Must be called before :meth:`next_state`.
 
         With ``resample_initial_state=False`` the first sample is cached and
         every later reset restores it. With ``True``, a new ``x_0`` is drawn
         each time.
         """
         if self.resample_initial_state or self.x_0 is None:
-            if self.x_0 is None:
-                np.random.seed(SEED)
             self.x_0 = self.sample_initial_state()
         self.x = self.x_0.copy()
-        self.noise = False
+
+        # Reset the noises carrying an internal state
+        if self.disturbance_noise is not None:
+            self.disturbance_noise.reset()
+        if self.parametric_noise is not None:
+            self.parametric_noise.reset()
+
         self.initialized = True
 
     def setup_noise(self, noise_settings: LQRNoiseSettings | None):
@@ -224,14 +243,8 @@ class LQRBase:
         self.control_noise = noise_settings.control_noise
         self.measurement_noise = noise_settings.measurement_noise
         self.disturbance_noise = noise_settings.disturbance_noise
-
-    def apply_noise(self):
-        """Arm the configured noise channels for the steps that follow.
-
-        Call this after :meth:`reset`, which clears the flag. Channels that
-        were never configured stay inactive regardless.
-        """
         self.noise = True
+
 
     def next_state(self, K: np.ndarray) -> StepResult:
         """Advance one step under the gain ``K``. Implemented by subclasses.
@@ -279,23 +292,16 @@ class LQRDiscrete(LQRBase):
             Configuration; ``settings.model`` is expected in continuous time
             and is discretized here with ``settings.dt``.
         """
+        super().__init__(settings)
+
+        # Only do the setup not covered by base class
+
         self.dt = settings.dt
 
         A_d, B_d = continuous_to_discrete(settings.model.A, settings.model.B, dt=settings.dt)
 
         self.A = A_d
         self.B = B_d
-
-        self.Q = settings.Q
-        self.R = settings.R
-
-        self.max_initial_state = settings.max_initial_state
-        self.resample_initial_state = settings.resample_initial_state
-        self.x_0 = None
-        self.initialized = False
-
-        self.noise = False
-        self.setup_noise(settings.noise_settings)
 
     def effective_gain(self, K: np.ndarray) -> np.ndarray:
         """Map a gain from the controller's space to the true state space.
@@ -360,7 +366,7 @@ class LQRDiscrete(LQRBase):
             # Observation
             y_t = x_t
             if self.measurement_noise is not None:
-                noise = self.measurement_noise.sample_measurement_noise(y_t)
+                noise = self.measurement_noise.sample_measurement_noise(y_t, self.noise_rng)
                 y_t = y_t + noise
 
             # Control input based on the observation
@@ -369,14 +375,14 @@ class LQRDiscrete(LQRBase):
             # The actual control input applied
             v_t = u_t
             if self.control_noise is not None:
-                control_noise = self.control_noise.sample_control_noise(u_t)
+                control_noise = self.control_noise.sample_control_noise(u_t, self.noise_rng)
                 v_t = v_t + control_noise
 
             # Parametric noise applied to state space
             A = self.A
             B = self.B
             if self.parametric_noise is not None:
-                noise_A, noise_B = self.parametric_noise.sample_parametric_noise(A, B)
+                noise_A, noise_B = self.parametric_noise.sample_parametric_noise(A, B, self.noise_rng)
                 A = A + noise_A
                 B = B + noise_B
 
@@ -385,7 +391,7 @@ class LQRDiscrete(LQRBase):
 
             # Disturbance noise also lives in the state space, not the measured space
             if self.disturbance_noise is not None:
-                disturbance_noise = self.disturbance_noise.sample_disturbance(x_next)
+                disturbance_noise = self.disturbance_noise.sample_disturbance(x_next, self.noise_rng)
                 x_next = x_next + disturbance_noise
 
             self.x = x_next
@@ -505,7 +511,6 @@ def simulate(lqr: LQRDiscrete, K: np.ndarray, n_steps: int):
     """
     # Reset lqr state to initial state before simulation
     lqr.reset()
-    lqr.apply_noise()
 
     x_traj = []
     u_traj = []

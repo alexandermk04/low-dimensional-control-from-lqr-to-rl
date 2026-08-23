@@ -11,8 +11,7 @@ Which point a channel attacks is the whole difference between them:
 
 Notes
 -----
-Noise is only injected while the runtime flag ``LQRBase.noise`` is set, which
-happens in :meth:`LQRBase.apply_noise` and is cleared by :meth:`LQRBase.reset`.
+Noise is only injected while the runtime flag ``LQRBase.noise``.
 
 All channels draw from the global :mod:`numpy.random` state, so seeding that
 state makes a whole experiment reproducible.
@@ -52,7 +51,11 @@ class ParametricNoiseSettings:
         self.sampled_A = None
         self.sampled_B = None
 
-    def sample_parametric_noise(self, A: np.ndarray, B: np.ndarray):
+    def reset(self):
+        self.sampled_A = None
+        self.sampled_B = None
+
+    def sample_parametric_noise(self, A: np.ndarray, B: np.ndarray, rng: np.random.Generator) -> tuple[np.ndarray, np.ndarray]:
         """Draw perturbations shaped like ``A`` and ``B``.
 
         Parameters
@@ -71,8 +74,8 @@ class ParametricNoiseSettings:
         if self.time_invariant and self.sampled_A is not None and self.sampled_B is not None:
             return self.sampled_A, self.sampled_B
 
-        noise_A = np.random.normal(0, self.noise_std, size=A.shape)
-        noise_B = np.random.normal(0, self.noise_std, size=B.shape)
+        noise_A = rng.normal(0, self.noise_std, size=A.shape)
+        noise_B = rng.normal(0, self.noise_std, size=B.shape)
 
         if self.time_invariant:
             self.sampled_A = noise_A
@@ -94,7 +97,7 @@ class ControlNoiseSettings:
     def __init__(self, noise_std: float):
         self.control_noise_std = noise_std
 
-    def sample_control_noise(self, u: np.ndarray):
+    def sample_control_noise(self, u: np.ndarray, rng: np.random.Generator) -> np.ndarray:
         """Draw the additive term that realises a relative control error.
 
         Parameters
@@ -109,7 +112,7 @@ class ControlNoiseSettings:
             that ``u + result = u * (1 + eps)``.
         """
 
-        control_noise = np.random.normal(0, self.control_noise_std, size=u.shape)
+        control_noise = rng.normal(0, self.control_noise_std, size=u.shape)
 
         # Scaled noise based on the control input magnitude
         scaled_noise = u * control_noise
@@ -131,7 +134,7 @@ class MeasurementNoiseSettings:
     def __init__(self, noise_std: float):
         self.measurement_noise_std = noise_std
 
-    def sample_measurement_noise(self, x: np.ndarray):
+    def sample_measurement_noise(self, x: np.ndarray, rng: np.random.Generator) -> np.ndarray:
         """Draw the additive measurement error.
 
         Parameters
@@ -145,7 +148,7 @@ class MeasurementNoiseSettings:
             Noise of the same shape as the observation, to be added by the caller.
         """
 
-        measurement_noise = np.random.normal(0, self.measurement_noise_std, size=x.shape)
+        measurement_noise = rng.normal(0, self.measurement_noise_std, size=x.shape)
 
         return measurement_noise
 
@@ -183,10 +186,21 @@ class DisturbanceNoiseSettings:
     def __init__(self, noise_std: float, disturbance_type: str):
         self.disturbance_noise_std = noise_std
         self.disturbance_type = disturbance_type
+        if disturbance_type not in {"gaussian", "sinusoidal", "constant"}:
+            raise ValueError(f"Unknown disturbance type: {disturbance_type}")
         self.const_val = None
         self.step_count = 0
 
-    def sample_disturbance(self, x: np.ndarray):
+    def reset(self):
+        """Reset the internal state of the noise generator.
+
+        For ``"sinusoidal"``, resets the phase to zero. For ``"constant"``,
+        forgets the cached offset so a new one is drawn on next use.
+        """
+        self.const_val = None
+        self.step_count = 0
+
+    def sample_disturbance(self, x: np.ndarray, rng: np.random.Generator) -> np.ndarray:
         """Draw the disturbance to add to the successor state.
 
         Parameters
@@ -205,7 +219,7 @@ class DisturbanceNoiseSettings:
             If ``disturbance_type`` is not one of the three supported values.
         """
         if self.disturbance_type == "gaussian":
-            disturbance = np.random.normal(0, self.disturbance_noise_std, size=x.shape)
+            disturbance = rng.normal(0, self.disturbance_noise_std, size=x.shape)
             return disturbance
         elif self.disturbance_type == "sinusoidal":
             disturbance = self.disturbance_noise_std * np.sin(0.1 * self.step_count) * np.ones_like(x)
@@ -213,7 +227,7 @@ class DisturbanceNoiseSettings:
             return disturbance
         elif self.disturbance_type == "constant":
             if self.const_val is None:
-                self.const_val = np.random.normal(0, self.disturbance_noise_std, size=x.shape)
+                self.const_val = rng.normal(0, self.disturbance_noise_std, size=x.shape)
             return self.const_val
         else:
             raise ValueError(f"Unknown disturbance type: {self.disturbance_type}")
