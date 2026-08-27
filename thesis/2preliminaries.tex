@@ -5,7 +5,7 @@ Before turning to the experiments, this chapter revisits the concepts that all
 later parts of this thesis build on. \Cref{sec:statespace} introduces linear
 state-space models and their discretization, \cref{sec:doubleintegrator}
 shows them on the double integrator that serves as our running example
-throughout, and \cref{sec:stability,sec:lqr} recall the stability notions and
+throughout, and \cref{sec:characteristics,sec:lqr} recall the stability notions and
 the linear quadratic regulator. \Cref{sec:uncertainty,sec:robustness} define the
 perturbation models and the robustness metrics used to evaluate every
 controller we construct.
@@ -187,187 +187,512 @@ correspondingly a double eigenvalue at $1$. The last property matters for the
 learning experiments: an uncontrolled or badly initialised policy diverges, so
 the assumption of a known stabilising initial gain (\cref{sec:lqr}) is a real
 restriction. These properties are made precise in
-\cref{sec:stability}.
+\cref{sec:characteristics}.
 
 
-\section{Stability, Controllability and Observability}
-\label{sec:stability}
+\section{Characteristics of a system}
+\label{sec:characteristics}
 
-Now that we have defined our system, before we can optimze over it, it
-is important to clear up different characteristics of the same.
+Now that we have defined our system, before we can optimize over it, it
+is important to clear up different characteristics of the same. The three we
+need are properties of the model and not of any particular controller.
+Stability is what the controller has to establish in the first place,
+controllability is what guarantees that it can, and observability is what
+allows a controller that only sees $y$ to act as if it actually recorded $x$.
 
 \subsection{Stability}
-\label{subsec:stability}
+\label{subsec:characteristics}
 
-The first of these is stability, which guarantees that changes in the system
-don't become to drastic, and thus cause some kind of failure. Mathematically, stability
-is defined the following way\needcite{Astrom \& Wittenmark,
-"Computer-Controlled Systems", p.77}:
+The first of these is stability, which guarantees that deviations in the system
+don't become too drastic, and thus cause some kind of failure. Mathematically,
+stability is a statement about a \emph{solution} of the recursion
+$x_{k+1} = f(x_k, k)$, and is defined the following
+way\needcite{Astrom \& Wittenmark, "Computer-Controlled Systems", p.77}:
 
-For a discrete-time state-space equation x(k+1) = f(x(k), k), and solutions x_0(k), x(k),
-as well as initial conditions x_0(k_0), x(k_0):
+\begin{definition}[Stability]
+\label{def:stability}
+Let $x^{0}(\cdot)$ be a solution of $x_{k+1} = f(x_k, k)$. The solution
+$x^{0}(\cdot)$ is called \emph{stable} if for every $\varepsilon > 0$ there
+exists a $\delta(\varepsilon, k_0) > 0$ such that every solution $x(\cdot)$ with
+$\lVert x(k_0) - x^{0}(k_0) \rVert < \delta$ satisfies
+\begin{equation*}
+    \lVert x(k) - x^{0}(k) \rVert < \varepsilon
+    \qquad \text{for all } k \ge k_0 .
+\end{equation*}
+It is called \emph{asymptotically stable} if it is stable and in addition
+$\lVert x(k) - x^{0}(k) \rVert \to 0$ as $k \to \infty$.
+\end{definition}
 
-The solution x_0(k) is stable if for a given epsilon > 0, there exists a delta(epsilon, k_0) > 0
-such that all solutions with norm(x(k_0) - x_0(k_0)) < epsilon for all k >= k_0.
+In the definition, $\varepsilon$ bounds how far a perturbed
+trajectory is allowed to deviate, and $\delta$ says how small the initial
+distance must be to stay inside that bound. Asymptotic additionally requires 
+the deviation to vanish with increasing time.
 
-This then produces the for us relevant notion of Asymptotic stability of linear systems\needcite{Astrom \& Wittenmark,
-"Computer-Controlled Systems", p.77}:
+For linear systems this simplifies considerably. If $x(\cdot)$ and $x^{0}(\cdot)$
+both solve $x_{k+1} = A x_k$, then their difference solves the same recursion,
+so the behaviour of \emph{one} solution decides the behaviour of all of them.
+Stability is thus a property of the system, explicitly the matrix $A$. 
+This is stated as a theorem by\needcite{Astrom \& Wittenmark, "Computer-Controlled Systems", p.77}:
 
-Theorem 3.1: A discrete-time linear time-invariant system is asymptotically stable, if and only if
-all eigenvalues of the system are strictly inside the unit disk"
+\begin{theorem}[Asymptotic stability of discrete-time LTI systems]
+\label{thm:asymptotic_stability}
+The discrete-time LTI system $x_{k+1} = A x_k$ is asymptotically stable if and
+only if all eigenvalues of $A$ lie strictly inside the unit disk, i.e.
+\begin{equation}
+    \label{eq:spectral_radius}
+    \spr(A) \coloneqq \max_{i} \lvert \lambda_i(A) \rvert < 1 
+\end{equation}
+\end{theorem}
 
-One of the relevant findings here is, that stability is dependent on the whole system, not any specific
-step.
+Our double integrator sits precisely on the boundary. From
+\eqref{eq:di_disc_matrices}, $A_d$ has the double eigenvalue $\lambda_{1,2} = 1$,
+so $\spr(A_d) = 1$ and \cref{thm:asymptotic_stability} fails. It is not only
+non-asymptotically stable but actually unstable. We can see that in the matrix
+powers
+\begin{equation}
+    \label{eq:di_powers}
+    A_d^{\,k} = \begin{bmatrix} 1 & k h \\ 0 & 1 \end{bmatrix},
+\end{equation}
+
+which are growing without bound in $k$. This is also logical from a physical
+point of view as a frictionless mass with a nonzero initial velocity continues 
+its trajectory forever if nothing acts on it. 
+Every controller we construct therefore has to \emph{create} stability rather than preserve it.
 
 \subsection{Controllability}
 \label{subsec:controllability}
 
-Whether a system is controllable or not indicates if, independently from the controller,
-it is possible to reach any state inside its state space in a given time. Are more formal definition
-is given in \needcite{ControlSystemsTheoryAndDesign}:
+Whether a system is controllable or not indicates if, independently from the
+controller, it is possible to reach any state inside its state space in a given
+time. A more formal definition is given in
+\needcite{ControlSystemsTheoryAndDesign}:
 
-Definition 3.1
-The system (3.1) is said to be controllable if for any initial state x(0) = x0, time tf > 0
-and final state xf there exists a control input u(t), 0 ≤ t ≤ tf , such that the solution of
-(3.1) satisfies x(tf ) = xf . Otherwise, the system is said to be uncontrollable.
+\begin{definition}[Controllability]
+\label{def:controllability}
+The system is said to be \emph{controllable} if for any initial state
+$x_0$ and any final state $x_f$ there exist a horizon $N$ and inputs
+$u_0, \dots, u_{N-1}$ such that the solution of \eqref{eq:ss_disc} satisfies
+$x_N = x_f$. Otherwise, the system is said to be \emph{uncontrollable}.
+\end{definition}
 
-To check whether a given system is actually controllable, we need to compute a controllability
-matrix \needcite{ControlSystemsTheoryAndDesign}:
+To check whether a given system is actually controllable, we need to compute the
+\emph{controllability matrix}\needcite{ControlSystemsTheoryAndDesign}
 
-C(A,b) = [b Ab A2b...An−1b] (needs to be adapted to B as matrix)
+\begin{equation}
+    \label{eq:controllability_matrix}
+    \mathcal{C}(A, B) =
+    \begin{bmatrix} B & AB & A^{2}B & \cdots & A^{n-1}B \end{bmatrix}
+    \in \R^{n \times nm},
+\end{equation}
 
-and then verify it is full rank. Given by Corrollary 3.1 in \needcite{ControlSystemsTheoryAndDesign},
-the system is thus controllable.
+and then verify that it has full rank $n$; the system is controllable if and
+only if it does\needcite{ControlSystemsTheoryAndDesign}. Note that \eqref{eq:controllability_matrix} is stated for a general
+input matrix $B$; for a single input ($m = 1$) it reduces to the square
+matrix $[\,b\ \ Ab\ \cdots\ A^{n-1}b\,]$.
 
-Applying this to our Double Integrator example:
+Applying this to our double integrator, we obtain
 
-... 
+\begin{equation}
+    \label{eq:di_controllability}
+    \mathcal{C}(A_d, B_d) =
+    \begin{bmatrix} B_d & A_d B_d \end{bmatrix}
+    = \begin{bmatrix} h^{2}/2 & 3h^{2}/2 \\ h & h \end{bmatrix},
+    \qquad
+    \det \mathcal{C}(A_d, B_d) = -h^{3},
+\end{equation}
 
-we can indeed see that it an controllable system.
+which is nonzero for every sampling period $h > 0$. The system is therefore
+controllable at every sampling rate, as claimed in
+\cref{sec:doubleintegrator}.
+
+For the optimal control problem of \cref{sec:lqr} we will not need the full
+strength of \cref{def:controllability}. The weaker notion of
+\emph{stabilizability} suffices: 
+
+TODO: Stabilizability definition + citation
 
 \subsection{Observability}
 \label{subsec:observability}
 
-Finally, we need to take a look at observability. Before we assumed, that we can actually
-observe the state of the system we're modeling. However, it is much more realistic, that we
-only collect a recording of it (for example through sensors), and need to estimate the, for us,
-hidden real state of the system. The notion of observability describes whether we can determine
-this state only from our control input u(t) and our recorded response of the system y(t)
+Finally, we need to take a look at observability. Above we assumed that we can
+actually observe the state of the system we are modelling. However, it is much
+more realistic that we only collect a recording of it, for example through
+sensors, and need to estimate real state of the
+system. The notion of observability describes whether we can determine this
+state from our control input $u$ and our recorded response $y$ alone
 \needcite{ControlSystemsTheoryAndDesign}:
 
-Definition 4.1
-The system with state space model (4.1) is said to be observable if for any tf > 0 the
-initial state x(0) can be uniquely determined from the time history of the input u(t) and
-the output y(t) in the time interval 0 ≤ t ≤ tf . Otherwise, the system is said to be
-unobservable.
+\begin{definition}[Observability]
+\label{def:observability}
+The system with state-space model \eqref{eq:ss_disc} and output $y_k = C x_k$
+is said to be \emph{observable} if the initial state $x_0$ can be uniquely
+determined from the time history of the input $u_k$ and the output $y_k$ over a
+finite interval. Otherwise, the system is said to be \emph{unobservable}.
+\end{definition}
 
-Again, together with the previously constructed controllability matrix, we can derive a matrix,
-called observability matrix:
+Dual to the controllability matrix, we can derive the \emph{observability
+matrix}
 
-O(c,A) = CT (AT ,cT ) = [c cA...cAn−1]^T
+\begin{equation}
+    \label{eq:observability_matrix}
+    \mathcal{O}(C, A) =
+    \begin{bmatrix} C \\ CA \\ \vdots \\ CA^{n-1} \end{bmatrix}
+    \in \R^{pn \times n},
+\end{equation}
 
 and make use of the following theorem\needcite{ControlSystemsTheoryAndDesign}:
 
-Theorem 4.2
-The system (4.1) is observable if and only if the observability matrix O(c,A) has full rank.
+\begin{theorem}[Observability rank condition]
+\label{thm:observability}
+The system is observable if and only if the observability matrix
+$\mathcal{O}(C, A)$ has full rank $n$.
+\end{theorem}
 
-Checking this for our double integrator, we can again see that it is observable.
+Using \cref{thm:observability} for our double integrator is actually quite simple:
+we set $C = I_2$ in \eqref{eq:di_cont_matrices}, so $\mathcal{O}(C, A_d)$
+already contains the identity in its first block rows and has full rank. The
+system is thus observable.
 
-...
+If we cannot uniquely determine $x_k$ from our observation, we work with an
+estimate $\hat{x}_k$ instead. Running a copy of the model,
+$\hat{x}_{k+1} = A \hat{x}_k + B u_k$, the estimation error
+$\tilde{x}_k \coloneqq x_k - \hat{x}_k$ follows the dynamics
 
-If we however can't uniquely determine x(t) from our observation, we make use of an estimation x^(t).
-The difference between both is called estimation error, and follows the dynamics:
+\begin{equation}
+    \label{eq:estimation_error}
+    \tilde{x}_{k+1} = A\, \tilde{x}_k,
+    \qquad \tilde{x}_0 = x_0 - \hat{x}_0 ,
+\end{equation}
 
-x˜.(t) = A˜x(t), ˜x(0) = x(0)− ˆx(0)
+which is again just the system without control input. The decay of the error
+therefore depends only on the eigenvalues of $A$.
+If the system is unstable, the error grows infinitely\needcite{ControlSystemsTheoryAndDesign} 
+and for our example it does so
+linearly, by \eqref{eq:di_powers}. Observability fixes this by correcting
+the model with the measurement,
+$\hat{x}_{k+1} = A \hat{x}_k + B u_k + L (y_k - C \hat{x}_k)$, which turns
+\eqref{eq:estimation_error} into $\tilde{x}_{k+1} = (A - LC) \tilde{x}_k$. If
+and only if the system is observable we can choose $L$ such that the eigenvalues
+of $A - LC$ lie inside the unit disk, making it stable.
 
-The reduction of this error thus depends on the eigenvalues of A.
-Here again stability becomes important: if our system is unstable, the error goes to infinity\needcite{ControlSystemsTheoryAndDesign}
-and makes it impossible to correctly estimate our system state. Any applied optimizer for a controller only
-estimating the state will thus fail as a consequence.
+As with stabilizability, the weaker requirement that only the unobservable modes be
+stable is called \emph{detectability}, and it is the condition we will actually
+use in \cref{sec:lqr}. 
 
-The topic of observability will become later important in \cref{sec:uncertainty}, where we intentionally
-introduce noise to make y(t) != x(t). We will revisit observability and its implications there again.
+TODO: Detectability
+
+The topic of observability will become important again in
+\cref{sec:uncertainty}, where we deliberately introduce noise so that
+$y_k \neq x_k$. This doesn't change our matrix $C = I_2$, 
+so the rank condition of \cref{thm:observability} still
+holds and the system remains observable by definition. However,
+$y_k$ is no longer a deterministic function of $x_k$, so we can
+never estimate the state exactly. We revisit this and its
+implications there.
  
 \section{The Linear Quadratic Regulator}
 \label{sec:lqr}
 
-TODO
- 
+Now that we have defined our state-space model and its important
+characteristics, it is time to introduce our controller, which is based on the
+\emph{linear quadratic regulator} (LQR) problem.
+
+Here, the setting is that our system starts at an arbitrary initial state in its
+state space, and the goal of our controller is to return to the zero state as
+fast as possible. At the same time, the control input should be limited to a realistic
+quantity, such that it could actually be produced by an actuator.
+Both requirements can be combined into a single cost function, where $Q$
+describes the former, while $R$
+associates costs to control input. Over a finite horizon $T$, this gives the
+cost\needcite{OptimalAndRobustControl.pdf}
+
+\begin{equation}
+    \label{eq:lqr_cost_finite}
+    V_T(x_0, u) = \int_{0}^{T} \left( x(t)\T Q\, x(t) + u(t)\T R\, u(t) \right) \mathrm{d}t ,
+    \qquad Q = Q\T \succeq 0, \quad R = R\T \succ 0 .
+\end{equation}
+
+We notice to further restrictions here: $Q$ is required to be positive
+semi-definite, meaning deviating from the origin isn't reducing costs,
+and $R$ must be positive definite, such that every control input results in a cost.
+
+As the original formula relates to a continuous problem with a fixed endtime $T$,
+it doesn't fit well to our goal of evaluating over an infinite discrete horizon.
+The following formula offers exactly that:
+
+\begin{equation}
+    \label{eq:lqr_cost_infinite}
+    J(x_0, u) = \sum_{k=0}^{\infty} \left( x_k\T Q\, x_k + u_k\T R\, u_k \right) .
+\end{equation}
+
+\subsection{The optimal gain}
+\label{subsec:lqr_optimal}
+
+What makes the LQR problem special is that its solution is a static linear feedback
+law: the optimal input at time $k$ depends only the current state of the model.
+Introducing a gain matrix $K \in \R^{m \times n}$, we write it as
+
+\begin{equation}
+    \label{eq:feedback_law}
+    u_k = -K x_k .
+\end{equation}
+
+TODO - Footnote: Note that the minus in front of the K has been chosen as the convention for this paper.
+Other formulas have been adapted to this convention, if the other papers used different approaches.
+
+Our controller is thus reduced to choosing a matrix, and the
+optimal controller is given by the optimal gain matrix $K^{*}$.
+
+As we are dealing with a discrete-time system, that gain is obtained from the
+\emph{discrete algebraic Riccati equation} (DARE)
+
+\begin{equation}
+    \label{eq:dare}
+    P = A\T P A - A\T P B \left( R + B\T P B \right)^{-1} B\T P A + Q ,
+\end{equation}
+
+whose stabilizing solution $P = P\T \succeq 0$ yields
+
+\begin{equation}
+    \label{eq:optimal_gain}
+    K^{*} = \left( R + B\T P B \right)^{-1} B\T P A ,
+    \qquad
+    u_k^{*} = -K^{*} x_k .
+\end{equation}
+
+The matrix $P$ is additioanlly our
+\emph{cost-to-go} matrix, meaning that we can use it to calculate the optimal cost 
+incurred from any state $x$ onwards with
+
+\begin{equation}
+    \label{eq:cost_to_go}
+    J^{*}(x) = x\T P x .
+\end{equation}
+
+Whether \eqref{eq:dare} has such a solution at all is answered by the structural
+properties of \cref{sec:characteristics}\needcite{OptimalAndRobustControl.pdf}:
+
+\begin{theorem}[Existence and uniqueness]
+\label{thm:dare_existence}
+Let $(A, B)$ be stabilizable and let $(A, Q^{1/2})$ be detectable. Then the DARE
+\eqref{eq:dare} has a unique symmetric positive semi-definite solution $P$, which
+is the only stabilizing one, and the resulting closed loop satisfies
+$\spr(A - B K^{*}) < 1$. If $(A, Q^{1/2})$ is observable, $P$ is positive
+definite.
+\end{theorem}
+
+\subsection{The cost as a function of the gain}
+\label{subsec:lqr_cost_of_gain}
+
+\Cref{eq:optimal_gain} solves the problem, but it solves it directly and
+tells us nothing about the quality of non-optimal gains. The learning algorithms of
+the following chapters never see the model itself; they search over gains
+directly, and for that we need the cost as a function of $K$ rather than of an
+input sequence.
+
+Fix a gain $K$ and write the resulting closed loop as
+$x_{k+1} = A_K x_k$ with $A_K \coloneqq A - BK$. Substituting
+\eqref{eq:feedback_law} into \eqref{eq:lqr_cost_infinite} shows that the cost is
+again a quadratic form, $J(x_0, K) = x_0\T P_K x_0$, where $P_K$ now solves
+the far simpler discrete \emph{Lyapunov equation}
+
+\begin{equation}
+    \label{eq:lyapunov}
+    P_K = A_K\T P_K A_K + Q + K\T R K ,
+\end{equation}
+
+which is linear in the unknown $P_K$ and has a unique solution whenever
+$\spr(A_K) < 1$. This restricts us to the set of stabilizing gains
+
+\begin{equation}
+    \label{eq:stabilizing_set}
+    \mathcal{K} \coloneqq \left\{ K \in \R^{m \times n} : \spr(A - BK) < 1 \right\} ,
+\end{equation}
+
+outside of which we set the cost to $+\infty$, consistent with the remark after
+\eqref{eq:lqr_cost_infinite}.
+
+One dependency remains, namely on the initial state. Evaluating the gain
+based on a single $x_0$ would reward gains that happen to fit that one
+point, so we instead draw the initial state from a distribution,
+$x_0 \sim \mathcal{D}$, and average. Writing
+$\Sigma \coloneqq \E_{x_0 \sim \mathcal{D}}[x_0 x_0\T]$ for its second moment,
+the objective becomes
+
+\begin{equation}
+    \label{eq:cost_of_gain}
+    f(K) \coloneqq \E_{x_0 \sim \mathcal{D}} \left[ x_0\T P_K x_0 \right]
+    = \tr \left( P_K \Sigma \right) ,
+\end{equation}
+
+using the cyclic property of the trace. \Cref{eq:cost_of_gain} is the object
+that every remaining chapter of this thesis minimizes, and the algorithms differ
+only in how much of the model is known to them.
+
+Throughout this thesis we set $Q = I_2$ and $R = 1$, which weighs position,
+velocity and control effort equally. Initial states are drawn uniformly from the
+box $[-10, 10] \times [-1, 1]$.
+
 \section{Uncertainty and Disturbance Models}
 \label{sec:uncertainty}
 
-Until now, we assumed that we can fully observe the system, and that its behavior
-are governed by the same dynamics we know. However, in reality, there are influences on such
-systems which we don't clearly know of. Especially for embodied agents this is important, as
-the world is a messy place.
+Until now, we assumed that we can fully observe the system, and that its
+behaviour is governed by exactly the dynamics we know. However, in reality there
+are influences on such systems which we don't clearly know of. Especially for
+embodied agents this is important, as the world is a messy place.
 
-We will thus introduce four different disturbances to be included in the model, commonly known
-as noise.
+We will thus introduce four different disturbances to be included in the model,
+commonly known as noise. They are distinguished by the point at which they
+affect the loop: what the controller \emph{observes} (measurement noise),
+what its output actually \emph{does} (control noise), what the plant
+\emph{is} (parametric uncertainty), and what else \emph{acts} on it
+(external disturbance). Each of them can be activated separately, so that we
+can clearly isolate the cause of an effect. Throughout this section
+$k$ indexes the sampling instants, and $\sigma$ denotes the standard deviation
+of the respective noise.
 
 \subsection{Measurement Noise}
 \label{subsec:measurementnoise}
 
-This is the one mainly dealt with in relation to observability - with this we model
-that sensors can't capture the real model state cleanly, and are noisy. So capturing the same
-state twice would lead to slightly different observations y(t). Let n_m(t) denote the measurement
-noise at timestep t. Then:
+This one mainly relates to observability: we influence the sensors used to measured
+the model state, such that capturing the same state twice would
+not lead to the same observation $y_k$. 
+Let $n^{\mathrm{m}}_k$ denote the measurement noise at step $k$. Then
 
-n_m(t) sampled from Normal(0, std) with shape x(t), std in \R+
+\begin{equation}
+    \label{eq:measurement_noise}
+    n^{\mathrm{m}}_k \sim \mathcal{N}\!\left(0, \sigma_{\mathrm{m}}^{2} I_n\right),
+    \qquad
+    y_k = x_k + n^{\mathrm{m}}_k ,
+    \qquad \sigma_{\mathrm{m}} \in \R_{+} ,
+\end{equation}
 
-y(t) = x(t) + n_m(t)
+drawn independently at every step.
 
-TODO: include note in relation to observability
+While one might think that this noise removes observability for us, it doesn't.
+The output matrix is still $C = I_2$, 
+so the rank condition of \cref{thm:observability} holds
+unchanged and observability is given. 
+
+However, it does remove the deterministic link between state and
+output, so we can't identify $x_k$ exactly with any amount of measurements. Using
+our noisy observation in the feedback law \eqref{eq:feedback_law} and $u_k = -K y_k$, 
+the closed loop becomes
+
+\begin{equation}
+    \label{eq:measurement_closed_loop}
+    x_{k+1} = (A - BK)\, x_k - BK\, n^{\mathrm{m}}_k .
+\end{equation}
+
+So even a perfectly stabilizing $K$ can no longer bring the state exactly to the origin, 
+but rather to a distribution around it.
 
 \subsection{Control Noise}
 \label{subsec:controlnoise}
 
-Control noise, as the name says, acts on the applied control input. The realism comes from the
-difference between the programmed motion of an actuator and the actually enacted action. This
-variation is captured by this noise. Here we deal (other than the additive noise on the measurement)
-with multiplicative noise, which scales with the received control input. In practice this means that
-the applied control input v(t) is calculated by:
+Control noise, as the name says, acts on the applied control input. With it,
+we try to model thedifference between the intended movement of an actuator,
+and its actual action due to different factors. Here we deal with
+\emph{multiplicative} noise, which scales with the input. In
+detail this means that the applied control input $v_k$ is obtained as
 
-n_c(t) sampled from Normal(0, std) with shape u(t)
+\begin{equation}
+    \label{eq:control_noise}
+    n^{\mathrm{c}}_k \sim \mathcal{N}\!\left(0, \sigma_{\mathrm{c}}^{2} I_m\right),
+    \qquad
+    v_k = \left( 1 + n^{\mathrm{c}}_k \right) \odot u_k ,
+\end{equation}
 
-v(t) = u(t) * (1 + n_c(t))
+where $\odot$ denotes the elementwise product, so that $\sigma_{\mathrm{c}}$ is
+the \emph{relative} error. Applying this to the input, the next step becomes
 
-When applying this to an input, the next step then becomes:
-
-x(t+1) = A @ x_t + B @ v_t
+\begin{equation}
+    \label{eq:control_noise_step}
+    x_{k+1} = A\, x_k + B\, v_k .
+\end{equation}
 
 \subsection{Parametric Uncertainty}
 \label{subsec:paremetricuncertainty}
 
-This acts directly on the matrices of the model. Here, we either decide to keep it time invariant,
-meaning n_p(t) = n_p(0) for all t, or resample on each iteration. With the latter, we simulate an
-ever changing system, while the former is a formalization of us following a slightly mismodeled system.
-As well as the first one, this again is additive noise, so doesn't scale with the values of A or B.
+This noise acts directly on the matrices of the model. Here, we either decide to keep
+it time invariant, meaning $\Delta_k = \Delta_0$ for all $k$, or to resample it
+at every step. The former models a wrongly identified system, while the latter
+simulates one that continuously changes. As with measurement noise, it is additive. 
+Applied, it acts on the system the
+following way:
 
-Applied, it influences the system in the following way:
+\begin{equation}
+    \label{eq:parametric_noise}
+    \left( \Delta_k^{A} \right)_{ij},\ \left( \Delta_k^{B} \right)_{ij}
+    \overset{\text{i.i.d.}}{\sim} \mathcal{N}\!\left(0, \sigma_{\mathrm{p}}^{2}\right),
+    \qquad
+    x_{k+1} = \left( A + \Delta_k^{A} \right) x_k + \left( B + \Delta_k^{B} \right) v_k .
+\end{equation}
 
-n_p_A(t) = Normal(0, std) with shape A
-n_p_B(t) = Normal(0, std) with shape b
-
-x(t+1) = (A + n_p_A(t)) @ x_t + (B + n_p_B(t)) @ v_t
+Worth noting is that resampling every
+step leaves the model correct \emph{on average}, since
+$\E[\Delta_k] = 0$, and mainly adds variance to the trajectory. This stands
+in contrast to the time invariant version, where we have an discrepancy between
+what we compute actions on, and what actually happens.
 
 \subsection{External Disturbance}
 \label{subsec:externaldisturbance}
 
-This noise not only influences our observability, but interacts with the system directly.
-Here we model external influences, like constant wind pushing our agent in a specific direction
-or periodic disturbances, for example rain hitting it with some frequency.
+This noise models external influences, like a constant wind pushing on our
+agent, or periodic disturbances, for example rain
+hitting it with some frequency. Depending on the type, the disturbance
+$n^{\mathrm{d}}_k \in \R^{n}$ is drawn as
 
-In practice, depending on the type, the noise is drawn the following way:
+\begin{subequations}
+\label{eq:disturbance_noise}
+\begin{align}
+    \text{Gaussian:} \quad
+        & n^{\mathrm{d}}_k \sim \mathcal{N}\!\left(0, \sigma_{\mathrm{d}}^{2} I_n\right)
+          \quad \text{independently at every step}, \label{eq:dist_gauss}\\
+    \text{Sinusoidal:} \quad
+        & n^{\mathrm{d}}_k = \sigma_{\mathrm{d}} \sin(0.1\,k)\, \mathbf{1}_n , \label{eq:dist_sin}\\
+    \text{Constant:} \quad
+        & n^{\mathrm{d}}_k = n^{\mathrm{d}}_0 \sim \mathcal{N}\!\left(0, \sigma_{\mathrm{d}}^{2} I_n\right)
+          \quad \text{for all } k . \label{eq:dist_const}
+\end{align}
+\end{subequations}
 
-Gaussian: n_d(t) = Normal(0, std) with shape x(t)
+Only the first one can really be considered as noise; the other are more
+deterministic values, where $\sigma_{\mathrm{d}}$ acts as the amplitude of it. 
+The sinusoidal variant completes one period every
+$2\pi / 0.1 \approx 63$ steps, which at a sampling intervall of $h = 0.01$ 
+is a slow drift rather than a rapid vibration. Including the
+noise in our loop, the state transition becomes
 
-Sinusoidal: n_d(t) = std * np.sin(0.1 * t) * 1_vector
+\begin{equation}
+    \label{eq:disturbance_step}
+    x_{k+1} = A\, x_k + B\, v_k + n^{\mathrm{d}}_k .
+\end{equation}
 
-Constant: n_d(0) = Normal(0, std) with shape x(t), n_d(t) = n_d(0)
+\subsection{The full loop}
+\label{subsec:full_noise}
+While we, until now, have only regarded each noise type on their own,
+there is also the possibility to include them all at once. Doing so,
+a singular step becomes:
 
-With it, the following state is calculated in this way:
+\begin{subequations}
+\label{eq:noisy_loop}
+\begin{align}
+    y_k     &= x_k + n^{\mathrm{m}}_k , \label{eq:noisy_obs}\\
+    u_k     &= -K y_k , \label{eq:noisy_ctrl}\\
+    v_k     &= \left( 1 + n^{\mathrm{c}}_k \right) \odot u_k , \label{eq:noisy_act}\\
+    x_{k+1} &= \left( A + \Delta_k^{A} \right) x_k + \left( B + \Delta_k^{B} \right) v_k + n^{\mathrm{d}}_k . \label{eq:noisy_dyn}
+\end{align}
+\end{subequations}
 
-x(t+1) = A @ x_t + B @ v_t + n_d(t)
+Relevant to note about \eqref{eq:noisy_loop} is that the controller only 
+interacts with $y_k$ and $u_k$, whereas the dynamics
+and the stage cost of \eqref{eq:lqr_cost_infinite} are evaluated on the true
+state $x_k$. Thus our controller can never actually observe the true state it is
+evaluated on. For our baseline LQR solution of \cref{sec:lqr}, which we will use to compare,
+we compute the gain on a pure system, and only afterwards apply it to an
+\emph{exposed} system of the style \eqref{eq:noisy_loop} afterwards. Measuring how much
+performance this difference makes is the subject of the next section.
  
 \section{Robustness Metrics}
 \label{sec:robustness}

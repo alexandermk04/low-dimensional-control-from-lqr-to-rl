@@ -70,3 +70,6 @@ diverges for steps larger than 3.7e-4
 - added seeding to improve reproducibility and comparability
 - TODO: Need to reset seeding before each simulation run, to get exactly the same results here (for noise)
 - !!Finding: SPI needs only a tiny fraction of the iterations to reduce the matrix to low rank and lower the costs - overiterating makes it worse, until divergence
+
+## 26th of August
+- check whether notation for noise sampling is correct of dimension
