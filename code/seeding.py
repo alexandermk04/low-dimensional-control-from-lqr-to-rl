@@ -1,7 +1,7 @@
 import numpy as np
 
 # Global seed
-SEED = 2023
+SEED = 2026
 
 def create_seed_sequences(names: list[str]) -> dict[str, np.random.SeedSequence]:
     """Create a dictionary of seed sequences for reproducibility.

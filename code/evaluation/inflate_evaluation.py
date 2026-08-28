@@ -368,8 +368,8 @@ if __name__ == "__main__":
     # Position, velocity
     x_0 = np.array([10, 0])
 
-    INFLATED_INPUT_DIM = 10
-    INFLATED_OUTPUT_DIM = 5
+    INFLATED_INPUT_DIM = 50
+    INFLATED_OUTPUT_DIM = 25
 
     model = StateSpaceModel(A, B)
 
@@ -392,7 +392,7 @@ if __name__ == "__main__":
         sim_steps=STEPS,
     )
 
-    VISUALIZE = False
+    VISUALIZE = True
 
     try:
         experiment.run_pure(VISUALIZE)
