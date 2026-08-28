@@ -56,3 +56,6 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+# Data Output files from the experiments
+code/results/

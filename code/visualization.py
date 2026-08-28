@@ -1,10 +1,23 @@
 """Plotting helpers shared by the scripts in :mod:`evaluation`.
+
+These show plots directly based on the input data.
 """
+
+import os
 
 import numpy as np
 import matplotlib.pyplot as plt
 
 from basetypes import SimulationResult
+
+# Path for saving the figures
+FIGURE_ROOT = "results/figures"
+
+
+def _figure_path(name: str) -> str:
+    """Absolute path for a figure, creating the directory if it doesn't exist."""
+    os.makedirs(FIGURE_ROOT, exist_ok=True)
+    return os.path.join(FIGURE_ROOT, f"{name}.png")
 
 
 def relative_cost_error(cost_estimate, baseline_cost):
@@ -168,7 +181,7 @@ def visualize_multiple_results(
         Key/value pairs rendered into the sixth panel.
     save_to : str, optional
         Filename stem. When given, the figure is written to
-        ``../../Visualizations/<save_to>.png`` instead of being shown.
+        ``results/figures/<save_to>.png`` instead of being shown.
     dt : float, optional
         Sampling interval, for labelling the time axes in seconds.
 
@@ -243,7 +256,7 @@ def visualize_multiple_results(
     plt.tight_layout()
 
     if save_to is not None:
-        plt.savefig(f"../../Visualizations/{save_to}.png")
+        plt.savefig(_figure_path(save_to))
     else:
         plt.show()
 
@@ -320,6 +333,6 @@ def visualize_spi(
     plt.tight_layout()
 
     if save_to is not None:
-        plt.savefig(f"../../Visualizations/{save_to}.png")
+        plt.savefig(_figure_path(save_to))
     else:
         plt.show()
