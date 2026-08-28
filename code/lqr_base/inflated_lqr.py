@@ -153,76 +153,42 @@ class LQRInflated(LQRDiscrete):
         """
         return self.U_2.T @ grad_K @ self.U_1.T
 
-    def next_state(self, K: np.ndarray) -> StepResult:
-        """Advance one step with the controller confined to the lifted spaces.
+    @property
+    def observation_dim(self) -> int:
+        """Dimension of the inflated observation space, ``p``."""
+        return self.U_1.shape[0]
+
+    @property
+    def action_dim(self) -> int:
+        """Dimension of the inflated action space, ``q``."""
+        return self.U_2.shape[1]
+
+    def lift_observation(self, x: np.ndarray) -> np.ndarray:
+        """Lift the true state into the inflated observation space.
 
         Parameters
         ----------
-        K : np.ndarray
-            Gain in the controller's space, of shape ``(q, p)``.
+        x : np.ndarray
+            True state of shape ``(n,)``.
 
         Returns
         -------
-        StepResult
-            ``y_t`` is the (possibly noisy) inflated observation of shape
-            ``(p,)``, ``v_t`` the inflated control of shape ``(q,)``, while
-            ``x_t`` and ``u_t`` remain the true state and the true plant input.
-            Unlike the plain system, these never coincide, so both branches
-            fill all four fields.
-
-        Raises
-        ------
-        ValueError
-            If :meth:`reset` has not been called.
+        np.ndarray
+            ``U_1 @ x``, of shape ``(p,)``.
         """
-        if not self.initialized:
-            raise ValueError("LQRInflated must be initialized before calling next_state. Call reset() first.")
+        return self.U_1 @ x
 
-        if self.noise:
-            x_t = self.x
-            y_t = self.U_1 @ x_t
+    def project_action(self, v: np.ndarray) -> np.ndarray:
+        """Project the inflated control down onto the true input space.
 
-            if self.measurement_noise is not None:
-                noise = self.measurement_noise.sample_measurement_noise(y_t, self.noise_rng)
-                y_t = y_t + noise
-            v_t = - K @ y_t
+        Parameters
+        ----------
+        v : np.ndarray
+            Controller output of shape ``(q,)``.
 
-            if self.control_noise is not None:
-                control_noise = self.control_noise.sample_control_noise(v_t, self.noise_rng)
-                v_t = v_t + control_noise
-
-            u_t = self.U_2 @ v_t
-
-            # Parametric noise lives in the state space, not the measured space
-            A = self.A
-            B = self.B
-            if self.parametric_noise is not None:
-                noise_A, noise_B = self.parametric_noise.sample_parametric_noise(A, B, self.noise_rng)
-                A = A + noise_A
-                B = B + noise_B
-
-            # Use the actual state, with the calculated control, based on the observations
-            x_next = A @ x_t + B @ u_t
-
-            # Disturbance noise also lives in the state space, not the measured space
-            if self.disturbance_noise is not None:
-                disturbance_noise = self.disturbance_noise.sample_disturbance(x_next, self.noise_rng)
-                x_next = x_next + disturbance_noise
-
-            self.x = x_next
-
-            cost = x_t.T @ self.Q @ x_t + u_t.T @ self.R @ u_t
-
-            return StepResult(y_t, v_t, x_t, u_t, cost)
-
-        else:
-            x_t = self.x
-            y_t = self.U_1 @ x_t
-            v_t = - K @ y_t
-
-            u_t = self.U_2 @ v_t
-
-            self.x = self.A @ x_t + self.B @ u_t
-
-            cost = x_t.T @ self.Q @ x_t + u_t.T @ self.R @ u_t
-            return StepResult(y_t, v_t, x_t, u_t, cost)
+        Returns
+        -------
+        np.ndarray
+            ``U_2 @ v``, of shape ``(m,)``.
+        """
+        return self.U_2 @ v

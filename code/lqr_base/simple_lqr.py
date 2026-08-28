@@ -176,6 +176,14 @@ class LQRBase:
         self.x_0 = None
         self.initialized = False
 
+        # Observation cached so that measurement noise is only drawn once
+        self._y_cache = None
+
+        # Counts total steps of this model
+        self.env_steps = 0
+        # How many times it was reset
+        self.episodes = 0
+
         # Seeding
         children = settings.seed_seq.spawn(2)
         self.state_rng = np.random.default_rng(children[0])
@@ -204,6 +212,12 @@ class LQRBase:
         self.state_rng.bit_generator.state = self.state_rng_bit_state
         self.noise_rng.bit_generator.state = self.noise_rng_bit_state
 
+    def reset_counters(self):
+        """Zero the sample counters.
+        """
+        self.env_steps = 0
+        self.episodes = 0
+
     def reset(self):
         """Return the system to its initial state.
 
@@ -216,6 +230,8 @@ class LQRBase:
         if self.resample_initial_state or self.x_0 is None:
             self.x_0 = self.sample_initial_state()
         self.x = self.x_0.copy()
+        self._y_cache = None
+        self.episodes += 1
 
         # Reset the noises carrying an internal state
         if self.disturbance_noise is not None:
@@ -246,26 +262,139 @@ class LQRBase:
         self.noise = True
 
 
-    def next_state(self, K: np.ndarray) -> StepResult:
-        """Advance one step under the gain ``K``. Implemented by subclasses.
+    def lift_observation(self, x: np.ndarray) -> np.ndarray:
+        """Map the true state into the space the controller observes.
 
         Parameters
         ----------
-        K : np.ndarray
-            Feedback gain, applied as ``u = -K y``.
+        x : np.ndarray
+            True state of shape ``(n,)``.
+
+        Returns
+        -------
+        np.ndarray
+            ``x`` unchanged here.
+        """
+        return x
+
+    def project_action(self, v: np.ndarray) -> np.ndarray:
+        """Map the controller's output into the true input space.
+
+        Parameters
+        ----------
+        v : np.ndarray
+            Controller output of shape ``(q,)``.
+
+        Returns
+        -------
+        np.ndarray
+            ``v`` unchanged here.
+        """
+        return v
+
+    @property
+    def observation_dim(self) -> int:
+        """Dimension of the space the controller observes."""
+        return self.A.shape[0]
+
+    @property
+    def action_dim(self) -> int:
+        """Dimension of the space the controller acts in."""
+        return self.B.shape[1]
+
+    def observe(self) -> np.ndarray:
+        """Observation of the current state, can be called multiple times within a step.
+        The noise stays the same for all at a certain time.
+
+        Returns
+        -------
+        np.ndarray
+            ``y_t``, of shape ``(observation_dim,)``.
+
+        Raises
+        ------
+        ValueError
+            If :meth:`reset` has not been called.
+        """
+        if not self.initialized:
+            raise ValueError(
+                f"{type(self).__name__} must be initialized before observing. "
+                "Call reset() first."
+            )
+
+        if self._y_cache is None:
+            y = self.lift_observation(self.x)
+            if self.noise and self.measurement_noise is not None:
+                y = y + self.measurement_noise.sample_measurement_noise(y, self.noise_rng)
+            self._y_cache = y
+
+        return self._y_cache
+
+    def apply_control(self, v: np.ndarray) -> StepResult:
+        """Advance the plant one step given the controller's raw output.
+
+        Parameters
+        ----------
+        v : np.ndarray
+            Controller output in the controller's own space, of shape
+            ``(action_dim,)``.
 
         Returns
         -------
         StepResult
-            What was observed, commanded, and actually applied, plus the stage
-            cost.
+            ``y_t`` as observed, ``v_t`` after control noise, and the true
+            ``x_t`` / ``u_t`` the cost is charged on.
 
         Raises
         ------
-        NotImplementedError
-            Always, on the base class.
+        ValueError
+            If :meth:`reset` has not been called.
         """
-        raise NotImplementedError
+        y_t = self.observe()
+        x_t = self.x
+
+        # Multiplicative control noise
+        if self.noise and self.control_noise is not None:
+            v = v + self.control_noise.sample_control_noise(v, self.noise_rng)
+
+        u_t = self.project_action(v)
+
+        # Parametric noise
+        A = self.A
+        B = self.B
+        if self.noise and self.parametric_noise is not None:
+            noise_A, noise_B = self.parametric_noise.sample_parametric_noise(A, B, self.noise_rng)
+            A = A + noise_A
+            B = B + noise_B
+
+        x_next = A @ x_t + B @ u_t
+
+        # Disturbances on the true successor state
+        if self.noise and self.disturbance_noise is not None:
+            x_next = x_next + self.disturbance_noise.sample_disturbance(x_next, self.noise_rng)
+
+        self.x = x_next
+        self._y_cache = None
+        self.env_steps += 1
+
+        cost = float(x_t.T @ self.Q @ x_t + u_t.T @ self.R @ u_t)
+
+        return StepResult(y_t, v, x_t, u_t, cost)
+
+    def next_state(self, K: np.ndarray) -> StepResult:
+        """Advance one step under the linear policy ``v = -K y``.
+
+        Parameters
+        ----------
+        K : np.ndarray
+            Feedback gain in the controller's space, applied as ``v = -K y``.
+
+        Returns
+        -------
+        StepResult
+            See :meth:`apply_control`.
+        """
+        return self.apply_control(-K @ self.observe())
 
 
 class LQRDiscrete(LQRBase):
@@ -338,79 +467,6 @@ class LQRDiscrete(LQRBase):
         """
         return grad_K
 
-    def next_state(self, K: np.ndarray) -> StepResult:
-        """Advance the plant one step under ``u = -K x``.
-
-        Parameters
-        ----------
-        K : np.ndarray
-            Feedback gain of shape ``(m, n)``.
-
-        Returns
-        -------
-        StepResult
-            What was observed, commanded, and actually applied, plus the stage
-            cost.
-
-        Raises
-        ------
-        ValueError
-            If :meth:`reset` has not been called.
-        """
-        if not self.initialized:
-            raise ValueError("LQRDiscrete must be initialized before calling next_state. Call reset() first.")
-
-        if self.noise:
-            x_t = self.x
-
-            # Observation
-            y_t = x_t
-            if self.measurement_noise is not None:
-                noise = self.measurement_noise.sample_measurement_noise(y_t, self.noise_rng)
-                y_t = y_t + noise
-
-            # Control input based on the observation
-            u_t = - K @ y_t
-
-            # The actual control input applied
-            v_t = u_t
-            if self.control_noise is not None:
-                control_noise = self.control_noise.sample_control_noise(u_t, self.noise_rng)
-                v_t = v_t + control_noise
-
-            # Parametric noise applied to state space
-            A = self.A
-            B = self.B
-            if self.parametric_noise is not None:
-                noise_A, noise_B = self.parametric_noise.sample_parametric_noise(A, B, self.noise_rng)
-                A = A + noise_A
-                B = B + noise_B
-
-            # Here we use the actual state, with our control
-            x_next = A @ x_t + B @ v_t
-
-            # Disturbance noise also lives in the state space, not the measured space
-            if self.disturbance_noise is not None:
-                disturbance_noise = self.disturbance_noise.sample_disturbance(x_next, self.noise_rng)
-                x_next = x_next + disturbance_noise
-
-            self.x = x_next
-
-            cost = x_t.T @ self.Q @ x_t + u_t.T @ self.R @ u_t
-
-            return StepResult(y_t, v_t, x_t, u_t, cost)
-
-        else:
-            x_t = self.x
-            u_t = - K @ x_t
-
-            self.x = self.A @ x_t + self.B @ u_t
-
-            cost = x_t.T @ self.Q @ x_t + u_t.T @ self.R @ u_t
-
-            return StepResult(x_t, u_t, x_t, u_t, cost)
-
-
 def get_optimal_K_and_cost_discrete(lqr: LQRDiscrete):
     """Solve the LQR exactly, giving the baseline every solver is compared to.
 
@@ -449,6 +505,43 @@ def get_optimal_K_and_cost_discrete(lqr: LQRDiscrete):
     cost = lqr.x_0.T @ P @ lqr.x_0
 
     return K, cost
+
+def initial_state_covariance(lqr: LQRDiscrete) -> np.ndarray:
+    """Second moment ``Sigma_0 = E[x_0 x_0']`` of the reset distribution.
+
+    Parameters
+    ----------
+    lqr : LQRDiscrete
+        System whose reset distribution is described.
+
+    Returns
+    -------
+    np.ndarray
+        Of shape ``(n, n)``. For ``resample_initial_state=True`` the states are
+        drawn from the uniform box ``U(-b, b)`` with independent coordinates,
+        whose second moment is ``diag(b_i**2 / 3)``. For a fixed ``x_0`` it
+        degenerates to ``outer(x_0, x_0)``, so that ``trace(P @ Sigma_0)``
+        reduces to :func:`true_cost` exactly.
+
+    Raises
+    ------
+    ValueError
+        If the initial state is fixed but has not been sampled yet, i.e.
+        ``reset()`` has not been called.
+    """
+
+    if lqr.resample_initial_state:
+        bounds = np.asarray(lqr.max_initial_state, dtype=float)
+        return np.diag(bounds ** 2 / 3.0)
+
+    if lqr.x_0 is None:
+        raise ValueError(
+            "With resample_initial_state=False the covariance is determined by "
+            "the single sampled x_0. Call reset() first."
+        )
+
+    return np.outer(lqr.x_0, lqr.x_0)
+
 
 def true_cost(lqr: LQRDiscrete, K: np.ndarray) -> float:
     """Exact infinite-horizon cost of a gain, without simulating anything.
