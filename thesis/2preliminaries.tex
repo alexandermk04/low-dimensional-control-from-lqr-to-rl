@@ -32,11 +32,11 @@ A continuous-time LTI system is given by
 \end{subequations}
 
 where $x(t) \in \R^{n}$ is the \emph{state vector}, $u(t) \in \R^{m}$ the
-\emph{input vector} chosen by the agent, and $y(t) \in \R^{p}$ the
+\emph{input vector} chosen by the agent, and $y(t) \in \R^{q}$ the
 \emph{output vector}, i.e.\ the output observed and thus available to the
 feedback controller. Accordingly, $A_c \in \R^{n \times n}$ is called the
 \emph{system matrix}, $B_c \in \R^{n \times m}$ the \emph{input matrix},
-$C \in \R^{p \times n}$ the \emph{output matrix}, and $D \in \R^{p \times m}$
+$C \in \R^{q \times n}$ the \emph{output matrix}, and $D \in \R^{q \times m}$
 the \emph{feedthrough matrix}.
  
 The two equations in \eqref{eq:ss_cont} play fundamentally different roles, and
@@ -73,8 +73,8 @@ measurable and therefore set $C = I_n$, which reduces
 \eqref{eq:ss_cont_output} to $y(t) = x(t)$. However, when we introduce disturbances
 through noise, this will no longer be the case. More details on this will be
 given in \cref{sec:uncertainty}. The distinction between $u = -Kx$ and $u = -Ky$ is
-therefore critical, since the former admits an exact solution while the
-latter does not; we return to this point in \cref{sec:lqr}.
+therefore critical, since the former admits an optimal solution while the
+latter might not; we return to this point in \cref{sec:lqr}.
  
 % -----------------------------------------------------------------------------
 \subsection{Discretization}
@@ -201,7 +201,7 @@ controllability is what guarantees that it can, and observability is what
 allows a controller that only sees $y$ to act as if it actually recorded $x$.
 
 \subsection{Stability}
-\label{subsec:characteristics}
+\label{subsec:stability}
 
 The first of these is stability, which guarantees that deviations in the system
 don't become too drastic, and thus cause some kind of failure. Mathematically,
@@ -305,11 +305,45 @@ which is nonzero for every sampling period $h > 0$. The system is therefore
 controllable at every sampling rate, as claimed in
 \cref{sec:doubleintegrator}.
 
-For the optimal control problem of \cref{sec:lqr} we will not need the full
-strength of \cref{def:controllability}. The weaker notion of
-\emph{stabilizability} suffices: 
+For \cref{sec:lqr} we will not need the strong \cref{def:controllability}
+but can rather suffice with the weaker notion of \emph{stabilizability}
+\needcite{ControlSystemsTheoryAndDesign}:
 
-TODO: Stabilizability definition + citation
+\begin{definition}[Stabilizability]
+\label{def:stabilizability}
+The pair $(A, B)$ is called \emph{stabilizable} if there exists a gain
+$K \in \R^{m \times n}$ such that $\spr(A - BK) < 1$, i.e.\ if the closed loop
+obtained from \eqref{eq:ss_disc} with $u_k = -K x_k$ can be made asymptotically
+stable. Equivalently, $(A,B)$ is stabilizable if and only if every mode of $A$
+that is not controllable is already asymptotically stable.
+\end{definition}
+
+However, to decide whether our system is stabilizable,
+we do not need to construct this specific $K$. The
+Popov-Belevitch-Hautus (PBH) test\needcite{TODO: Find fitting}
+allows us to employ it as a rank condition on the relevant eigenvalues:
+
+\begin{theorem}[PBH test for stabilizability]
+\label{thm:pbh_stabilizability}
+The pair $(A, B)$ is stabilizable if and only if
+\begin{equation}
+    \label{eq:pbh_stabilizability}
+    \rank \begin{bmatrix} A - \lambda I_n & B \end{bmatrix} = n
+    \qquad \text{for all } \lambda \in \C \text{ with } \lvert \lambda \rvert \ge 1 .
+\end{equation}
+\end{theorem}
+
+Comparing \eqref{eq:pbh_stabilizability} with
+\eqref{eq:controllability_matrix} shows that the latter
+applies the same rank condition as the former, however 
+imposed for \emph{every} $\lambda \in \C$. 
+Thus, controllability implies stabilizability but not vice versa. 
+The difference contains systems which have uncontrollable
+directions decaying on their own, and a controller can hence never
+influence.
+
+As our double integrator is already controllable by \eqref{eq:di_controllability},
+it is therefore also stabilizable.
 
 \subsection{Observability}
 \label{subsec:observability}
@@ -372,14 +406,43 @@ linearly, by \eqref{eq:di_powers}. Observability fixes this by correcting
 the model with the measurement,
 $\hat{x}_{k+1} = A \hat{x}_k + B u_k + L (y_k - C \hat{x}_k)$, which turns
 \eqref{eq:estimation_error} into $\tilde{x}_{k+1} = (A - LC) \tilde{x}_k$. If
-and only if the system is observable we can choose $L$ such that the eigenvalues
+the system is observable, we can choose a $L$ such that the eigenvalues
 of $A - LC$ lie inside the unit disk, making it stable.
 
-As with stabilizability, the weaker requirement that only the unobservable modes be
-stable is called \emph{detectability}, and it is the condition we will actually
-use in \cref{sec:lqr}. 
+As with stabilizability, the weaker requirement is called \emph{detectability}, 
+and it is the condition we will rely on in \cref{sec:lqr}. 
 
-TODO: Detectability
+\begin{definition}[Detectability]
+\label{def:detectability}
+The pair $(A, C)$ is called \emph{detectable} if there exists an observer gain
+$L \in \R^{n \times p}$ such that $\spr(A - LC) < 1$. Equivalently, $(A,C)$ is
+detectable if and only if every unobservable mode of $A$ is already
+asymptotically stable.
+\end{definition}
+
+Detectability is the dual of \cref{def:stabilizability} which gives us
+that $(A, C)$ is detectable if and only if $(A\T, C\T)$ is
+stabilizable\needcite{ControlSystemsTheoryAndDesign}. This follows as
+$\spr(A - LC) = \spr\!\left((A\T - C\T L\T)\right)$. Transposing the test
+for stabilizability \eqref{eq:pbh_stabilizability} leaves us with the dual rank test:
+
+\begin{theorem}[PBH test for detectability]
+\label{thm:pbh_detectability}
+The pair $(A, C)$ is detectable if and only if
+\begin{equation}
+    \label{eq:pbh_detectability}
+    \rank \begin{bmatrix} A - \lambda I_n \\ C \end{bmatrix} = n
+    \qquad \text{for all } \lambda \in \C \text{ with } \lvert \lambda \rvert \ge 1 .
+\end{equation}
+\end{theorem}
+
+With $C = I_2$ the matrix in \eqref{eq:pbh_detectability} contains an identity
+block and has full rank for every $\lambda$, so our system is observable and
+therefore detectable. The reason we introduce the weaker notion here is
+\cref{thm:dare_existence}, whose hypothesis is the detectability of
+$(A, Q^{1/2})$ rather than $(A, C)$. This shifts the focus from what
+the sensor sees, to which directions of the state space are penalised by the
+cost.
 
 The topic of observability will become important again in
 \cref{sec:uncertainty}, where we deliberately introduce noise so that
@@ -425,20 +488,25 @@ The following formula offers exactly that:
     J(x_0, u) = \sum_{k=0}^{\infty} \left( x_k\T Q\, x_k + u_k\T R\, u_k \right) .
 \end{equation}
 
+This sum does not necessarily converge. If the closed loop
+does not decay, the costs do not vanish and $J$ tends to $+\infty$. 
+Using this as our definition, $J$ becomes well defined for every gain.
+
 \subsection{The optimal gain}
 \label{subsec:lqr_optimal}
 
 What makes the LQR problem special is that its solution is a static linear feedback
 law: the optimal input at time $k$ depends only the current state of the model.
 Introducing a gain matrix $K \in \R^{m \times n}$, we write it as
+\footnote{Note that the minus in front of the K has been chosen as the convention for this paper.
+This turns our closed loop into the format $A - BK$, while some referenced literature
+uses $A + BK$. Formulas cited have been adapted to our convention by replacing $K$ with $-K$.
+}
 
 \begin{equation}
     \label{eq:feedback_law}
     u_k = -K x_k .
 \end{equation}
-
-TODO - Footnote: Note that the minus in front of the K has been chosen as the convention for this paper.
-Other formulas have been adapted to this convention, if the other papers used different approaches.
 
 Our controller is thus reduced to choosing a matrix, and the
 optimal controller is given by the optimal gain matrix $K^{*}$.
@@ -594,13 +662,13 @@ Control noise, as the name says, acts on the applied control input. With it,
 we try to model thedifference between the intended movement of an actuator,
 and its actual action due to different factors. Here we deal with
 \emph{multiplicative} noise, which scales with the input. In
-detail this means that the applied control input $v_k$ is obtained as
+detail this means that the applied control input $\tilde{u}_k$ is obtained as
 
 \begin{equation}
     \label{eq:control_noise}
     n^{\mathrm{c}}_k \sim \mathcal{N}\!\left(0, \sigma_{\mathrm{c}}^{2} I_m\right),
     \qquad
-    v_k = \left( 1 + n^{\mathrm{c}}_k \right) \odot u_k ,
+    \tilde{u}_k = \left( 1 + n^{\mathrm{c}}_k \right) \odot u_k ,
 \end{equation}
 
 where $\odot$ denotes the elementwise product, so that $\sigma_{\mathrm{c}}$ is
@@ -608,7 +676,7 @@ the \emph{relative} error. Applying this to the input, the next step becomes
 
 \begin{equation}
     \label{eq:control_noise_step}
-    x_{k+1} = A\, x_k + B\, v_k .
+    x_{k+1} = A\, x_k + B\, \tilde{u}_k .
 \end{equation}
 
 \subsection{Parametric Uncertainty}
@@ -626,7 +694,7 @@ following way:
     \left( \Delta_k^{A} \right)_{ij},\ \left( \Delta_k^{B} \right)_{ij}
     \overset{\text{i.i.d.}}{\sim} \mathcal{N}\!\left(0, \sigma_{\mathrm{p}}^{2}\right),
     \qquad
-    x_{k+1} = \left( A + \Delta_k^{A} \right) x_k + \left( B + \Delta_k^{B} \right) v_k .
+    x_{k+1} = \left( A + \Delta_k^{A} \right) x_k + \left( B + \Delta_k^{B} \right) \tilde{u}_k .
 \end{equation}
 
 Worth noting is that resampling every
@@ -661,12 +729,12 @@ Only the first one can really be considered as noise; the other are more
 deterministic values, where $\sigma_{\mathrm{d}}$ acts as the amplitude of it. 
 The sinusoidal variant completes one period every
 $2\pi / 0.1 \approx 63$ steps, which at a sampling intervall of $h = 0.01$ 
-is a slow drift rather than a rapid vibration. Including the
+is relatively a rather slow drift than a rapid vibration. Including the
 noise in our loop, the state transition becomes
 
 \begin{equation}
     \label{eq:disturbance_step}
-    x_{k+1} = A\, x_k + B\, v_k + n^{\mathrm{d}}_k .
+    x_{k+1} = A\, x_k + B\, \tilde{u}_k + n^{\mathrm{d}}_k .
 \end{equation}
 
 \subsection{The full loop}
@@ -680,8 +748,8 @@ a singular step becomes:
 \begin{align}
     y_k     &= x_k + n^{\mathrm{m}}_k , \label{eq:noisy_obs}\\
     u_k     &= -K y_k , \label{eq:noisy_ctrl}\\
-    v_k     &= \left( 1 + n^{\mathrm{c}}_k \right) \odot u_k , \label{eq:noisy_act}\\
-    x_{k+1} &= \left( A + \Delta_k^{A} \right) x_k + \left( B + \Delta_k^{B} \right) v_k + n^{\mathrm{d}}_k . \label{eq:noisy_dyn}
+    \tilde{u}_k     &= \left( 1 + n^{\mathrm{c}}_k \right) \odot u_k , \label{eq:noisy_act}\\
+    x_{k+1} &= \left( A + \Delta_k^{A} \right) x_k + \left( B + \Delta_k^{B} \right) \tilde{u}_k + n^{\mathrm{d}}_k . \label{eq:noisy_dyn}
 \end{align}
 \end{subequations}
 
@@ -702,5 +770,69 @@ TODO: How do I define robustness, what are interesting metrics to report, per se
 \section{Notation}
 \label{sec:notation}
 
+In the following table I have collected the notation symbols used throughout this thesis.
+Unless specifically mentioned otherwise, one can be sure of the context of a symbol used
+from now on.
 
-TODO: Which letters I will use in what context, tbd
+\begin{longtable}{@{}p{0.20\textwidth}p{0.74\textwidth}@{}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Symbol} & \textbf{Meaning} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\multicolumn{2}{@{}l}{\emph{Sets and operators}} \\[2pt]
+$I_n$, $\mathbf{1}_n$ & identity matrix and all-ones vector of dimension $n$ \\
+$\lambda_i(M)$, $\sigma_i(M)$ & $i$-th eigenvalue and $i$-th singular value of $M$ \\
+$\spr(M)$ & spectral radius, $\max_i \lvert \lambda_i(M) \rvert$ \\
+$M \succeq 0$, $M \succ 0$ & $M$ symmetric positive semi-definite / positive definite \\
+$\lVert \cdot \rVert$, $\lVert \cdot \rVert_F$, $\lVert \cdot \rVert_{*}$ & Euclidean (spectral) norm, Frobenius norm, nuclear norm \\
+$\odot$ & elementwise product \\
+$\mathcal{N}(\mu, \Sigma)$ & Gaussian distribution with mean $\mu$ and covariance $\Sigma$ \\
+$\nabla f$, $\widehat{\nabla} f$ & gradient of $f$ and the estimate of it\\
+\midrule
+\multicolumn{2}{@{}l}{\emph{System description}} \\[2pt]
+$n$, $m$, $q$ & dimension of the state, input and output \\
+$t$, $k$, $h$ & continuous time, discrete step index, sampling period \\
+$x_k \in \R^{n}$ & state \\
+$u_k \in \R^{m}$ & control input computed by the controller \\
+$\tilde{u}_k \in \R^{m}$ & control input actually applied to the plant \\
+$y_k \in \R^{q}$ & observed output \\
+$p$, $v$ & position and velocity of the double integrator, $x = [\,p,\ v\,]\T$ \\
+$A_c$, $B_c$ & continuous-time system and input matrix \\
+$A$, $B$ & their zero-order-hold discretizations \\
+$C$, $D$ & output and feedthrough matrix; $D = 0$ throughout \\
+$A_K$ & closed-loop matrix, $A_K = A - BK$ \\
+$\mathcal{C}(A,B)$, $\mathcal{O}(C,A)$ & controllability and observability matrix \\
+$\hat{x}_k$, $\tilde{x}_k$ & state estimate and estimation error $x_k - \hat{x}_k$ \\
+$L$ & observer gain \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Optimal control}} \\[2pt]
+$Q$, $R$ & state and input cost matrices, $Q \succeq 0$, $R \succ 0$ \\
+$K \in \R^{m \times n}$ & feedback gain, $u_k = -K x_k$ \\
+$K^{*}$ & optimal gain, solution of \eqref{eq:optimal_gain} \\
+$\mathcal{K}$ & set of stabilizing gains, \eqref{eq:stabilizing_set} \\
+$J(x_0, u)$ & infinite-horizon cost of an input sequence \\
+$P$ & stabilizing solution of the DARE \eqref{eq:dare} \\
+$P_K$ & solution of the Lyapunov equation \eqref{eq:lyapunov} for a fixed $K$ \\
+$\mathcal{D}$, $\Sigma_0$ & distribution of $x_0$ and its second moment $\E[x_0 x_0\T]$ \\
+$f(K)$ & expected cost of a gain, $\tr(P_K \Sigma_0)$ \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Noise}} \\[2pt]
+$n^{\mathrm{m}}_k$, $\sigma_{\mathrm{m}}$ & measurement noise and its standard deviation \\
+$n^{\mathrm{c}}_k$, $\sigma_{\mathrm{c}}$ & control noise (relative) and its standard deviation \\
+$\Delta^{A}_k$, $\Delta^{B}_k$, $\sigma_{\mathrm{p}}$ & parametric perturbations and their standard deviation \\
+$n^{\mathrm{d}}_k$, $\sigma_{\mathrm{d}}$ & external disturbance and its standard deviation / amplitude \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Learning and inflated systems}} \\[2pt]
+$d_{in}$, $d_{out}$ & inflated input and output dimension, $d \gg n$ \\
+$U_1$, $U_2$ & orthonormal inflation matrices \\
+$\lambda$ & weight of the nuclear-norm regulariser \\
+$\eta$ & step size \\
+$r$ & smoothing radius of the zeroth-order gradient estimator \\
+$N$, $T$ & number of rollouts and rollout horizon \\
+\end{longtable}
