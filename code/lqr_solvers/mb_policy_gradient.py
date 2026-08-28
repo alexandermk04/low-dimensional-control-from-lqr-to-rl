@@ -21,7 +21,8 @@ from scipy.linalg import solve_discrete_lyapunov
 
 from basetypes import StateSpaceModel
 
-from lqr_base.simple_lqr import LQRDiscrete, true_cost
+from lqr_base.simple_lqr import LQRDiscrete, true_cost, initial_state_covariance
+from evaluation.probe import Probe, record_iteration
 
 @dataclass
 class ModelBasedPolicyGradientSettings:
@@ -35,14 +36,22 @@ class ModelBasedPolicyGradientSettings:
         Number of descent steps.
     gradient_lr : float
         Fixed step size.
+    probe : evaluation.probe.Probe or None, optional
+        Instrumentation recording cost, sample budget and total time per
+        iteration. Defaults to ``None`` 
     """
 
     K_0: np.ndarray  # Initial policy
     gradient_steps: int  # Number of gradient steps
     gradient_lr: float  # Gradient step size
+    probe: Probe | None = None  # Optional per-iteration instrumentation
 
 # Global Convergence... Paper, page 5
-def calculate_gradient_model_based_discrete(lqr: LQRDiscrete, K_t: np.ndarray) -> tuple[np.ndarray, float]:
+def calculate_gradient_model_based_discrete(
+    lqr: LQRDiscrete,
+    K_t: np.ndarray,
+    sigma_0: np.ndarray | None = None,
+) -> tuple[np.ndarray, float]:
     """Exact policy gradient of the LQR cost at ``K_t``.
 
     Parameters
@@ -50,12 +59,16 @@ def calculate_gradient_model_based_discrete(lqr: LQRDiscrete, K_t: np.ndarray) -
     lqr : LQRDiscrete
         System to optimize over.
     K_t : np.ndarray
-        Current gain of shape ``(m, n)``, applied as ``u = -K x``.
+        Current gain in the controller's space, applied as ``v = -K y``. For a
+        plain system that is ``(m, n)``; under inflation it is ``(q, p)``.
+    sigma_0 : np.ndarray or None, optional
+        Initial-state covariance of shape ``(n, n)``.
 
     Returns
     -------
     grad : np.ndarray
-        ``2 E_k Sigma_k``, of shape ``(m, n)``.
+        ``2 E_k Sigma_k`` transformed into the controller's space, so it has
+        the same shape as ``K_t``.
     expected_cost : float
         ``x_0' P_k x_0``, the cost of the current policy from the sampled
         initial state.
@@ -64,21 +77,26 @@ def calculate_gradient_model_based_discrete(lqr: LQRDiscrete, K_t: np.ndarray) -
     -----
     .. code-block:: text
 
-        E_k  = (R + B' P_k B) K_t - B' P_k A
-        grad = 2 E_k Sigma_k
+        K_eff = U_2 K_t U_1
+        E_k   = (R + B' P_k B) K_eff - B' P_k A
+        grad  = project(2 E_k Sigma_k)
 
     The sign of ``E_k`` follows this repository's ``u = -K x`` convention and
     is flipped relative to the paper.
     """
 
-    lya_a = lqr.A - lqr.B @ K_t
+    # Everything below happens in the true state space
+    K_eff = lqr.effective_gain(K_t)
 
-    lya_q = lqr.Q + K_t.T @ lqr.R @ K_t
+    lya_a = lqr.A - lqr.B @ K_eff
+
+    lya_q = lqr.Q + K_eff.T @ lqr.R @ K_eff
 
     P_k = solve_discrete_lyapunov(lya_a.T, lya_q)
 
     # Initial state covariance
-    sigma_0 = np.eye(lqr.A.shape[0])
+    if sigma_0 is None:
+        sigma_0 = initial_state_covariance(lqr)
 
     # Expected cost using current policy K_t
     expected_cost = lqr.x_0.T @ P_k @ lqr.x_0
@@ -86,9 +104,9 @@ def calculate_gradient_model_based_discrete(lqr: LQRDiscrete, K_t: np.ndarray) -
     # Compute the state covariance under the current policy K_t
     sigma_k = solve_discrete_lyapunov(lya_a, sigma_0)
 
-    E_k = (lqr.R + lqr.B.T @ P_k @ lqr.B) @ K_t - lqr.B.T @ P_k @ lqr.A
+    E_k = (lqr.R + lqr.B.T @ P_k @ lqr.B) @ K_eff - lqr.B.T @ P_k @ lqr.A
 
-    grad = 2 * E_k @ sigma_k
+    grad = lqr.project_gradient(2 * E_k @ sigma_k)
 
     return grad, expected_cost
 
@@ -121,15 +139,14 @@ def gradient_descent_discrete(lqr: LQRDiscrete, settings: ModelBasedPolicyGradie
 
     progress_bar = tqdm(range(settings.gradient_steps), desc="Model-Based Policy Gradient", unit="step")
 
-    for _ in progress_bar:
+    for i in progress_bar:
         grad, expected_cost = calculate_gradient_model_based_discrete(lqr, K)
         costs.append(expected_cost)
 
         K = K - settings.gradient_lr * grad
         ks.append(K)
 
-        progress_bar.set_postfix({
-            "True Cost": f"{true_cost(lqr, lqr.effective_gain(K)):.3e}"
-        })
+        # data collection
+        record_iteration(settings, lqr, progress_bar, i, K, cost_estimate=expected_cost)
 
     return ks, costs

@@ -35,8 +35,11 @@ from lqr_base.simple_lqr import (
     LQRDiscreteSettings,
     simulate,
     true_cost,
+    initial_state_covariance,
     get_optimal_K_and_cost_discrete as baseline_solution,
 )
+
+from evaluation.probe import Probe, record_iteration
 
 from lqr_solvers.mf_policy_gradient import (
     estimate_gradient
@@ -75,6 +78,9 @@ class StructuredPolicySettings:
     max_linesearch_iter : int
         Cap on backtracking steps per iteration. If it is exhausted, the last
         candidate is accepted regardless of whether it satisfied the criterion.
+    probe : evaluation.probe.Probe or None, optional
+        Instrumentation recording cost, sample budget and total time per
+        iteration. Defaults to ``None`` 
     """
 
     K_0: np.ndarray  # Initial policy
@@ -83,6 +89,7 @@ class StructuredPolicySettings:
     epsilon: float # stopping criterion for convergence
     limit: int # maximum number of iterations to prevent infinite loop in case of non-convergence
     max_linesearch_iter: int
+    probe: Probe | None = None  # Optional per-iteration instrumentation
 
 def solve_lyapunov(lqr: LQRDiscrete, K_t: np.ndarray, sigma_0: np.ndarray) -> np.ndarray:
     """Value matrix and state covariance of the closed loop under ``K_t``.
@@ -133,17 +140,21 @@ def compute_gradient(lqr: LQRDiscrete, K_t: np.ndarray, P_k: np.ndarray, sigma_k
     Returns
     -------
     np.ndarray
-        ``2 ((R + B' P_k B) K_t - B' P_k A) sigma_k``.
+        ``project(2 ((R + B' P_k B) K_eff - B' P_k A) sigma_k)``, shaped like
+        ``K_t``.
 
     Notes
     -----
     The sign follows this repository's ``u = -K x`` convention.
     """
 
-    # Minus, as we use u(t) = - K @ x(t)
-    E_k = (lqr.R + lqr.B.T @ P_k @ lqr.B) @ K_t - lqr.B.T @ P_k @ lqr.A
+    # The gradient is taken in the true state space
+    K_eff = lqr.effective_gain(K_t)
 
-    grad = 2 * E_k @ sigma_k
+    # Minus, as we use u(t) = - K @ x(t)
+    E_k = (lqr.R + lqr.B.T @ P_k @ lqr.B) @ K_eff - lqr.B.T @ P_k @ lqr.A
+
+    grad = lqr.project_gradient(2 * E_k @ sigma_k)
 
     return grad
 
@@ -332,7 +343,7 @@ def structured_policy_iteration(lqr: LQRDiscrete, settings: StructuredPolicySett
     costs = []
 
     # Initial state covariance
-    sigma_0 = np.eye(lqr.A.shape[0])
+    sigma_0 = initial_state_covariance(lqr)
 
     progress_bar = tqdm(range(settings.limit), desc="Structured Policy Iteration", unit="step")
 
@@ -342,10 +353,8 @@ def structured_policy_iteration(lqr: LQRDiscrete, settings: StructuredPolicySett
 
         ks.append(K_plus)
 
-        progress_bar.set_postfix({
-            "True Cost": f"{true_cost(lqr, lqr.effective_gain(K_plus)):.3e}",
-            "Matrix Rank": f"{np.linalg.matrix_rank(K_plus)}",
-        })
+        # Used to collect run data
+        record_iteration(settings, lqr, progress_bar, i, K_plus, show_rank=True)
 
         if np.linalg.norm(K_plus - K_t, ord='fro') < settings.epsilon:
             progress_bar.set_description(f"Structured Policy Iteration: Converged.")
@@ -390,6 +399,9 @@ class MFStructuredPolicySettings:
         Perturbation radius.
     stepsize : float, optional
         Fixed step size, disables backtracking if given.
+    probe : evaluation.probe.Probe or None, optional
+        Instrumentation recording cost, sample budget and total time per
+        iteration. Defaults to ``None`` 
     """
 
     K_0: np.ndarray  # Initial policy
@@ -403,6 +415,7 @@ class MFStructuredPolicySettings:
     r: float  # Smoothing parameter
     stepsize: float | None  # Fixed stepsize disables linesearch
     seed_seq: np.random.SeedSequence # Seed sequence for reproducibility
+    probe: Probe | None = None  # Optional per-iteration instrumentation
 
 def calculate_next_K_mf(
         lqr: LQRDiscrete,
@@ -503,16 +516,14 @@ def structured_policy_iteration_mf(lqr: LQRDiscrete, settings: MFStructuredPolic
 
         grad_K, _, f_K = estimate_gradient(lqr, K_t, settings.m, settings.l, settings.r, rngen=rngen)
 
-        K_plus = calculate_next_K_mf(lqr, K_t, grad_K, f_K, rngen=rngen, settings=settings)
+        K_plus = calculate_next_K_mf(lqr, K_t, f_K, grad_K, rngen=rngen, settings=settings)
 
         ks.append(K_plus)
         costs.append(f_K)
-        #print(f"Iteration {i}, cost estimate: {mean_cost}")
 
-        progress_bar.set_postfix({
-            "True Cost": f"{true_cost(lqr, lqr.effective_gain(K_plus)):.3e}",
-            "Matrix Rank": f"{np.linalg.matrix_rank(K_plus)}",
-        })
+        # data collection
+        record_iteration(settings, lqr, progress_bar, i, K_plus, cost_estimate=f_K,
+                         show_rank=True)
 
         if np.linalg.norm(K_plus - K_t, ord='fro') < settings.epsilon:
             progress_bar.set_description(f"Structured Policy Iteration (Model-Free): Converged.")

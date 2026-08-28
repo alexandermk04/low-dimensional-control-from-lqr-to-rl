@@ -20,6 +20,8 @@ from dataclasses import dataclass
 
 from seeding import rng
 
+from evaluation.probe import Probe, record_iteration
+
 from lqr_base.simple_lqr import (
     LQRDiscrete,
     true_cost,
@@ -43,6 +45,11 @@ class ModelFreePolicyGradientSettings:
         Number of descent steps.
     gradient_lr : float
         Fixed step size.
+    seed_seq : np.random.SeedSequence
+        Seed sequence for reproducibility.
+    probe : evaluation.probe.Probe or None, optional
+        Instrumentation recording cost, sample budget and total time per
+        iteration. Defaults to ``None``
     """
 
     K_0: np.ndarray  # Initial policy
@@ -52,6 +59,7 @@ class ModelFreePolicyGradientSettings:
     gradient_steps: int  # Number of gradient steps
     gradient_lr: float  # Gradient step size
     seed_seq: np.random.SeedSequence  # Seed sequence for reproducibility
+    probe: Probe | None = None  # Optional per-iteration instrumentation
 
 # Observation norm beyond which a rollout is treated as diverged.
 DIVERGENCE_THRESHOLD = 1e5
@@ -117,7 +125,7 @@ def estimate_gradient(lqr: LQRDiscrete, K: np.ndarray, m: int, l: int, r: float,
     Parameters
     ----------
     lqr : LQRDiscrete
-        System to sample from. Reset and armed with noise before each rollout.
+        System to sample from. Reset and seeded with noise before each rollout.
     K : np.ndarray
         Point at which to estimate the gradient, of shape ``(q, p)``.
     m : int
@@ -238,7 +246,7 @@ def model_free_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePolicyGradie
 
     progress_bar = tqdm(range(settings.gradient_steps), desc="Model-Free Policy Gradient", unit="step")
 
-    for _ in progress_bar:
+    for i in progress_bar:
         cost_gradient_estimate, sigma_estimate, mean_cost = estimate_gradient(lqr, K, settings.m, settings.l, settings.r, rngen)
 
         # By section D.3, above lemma 29, the expected cost of the pertubed policy is used for the cost estimate
@@ -248,9 +256,7 @@ def model_free_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePolicyGradie
 
         ks.append(K)
 
-        progress_bar.set_postfix({
-            "True Cost": f"{true_cost(lqr, lqr.effective_gain(K)):.3e}"
-        })
+        record_iteration(settings, lqr, progress_bar, i, K, cost_estimate=mean_cost)
 
     return ks, costs
 
@@ -291,7 +297,7 @@ def model_free_natural_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePoli
 
     progress_bar = tqdm(range(settings.gradient_steps), desc="Model-Free Natural Policy Gradient", unit="step")
 
-    for _ in progress_bar:
+    for i in progress_bar:
         cost_gradient_estimate, sigma_estimate, mean_cost = estimate_gradient(lqr, K, settings.m, settings.l, settings.r, rngen)
 
         # By section D.3, above lemma 29, the expected cost of the pertubed policy is used for the cost estimate
@@ -302,8 +308,6 @@ def model_free_natural_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePoli
 
         ks.append(K)
 
-        progress_bar.set_postfix({
-            "True Cost": f"{true_cost(lqr, lqr.effective_gain(K)):.3e}"
-        })
+        record_iteration(settings, lqr, progress_bar, i, K, cost_estimate=mean_cost)
 
     return ks, costs
