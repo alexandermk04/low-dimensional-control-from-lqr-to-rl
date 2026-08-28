@@ -10,6 +10,15 @@ import numpy as np
 import time
 
 from seeding import create_seed_sequences, rng, SEED
+from config import (
+    make_lifts,
+    make_full_rank_K0,
+    double_integrator_model,
+    default_costs,
+    DEFAULT_DT,
+    DEFAULT_MAX_INITIAL_STATE,
+    DEFAULT_SIM_STEPS
+)
 
 from visualization import visualize_spi
 
@@ -93,10 +102,10 @@ class SPIInflationExperiment:
             "model": self.model,
             "Q": self.Q,
             "R": self.R,
-            "max_initial_state": np.array([10, 1]),
+            "max_initial_state": DEFAULT_MAX_INITIAL_STATE,
             "resample_initial_state": False,
             "noise_settings": None,
-            "dt": 0.01
+            "dt": self.dt,
         }
 
         base_seeds = create_seed_sequences(["base"])
@@ -115,9 +124,9 @@ class SPIInflationExperiment:
 
         mat_rng = rng(seeds["matrices"])
 
-        U_1, _ = np.linalg.qr(mat_rng.standard_normal((INFLATED_INPUT_DIM, model.A.shape[0])))
-        U_2_full, _ = np.linalg.qr(mat_rng.standard_normal((INFLATED_OUTPUT_DIM, model.B.shape[1])))
-        U_2 = U_2_full.T
+        U_1, U_2 = make_lifts(
+            self.inflated_input_dim, self.inflated_output_dim, self.model, mat_rng
+        )
 
         inflated_settings = LQRInflatedSettings(
             **settings,
@@ -130,20 +139,8 @@ class SPIInflationExperiment:
             settings=inflated_settings
         )
     
-        # Construct a full rank stable K_0
-        K_start = np.array([[0.1, 0.5]])
-        K_low_rank = np.linalg.pinv(U_2) @ K_start @ np.linalg.pinv(U_1)
-    
-        G = mat_rng.standard_normal((INFLATED_OUTPUT_DIM, INFLATED_INPUT_DIM))
-    
-        # Create matrix N such that U_2 @ N @ U_1 = 0
-        N = G - np.linalg.pinv(U_2) @ (U_2 @ G @ U_1) @ np.linalg.pinv(U_1)
-    
-        # Normaliza N, such that we can control size of the full-rank component
-        N = N / np.linalg.norm(N, ord='fro')
-    
         ALPHA = 1.0
-        K_0 = K_low_rank + ALPHA * N
+        K_0 = make_full_rank_K0(U_1, U_2, mat_rng, alpha=ALPHA)
     
         # Create the settings
         LIMIT = 100
@@ -243,26 +240,13 @@ class SPIInflationExperiment:
 
 
 if __name__ == "__main__":
-    # Double Integrator example implementation
-
-    # x" = Ax + Bu; x = [position, velocity], u = [acceleration]
-    # Hence: Ax + Bu = [velocity, acceleration]
-    A = np.array([[0, 1], [0, 0]])
-    B = np.array([[0], [1]])
-    # Position, velocity
-    x_0 = np.array([10, 0])
 
     INFLATED_INPUT_DIM = 100
     INFLATED_OUTPUT_DIM = 50
 
-    model = StateSpaceModel(A, B)
+    model = double_integrator_model()
 
-    # Write identity matrices out, to easily modify them
-    # Q[0, 0] penalizes position error, Q[1, 1] penalizes high velocities
-    Q = np.array([[1, 0], [0, 1]])
-
-    # Penalizes gigantic control input
-    R = np.array([[1]])
+    Q, R = default_costs()
 
     experiment = SPIInflationExperiment(
         model=model,
@@ -270,7 +254,8 @@ if __name__ == "__main__":
         R=R,
         inflated_input_dim=INFLATED_INPUT_DIM,
         inflated_output_dim=INFLATED_OUTPUT_DIM,
-        dt=0.01,
+        dt=DEFAULT_SIM_STEPS,
+        sim_steps=DEFAULT_SIM_STEPS
     )
 
     VISUALIZE = True
