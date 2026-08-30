@@ -49,7 +49,7 @@ SUMMARY_KEYS = (
     "iters_to_thresh_1pct",
     "seconds_to_thresh_1pct",
     "total_env_steps", 
-    "total_wall_time", # overall time that has passed
+    "total_time", # overall time that has passed
     "converged", # boolean
     "spectral_radius_final",
     "rank_final", # rank of gain matrix
@@ -274,7 +274,7 @@ def append_index(record: RunRecord, root: Path | str = DEFAULT_ROOT) -> Path:
         "J_final": to_jsonable(record.summary.get("J_final")),
         "subopt_final": to_jsonable(record.summary.get("subopt_final")),
         "total_env_steps": to_jsonable(record.summary.get("total_env_steps")),
-        "total_wall_time": to_jsonable(record.summary.get("total_wall_time")),
+        "total_time": to_jsonable(record.summary.get("total_time")),
     }
 
     with index.open("a") as handle:

@@ -27,7 +27,7 @@ FIGURE_ROOT = Path("results/figures")
 
 X_LABELS = {
     "env_steps": "Environment steps",
-    "wall_time": "Clock time (s)",
+    "total_time": "Clock time (s)",
     "iteration": "Solver iteration",
 }
 
@@ -77,7 +77,7 @@ def learning_curves(
     records : list[RunRecord]
         Runs to draw. Each needs ``cost`` and the chosen ``x`` column.
     x : str, optional
-        ``"env_steps"``, ``"wall_time"``
+        ``"env_steps"``, ``"total_time"``
         or ``"iteration"``.
     j_star : float or None, optional
         Optimal cost. Uses record's ``summary["J_star"]`` when
@@ -178,7 +178,7 @@ def format_table(rows: list[dict], columns: list[str] | None = None) -> str:
 
     if columns is None:
         columns = ["solver", "J_final", "subopt_final", "total_env_steps",
-                   "total_wall_time", "rank_final", "policy_complexity", "converged"]
+                   "total_time", "rank_final", "policy_complexity", "converged"]
 
     def render(value):
         if value is None:
@@ -280,8 +280,8 @@ def figure_from_records(
     learning_curves(records, x="env_steps", ax=figure.add_subplot(2, 3, 4))
     figure.axes[-1].set_title("Cost vs. environment steps")
 
-    learning_curves(records, x="wall_time", ax=figure.add_subplot(2, 3, 5), logx=False)
-    figure.axes[-1].set_title("Cost vs. wall time")
+    learning_curves(records, x="total_time", ax=figure.add_subplot(2, 3, 5), logx=False)
+    figure.axes[-1].set_title("Cost vs. total time")
 
     ax = figure.add_subplot(2, 3, 6)
     ax.axis("off")
