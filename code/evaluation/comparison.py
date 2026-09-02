@@ -51,7 +51,6 @@ from lqr_solvers.structured_policy_iteration import (
 from evaluation.analysis import (
     converged,
     policy_complexity_linear,
-    policy_complexity_mlp,
     suboptimality,
     time_to_threshold,
 )
@@ -133,13 +132,14 @@ class ComparisonConfig:
     label: str = "pure"
 
     # ----- Solver parameters -----
-    solver_iterations: int = 300
-    mf_trajectories: int = 50
-    mf_rollout_length: int = 200
+    # TODO: Need to be adjusted, as we reworked the initial state covariance, need scaling now
+    solver_iterations: int = 500
+    mf_trajectories: int = 100
+    mf_rollout_length: int = 800
     mf_smoothing: float = 0.5
-    gradient_lr: float = 1e-5
+    gradient_lr: float = 1e-3
     spi_lambda: float = 3000.0
-    spi_stepsize: float = 3.7e-7
+    spi_stepsize: float = 3.7e-5
     # ----------------------------
 
     def __post_init__(self):
@@ -404,8 +404,6 @@ if __name__ == "__main__":
     config = ComparisonConfig(
         inflation=(50, 25),
         solvers=("mb_pg", "spi", "mf_npg", "spi_mf"),
-        solver_iterations=200,
-        rl_timesteps=200_000,
         label="pure",
     )
     results = run_comparison(config)

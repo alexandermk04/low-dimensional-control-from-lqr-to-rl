@@ -73,3 +73,9 @@ diverges for steps larger than 3.7e-4
 
 ## 26th of August
 - check whether notation for noise sampling is correct of dimension
+
+
+# 30th of August
+- TODOs: 
+  - Readjust learning rate parameters
+  - Make evaluation LQR system identical for fair simulation comparison (in relation to initial state)
