@@ -143,3 +143,41 @@ def policy_complexity_linear(K: np.ndarray, tol: float | None = None) -> dict[st
         "n_params": min(rank * (q + p), q * p),
         "n_params_dense": q * p,
     }
+
+def policy_complexity_mlp(model) -> dict[str, int]:
+    """Parameter count of a Stable-Baselines3 actor.
+
+    Parameters
+    ----------
+    model : stable_baselines3.common.base_class.BaseAlgorithm
+        A trained model.
+
+    Returns
+    -------
+    dict[str, int]
+        ``rank`` (always ``None``-like ``-1``), ``n_params`` and ``n_params_dense``, both the actor's parameter
+        count.
+
+    Raises
+    ------
+    AttributeError
+        If no actor-like submodule can be found on the policy.
+    """
+    policy = model.policy
+
+    if hasattr(policy, "actor"):                      # SAC
+        modules = [policy.actor]
+    elif hasattr(policy, "action_net"):               # PPO
+        modules = [policy.mlp_extractor.policy_net, policy.action_net]
+    else:
+        raise AttributeError(
+            f"Cannot locate an actor on {type(policy).__name__} to count parameters."
+        )
+
+    total = sum(
+        int(parameter.numel())
+        for module in modules
+        for parameter in module.parameters()
+    )
+
+    return {"rank": -1, "n_params": total, "n_params_dense": total}

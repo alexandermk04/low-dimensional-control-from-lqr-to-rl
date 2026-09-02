@@ -51,6 +51,7 @@ from lqr_solvers.structured_policy_iteration import (
 from evaluation.analysis import (
     converged,
     policy_complexity_linear,
+    policy_complexity_mlp,
     suboptimality,
     time_to_threshold,
 )
@@ -67,6 +68,8 @@ from evaluation.records import RunRecord, append_index, save_record
 from evaluation.serialization import to_jsonable
 
 __all__ = ["ComparisonConfig", "build_lqr", "run_comparison"]
+
+RL_SOLVERS = ("ppo_linear", "ppo_mlp", "sac_mlp")
 
 LQR_SOLVERS = ("mb_pg", "spi", "mf_npg", "spi_mf")
 
@@ -96,11 +99,13 @@ class ComparisonConfig:
         Size of the full-rank component of ``K_0``.
     horizon : int or None
         Evaluation horizon. Derived from the optimal closed loop when omitted.
+    train_horizon : int
+        Episode length during RL training. May be shorter than ``horizon``.
     reward_scale : float or None
         Defaults to ``dt``, making the return a Riemann sum of the continuous
         cost integral.
     action_limit : float or None
-        Maximum magnitude of the action. Derived from the optimal policy's peak
+        Half-width of the action box. Derived from the optimal policy's peak
         output when omitted, with a safety factor.
     n_mc_episodes : int
         Rollouts per Monte-Carlo score.
@@ -124,10 +129,11 @@ class ComparisonConfig:
     inflation: tuple[int, int] | None = (50, 25)
     alpha: float = 0.5
     horizon: int | None = None
+    train_horizon: int = 400
     reward_scale: float | None = None
     action_limit: float | None = None
     n_mc_episodes: int = 300
-    solvers: tuple[str, ...] = LQR_SOLVERS
+    solvers: tuple[str, ...] = LQR_SOLVERS + ("ppo_linear", "ppo_mlp", "sac_mlp")
     experiment: str = "comparison"
     label: str = "pure"
 
@@ -139,7 +145,9 @@ class ComparisonConfig:
     mf_smoothing: float = 0.5
     gradient_lr: float = 1e-3
     spi_lambda: float = 3000.0
-    spi_stepsize: float = 3.7e-5
+    spi_stepsize: float = 3.7e-7
+    rl_timesteps: int = 300_000
+    rl_eval_freq: int = 25_000
     # ----------------------------
 
     def __post_init__(self):
@@ -321,6 +329,94 @@ def _run_lqr_solver(solver, config, K_0, U_1, U_2, j_star, seeds) -> RunRecord:
     return record
 
 
+def _run_rl_solver(solver, config, K_0, U_1, U_2, j_star, seeds) -> RunRecord:
+    """Train one RL solver and package the result."""
+    import dataclasses as dc
+
+    from reinforcement_learning.solvers import (
+        LINEAR_PPO, MLP_PPO, MLP_SAC, SB3Policy,
+        build_model, extract_linear_gain, is_linear_solver,
+    )
+    from reinforcement_learning.callbacks import ProbeCallback
+    from reinforcement_learning.lqr_env import LQREnv
+
+    presets = {"ppo_linear": LINEAR_PPO, "ppo_mlp": MLP_PPO, "sac_mlp": MLP_SAC}
+    settings = dc.replace(
+        presets[solver],
+        total_timesteps=config.rl_timesteps,
+        eval_freq=config.rl_eval_freq,
+        initial_gain=K_0 if is_linear_solver(presets[solver]) else None,
+    )
+
+    train = build_lqr(config, seeds[f"lqr_{solver}"], U_1, U_2)
+    env = LQREnv(
+        train, horizon=config.train_horizon,
+        reward_scale=config.reward_scale, action_limit=config.action_limit,
+    )
+
+    scorer = build_lqr(config, seeds[f"eval_{solver}"], U_1, U_2)
+    scorer.reset()
+
+    linear = is_linear_solver(settings)
+
+    def evaluate(model):
+        if linear:
+            K, _ = extract_linear_gain(model)
+            return (
+                expected_true_cost(scorer, scorer.effective_gain(K)),
+                int(np.linalg.matrix_rank(K)),
+            )
+        mean, _ = monte_carlo_cost(
+            scorer, SB3Policy(model),
+            n_episodes=max(20, config.n_mc_episodes // 10), horizon=config.horizon,
+        )
+        return mean, None
+
+    callback = ProbeCallback(evaluate, eval_freq=settings.eval_freq)
+    model = build_model(env, settings, seed=SEED)
+    model.learn(total_timesteps=settings.total_timesteps, callback=callback,
+                progress_bar=False)
+
+    if linear:
+        K_final, bias = extract_linear_gain(model)
+        complexity = policy_complexity_linear(K_final)
+        policy = LinearPolicy(K_final)
+    else:
+        K_final, bias = None, None
+        complexity = policy_complexity_mlp(model)
+        policy = SB3Policy(model)
+
+    mc = monte_carlo_cost(
+        scorer, policy, n_episodes=config.n_mc_episodes, horizon=config.horizon
+    )
+
+    arrays = {**callback.to_arrays()}
+    if K_final is not None:
+        arrays["K_final"] = K_final
+        arrays["K_eff_final"] = scorer.effective_gain(K_final)
+        arrays["bias"] = bias
+        trajectory = simulate(lqr=scorer, K=K_final, n_steps=config.horizon)
+        arrays["x_traj"] = trajectory.x_traj
+        arrays["u_traj"] = trajectory.u_traj
+
+    record = RunRecord(
+        experiment=config.experiment,
+        solver=f"{solver}_{config.label}",
+        seed=SEED,
+        config=_base_config_dict(config, {"solver": to_jsonable(settings)}),
+        summary=_summarize(callback.records, j_star, K_final, scorer, config, mc, complexity),
+    )
+    record.arrays = arrays
+    record.summary["n_params_dense"] = complexity.get("n_params_dense")
+    record.summary["action_clips"] = env.n_action_clips
+    if bias is not None:
+        record.summary["bias_ratio"] = float(
+            np.linalg.norm(bias) / max(np.linalg.norm(K_final), 1e-12)
+        )
+
+    return record
+
+
 def run_comparison(config: ComparisonConfig, root="results", verbose: bool = True):
     """Run every configured solver and save one record each.
 
@@ -379,8 +475,9 @@ def run_comparison(config: ComparisonConfig, root="results", verbose: bool = Tru
 
     records = []
     for solver in config.solvers:
-        started = time.perf_counter() 
-        record = _run_lqr_solver(solver, config, K_0, U_1, U_2, j_star, seeds)
+        started = time.perf_counter()
+        runner = _run_rl_solver if solver in RL_SOLVERS else _run_lqr_solver
+        record = runner(solver, config, K_0, U_1, U_2, j_star, seeds)
 
         save_record(record, root)
         append_index(record, root)
@@ -403,7 +500,9 @@ if __name__ == "__main__":
 
     config = ComparisonConfig(
         inflation=(50, 25),
-        solvers=("mb_pg", "spi", "mf_npg", "spi_mf"),
+        solvers=("mb_pg", "spi", "mf_npg", "spi_mf", "ppo_linear", "ppo_mlp", "sac_mlp"),
+        solver_iterations=200,
+        rl_timesteps=200_000,
         label="pure",
     )
     results = run_comparison(config)
