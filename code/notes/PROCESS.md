@@ -81,3 +81,9 @@ diverges for steps larger than 3.7e-4
 
 ## 2nd of September: unifying the LQR and RL halves
 - potentially removing gamma from metrics if not needed
+
+## 3rd of September
+- read up on possible RL architectures
+- investigated possible parameter combinations for converging SPI
+  - would require large m (number of trajectories) to be able to reduce rank without diverging (around 120M env steps)
+  - needs decision: should we allow this type of budget? does this contradict our assumption?

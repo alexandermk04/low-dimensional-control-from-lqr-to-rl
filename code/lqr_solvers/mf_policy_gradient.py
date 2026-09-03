@@ -212,7 +212,7 @@ def estimate_gradient(lqr: LQRDiscrete, K: np.ndarray, m: int, l: int, r: float,
 
     mean_cost = np.mean(cost_estimates)
 
-    cost_gradient_estimate = sum((d / (r ** 2)) * C * U for C, U in zip(centered_cost_diffs, pertubations))
+    cost_gradient_estimate = sum(1/2 * (d / (r ** 2)) * C * U for C, U in zip(centered_cost_diffs, pertubations))
     cost_gradient_estimate /= m
 
     sigma_estimate = sum(sig for sig in sigma_estimates) / m
