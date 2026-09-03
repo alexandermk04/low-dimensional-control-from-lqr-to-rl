@@ -25,8 +25,10 @@ analytic LQR solution:
 ```
 .
 ├── code/
-│   ├── basetypes.py                  shared dataclasses + the global SEED
-│   ├── visualization.py              all plotting
+│   ├── basetypes.py                  shared dataclasses
+│   ├── seeding.py                    the global SEED and its seed sequences
+│   ├── config.py                     the shared plant, costs and inflation lifts
+│   ├── visualization.py              plotting from live objects
 │   ├── lqr_base/                     the systems being controlled
 │   │   ├── simple_lqr.py             discrete LQR, exact solution, simulator
 │   │   ├── inflated_lqr.py           LQR seen through lifted observation/action spaces
@@ -35,14 +37,25 @@ analytic LQR solution:
 │   │   ├── mb_policy_gradient.py     model-based gradient descent
 │   │   ├── mf_policy_gradient.py     model-free (natural) policy gradient
 │   │   └── structured_policy_iteration.py   S-PI, model-based and model-free
-│   ├── evaluation/                   runnable experiments
+│   ├── evaluation/                   runnable experiments and the metrics
+│   │   ├── metrics.py                the cost metrics both halves are scored on
+│   │   ├── probe.py                  per-iteration cost / samples / total time
+│   │   ├── convergence.py            time-to-threshold, policy complexity
+│   │   ├── records.py                one run, saved as JSON + NPZ
+│   │   ├── serialization.py          config -> JSON
+│   │   ├── plots.py                  figures rebuilt from saved runs
+│   │   ├── comparison.py             LQR vs. RL, the chapter-5 experiment
 │   │   ├── policy_gradient_evaluation.py    solver comparison
 │   │   ├── noise_evaluation.py       one noise channel at a time
 │   │   ├── inflate_evaluation.py     full-rank vs. low-rank under inflation
 │   │   └── spi_evaluation.py         does S-PI actually reduce the rank?
 │   ├── reinforcement_learning/       the RL
-│   │   ├── double_integrator_environment.py   Gymnasium env
-│   │   └── inflated_rl.py            PPO prototype
+│   │   ├── lqr_env.py                Gymnasium view of an LQRBase
+│   │   ├── solvers.py                   the linear and neural PPO/SAC solvers
+│   │   ├── callbacks.py              the RL counterpart of Probe
+│   │   ├── double_integrator_environment.py   DEPRECATED prototype
+│   │   └── inflated_rl.py            DEPRECATED, see evaluation/comparison.py
+│   └── results/                      saved runs and figures (git-ignored)
 │   └── notes/                        working notes, not documentation
 ├── thesis/                           LaTeX source of the thesis itself
 └── requirements.txt
@@ -101,9 +114,11 @@ Every `run_*` method takes a `visualize` flag:
 - `visualize=True` (default) opens the figure in a window.
 - `visualize=False` writes it as `Run_<label>_<timestamp>.png`.
 
-Saved figures go to `../../Visualizations/`, which from `code/` resolves to a folder
-**outside this repository**, next to the repo root. The directory is not created
-automatically.
+Saved figures go to `results/figures/`, inside the repository, created on demand.
+
+New work should prefer [`evaluation/plots.py`](code/evaluation/plots.py), which draws from
+saved `RunRecord`s rather than from live objects, so a figure survives the process that made
+it.
 
 ---
 
@@ -142,16 +157,22 @@ construction — which is exactly what makes S-PI the right tool. The experiment
 lifts as *orthonormal* (QR) matrices; experiments with
 plain random lifts showed that the solvers diverge.
 
-**4. Seeding is used for the initial condition only.** `SEED = #` in [`basetypes.py`](code/basetypes.py) is applied in
+**4. Seeding is used for the initial condition only.** `SEED = #` in [`seeding.py`](code/seeding.py) is applied in
 `LQRBase.reset()` before the *first* initial-state sample only. With
 `resample_initial_state=False` that one sample is reused, so the run is
 reproducible; with `True`, later samples, for example during trajectory runs, are resampled, and thus vary overall.
 
-**5. Noise is a runtime flag, not configuration.** Configuring an `LQRNoiseSettings` does not
-switch noise on. `reset()` clears the flag and `apply_noise()` sets it, which means noise is
-active during `simulate()` and inside `estimate_gradient`'s rollouts, and nowhere else. The
-model-based solvers never see it. (This answers the open question at the bottom of
-[`Plan.md`](code/notes/Plan.md).) -> TODO: Fix this 
+**5. Noise is on whenever it is configured.** `setup_noise()` sets `self.noise` once, in the
+constructor, if and only if an `LQRNoiseSettings` was passed. So
+noise *is* active everywhere the plant is stepped: inside `simulate()`, inside
+`estimate_gradient`'s rollouts, and inside the RL environment. The model-based solvers are the
+only thing that never sees it, because they never step the plant at all - they work from `A`
+and `B` directly.
+
+**6. One plant, one step counter.** Every plant transition goes through
+`LQRBase.apply_control(v)`, which `next_state(K)` and the Gymnasium environment both call. That
+is what lets a model-free solver and an RL algorithm be measured on the same `lqr.env_steps`
+budget, and it is why the environment cannot silently drift away from the solvers' plant.
 
 ---
 
@@ -168,7 +189,7 @@ experiments lean on:
 | --- | --- |
 | `get_optimal_K_and_cost_discrete(lqr)` | Exact solution via the discrete Riccati equation. The baseline everything is measured against. |
 | `true_cost(lqr, K)` | Exact infinite-horizon cost of a gain, or `inf` if the closed loop is unstable. Used for every cost curve. |
-| `simulate(lqr, K, n_steps)` | Rolls the closed loop out **with noise armed** and records the trajectory. |
+| `simulate(lqr, K, n_steps)` | Rolls the closed loop out **with noise activated** and records the trajectory. |
 
 [`inflated_lqr.py`](code/lqr_base/inflated_lqr.py) subclasses `LQRDiscrete` and overrides
 only what the lifts change: `effective_gain`, `project_gradient` and `next_state`.
@@ -195,10 +216,10 @@ in the same file.
 
 | Entry point | File | Model-Based? | Notes |
 | --- | --- | --- | --- |
-| `gradient_descent_discrete` | [`mb_policy_gradient.py`](code/lqr_solvers/mb_policy_gradient.py) | yes | Exact gradient. The clean reference. Does not go through `effective_gain`, so it is for the plain system only. |
+| `gradient_descent_discrete` | [`mb_policy_gradient.py`](code/lqr_solvers/mb_policy_gradient.py) | yes | Exact gradient. The clean reference. Goes through `effective_gain` / `project_gradient`, so it runs on the inflated system too. |
 | `model_free_policy_gradient` | [`mf_policy_gradient.py`](code/lqr_solvers/mf_policy_gradient.py) | no | Two-point estimator over `m` rollout pairs. |
 | `model_free_natural_policy_gradient` | [`mf_policy_gradient.py`](code/lqr_solvers/mf_policy_gradient.py) | no | Preconditioned by the inverse observation covariance. Much better conditioned under inflation. |
-| `structured_policy_iteration` | [`structured_policy_iteration.py`](code/lqr_solvers/structured_policy_iteration.py) | yes | Proximal gradient with a nuclear-norm penalty. TODO: **Returns an empty cost list** and does not yet work under inflation. |
+| `structured_policy_iteration` | [`structured_policy_iteration.py`](code/lqr_solvers/structured_policy_iteration.py) | yes | Proximal gradient with a nuclear-norm penalty. Now works under inflation. Still **returns an empty cost list** - use a `Probe` for the cost curve. |
 | `structured_policy_iteration_mf` | [`structured_policy_iteration.py`](code/lqr_solvers/structured_policy_iteration.py) | no | No model, tolerates noise, produces a low-rank gain. |
 
 Three implementation details carry most of the model-free quality, all recorded as hard-won
@@ -263,5 +284,11 @@ The PDFs live outside this repository, in a sibling `Material/` folder.
 
 - `calculate_gradient_model_based_discrete` and `estimate_gradient` are annotated
   `-> np.ndarray` but return tuples.
-- `spi_evaluation.py` hard-codes `dt=0.01` when building its systems, independently of the
-  `dt` passed to the experiment class.
+- `structured_policy_iteration` (model-based) still returns `costs = []`.
+- Under inflation the model-based gradient is confined to a rank-1 subspace, because
+  `project_gradient` returns `U_2' G U_1'` and `U_2` has only `m = 1` row. The iterates
+  therefore never leave the low-rank manifold, and the nuclear-norm penalty only does real work
+  in the model-free case. This is correct behaviour, not a bug, but it is easy to misread as
+  S-PI "working" when nothing was there to shrink.
+- The model-free solvers estimate the cost over `l = 200` steps while the closed loop needs
+  `H ≈ 800` to decay; their cost estimate is materially truncated.
