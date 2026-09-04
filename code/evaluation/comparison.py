@@ -500,9 +500,9 @@ if __name__ == "__main__":
 
     config = ComparisonConfig(
         inflation=(50, 25),
-        solvers=("mb_pg", "spi", "mf_npg", "spi_mf"), #, "ppo_linear", "ppo_mlp", "sac_mlp"
+        solvers=("mb_pg", "spi", "mf_npg", "ppo_linear", "ppo_mlp"), #, "spi_mf", "ppo_mlp", "sac_mlp"
         solver_iterations=500,
-        rl_timesteps=200_000,
+        rl_timesteps=80_000_000,
         label="pure",
     )
     results = run_comparison(config)

@@ -87,3 +87,32 @@ diverges for steps larger than 3.7e-4
 - investigated possible parameter combinations for converging SPI
   - would require large m (number of trajectories) to be able to reduce rank without diverging (around 120M env steps)
   - needs decision: should we allow this type of budget? does this contradict our assumption?
+
+## Agenda 4th of September
+Important decisions:
+- SPI:
+  - Model-based works well, tells the story I want
+  - Model-free doesn't converge at all, or not low-rank
+  - Can converge, however only with 20000+ trajectories
+  - Question: Leave this out as unsuccessful, report as such, details in appendix?
+- (Robustness) Metrics / Experiment setup
+  - Run with 10 different seeds
+  - True Cost
+  - Supoptimality: (J - J*) / J*
+  - Policy Complexity: No of params
+  - Environment Steps used
+  - Convergence
+  - Ok like this, any other metric?
+- Settings for Noise / Algorithms:
+  - How do I decide number of trajectories, etc.?
+  - How large should the noise be? - are 3 different scales that I compare enough?
+- Comparison with RL chapter 5:
+  - Linear PPO, allowing to extract gain matrix
+  - Fully connected PPO
+  - Orthogonal-bottleneck PPO
+  - State Encoder + PPO
+  - Question: Ok, preferences, leave some out?
+- Chapter 6, perception based
+  - Can this be shortened / cut if time runs out?
+  - Proposed smaller version: Apply the RL algorithms from before onto this
+  - Larger Version: Introduce Position-Velocity Encoder as well
