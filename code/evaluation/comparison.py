@@ -138,15 +138,16 @@ class ComparisonConfig:
     label: str = "pure"
 
     # ----- Solver parameters -----
-    # TODO: Need to be adjusted, as we reworked the initial state covariance, need scaling now
     solver_iterations: int = 500
-    mf_trajectories: int = 100
+    mf_trajectories: int = 200
     mf_rollout_length: int = 800
     mf_smoothing: float = 0.5
-    gradient_lr: float = 1e-3
-    spi_lambda: float = 3000.0
-    spi_stepsize: float = 3.7e-7
-    rl_timesteps: int = 300_000
+    gradient_lr: float = 1.2e-3
+    mf_gradient_lr: float = 1e-3
+    spi_lambda: float = 50
+    spi_mf_lambda: float = 4e4
+    spi_mf_stepsize: float = 3.5e-7
+    rl_timesteps: int = 120_000_000
     rl_eval_freq: int = 25_000
     # ----------------------------
 
@@ -287,14 +288,14 @@ def _run_lqr_solver(solver, config, K_0, U_1, U_2, j_star, seeds) -> RunRecord:
         settings = ModelFreePolicyGradientSettings(
             K_0=K_0, m=config.mf_trajectories, l=config.mf_rollout_length,
             r=config.mf_smoothing, gradient_steps=config.solver_iterations,
-            gradient_lr=config.gradient_lr, seed_seq=seeds[f"solve_{solver}"], probe=probe)
+            gradient_lr=config.mf_gradient_lr, seed_seq=seeds[f"solve_{solver}"], probe=probe)
         ks, _ = model_free_natural_policy_gradient(lqr, settings)
     elif solver == "spi_mf":
         settings = MFStructuredPolicySettings(
-            K_0=K_0, beta=0.5, lambda_=config.spi_lambda, epsilon=1e-8,
+            K_0=K_0, beta=0.5, lambda_=config.spi_mf_lambda, epsilon=1e-8,
             limit=config.solver_iterations, max_linesearch_iter=10,
             m=config.mf_trajectories, l=config.mf_rollout_length,
-            r=config.mf_smoothing, stepsize=config.spi_stepsize,
+            r=config.mf_smoothing, stepsize=config.spi_mf_stepsize,
             seed_seq=seeds[f"solve_{solver}"], probe=probe)
         ks, _ = structured_policy_iteration_mf(lqr, settings)
     else:
@@ -500,10 +501,11 @@ if __name__ == "__main__":
 
     config = ComparisonConfig(
         inflation=(50, 25),
-        solvers=("mb_pg", "spi", "mf_npg", "ppo_linear", "ppo_mlp"), #, "spi_mf", "ppo_mlp", "sac_mlp"
+        solvers=("mb_pg", "spi", "mf_npg"), # "spi_mf", "ppo_linear", "ppo_mlp", "sac_mlp"
+        noise_settings=None,
         solver_iterations=500,
         rl_timesteps=80_000_000,
-        label="pure",
+        label="pure_adjusted",
     )
     results = run_comparison(config)
 

@@ -94,25 +94,32 @@ Important decisions:
   - Model-based works well, tells the story I want
   - Model-free doesn't converge at all, or not low-rank
   - Can converge, however only with 20000+ trajectories
-  - Question: Leave this out as unsuccessful, report as such, details in appendix?
+  - Question: Leave this out as unsuccessful, report as such, details in appendix? 
+  -> focus more on mb, maybe model-sampling first, then use with mb
+  -> known difficulty of model-free approaches
+
 - (Robustness) Metrics / Experiment setup
   - Run with 10 different seeds
   - True Cost
   - Supoptimality: (J - J*) / J*
-  - Policy Complexity: No of params
-  - Environment Steps used
+  - Policy Complexity: No of params -> reason why
+  - Environment Steps used -> Data Size, learning time (rollout, etc.; sample complexity)
   - Convergence
+  - How stable is a policy if the dynamics change? -> different environments, post-training, mass, friction change (dynamics disturbances)
   - Ok like this, any other metric?
+
 - Settings for Noise / Algorithms:
   - How do I decide number of trajectories, etc.?
   - How large should the noise be? - are 3 different scales that I compare enough?
+
 - Comparison with RL chapter 5:
   - Linear PPO, allowing to extract gain matrix
   - Fully connected PPO
-  - Orthogonal-bottleneck PPO
+  - Orthogonal-bottleneck PPO -> maybe exclude regarding time
   - State Encoder + PPO
   - Question: Ok, preferences, leave some out?
 - Chapter 6, perception based
   - Can this be shortened / cut if time runs out?
-  - Proposed smaller version: Apply the RL algorithms from before onto this
-  - Larger Version: Introduce Position-Velocity Encoder as well
+  - Introduce Position-Velocity Encoder as well
+
+- Access to high compute renewable?
