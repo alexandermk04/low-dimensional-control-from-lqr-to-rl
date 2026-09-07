@@ -27,6 +27,7 @@ __all__ = [
     "choose_horizon",
     "Policy",
     "LinearPolicy",
+    "monte_carlo_returns",
     "monte_carlo_cost",
 ]
 
@@ -389,14 +390,14 @@ class LinearPolicy:
         return -self.K @ y
 
 
-def monte_carlo_cost(
+def monte_carlo_returns(
     lqr: LQRDiscrete,
     policy: Policy,
     n_episodes: int,
     horizon: int,
     gamma: float = 1.0,
-) -> tuple[float, float]:
-    """Estimate the expected finite-horizon cost by rolling the plant out.
+) -> np.ndarray:
+    """Accumulated cost of each individual rollout.
 
     Parameters
     ----------
@@ -406,8 +407,8 @@ def monte_carlo_cost(
     policy : Policy
         Callable mapping an observation to a control in the controller's space.
     n_episodes : int
-        Number of independent rollouts to average over. Requires
-        ``resample_initial_state=True`` to actually sample the distribution.
+        Number of independent rollouts. Requires ``resample_initial_state=True``
+        to actually sample the initial-state distribution.
     horizon : int
         Steps per rollout.
     gamma : float, optional
@@ -415,8 +416,8 @@ def monte_carlo_cost(
 
     Returns
     -------
-    tuple[float, float]
-        ``(mean, standard_error)`` of the per-episode accumulated cost.
+    np.ndarray
+        Accumulated cost per episode, of shape ``(n_episodes,)``.
     """
     state_snapshot = lqr.state_rng.bit_generator.state
     noise_snapshot = lqr.noise_rng.bit_generator.state
@@ -444,7 +445,33 @@ def monte_carlo_cost(
         lqr.env_steps = steps_snapshot
         lqr.episodes = episodes_snapshot
 
+    return returns
+
+
+def monte_carlo_cost(
+    lqr: LQRDiscrete,
+    policy: Policy,
+    n_episodes: int,
+    horizon: int,
+    gamma: float = 1.0,
+) -> tuple[float, float]:
+    """Mean and standard error of :func:`monte_carlo_returns`.
+
+    Parameters
+    ----------
+    lqr, policy, n_episodes, horizon, gamma
+        As for :func:`monte_carlo_returns`.
+
+    Returns
+    -------
+    tuple[float, float]
+        ``(mean, standard_error)`` of the per-episode accumulated cost.
+    """
+    returns = monte_carlo_returns(lqr, policy, n_episodes, horizon, gamma)
+
     mean = float(np.mean(returns))
-    stderr = float(np.std(returns, ddof=1) / np.sqrt(n_episodes)) if n_episodes > 1 else 0.0
+    stderr = (
+        float(np.std(returns, ddof=1) / np.sqrt(n_episodes))
+    )
 
     return mean, stderr

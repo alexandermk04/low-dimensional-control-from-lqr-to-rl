@@ -79,5 +79,7 @@ Afterwards a section comparing only baseline with model-based + estimator of pol
 ## Chapter 6
 Introduce how we now observe our environment via a camera, explain which assumptions we take. Introduce the Position Velocity Encoder shortly, mainly link the real paper. Only do comparison of performance with plots 1-3, 6, maybe 7 if shows difference, as well as table 2 between baseline, state-encoder + fully connected ppo and pve. No noise comparison with be done here.
 
+Add additional plots analyzing how well each solver captures velocity and position during testing - bar plots with accuracy per solver side by side.
+
 ## Plotting & Table goals
 The goal would be to create the table and plots within latex, to have a uniform styling of my paper - whatever the best approach would be for that.
