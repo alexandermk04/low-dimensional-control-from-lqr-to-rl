@@ -8,7 +8,8 @@ Run it from ``code/`` with::
 import numpy as np
 import time
 
-from seeding import create_seed_sequences, SEED
+from seeding import create_seed_sequences
+from settings import TEST_SEED
 
 from visualization import visualize_multiple_results
 
@@ -78,7 +79,7 @@ class NoiseExperiment:
 
         self.base_metadata = {
             "Simulation Steps": sim_steps,
-            "Seed": SEED,
+            "Seed": TEST_SEED,
         }
 
     def run_comparison(
@@ -120,7 +121,7 @@ class NoiseExperiment:
         }
 
         # Create seperately to get same seq for both lqrs
-        base_seeds = create_seed_sequences(["base"])
+        base_seeds = create_seed_sequences(["base"], TEST_SEED)
 
         base_lqr = LQRDiscrete(
             settings=LQRDiscreteSettings(
@@ -130,7 +131,7 @@ class NoiseExperiment:
             )
         )
 
-        seeds = create_seed_sequences(["lqr", "mf_natural"])
+        seeds = create_seed_sequences(["lqr", "mf_natural"], TEST_SEED)
 
         lqr = LQRDiscrete(
             settings=LQRDiscreteSettings(
@@ -185,7 +186,7 @@ class NoiseExperiment:
         file_name = None
         if not visualize:
             date_str = time.strftime("%Y-%m-%d %H:%M:%S")
-            file_name = f"Run_{label}_{date_str}_seed_{SEED}"
+            file_name = f"Run_{label}_{date_str}_seed_{TEST_SEED}"
 
         metadata = {**self.base_metadata, **settings_metadata, **(extra_metadata or {})}
 

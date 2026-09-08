@@ -1,22 +1,23 @@
 import numpy as np
 
-# Global seed
-SEED = 2026
-
-def create_seed_sequences(names: list[str]) -> dict[str, np.random.SeedSequence]:
+def create_seed_sequences(
+    names: list[str], seed: int
+) -> dict[str, np.random.SeedSequence]:
     """Create a dictionary of seed sequences for reproducibility.
 
     Parameters
     ----------
     names : list[str]
         Names for which to create seed sequences.
-    
+    seed : int
+        Seed to spawn from.
+
     Returns
     -------
     dict[str, np.random.SeedSequence]
         A dictionary mapping each name to a unique seed sequence.
     """
-    return dict(zip(names, np.random.SeedSequence(SEED).spawn(len(names))))
+    return dict(zip(names, np.random.SeedSequence(seed).spawn(len(names))))
 
 def rng(seed_seq: np.random.SeedSequence) -> np.random.Generator:
     """Create a random number generator from a seed sequence.

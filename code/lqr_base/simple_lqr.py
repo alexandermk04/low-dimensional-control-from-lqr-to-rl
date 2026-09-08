@@ -23,7 +23,6 @@ from scipy.linalg import solve_discrete_are, solve_discrete_lyapunov
 from scipy.signal import cont2discrete
 
 from basetypes import StateSpaceModel, SimulationResult, StepResult
-from seeding import SEED
 from lqr_base.noise import (
     ParametricNoiseSettings,
     ControlNoiseSettings,
@@ -78,7 +77,7 @@ class LQRBaseSettings:
         from ``[-max_initial_state, max_initial_state]``.
     resample_initial_state : bool
         If ``False``, one ``x_0`` is drawn (seeded with
-        :data:`seeding.SEED`) and reused by every subsequent ``reset()``, so
+        :data:`settings.TEST_SEED`) and reused by every subsequent ``reset()``, so
         all solvers see the same problem. If ``True``, every ``reset()`` draws
         a fresh one.
     noise_settings : LQRNoiseSettings or None

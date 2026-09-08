@@ -9,7 +9,8 @@ import numpy as np
 
 from visualization import visualize_multiple_results
 
-from seeding import create_seed_sequences, SEED
+from seeding import create_seed_sequences
+from settings import TEST_SEED
 
 from lqr_base.simple_lqr import (
     StateSpaceModel,
@@ -50,7 +51,7 @@ def compare_all():
     Q = np.array([[1, 0], [0, 1]])
     R = np.array([[1]])
 
-    seeds = create_seed_sequences(['system', 'model_free', 'model_free_natural'])
+    seeds = create_seed_sequences(['system', 'model_free', 'model_free_natural'], TEST_SEED)
 
     settings = LQRDiscreteSettings(
         model=model,
@@ -127,7 +128,7 @@ def compare_all():
     }
 
     metadata = {
-        "Seed": SEED
+        "Seed": TEST_SEED
     }
 
     visualize_multiple_results(

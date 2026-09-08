@@ -8,7 +8,8 @@ Run it from ``code/`` with::
 import numpy as np
 import time
 
-from seeding import SEED, create_seed_sequences, rng
+from seeding import create_seed_sequences, rng
+from settings import TEST_SEED
 from config import (
     make_lifts,
     make_full_rank_K0,
@@ -96,7 +97,7 @@ class InflationExperiment:
             "Inflated Input Dim": inflated_input_dim,
             "Inflated Output Dim": inflated_output_dim,
             "Simulation Steps": sim_steps,
-            "Seed": SEED,
+            "Seed": TEST_SEED,
         }
 
     def run_comparison(
@@ -129,7 +130,7 @@ class InflationExperiment:
             Shows or saves the six-panel comparison figure.
         """
 
-        base_seeds = create_seed_sequences(["base"])
+        base_seeds = create_seed_sequences(["base"], TEST_SEED)
 
         base_settings = LQRDiscreteSettings(
             model=self.model,
@@ -146,7 +147,7 @@ class InflationExperiment:
             settings=base_settings
         )
 
-        seeds = create_seed_sequences(["lqr", "matrices", "mf_nat", "mf_spi"])
+        seeds = create_seed_sequences(["lqr", "matrices", "mf_nat", "mf_spi"], TEST_SEED)
 
         mat_rng = rng(seeds["matrices"])
 
@@ -251,7 +252,7 @@ class InflationExperiment:
         file_name = None
         if not visualize:
             date_str = time.strftime("%Y-%m-%d %H:%M:%S")
-            file_name = f"Run_{label}_{date_str}_seed_{SEED}"
+            file_name = f"Run_{label}_{date_str}_seed_{TEST_SEED}"
 
         metadata = {**self.base_metadata, **settings_metadata, **(extra_metadata or {})}
         visualize_multiple_results(

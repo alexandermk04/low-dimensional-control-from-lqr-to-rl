@@ -9,7 +9,8 @@ Run it from ``code/`` with::
 import numpy as np
 import time
 
-from seeding import create_seed_sequences, rng, SEED
+from seeding import create_seed_sequences, rng
+from settings import TEST_SEED
 from config import (
     make_lifts,
     make_full_rank_K0,
@@ -108,7 +109,7 @@ class SPIInflationExperiment:
             "dt": self.dt,
         }
 
-        base_seeds = create_seed_sequences(["base"])
+        base_seeds = create_seed_sequences(["base"], TEST_SEED)
 
         discrete_settings = LQRDiscreteSettings(
             **settings,
@@ -120,7 +121,7 @@ class SPIInflationExperiment:
         )
 
         # LQR first to sample same seq as in base
-        seeds = create_seed_sequences(["lqr", "matrices", "mf_structured"])       
+        seeds = create_seed_sequences(["lqr", "matrices", "mf_structured"], TEST_SEED)       
 
         mat_rng = rng(seeds["matrices"])
 
@@ -214,14 +215,14 @@ class SPIInflationExperiment:
         file_name = None
         if not visualize:
             date_str = time.strftime("%Y-%m-%d %H:%M:%S")
-            file_name = f"Run_{label}_{date_str}_seed_{SEED}"
+            file_name = f"Run_{label}_{date_str}_seed_{TEST_SEED}"
 
         visualize_spi(
             k_ranks=rank_dict,
             cost_trajectories=cost_dict,
             baseline_cost=base_cost,
             simulation_dict=simulation_dict,
-            seed=SEED,
+            seed=TEST_SEED,
             dt=self.dt,
             save_to=file_name
         )

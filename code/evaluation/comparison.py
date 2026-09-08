@@ -21,7 +21,8 @@ from config import (
     make_lifts,
 )
 from basetypes import StateSpaceModel
-from seeding import SEED, create_seed_sequences, rng
+from seeding import create_seed_sequences, rng
+from settings import TEST_SEED
 
 from lqr_base.simple_lqr import (
     LQRBase,
@@ -314,7 +315,7 @@ def _run_lqr_solver(solver, config, K_0, U_1, U_2, j_star, seeds) -> RunRecord:
     record = RunRecord(
         experiment=config.experiment,
         solver=f"{solver}_{config.label}",
-        seed=SEED,
+        seed=TEST_SEED,
         config=_base_config_dict(config, {"solver": to_jsonable(settings)}),
         summary=_summarize(probe.records, j_star, K_final, scorer, config, mc, complexity),
         arrays={
@@ -374,7 +375,7 @@ def _run_rl_solver(solver, config, K_0, U_1, U_2, j_star, seeds) -> RunRecord:
         return mean, None
 
     callback = ProbeCallback(evaluate, eval_freq=settings.eval_freq)
-    model = build_model(env, settings, seed=SEED)
+    model = build_model(env, settings, seed=TEST_SEED)
     model.learn(total_timesteps=settings.total_timesteps, callback=callback,
                 progress_bar=False)
 
@@ -403,7 +404,7 @@ def _run_rl_solver(solver, config, K_0, U_1, U_2, j_star, seeds) -> RunRecord:
     record = RunRecord(
         experiment=config.experiment,
         solver=f"{solver}_{config.label}",
-        seed=SEED,
+        seed=TEST_SEED,
         config=_base_config_dict(config, {"solver": to_jsonable(settings)}),
         summary=_summarize(callback.records, j_star, K_final, scorer, config, mc, complexity),
     )
@@ -441,7 +442,7 @@ def run_comparison(config: ComparisonConfig, root="results", verbose: bool = Tru
         + [f"eval_{a}" for a in config.solvers]
         + [f"solve_{a}" for a in config.solvers]
     )
-    seeds = create_seed_sequences(names)
+    seeds = create_seed_sequences(names, TEST_SEED)
 
     U_1 = U_2 = None
     if config.inflation is not None:
