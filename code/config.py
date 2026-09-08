@@ -22,6 +22,10 @@ DEFAULT_MAX_INITIAL_STATE = np.array([10.0, 1.0])
 # Length of the trajectory rollouts the figures show.
 DEFAULT_SIM_STEPS = 2500
 
+DEFAULT_A = np.array([[0.0, 1.0],
+                       [0.0, 0.0]])
+DEFAULT_B = np.array([[0.0],
+                       [1.0]])
 
 def double_integrator_model() -> StateSpaceModel:
     """The standard double integrator as its state space model.
@@ -35,10 +39,8 @@ def double_integrator_model() -> StateSpaceModel:
         Continuous-time ``(A, B)`` with ``n = 2``, ``m = 1``.
     """
     return StateSpaceModel(
-        A=np.array([[0.0, 1.0],
-                    [0.0, 0.0]]),
-        B=np.array([[0.0],
-                    [1.0]]),
+        A=DEFAULT_A,
+        B=DEFAULT_B,
     )
 
 
