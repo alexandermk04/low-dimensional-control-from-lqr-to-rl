@@ -24,6 +24,7 @@ __all__ = [
     "SCHEMA_VERSION",
     "SUMMARY_KEYS",
     "RunRecord",
+    "condition_slug",
     "save_record",
     "load_record",
     "load_records",
@@ -31,7 +32,7 @@ __all__ = [
     "DEFAULT_ROOT",
 ]
 
-SCHEMA_VERSION = "1"
+SCHEMA_VERSION = "2"
 
 # Where the records are saved to
 DEFAULT_ROOT = Path("results")
@@ -62,7 +63,35 @@ SUMMARY_KEYS = (
     "mc_cost_stderr",
     "horizon",
     "n_mc_episodes",
+    # Test evaluation metrics
+    "test_cost_mean", # accumulated cost, averaged over test episodes
+    "test_cost_std", # spread across test episodes
+    "test_cost_stderr",
+    "test_episodes",
+    "test_horizon",
 )
+
+
+def condition_slug(condition: dict) -> str:
+    """Turn a condition dict into a filesystem-safe, stable identifier.
+
+    Parameters
+    ----------
+    condition : dict
+        Flat mapping of cell name to value.
+
+    Returns
+    -------
+    str
+        e.g. ``"l500-m200"`` for ``{"l": 500, "m": 200}``. Empty for an empty
+        condition.
+    """
+    def clean(value):
+        if isinstance(value, (list, tuple)):
+            return "x".join(str(v) for v in value)
+        return str(value).replace(" ", "").replace("/", "-")
+
+    return "-".join(f"{k}{clean(v)}" for k, v in sorted(condition.items()))
 
 
 def _timestamp() -> str:
@@ -85,6 +114,9 @@ class RunRecord:
         ``"ppo_linear"``. Becomes the legend label.
     seed : int
         The global seed the run was produced under.
+    condition : dict
+        Specific condition settings of this run, e.g. ``{"l": 500, "m": 200}``.
+        Used to name the run.
     config : dict
         Nested configuration, passed through
         :func:`~evaluation.serialization.to_jsonable`.
@@ -99,13 +131,14 @@ class RunRecord:
     timestamp : str
         When the run finished.
     run_id : str
-        ``<experiment>__<solver>__<timestamp>__seed<seed>``, and the directory
-        name.
+        ``<experiment>__<solver>[__<condition slug>]__<timestamp>__seed<seed>``,
+        and the directory name.
     """
 
     experiment: str
     solver: str
     seed: int
+    condition: dict = field(default_factory=dict)
     config: dict = field(default_factory=dict)
     summary: dict = field(default_factory=dict)
     arrays: dict[str, np.ndarray] = field(default_factory=dict)
@@ -115,7 +148,11 @@ class RunRecord:
 
     def __post_init__(self):
         if not self.run_id:
-            self.run_id = f"{self.experiment}__{self.solver}__{self.timestamp}__seed{self.seed}"
+            parts = [self.experiment, self.solver]
+            if self.condition:
+                parts.append(condition_slug(self.condition))
+            parts += [self.timestamp, f"seed{self.seed}"]
+            self.run_id = "__".join(parts)
         for key in SUMMARY_KEYS:
             self.summary.setdefault(key, None)
 
@@ -149,6 +186,7 @@ def save_record(record: RunRecord, root: Path | str = DEFAULT_ROOT) -> Path:
         "solver": record.solver,
         "timestamp": record.timestamp,
         "seed": record.seed,
+        "condition": to_jsonable(record.condition),
         "config": to_jsonable(record.config),
         "summary": to_jsonable(record.summary),
         "array_keys": sorted(record.arrays),
@@ -197,8 +235,9 @@ def load_record(path: Path | str) -> RunRecord:
 
     return RunRecord(
         experiment=payload["experiment"],
-        solver=payload["solver"],
+        solver=payload.get("solver"),
         seed=payload["seed"],
+        condition=payload.get("condition") or {},
         config=payload["config"],
         summary=payload["summary"],
         arrays=arrays,
@@ -271,10 +310,12 @@ def append_index(record: RunRecord, root: Path | str = DEFAULT_ROOT) -> Path:
         "solver": record.solver,
         "timestamp": record.timestamp,
         "seed": record.seed,
+        "condition": to_jsonable(record.condition),
         "J_final": to_jsonable(record.summary.get("J_final")),
         "subopt_final": to_jsonable(record.summary.get("subopt_final")),
         "total_env_steps": to_jsonable(record.summary.get("total_env_steps")),
         "total_time": to_jsonable(record.summary.get("total_time")),
+        "test_cost_mean": to_jsonable(record.summary.get("test_cost_mean")),
     }
 
     with index.open("a") as handle:
