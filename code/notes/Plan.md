@@ -50,12 +50,12 @@
 accumulated cost averaged over runs and seeds
 
 ### Plots
-1. Violin plots for True Cost / Suboptimality
+1. Box plots for True Cost / Suboptimality
 2. Line Graphs with mean and range for training process
 3. Simulation (position, velocity, acceleration) graphic showing different trained controllers for the same starting state
 4. Simulation showing one specific controller with the same starting state for the different noise levels applied
 5. Simulation showing one specific controller with the same starting state for different noise channels at the same level applied
-6. Violin Plots for Cost accumulated during tests
+6. Box Plots for Cost accumulated during tests
 7. Barplots for policy complexity
 
 ### Tables
