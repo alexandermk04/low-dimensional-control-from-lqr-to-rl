@@ -18,7 +18,7 @@ from config import (
     make_full_rank_K0,
     make_lifts,
 )
-from evaluation.metrics import choose_horizon, expected_true_cost
+from evaluation.metrics import expected_true_cost
 from seeding import sub_rng, sub_seed
 from lqr_base.inflated_lqr import LQRInflated, LQRInflatedSettings
 from lqr_base.noise import LQRNoiseSettings
@@ -93,8 +93,6 @@ class Problem:
         Optimal gain on the true plant.
     j_star : float
         Optimal expected infinite-horizon cost.
-    horizon : int
-        At what point the closed-loop has decayed to a tolerance. 
     action_limit : float
         Half-width of the RL action box.
     """
@@ -111,7 +109,6 @@ class Problem:
     K_0: np.ndarray
     K_star: np.ndarray
     j_star: float
-    horizon: int
     action_limit: float
 
 
@@ -201,7 +198,6 @@ def make_problem(seed: int, inflation: tuple[int, int] | None = None) -> Problem
         K_0=K_0,
         K_star=np.zeros((1, 1)),
         j_star=np.inf,
-        horizon=0,
         action_limit=0.0,
     )
 
@@ -221,7 +217,6 @@ def make_problem(seed: int, inflation: tuple[int, int] | None = None) -> Problem
 
     problem.K_star = K_star
     problem.j_star = expected_true_cost(reference, K_star)
-    problem.horizon = choose_horizon(reference, K_star)
 
     to_action = K_0 @ U_1 if U_1 is not None else K_star
     peak = float(np.max(np.abs(to_action) @ np.abs(max_initial_state)))

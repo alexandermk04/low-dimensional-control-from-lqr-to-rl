@@ -21,6 +21,12 @@ TEST_SEED = 2026
 TEST_EPISODES = 100
 TEST_HORIZON = 2000
 
+# Length of the trajectories drawn in the figures.
+FIGURE_HORIZON = 800
+
+# Rollout length of the mid-training Monte Carlo probe for non-linear RL policies.
+PROBE_HORIZON = 800
+
 # ---------------------------------------------------------------------------
 # Training
 # ---------------------------------------------------------------------------

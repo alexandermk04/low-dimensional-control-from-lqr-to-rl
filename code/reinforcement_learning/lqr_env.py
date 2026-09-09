@@ -21,9 +21,7 @@ class LQREnv(gym.Env):
     lqr : LQRBase
         The system to drive.
     horizon : int
-        Steps before truncation. Should be long enough that the closed-loop
-        transient has decayed - see
-        :func:`evaluation.metrics.choose_horizon`.
+        Steps before truncation.
     reward_scale : float
         Multiplies the stage cost. Passing ``dt`` makes the return a Riemann sum
         of the continuous-time cost integral.
