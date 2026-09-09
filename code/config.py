@@ -130,7 +130,10 @@ def make_full_rank_K0(
     # adding it changes the representation without changing the effective gain.
     N = G - np.linalg.pinv(U_2) @ (U_2 @ G @ U_1) @ np.linalg.pinv(U_1)
 
-    # Normalize
-    N = N / np.linalg.norm(N, ord='fro')
+    norm_N = np.linalg.norm(N, ord='fro')
 
-    return K_low_rank + alpha * N
+    # Edge case for an already full rank K_low_rank, where the nullspace is empty
+    if norm_N <= 1e-8 * max(np.linalg.norm(G, ord='fro'), 1.0):
+        return K_low_rank
+
+    return K_low_rank + alpha * N / norm_N

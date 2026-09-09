@@ -65,10 +65,10 @@ accumulated cost averaged over runs and seeds
 4. Table as in 3., but with different noise channels at one strength as columns
 
 ## Chapter 4
-Comparison of Baseline Solution with Model-based, Model-based + Model-estimator (still TODO), Model-free Policy Gradient Solvers - first noise free comparison using plots 1-3, 6, and table 1, 2 (but without policy complexity here), then tables 3,4 and and plots 4,5. So we compare the base controllers performance under normal behavior, as well as noise application.
+Comparison of Baseline Solution with Model-based, Model-based + System Identification, Model-free Policy Gradient Solvers - first noise free comparison using plots 1-3, 6, and table 1, 2 (but without policy complexity here), then tables 3,4 and and plots 4,5. So we compare the base controllers performance under normal behavior, as well as noise application. Inflation is also introduced here. Overall: Basic solvers, set data sample sizes based on experiments with different inflation intensities (base (2 in, 1 out), small (10 in, 5 out), medium (50 in, 25 out), large (200 in, 100 out)).
 
 ## Chapter 5
-Inflated in- and outputs in 4 different size dimensions: base (2 in, 1 out), small (10 in, 5 out), medium (50 in, 25 out), large (200 in, 100 out). First introduction of model-based spi, explanation why model-free is excluded. Experiments with model-based spi + model-estimator; plots 1-3, 6 and tables 2,3 (here we use sample sizes selected based on results from 4) for comparison only with mb + model-estimator between different inflation sizes.
+First introduction of model-based spi, explanation why model-free is excluded. Experiments with model-based spi + model-estimator; plots 1-3, 6 and tables 2,3 (here we use sample sizes selected based on results from 4) for comparison only with mb + model-estimator between different inflation sizes.
 
 Introduce linear-ppo, fully-connected ppo and state-encoder, do same comparisons with different inflation sizes for the state-encoder only.
 

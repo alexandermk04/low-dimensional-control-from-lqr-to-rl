@@ -7,3 +7,6 @@ matplotlib>=3.7
 gymnasium>=0.29
 stable-baselines3>=2.0
 pygame>=2.5
+
+# System identification: only needed by lqr_solvers/system_identification.py
+sippy_unipi>=1.0.1
