@@ -17,7 +17,13 @@ from pathlib import Path
 import numpy as np
 
 import settings
-from evaluation.records import RunRecord, append_index, load_records, save_record
+from evaluation.records import (
+    RunRecord,
+    append_index,
+    condition_slug,
+    load_records,
+    save_record,
+)
 from evaluation.serialization import to_jsonable
 
 __all__ = [
@@ -27,6 +33,7 @@ __all__ = [
     "store_record",
     "load_experiment",
     "load_trained_gains",
+    "load_run_index",
     "MissingExperimentError",
 ]
 
@@ -179,9 +186,18 @@ def load_trained_gains(experiment: str) -> dict[tuple[str, int], np.ndarray]:
     return gains
 
 
-def load_run_index(experiment: str) -> dict[tuple[str, int], RunRecord]:
-    """``(solver, seed) -> the most recent record`` for that cell."""
+def load_run_index(experiment: str) -> dict[tuple[str, int, str], RunRecord]:
+    """``(solver, seed, condition) -> the most recent record`` for the combination
+    of this specific experiment settings.
+
+    Returns
+    -------
+    dict[tuple[str, int, str], RunRecord]
+        Keyed by ``(solver, seed, condition_slug(condition))``. The slug is the
+        same one :func:`evaluation.records.condition_slug` builds run directory
+        names from.
+    """
     index = {}
     for record in load_experiment(experiment):
-        index[(record.solver, record.seed)] = record
+        index[(record.solver, record.seed, condition_slug(record.condition))] = record
     return index

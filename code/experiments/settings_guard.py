@@ -4,7 +4,13 @@ Helper functions to enforce that a specific setting has been set.
 
 import settings
 
-__all__ = ["MissingSettingError", "require", "require_noise", "require_choice"]
+__all__ = [
+    "MissingSettingError",
+    "require",
+    "require_noise",
+    "require_choice",
+    "require_per_size",
+]
 
 
 class MissingSettingError(RuntimeError):
@@ -84,3 +90,41 @@ def require_choice(value, name: str, allowed, set_by: str):
         )
 
     return value
+
+
+def require_per_size(mapping, name: str, set_by: str, sizes=None) -> dict:
+    """Check that a per-inflation-size setting has been decided for every size.
+
+    Parameters
+    ----------
+    mapping : dict
+        The setting, e.g. ``settings.CHOSEN_SAMPLE_CELL``.
+    name : str
+        Its name in :mod:`settings`.
+    set_by : str
+        Which experiment decides it.
+    sizes : iterable of str or None, optional
+        Sizes that must be present. Defaults to every key of
+        ``settings.INFLATION_SIZES``.
+
+    Returns
+    -------
+    dict
+        ``mapping``, unchanged.
+
+    Raises
+    ------
+    MissingSettingError
+        Listing every size that is missing or still ``None``.
+    """
+    sizes = tuple(settings.INFLATION_SIZES if sizes is None else sizes)
+
+    missing = [size for size in sizes if mapping.get(size) is None]
+
+    if missing:
+        raise MissingSettingError(
+            f"settings.{name} is not set for: {', '.join(missing)}.\n"
+            f"  Run: {set_by}"
+        )
+
+    return mapping

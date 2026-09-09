@@ -38,10 +38,39 @@ ROLLOUT_LENGTHS = (200, 500, 800)
 TRAJECTORY_COUNTS = (100, 200, 500)
 SAMPLE_GRID = tuple((l, m) for l in ROLLOUT_LENGTHS for m in TRAJECTORY_COUNTS)
 
-# The combination of rollout length and trajectory count that is chosen for the experiments.
-# TODO: set after running `python -m experiments.ch4_sample_size`
-CHOSEN_ROLLOUT_LENGTH = None
-CHOSEN_TRAJECTORIES = None
+# Reduced rollout lengths for the larger inflations
+SAMPLE_GRID_FULL_SIZES = ("base", "small")
+SAMPLE_GRID_REDUCED = tuple((l, m) for l in (200,) for m in TRAJECTORY_COUNTS)
+
+
+def sample_grid_for(size: str) -> tuple[tuple[int, int], ...]:
+    """The (l, m) cells swept at one inflation size."""
+    return SAMPLE_GRID if size in SAMPLE_GRID_FULL_SIZES else SAMPLE_GRID_REDUCED
+
+# Per inflation size sample sizes for model-free approach 
+
+# TODO: fill from `python -m experiments.ch4_sample_size`; values are (l, m).
+CHOSEN_SAMPLE_CELL = {
+    "base": None,
+    "small": None,
+    "medium": None,
+    "large": None,
+}
+
+# Length of excitation rollouts
+IDENTIFICATION_LENGTHS = (500, 1000, 2000, 4000, 8000)
+
+# Past/future horizon of the block Hankel matrices for N4SID
+IDENTIFICATION_HORIZONS = (5, 10, 20)
+
+# TODO: fill from `python -m experiments.ch4_identification_length`;
+# values are (trajectory_length, hankel_horizon).
+CHOSEN_IDENTIFICATION = {
+    "base": None,
+    "small": None,
+    "medium": None,
+    "large": None,
+}
 
 # TODO: RL solvers should be chosen based on the above selection
 # Episode length the RL solvers train on.
@@ -121,14 +150,18 @@ REFERENCE_INFLATION = "medium"
 # ---------------------------------------------------------------------------
 # Solvers per chapter
 # ---------------------------------------------------------------------------
-# The sample-size of chap4 is optimized for mb + estimator
-CH4_SAMPLE_SOLVERS = ("mb_est", "mf_npg")
+# Sample size solver to compare rollout lengths for
+CH4_SAMPLE_SOLVERS = ("mf_npg",)
+
+# System ID solver
+CH4_IDENTIFICATION_SOLVERS = ("mb_est",)
 
 # What we evaluate on in the end
 CH4_SOLVERS = ("baseline", "mb_pg", "mb_est", "mf_npg")
 
-# Compare different inflation sizes
-CH5_INFLATION_SOLVERS = ("mb_est", "spi")
+# Compare the effect of different inflation sizes on api
+CH5_INFLATION_SOLVERS = ("spi",)
+
 # Do the same for RL approach with only inflation sizes
 CH5_RL_SOLVERS = ("ppo_encoder",)
 
@@ -172,7 +205,12 @@ SOLVER_HYPERPARAMS = {
         "smoothing": 0.5,
     },
     "mb_est": {
-        # TODO: fill once architecture exists
+        "gradient_lr": 1.2e-3,
+        "excitation": 1.0, # std of variation added to input
+        "order_threshold": 1e-3,
+        "max_order": 10, # maximum order to consider for model identification
+        "horizon": 10, # Block Hankel past/future horizon
+        "input_rank_tol": 1e-3,
     },
 }
 

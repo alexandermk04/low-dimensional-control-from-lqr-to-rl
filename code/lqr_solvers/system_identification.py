@@ -66,7 +66,7 @@ class IdentificationSettings:
     trajectory_length: int
     excitation: float
     seed_seq: np.random.SeedSequence
-    max_order: int = 8
+    max_order: int = 10
     horizon: int = 10
     order_threshold: float = 1e-3
     fixed_order: int | None = None
