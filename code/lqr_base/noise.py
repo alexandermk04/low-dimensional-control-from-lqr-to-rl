@@ -222,7 +222,7 @@ class DisturbanceNoiseSettings:
             disturbance = rng.normal(0, self.disturbance_noise_std, size=x.shape)
             return disturbance
         elif self.disturbance_type == "sinusoidal":
-            disturbance = self.disturbance_noise_std * np.sin(0.1 * self.step_count) * np.ones_like(x)
+            disturbance = self.disturbance_noise_std * np.sin(0.01 * self.step_count) * np.ones_like(x)
             self.step_count += 1
             return disturbance
         elif self.disturbance_type == "constant":

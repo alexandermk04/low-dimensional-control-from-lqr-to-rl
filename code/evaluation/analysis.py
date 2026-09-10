@@ -165,9 +165,7 @@ def policy_complexity_mlp(model) -> dict[str, int]:
     """
     policy = model.policy
 
-    if hasattr(policy, "actor"):                      # SAC
-        modules = [policy.actor]
-    elif hasattr(policy, "action_net"):               # PPO
+    if hasattr(policy, "action_net"):               # PPO
         modules = [policy.mlp_extractor.policy_net, policy.action_net]
     else:
         raise AttributeError(

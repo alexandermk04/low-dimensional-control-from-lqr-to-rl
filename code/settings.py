@@ -94,35 +94,36 @@ NOISE_LEVELS = ("none", "weak", "standard", "strong", "divergent")
 NOISE_CHANNELS = ("measurement", "control", "parametric", "disturbance")
 
 # Standard deviation per channel and level. ``none`` must stay 0.0.
-# TODO: fill in the magnitude of the levels
+# Levels based on observation of optimal controller under these conditions.
+
 NOISE_STD = {
     "measurement": {
         "none": 0.0,
-        "weak": None,
-        "standard": None,
-        "strong": None,
-        "divergent": None,
+        "weak": 0.1,
+        "standard": 0.5,
+        "strong": 2.0,
+        "divergent": 20.0,
     },
     "control": {
         "none": 0.0,
-        "weak": None,
-        "standard": None,
-        "strong": None,
-        "divergent": None,
+        "weak": 0.1,
+        "standard": 0.5,
+        "strong": 2.0,
+        "divergent": 10.0,
     },
     "parametric": {
         "none": 0.0,
-        "weak": None,
-        "standard": None,
-        "strong": None,
-        "divergent": None,
+        "weak": 0.0005,
+        "standard": 0.001,
+        "strong": 0.005,
+        "divergent": 0.01,
     },
     "disturbance": {
         "none": 0.0,
-        "weak": None,
-        "standard": None,
-        "strong": None,
-        "divergent": None,
+        "weak": 0.0005,
+        "standard": 0.001,
+        "strong": 0.005,
+        "divergent": 0.05,
     },
 }
 
