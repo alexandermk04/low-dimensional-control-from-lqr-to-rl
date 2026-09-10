@@ -112,6 +112,8 @@
 
 % Self-included packages, not from base
 \usepackage{amsmath, amssymb, mathtools}
+\usepackage{pgf}
+\usepackage{import}
 \usepackage{xcolor}
 \usepackage[capitalise,nameinlink]{cleveref}
 
@@ -168,6 +170,9 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Own commands
+
+% To import a matplotlib figure
+\newcommand{\generatedfigure}[1]{\import{generated/figures/}{#1.pgf}}
 
 % Needs citations command
 \newcommand{\needcite}[1]{\textcolor{red}{\textsuperscript{[CITE: #1]}}}
