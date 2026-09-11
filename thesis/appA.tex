@@ -1,3 +1,96 @@
 \chapter{Nomenclature}\label{app:nomenclature}
 
 What goes in the appendices? Any material which impedes the smooth development of your presentation, but which is important to justify the results of a thesis. Generally it is material that is of too nitty-gritty a level of detail for inclusion in the main body of the thesis, but which should be available for perusal by the examiners to convince them sufficiently. Examples include program listings, immense tables of data, lengthy mathematical proofs or derivations, etc. 
+
+
+\section{Notation}
+\label{sec:notation}
+
+The following table contains the conventions regarding symbols
+used throughout this thesis:
+
+\begin{longtable}{@{}p{0.20\textwidth}p{0.74\textwidth}@{}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Symbol} & \textbf{Meaning} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\multicolumn{2}{@{}l}{\emph{Sets and operators}} \\[2pt]
+$I_n$, $\mathbf{1}_n$ & identity matrix and all-ones vector of dimension $n$ \\
+$\lambda_i(M)$, $\sigma_i(M)$ & $i$-th eigenvalue and $i$-th singular value of $M$ \\
+$\spr(M)$ & spectral radius, $\max_i \lvert \lambda_i(M) \rvert$ \\
+$M \succeq 0$, $M \succ 0$ & $M$ symmetric positive semi-definite / positive definite \\
+$\lVert \cdot \rVert$, $\lVert \cdot \rVert_F$, $\lVert \cdot \rVert_{*}$ & Euclidean (spectral) norm, Frobenius norm, nuclear norm \\
+$\odot$ & elementwise product \\
+$\mathcal{N}(\mu, \Sigma)$ & Gaussian distribution with mean $\mu$ and covariance $\Sigma$ \\
+$\nabla f$, $\widehat{\nabla} f$ & gradient of $f$ and the estimate of it\\
+\midrule
+\multicolumn{2}{@{}l}{\emph{System description}} \\[2pt]
+$n$, $m$, $q$ & dimension of the state, input and output \\
+$t$, $k$, $h$ & continuous time, discrete step index, sampling period \\
+$x_k \in \R^{n}$ & state \\
+$u_k \in \R^{m}$ & control input computed by the controller \\
+$\tilde{u}_k \in \R^{m}$ & control input actually applied to the plant \\
+$y_k \in \R^{q}$ & observed output \\
+$p$, $v$ & position and velocity of the double integrator, $x = [\,p,\ v\,]\T$ \\
+$A_c$, $B_c$ & continuous-time system and input matrix \\
+$A$, $B$ & their zero-order-hold discretizations \\
+$C$, $D$ & output and feedthrough matrix; $D = 0$ throughout \\
+$A_K$ & closed-loop matrix, $A_K = A - BK$ \\
+$\mathcal{C}(A,B)$, $\mathcal{O}(C,A)$ & controllability and observability matrix \\
+$\hat{x}_k$, $\tilde{x}_k$ & state estimate and estimation error $x_k - \hat{x}_k$ \\
+$L$ & observer gain \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Optimal control}} \\[2pt]
+$Q$, $R$ & state and input cost matrices, $Q \succeq 0$, $R \succ 0$ \\
+$K \in \R^{m \times n}$ & feedback gain, $u_k = -K x_k$ \\
+$K^{*}$ & optimal gain, solution of \eqref{eq:optimal_gain} \\
+$\mathcal{K}$ & set of stabilizing gains, \eqref{eq:stabilizing_set} \\
+$J(x_0, u)$ & infinite-horizon cost of an input sequence \\
+$P$ & stabilizing solution of the DARE \eqref{eq:dare} \\
+$P_K$ & solution of the Lyapunov equation \eqref{eq:lyapunov} for a fixed $K$ \\
+$\mathcal{D}$, $\Sigma_0$ & distribution of $x_0$ and its second moment $\E[x_0 x_0\T]$ \\
+$f(K)$ & expected cost of a gain, $\tr(P_K \Sigma_0)$ \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Noise}} \\[2pt]
+$n^{\mathrm{m}}_k$, $\sigma_{\mathrm{m}}$ & measurement noise and its standard deviation \\
+$n^{\mathrm{c}}_k$, $\sigma_{\mathrm{c}}$ & control noise (relative) and its standard deviation \\
+$\Delta^{A}_k$, $\Delta^{B}_k$, $\sigma_{\mathrm{p}}$ & parametric perturbations and their standard deviation \\
+$n^{\mathrm{d}}_k$, $\sigma_{\mathrm{d}}$ & external disturbance and its standard deviation / amplitude \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Learning and inflated systems}} \\[2pt]
+$d_{in}$, $d_{out}$ & inflated input and output dimension, $d \gg n$ \\
+$U_1$, $U_2$ & orthonormal inflation matrices \\
+$\lambda$ & weight of the nuclear-norm regulariser \\
+$\eta$ & step size \\
+$r$ & smoothing radius of the zeroth-order gradient estimator \\
+$N$, $T$ & number of rollouts and rollout horizon \\
+\end{longtable}
+
+\section{Noise intensities}
+\label{sec:app_noise_levels}
+
+The settings used for the different noise intensities. It is important to note
+that parametric noise is set to be time invariant, so drawn once per rollout,
+and that the disturbance noise uses its sinusoidal variant \eqref{eq:dist_sin}.
+
+\begin{table}[htbp]
+\centering
+\caption{Standard deviation per noise channel and intensity.}
+\label{tab:noise_levels}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Channel & \emph{none} & \emph{weak} & \emph{standard} & \emph{strong} & \emph{divergent} \\
+\midrule
+Measurement $\sigma_{\mathrm{m}}$  & $0$ & $0.1$    & $0.5$   & $2.0$   & $20.0$ \\
+Control $\sigma_{\mathrm{c}}$      & $0$ & $0.1$    & $0.5$   & $2.0$   & $10.0$ \\
+Parametric $\sigma_{\mathrm{p}}$   & $0$ & $0.0005$ & $0.001$ & $0.005$ & $0.01$ \\
+Disturbance $\sigma_{\mathrm{d}}$  & $0$ & $0.0005$ & $0.001$ & $0.005$ & $0.05$ \\
+\bottomrule
+\end{tabular}
+\end{table}

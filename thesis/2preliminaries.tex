@@ -718,7 +718,7 @@ $n^{\mathrm{d}}_k \in \R^{n}$ is drawn as
         & n^{\mathrm{d}}_k \sim \mathcal{N}\!\left(0, \sigma_{\mathrm{d}}^{2} I_n\right)
           \quad \text{independently at every step}, \label{eq:dist_gauss}\\
     \text{Sinusoidal:} \quad
-        & n^{\mathrm{d}}_k = \sigma_{\mathrm{d}} \sin(0.1\,k)\, \mathbf{1}_n , \label{eq:dist_sin}\\
+        & n^{\mathrm{d}}_k = \sigma_{\mathrm{d}} \sin(0.01\,k)\, \mathbf{1}_n , \label{eq:dist_sin}\\
     \text{Constant:} \quad
         & n^{\mathrm{d}}_k = n^{\mathrm{d}}_0 \sim \mathcal{N}\!\left(0, \sigma_{\mathrm{d}}^{2} I_n\right)
           \quad \text{for all } k . \label{eq:dist_const}
@@ -762,77 +762,164 @@ we compute the gain on a pure system, and only afterwards apply it to an
 \emph{exposed} system of the style \eqref{eq:noisy_loop} afterwards. Measuring how much
 performance this difference makes is the subject of the next section.
  
-\section{Robustness Metrics}
+\section{Metrics and Robustness}
 \label{sec:robustness}
 
-TODO: How do I define robustness, what are interesting metrics to report, per section
- 
-\section{Notation}
-\label{sec:notation}
+In this thesis we try to answer two main questions. First, how well a 
+trained controller performs generally, as well as under influences
+unknown to him during training. The second relates more to the size
+of the controller, and a possible tradeoff between performance and
+the former.
 
-In the following table I have collected the notation symbols used throughout this thesis.
-Unless specifically mentioned otherwise, one can be sure of the context of a symbol used
-from now on.
+\subsection{Cost and suboptimality}
+\label{subsec:suboptimality}
 
-\begin{longtable}{@{}p{0.20\textwidth}p{0.74\textwidth}@{}}
-\toprule
-\textbf{Symbol} & \textbf{Meaning} \\
-\midrule
-\endfirsthead
-\toprule
-\textbf{Symbol} & \textbf{Meaning} \\
-\midrule
-\endhead
-\bottomrule
-\endfoot
-\multicolumn{2}{@{}l}{\emph{Sets and operators}} \\[2pt]
-$I_n$, $\mathbf{1}_n$ & identity matrix and all-ones vector of dimension $n$ \\
-$\lambda_i(M)$, $\sigma_i(M)$ & $i$-th eigenvalue and $i$-th singular value of $M$ \\
-$\spr(M)$ & spectral radius, $\max_i \lvert \lambda_i(M) \rvert$ \\
-$M \succeq 0$, $M \succ 0$ & $M$ symmetric positive semi-definite / positive definite \\
-$\lVert \cdot \rVert$, $\lVert \cdot \rVert_F$, $\lVert \cdot \rVert_{*}$ & Euclidean (spectral) norm, Frobenius norm, nuclear norm \\
-$\odot$ & elementwise product \\
-$\mathcal{N}(\mu, \Sigma)$ & Gaussian distribution with mean $\mu$ and covariance $\Sigma$ \\
-$\nabla f$, $\widehat{\nabla} f$ & gradient of $f$ and the estimate of it\\
-\midrule
-\multicolumn{2}{@{}l}{\emph{System description}} \\[2pt]
-$n$, $m$, $q$ & dimension of the state, input and output \\
-$t$, $k$, $h$ & continuous time, discrete step index, sampling period \\
-$x_k \in \R^{n}$ & state \\
-$u_k \in \R^{m}$ & control input computed by the controller \\
-$\tilde{u}_k \in \R^{m}$ & control input actually applied to the plant \\
-$y_k \in \R^{q}$ & observed output \\
-$p$, $v$ & position and velocity of the double integrator, $x = [\,p,\ v\,]\T$ \\
-$A_c$, $B_c$ & continuous-time system and input matrix \\
-$A$, $B$ & their zero-order-hold discretizations \\
-$C$, $D$ & output and feedthrough matrix; $D = 0$ throughout \\
-$A_K$ & closed-loop matrix, $A_K = A - BK$ \\
-$\mathcal{C}(A,B)$, $\mathcal{O}(C,A)$ & controllability and observability matrix \\
-$\hat{x}_k$, $\tilde{x}_k$ & state estimate and estimation error $x_k - \hat{x}_k$ \\
-$L$ & observer gain \\
-\midrule
-\multicolumn{2}{@{}l}{\emph{Optimal control}} \\[2pt]
-$Q$, $R$ & state and input cost matrices, $Q \succeq 0$, $R \succ 0$ \\
-$K \in \R^{m \times n}$ & feedback gain, $u_k = -K x_k$ \\
-$K^{*}$ & optimal gain, solution of \eqref{eq:optimal_gain} \\
-$\mathcal{K}$ & set of stabilizing gains, \eqref{eq:stabilizing_set} \\
-$J(x_0, u)$ & infinite-horizon cost of an input sequence \\
-$P$ & stabilizing solution of the DARE \eqref{eq:dare} \\
-$P_K$ & solution of the Lyapunov equation \eqref{eq:lyapunov} for a fixed $K$ \\
-$\mathcal{D}$, $\Sigma_0$ & distribution of $x_0$ and its second moment $\E[x_0 x_0\T]$ \\
-$f(K)$ & expected cost of a gain, $\tr(P_K \Sigma_0)$ \\
-\midrule
-\multicolumn{2}{@{}l}{\emph{Noise}} \\[2pt]
-$n^{\mathrm{m}}_k$, $\sigma_{\mathrm{m}}$ & measurement noise and its standard deviation \\
-$n^{\mathrm{c}}_k$, $\sigma_{\mathrm{c}}$ & control noise (relative) and its standard deviation \\
-$\Delta^{A}_k$, $\Delta^{B}_k$, $\sigma_{\mathrm{p}}$ & parametric perturbations and their standard deviation \\
-$n^{\mathrm{d}}_k$, $\sigma_{\mathrm{d}}$ & external disturbance and its standard deviation / amplitude \\
-\midrule
-\multicolumn{2}{@{}l}{\emph{Learning and inflated systems}} \\[2pt]
-$d_{in}$, $d_{out}$ & inflated input and output dimension, $d \gg n$ \\
-$U_1$, $U_2$ & orthonormal inflation matrices \\
-$\lambda$ & weight of the nuclear-norm regulariser \\
-$\eta$ & step size \\
-$r$ & smoothing radius of the zeroth-order gradient estimator \\
-$N$, $T$ & number of rollouts and rollout horizon \\
-\end{longtable}
+By \cref{thm:dare_existence} no gain achieves a
+lower cost \eqref{eq:cost_of_gain} than $K^{*}$, and every controller we
+train is therefore in the best case only as good as it. This serves as our
+baseline, and we evaluate the cost produces by our controllers in relation to
+it.
+
+While can easily calculate the infinite-horizon cost of a gain
+via the Lyapunov equation \eqref{eq:lyapunov}, we can't effectively
+use it. The reason for that is that \eqref{eq:lyapunov} can only
+be applied to the closed loop, however when adding noise to our
+evaluation, this is not the case anymore. Additionally, the neural
+networks we will train later on, don't admit a gain matrix based
+policy $P_K$, which would need a different approach anyway.
+
+So, we instead evaluate them over a fixed horizon via rollout. Hence for
+a given controller, a noise condition $c$, which is a subset of channels and an
+intensity \cref{subsec:noise_strength}, and a horizon $T$, we
+simulate starting from a randomly drawn $x_0 \sim \mathcal{D}$.
+The resulting loop \eqref{eq:noisy_loop} under $c$ thus accumulates
+
+\begin{equation}
+    \label{eq:empirical_return}
+    J_T^{(i)}(K; c)
+    = \sum_{k=0}^{T-1}
+      \left( x_k\T Q\, x_k + \tilde{u}_k\T R\, \tilde{u}_k \right) .
+\end{equation}
+
+Averaging \eqref{eq:empirical_return} over the $N$ episodes of one seed $s$ and
+then over the $S$ seeds gives our cost estimate
+
+\begin{equation}
+    \label{eq:empirical_cost}
+    \hat{J}^{s}_T(K; c) = \frac{1}{N} \sum_{i=1}^{N} J^{(i)}_T(K; c) ,
+    \qquad
+    \hat{J}_T(K; c) = \frac{1}{S} \sum_{s=1}^{S} \hat{J}^{s}_T(K; c) ,
+\end{equation}
+
+Our final metric is the relative excess of the cost produced by a
+trained controller over the cost of the optimal controller $K^{*}$
+under a given condition:
+
+\begin{equation}
+    \label{eq:suboptimality}
+    S_{\mathrm{rob}}(K; c)
+        = \frac{\hat{J}_T(K; c) - \hat{J}_T(K^{*}; c)}
+                {\hat{J}_T(K^{*}; c)} .
+\end{equation}
+
+where $S = 0$ means that the trained controller performed as well
+as our baseline and $S = 0.1$ that it did ten percent worse. 
+
+Note that this metric can indeed be negative. $K^{*}$ is only optimal for
+the nominal problem \cref{sec:lqr}, which has exact state feedback on
+known matrices and no external disturbance. These conditions do not
+hold, unless no noise is applied, which is only true if $c=\varnothing$.
+
+\subsection{Test protocol}
+\label{subsec:protocol}
+
+For all evaluation throughout this thesis, we will use a standardized
+approach, so that only the trained controller varies between different runs.
+
+\begin{itemize}
+    \item \textbf{Seeds.} $S = 10$ fixed seeds, drawn once randomly.
+    \item \textbf{Episodes.} $N = 100$ rollouts per seed, each from an
+          independently sampled $x_0 \sim \mathcal{D}$.
+    \item \textbf{Horizon.} $T = 2000$ steps at $h = 0.01$, so a total
+            of $20\,$seconds.
+    \item \textbf{Initial states.} Drawn from the box
+          $[-10, 10] \times [-1, 1]$ of \cref{sec:lqr}.
+    \item \textbf{Initial gain.} For iterative solvers requiring a
+            stable initial gain, we use $K_0 = [\,0.1,\ 0.5\,]$,
+            whose closed loop has $\spr(A - B K_0) \approx 0.9975$.
+\end{itemize}
+
+Under the stronger conditions individual rollouts might diverge. 
+To keep our mean finite, we remove them from the mean calculation,
+and report them separately as the divergence rate:
+
+\begin{equation}
+    \label{eq:divergence_rate}
+    D(K; c) \coloneqq \frac{1}{S N}
+    \left| \left\{ (s, i) \;:\; J^{(i)}_T(K; c) = \infty \ \text{or}\
+    J^{(i)}_T(K; c) > J_{\max} \right\} \right| .
+\end{equation}
+
+\subsection{Noise Intensity}
+\label{subsec:noise_strength}
+
+\Cref{sec:uncertainty} introduced four channels which change the system
+compared to the base model. Each noise channel is seperated further
+into five intensities,
+
+\begin{center}
+    \emph{none} $\prec$ \emph{weak} $\prec$ \emph{standard} $\prec$
+    \emph{strong} $\prec$ \emph{divergent},
+\end{center}
+
+where \emph{none} leaves the system as it is and thus serves as our
+control condition. All the other intensities were chosen by applying
+each channel to the optimal gain $K^{*}$ and observing its deviation
+from the optimal path. \emph{divergent}, contrary to the name,
+doesn't always cause divergence, but makes the controller unusable. 
+The concrete standard deviations per channel are listed in 
+\cref{tab:noise_levels}.
+
+After an initial analysis of the influence of the different channels
+separately and combined at their different intensities, we will decide on
+one of them for the remaining chapters.
+
+\subsection{The size of a policy}
+\label{subsec:policy_size}
+
+The second question is one of size. For a neural network the known way 
+is simply the number of weights and biases of the actor \needcite{TODO}.
+For a gain matrix however, we need to find a definition that is comparable to it.
+
+The simply approach for a $K \in \R^{m \times n}$ is the number of its entries,
+$m n$. In \Cref{chap:inflation} however, we will reduce the rank of $K$.
+Optimizing the storage size for $K$ of rank $r$, the singular value decomposition
+\needcite{SVD\_Notes.pdf} seperates it into
+
+\begin{equation}
+    \label{eq:svd}
+    K = U \Sigma V\T ,
+    \qquad
+    U \in \R^{m \times r}, \quad
+    \Sigma = \operatorname{diag}(\sigma_1, \dots, \sigma_r), \quad
+    V \in \R^{n \times r} ,
+\end{equation}
+
+with $U$ and $V$ having orthonormal columns and $\sigma_1 \geq \dots \geq
+\sigma_r > 0$ being the non-zero singular values. Hence, we only need to
+store $mr$ entries for $U$, $r$ for the diagonal of $\Sigma$ and
+$rn$ for $V$, which in total yields $r(m + n + 1)$. 
+For a small enough $r$ this is less, so we take the minimum of both:
+
+\begin{definition}[Policy size]
+\label{def:policy_size}
+The size of a linear policy $K \in \R^{m \times n}$ of rank
+$r = \rank(K)$ is
+\begin{equation}
+    \label{eq:policy_size}
+    \lvert K \rvert \coloneqq \min \left\{ m n, \; r \, (m + n + 1) \right\} ,
+\end{equation}
+the number of real numbers required to store it.
+The size of a neural policy is its total number of trainable parameters in the
+actor.
+\end{definition}
