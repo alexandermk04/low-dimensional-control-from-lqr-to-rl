@@ -14,14 +14,13 @@ import json
 import time
 from pathlib import Path
 
-import numpy as np
-
 import settings
 from evaluation.records import (
     RunRecord,
     append_index,
     condition_slug,
     load_records,
+    record_dir,
     save_record,
 )
 from evaluation.serialization import to_jsonable
@@ -32,9 +31,11 @@ __all__ = [
     "read_manifest",
     "store_record",
     "load_experiment",
-    "load_trained_gains",
     "load_run_index",
+    "run_key",
+    "completed_runs",
     "MissingExperimentError",
+    "SettingsChangedError",
 ]
 
 ROOT = Path(settings.EXPERIMENT_ROOT)
@@ -44,11 +45,38 @@ class MissingExperimentError(RuntimeError):
     """An experiment this script depends on has not been run yet."""
 
 
+class SettingsChangedError(RuntimeError):
+    """Finished runs exist, but were produced under different settings."""
+
+
+# Manifest entries used to identify a started run
+_RESUME_KEYS = ("seeds", "test_protocol", "settings")
+
+# Version to not mix breaking changes in experiments
+PROTOCOL_VERSION = 3
+
+
 def experiment_root(experiment: str) -> Path:
     """Directory holding one experiment's runs, created if missing."""
     directory = ROOT / experiment
     directory.mkdir(parents=True, exist_ok=True)
     return directory
+
+
+def _changed_settings(previous: dict, current: dict) -> list[str]:
+    """Names of the manifest entries that differ between two manifests."""
+    changed = [
+        key for key in _RESUME_KEYS
+        if key != "settings" and previous.get(key) != current.get(key)
+    ]
+
+    old, new = previous.get("settings") or {}, current.get("settings") or {}
+    changed += [
+        f"settings.{key}" for key in sorted(set(old) | set(new))
+        if old.get(key) != new.get(key)
+    ]
+
+    return changed
 
 
 def write_manifest(experiment: str, used_settings: dict, grid: list | None = None) -> Path:
@@ -67,24 +95,76 @@ def write_manifest(experiment: str, used_settings: dict, grid: list | None = Non
     -------
     Path
         The manifest file.
+
+    Raises
+    ------
+    SettingsChangedError
+        If finished runs exist and were produced under different settings.
     """
-    path = experiment_root(experiment) / "manifest.json"
+    directory = experiment_root(experiment)
+    path = directory / "manifest.json"
+    now = time.strftime("%Y%m%dT%H%M%S")
 
     payload = {
         "experiment": experiment,
-        "created": time.strftime("%Y%m%dT%H%M%S"),
+        "created": now,
         "seeds": list(settings.SEEDS),
         "test_protocol": {
             "episodes": settings.TEST_EPISODES,
             "horizon": settings.TEST_HORIZON,
+            "version": PROTOCOL_VERSION,
+            "x0_stream": "sub_seed(seed, 'plant', 'test')",
         },
         "settings": to_jsonable(used_settings),
         "grid": to_jsonable(grid) if grid is not None else None,
     }
 
+    payload = json.loads(json.dumps(payload))
+
+    has_runs = any(directory.glob("*/record.json"))
+
+    if path.exists() and has_runs:
+        previous = json.loads(path.read_text())
+        changed = _changed_settings(previous, payload)
+
+        if changed:
+            raise SettingsChangedError(
+                f"{directory} holds finished runs made under different settings "
+                f"({', '.join(changed)}). Revert settings.py to resume, or delete contents of "
+                f"{directory} to restart {experiment!r}."
+            )
+
+        payload["created"] = previous.get("created", now)
+        payload["resumed"] = previous.get("resumed", []) + [now]
+
     path.write_text(json.dumps(payload, indent=2))
 
     return path
+
+
+def run_key(solver: str, seed: int, condition: dict) -> tuple[str, int, str]:
+    """What identifies one run within an experiment."""
+    return solver, int(seed), condition_slug(condition)
+
+
+def completed_runs(experiment: str) -> dict[tuple[str, int, str], dict]:
+    """``run_key -> record.json payload`` of every finished run of an experiment.
+
+    Returns
+    -------
+    dict[tuple[str, int, str], dict]
+        Empty if the experiment has not been run yet. If a run exists twice,
+        the most recent one is used.
+    """
+    done = {}
+
+    # Directory names end in <timestamp>__seed<seed>
+    for path in sorted((ROOT / experiment).glob("*/record.json")):
+        payload = json.loads(path.read_text())
+        key = run_key(payload["solver"], payload["seed"], payload.get("condition") or {})
+        done[key] = payload
+
+    return done
 
 
 def read_manifest(experiment: str) -> dict:
@@ -106,7 +186,16 @@ def read_manifest(experiment: str) -> dict:
 
 
 def store_record(record: RunRecord) -> Path:
-    """Save one run and append it to its experiment's index."""
+    """Save one run, its policy and its index entry.
+    """
+    directory = record_dir(record, ROOT)
+    directory.mkdir(parents=True, exist_ok=True)
+
+    saver = record.save_policy
+    if saver is not None:
+        record.policy = saver(directory)
+        record.save_policy = None
+
     directory = save_record(record, ROOT)
     append_index(record, experiment_root(record.experiment))
     return directory
@@ -149,41 +238,6 @@ def load_experiment(experiment: str, solver: str | None = None) -> list[RunRecor
         )
 
     return records
-
-
-def load_trained_gains(experiment: str) -> dict[tuple[str, int], np.ndarray]:
-    """The final gain of every run of a training experiment.
-
-    Parameters
-    ----------
-    experiment : str
-        Name of the training experiment to read.
-
-    Returns
-    -------
-    dict[tuple[str, int], np.ndarray]
-        ``(solver, seed) -> K_final``, in the controller's own space.
-
-    Raises
-    ------
-    MissingExperimentError
-        If the experiment has not been run, or produced no usable gains.
-    """
-    gains = {}
-
-    for record in load_experiment(experiment):
-        K = record.arrays.get("K_final")
-        if K is None or K.size == 0:
-            continue
-        gains[(record.solver, record.seed)] = K
-
-    if not gains:
-        raise MissingExperimentError(
-            f"{experiment} holds no runs with a stored K_final. "
-            "Non-linear policies cannot be reused this way."
-        )
-
-    return gains
 
 
 def load_run_index(experiment: str) -> dict[tuple[str, int, str], RunRecord]:

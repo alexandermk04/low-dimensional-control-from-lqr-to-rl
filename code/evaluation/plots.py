@@ -130,7 +130,7 @@ def learning_curves(
         ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel(X_LABELS.get(x, x))
-    ax.set_ylabel("Suboptimality $(J - J^*)/J^*$" if normalize else "Cost $J$")
+    ax.set_ylabel("Training suboptimality $(J - J^*)/J^*$" if normalize else "Cost $J$")
     ax.grid(True, which="both", alpha=0.25)
     ax.legend()
 
@@ -177,7 +177,7 @@ def format_table(rows: list[dict], columns: list[str] | None = None) -> str:
         return "(no runs)"
 
     if columns is None:
-        columns = ["solver", "J_final", "subopt_final", "total_env_steps",
+        columns = ["solver", "J_final", "training_subopt_final", "total_env_steps",
                    "total_time", "rank_final", "policy_complexity", "converged"]
 
     def render(value):

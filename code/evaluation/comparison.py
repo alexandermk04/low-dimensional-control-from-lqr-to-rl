@@ -219,8 +219,8 @@ def _summarize(
         "J_star": float(j_star),
         "J_final": float(j_final),
         "J_best": float(j_best),
-        "subopt_final": suboptimality(j_final, j_star),
-        "subopt_best": suboptimality(j_best, j_star),
+        "training_subopt_final": suboptimality(j_final, j_star),
+        "training_subopt_best": suboptimality(j_best, j_star),
         "steps_to_thresh_1pct": one_pct["env_steps"],
         "steps_to_thresh_10pct": ten_pct["env_steps"],
         "iters_to_thresh_1pct": one_pct["iterations"],
@@ -487,7 +487,7 @@ def run_comparison(config: ComparisonConfig, root="results", verbose: bool = Tru
 
         if verbose:
             s = record.summary
-            print(f"  {solver:12s} J={s['J_final']:.5e}  subopt={s['subopt_final']:+.4f}  "
+            print(f"  {solver:12s} J={s['J_final']:.5e}  subopt={s['training_subopt_final']:+.4f}  "
                   f"steps={s['total_env_steps']:>9d}  rank={s['rank_final']}  "
                   f"params={s['policy_complexity']}  ({time.perf_counter()-started:.0f}s)")
 

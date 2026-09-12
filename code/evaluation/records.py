@@ -11,6 +11,7 @@ comparison table can easily be built.
 """
 
 import json
+import os
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -26,6 +27,7 @@ __all__ = [
     "RunRecord",
     "condition_slug",
     "save_record",
+    "record_dir",
     "load_record",
     "load_records",
     "append_index",
@@ -37,37 +39,24 @@ SCHEMA_VERSION = "2"
 # Where the records are saved to
 DEFAULT_ROOT = Path("results")
 
-# TODO: Check whether descriptions are accurate
-# Every summary contains these keys, is ``None`` if it is not applicable
+# Every summary contains these keys, is ``None``if not applicable
 SUMMARY_KEYS = (
-    "J_star", # optimal cost
-    "J_final",
-    "J_best", # closest one
-    "subopt_final", # cost difference to optimal
-    "subopt_best",
-    "steps_to_thresh_1pct",
-    "steps_to_thresh_10pct",
-    "iters_to_thresh_1pct",
-    "seconds_to_thresh_1pct",
-    "total_env_steps", 
-    "total_time", # overall time that has passed
-    "converged", # boolean
+    "J_star",  # optimal cost on the standard plant
+    "J_final",  # cost of the returned gain, on the standard plant
+    "training_subopt_final",  # (J_final - J_star) / J_star
+    "steps_to_thresh_1pct",  # sample efficiency
+    "total_env_steps",
+    "total_time",  # overall time that has passed
+    "converged",  # boolean
     "spectral_radius_final",
-    "rank_final", # rank of gain matrix
-    "policy_complexity", # complexity in number of parameters
-    "n_params_dense",
+    "rank_final",  # rank of gain matrix
+    "policy_complexity",  # complexity in number of parameters
     # RL-only stats below - None otherwise
-    "action_clips", # should be 0 unless constrained problem is solved
-    "bias_ratio", # whether extracted gain describes policy accurately
-    "mc_cost_mean",
-    "mc_cost_stderr",
-    "horizon",
-    "n_mc_episodes",
+    "action_clips",  # should be 0 unless constrained problem is solved
+    "bias_ratio",  # whether extracted gain describes policy accurately
     # Test evaluation metrics
-    "test_cost_mean", # accumulated cost, averaged over test episodes
-    "test_cost_std", # spread across test episodes
-    "test_cost_stderr",
-    "test_episodes",
+    "test_cost_mean",  # accumulated cost, averaged over this run's episodes
+    "test_episodes",  # contents of the pooled sample
     "test_horizon",
 )
 
@@ -126,6 +115,16 @@ class RunRecord:
         :data:`SUMMARY_KEYS`.
     arrays : dict[str, np.ndarray]
         Learning-curve columns, trajectories and gains.
+    policy : dict
+        How to rebuild the trained controller, e.g.
+        ``{"kind": "linear", "array": "K_final"}`` or
+        ``{"kind": "sb3", "algo": "ppo", "file": "policy.zip"}``. Read by
+        :func:`~experiments.policies.load_policy`; empty for a record that
+        stores no reloadable policy.
+    save_policy : callable or None
+        Writes the policy into the run directory and returns its descriptor.
+        Carried only until the record is stored, never serialized - it holds a
+        reference to a live model, which must not outlive the write.
     schema_version : str
         Version of this layout.
     timestamp : str
@@ -142,6 +141,8 @@ class RunRecord:
     config: dict = field(default_factory=dict)
     summary: dict = field(default_factory=dict)
     arrays: dict[str, np.ndarray] = field(default_factory=dict)
+    policy: dict = field(default_factory=dict)
+    save_policy: object = field(default=None, repr=False, compare=False)
     schema_version: str = SCHEMA_VERSION
     timestamp: str = field(default_factory=_timestamp)
     run_id: str = ""
@@ -161,6 +162,15 @@ class RunRecord:
         return self.solver.replace("_", " ")
 
 
+def record_dir(record: RunRecord, root: Path | str = DEFAULT_ROOT) -> Path:
+    """The directory one record lives in.
+
+    Shared with the policy side-car, so a saver and a loader can never disagree
+    about where the file went.
+    """
+    return Path(root) / record.experiment / record.run_id
+
+
 def save_record(record: RunRecord, root: Path | str = DEFAULT_ROOT) -> Path:
     """Write a record to ``<root>/<experiment>/<run_id>/``.
 
@@ -176,7 +186,7 @@ def save_record(record: RunRecord, root: Path | str = DEFAULT_ROOT) -> Path:
     Path
         The directory written to, containing ``record.json`` and ``arrays.npz``.
     """
-    directory = Path(root) / record.experiment / record.run_id
+    directory = record_dir(record, root)
     directory.mkdir(parents=True, exist_ok=True)
 
     payload = {
@@ -189,15 +199,30 @@ def save_record(record: RunRecord, root: Path | str = DEFAULT_ROOT) -> Path:
         "condition": to_jsonable(record.condition),
         "config": to_jsonable(record.config),
         "summary": to_jsonable(record.summary),
+        "policy": to_jsonable(record.policy),
         "array_keys": sorted(record.arrays),
     }
 
-    (directory / "record.json").write_text(json.dumps(payload, indent=2))
-
     if record.arrays:
-        np.savez_compressed(directory / "arrays.npz", **record.arrays)
+        _write_atomic(
+            directory / "arrays.npz",
+            lambda handle: np.savez_compressed(handle, **record.arrays),
+        )
+
+    _write_atomic(
+        directory / "record.json",
+        lambda handle: handle.write(json.dumps(payload, indent=2).encode()),
+    )
 
     return directory
+
+
+def _write_atomic(path: Path, write) -> None:
+    """Write through a temporary file"""
+    tmp = path.with_name(path.name + ".tmp")
+    with tmp.open("wb") as handle:
+        write(handle)
+    os.replace(tmp, path)
 
 
 def load_record(path: Path | str) -> RunRecord:
@@ -241,6 +266,7 @@ def load_record(path: Path | str) -> RunRecord:
         config=payload["config"],
         summary=payload["summary"],
         arrays=arrays,
+        policy=payload.get("policy") or {},
         schema_version=payload["schema_version"],
         timestamp=payload["timestamp"],
         run_id=payload["run_id"],
@@ -312,7 +338,7 @@ def append_index(record: RunRecord, root: Path | str = DEFAULT_ROOT) -> Path:
         "seed": record.seed,
         "condition": to_jsonable(record.condition),
         "J_final": to_jsonable(record.summary.get("J_final")),
-        "subopt_final": to_jsonable(record.summary.get("subopt_final")),
+        "training_subopt_final": to_jsonable(record.summary.get("training_subopt_final")),
         "total_env_steps": to_jsonable(record.summary.get("total_env_steps")),
         "total_time": to_jsonable(record.summary.get("total_time")),
         "test_cost_mean": to_jsonable(record.summary.get("test_cost_mean")),

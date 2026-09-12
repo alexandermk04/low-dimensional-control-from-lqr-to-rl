@@ -1,8 +1,8 @@
 """The test protocol and trajectories we later draw figures from.
 
 The singular protocol: ``settings.TEST_EPISODES`` rollouts of
-``settings.TEST_HORIZON`` steps, accumulated cost averaged over episodes and
-later over seeds. Noise is only attached here, if the experiment requires it.
+``settings.TEST_HORIZON`` steps. Every episode of every seed is pooled. 
+Noise is only added, if the experiment requires it.
 """
 
 from dataclasses import dataclass
@@ -10,7 +10,7 @@ from dataclasses import dataclass
 import numpy as np
 
 import settings
-from evaluation.metrics import LinearPolicy, Policy, monte_carlo_returns
+from evaluation.metrics import Policy, monte_carlo_returns
 from experiments.problem import Problem, build_plant
 from seeding import sub_rng
 from lqr_base.noise import LQRNoiseSettings
@@ -18,7 +18,6 @@ from lqr_base.simple_lqr import SimulationResult
 
 __all__ = [
     "TestResult",
-    "test_cost",
     "evaluate_policy",
     "figure_trajectory",
     "shared_initial_state",
@@ -62,11 +61,10 @@ def shared_initial_state(problem: Problem) -> np.ndarray:
 def evaluate_policy(
     problem: Problem,
     policy: Policy,
-    purpose: str,
     noise_settings: LQRNoiseSettings | None = None,
     episodes: int | None = None,
     horizon: int | None = None,
-) -> dict:
+) -> TestResult:
     """Score a policy under the test protocol.
 
     Parameters
@@ -75,8 +73,6 @@ def evaluate_policy(
         The experiment setting the policy was trained on.
     policy : Policy
         The policy mapping an observation to a control output.
-    purpose : str
-        Seeds the test plant.
     noise_settings : LQRNoiseSettings or None, optional
         Whether to apply noise to the plan
     episodes, horizon : int or None, optional
@@ -85,27 +81,22 @@ def evaluate_policy(
     Returns
     -------
     TestResult
-        Its ``summary`` carries ``test_cost_mean``, ``test_cost_std``,
-        ``test_cost_stderr``, ``test_episodes`` and ``test_horizon``; its
-        ``returns`` contains the per-episode costs.
+        Its ``summary`` carries ``test_cost_mean``, ``test_episodes`` and
+        ``test_horizon``; its ``returns`` contains the per-episode costs.
     """
     episodes = settings.TEST_EPISODES if episodes is None else episodes
     horizon = settings.TEST_HORIZON if horizon is None else horizon
 
-    scorer = build_plant(problem, f"test:{purpose}", noise_settings=noise_settings)
+    scorer = build_plant(problem, "test", noise_settings=noise_settings)
     scorer.reset()
 
     returns = monte_carlo_returns(
         scorer, policy, n_episodes=episodes, horizon=horizon
     )
 
-    std = float(np.std(returns, ddof=1)) if episodes > 1 else 0.0
-
     return TestResult(
         summary={
             "test_cost_mean": float(np.mean(returns)),
-            "test_cost_std": std,
-            "test_cost_stderr": std / np.sqrt(episodes) if episodes > 1 else 0.0,
             "test_episodes": episodes,
             "test_horizon": horizon,
         },
@@ -113,15 +104,9 @@ def evaluate_policy(
     )
 
 
-def test_cost(problem: Problem, K: np.ndarray, purpose: str, **kwargs) -> TestResult:
-    """:func:`evaluate_policy` for a gain matrix in the controller's space."""
-    return evaluate_policy(problem, LinearPolicy(K), purpose, **kwargs)
-
-
 def figure_trajectory(
     problem: Problem,
     policy: Policy,
-    purpose: str,
     noise_settings: LQRNoiseSettings | None = None,
     n_steps: int | None = None,
 ) -> SimulationResult:
@@ -133,8 +118,6 @@ def figure_trajectory(
         The experiment setting the policy was trained on.
     policy : Policy
         The controller to roll out.
-    purpose : str
-        Seeds the plant's noise stream.
     noise_settings : LQRNoiseSettings or None, optional
         Noise settings to the plant
     n_steps : int or None, optional
@@ -150,7 +133,7 @@ def figure_trajectory(
 
     plant = build_plant(
         problem,
-        f"figure:{purpose}",
+        "figure",
         noise_settings=noise_settings,
         resample_initial_state=False,
     )

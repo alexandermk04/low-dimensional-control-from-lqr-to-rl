@@ -13,10 +13,11 @@ from evaluation.metrics import spectral_radius
 from evaluation.probe import IterationRecord
 from evaluation.records import RunRecord
 from evaluation.serialization import to_jsonable
+from experiments.keep_running import keep_running
 from experiments.evaluate import evaluate_policy, figure_trajectory
 from experiments.problem import Problem, RunSpec, make_problem
 from experiments.registry import SolverResult, run_solver
-from experiments.store import store_record, write_manifest
+from experiments.store import completed_runs, run_key, store_record, write_manifest
 
 __all__ = ["train", "run_grid"]
 
@@ -46,11 +47,8 @@ def _summarize(
     records = result.records
 
     j_final = records[-1].cost if records else np.inf
-    finite = [r.cost for r in records if np.isfinite(r.cost)]
-    j_best = min(finite) if finite else np.inf
 
     one_pct = time_to_threshold(records, problem.j_star, 0.01)
-    ten_pct = time_to_threshold(records, problem.j_star, 0.10)
 
     K_eff = (
         result.scorer.effective_gain(result.K_final)
@@ -60,13 +58,8 @@ def _summarize(
     summary = {
         "J_star": float(problem.j_star),
         "J_final": float(j_final),
-        "J_best": float(j_best),
-        "subopt_final": suboptimality(j_final, problem.j_star),
-        "subopt_best": suboptimality(j_best, problem.j_star),
+        "training_subopt_final": suboptimality(j_final, problem.j_star),
         "steps_to_thresh_1pct": one_pct["env_steps"],
-        "steps_to_thresh_10pct": ten_pct["env_steps"],
-        "iters_to_thresh_1pct": one_pct["iterations"],
-        "seconds_to_thresh_1pct": one_pct["total_time"],
         "total_env_steps": int(records[-1].env_steps) if records else 0,
         "total_time": float(records[-1].total_time) if records else 0.0,
         "converged": converged(records),
@@ -75,8 +68,6 @@ def _summarize(
         ),
         "rank_final": result.complexity.get("rank"),
         "policy_complexity": result.complexity.get("n_params"),
-        "n_params_dense": result.complexity.get("n_params_dense"),
-        "horizon": settings.FIGURE_HORIZON,
         **test,
         **result.extra,
     }
@@ -99,7 +90,7 @@ def _config_dict(spec: RunSpec, problem: Problem, result: SolverResult) -> dict:
             "iterations": spec.iterations,
         },
         "evaluation": {
-            "horizon": settings.FIGURE_HORIZON,
+            "figure_horizon": settings.FIGURE_HORIZON,
             "probe_horizon": settings.PROBE_HORIZON,
             "action_limit": problem.action_limit,
             "test_episodes": settings.TEST_EPISODES,
@@ -129,14 +120,12 @@ def train(spec: RunSpec, test_kwargs: dict | None = None) -> RunRecord:
 
     result = run_solver(spec, problem)
 
-    test = evaluate_policy(
-        problem, result.policy, purpose=spec.solver, **(test_kwargs or {})
-    )
+    test = evaluate_policy(problem, result.policy, **(test_kwargs or {}))
 
     arrays = _curve_arrays(result.records)
     arrays["test_costs"] = test.returns
 
-    trajectory = figure_trajectory(problem, result.policy, purpose=spec.solver)
+    trajectory = figure_trajectory(problem, result.policy)
     arrays["x_traj"] = trajectory.x_traj
     arrays["u_traj"] = trajectory.u_traj
 
@@ -152,9 +141,14 @@ def train(spec: RunSpec, test_kwargs: dict | None = None) -> RunRecord:
         config=_config_dict(spec, problem, result),
         summary=_summarize(result, problem, spec, test.summary),
         arrays=arrays,
+        policy={"kind": "linear", "array": "K_final"}
+        if result.K_final is not None
+        else {},
+        save_policy=result.save_policy,
     )
 
 
+@keep_running()
 def run_grid(
     specs: list[RunSpec],
     experiment: str,
@@ -164,7 +158,7 @@ def run_grid(
 ) -> list[RunRecord]:
     """Train every spec, saving each record as soon as it is finished.
 
-    Allows for re-running with inbetween saves.
+    Can be resumed if interrupted during runs.
 
     Parameters
     ----------
@@ -182,6 +176,8 @@ def run_grid(
     Returns
     -------
     list[RunRecord]
+        The runs trained in this call. Runs skipped as already done are not
+        reloaded.
     """
     write_manifest(
         experiment,
@@ -189,11 +185,23 @@ def run_grid(
         grid=[{"solver": s.solver, "seed": s.seed, **s.condition} for s in specs],
     )
 
+    done = completed_runs(experiment)
+    pending = [
+        spec for spec in specs
+        if run_key(spec.solver, spec.seed, spec.condition) not in done
+    ]
+
     if verbose:
-        print(f"[{experiment}] {len(specs)} runs")
+        print(
+            f"[{experiment}] {len(specs)} runs, {len(specs) - len(pending)} "
+            f"already done, {len(pending)} to go"
+        )
 
     records = []
     for index, spec in enumerate(specs, start=1):
+        if run_key(spec.solver, spec.seed, spec.condition) in done:
+            continue
+
         started = time.perf_counter()
 
         record = train(spec, test_kwargs=test_kwargs)
@@ -205,7 +213,7 @@ def run_grid(
             cell = " ".join(f"{k}={v}" for k, v in spec.condition.items())
             print(
                 f"  [{index:>3d}/{len(specs)}] {spec.solver:12s} seed={spec.seed:<6d}"
-                f" {cell:24s} subopt={s['subopt_final']:+.4f}"
+                f" {cell:24s} subopt={s.get('training_subopt_final', float('nan')):+.4f}"
                 f" test={s['test_cost_mean']:.4e}"
                 f" rank={s['rank_final']} ({time.perf_counter() - started:.0f}s)"
             )

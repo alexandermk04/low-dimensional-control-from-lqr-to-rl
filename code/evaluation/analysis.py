@@ -119,7 +119,7 @@ def converged(
 
 
 def policy_complexity_linear(K: np.ndarray, tol: float | None = None) -> dict[str, int]:
-    """Free-parameter count of a linear policy, given its rank.
+    """Storage cost of a linear policy, given its rank.
 
     Parameters
     ----------
@@ -131,16 +131,17 @@ def policy_complexity_linear(K: np.ndarray, tol: float | None = None) -> dict[st
     Returns
     -------
     dict[str, int]
-        ``rank``, ``n_params`` (the cheaper of the factored and the dense
-        count) and ``n_params_dense`` (``q * p``, what an unstructured policy
-        costs).
+        ``rank``, ``n_params`` (equals ``min(q*p, r*(q + p + 1))``) 
+        and ``n_params_dense`` (``q * p``).
     """
     rank = int(np.linalg.matrix_rank(K) if tol is None else np.linalg.matrix_rank(K, tol=tol))
     q, p = K.shape
 
     return {
         "rank": rank,
-        "n_params": min(rank * (q + p), q * p),
+        # Storage space of SVD factors: U (q*r), the diagonal of Sigma (r) and
+        # V^T (r*p), so r*(q + p + 1)
+        "n_params": min(rank * (q + p + 1), q * p),
         "n_params_dense": q * p,
     }
 
