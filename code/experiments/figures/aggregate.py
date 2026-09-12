@@ -318,10 +318,6 @@ def _pooled_episodes(rows: list[dict], by, column: str) -> dict[tuple, dict]:
 def aggregate(rows: list[dict], by, metric: str) -> dict[tuple, dict]:
     """Aggregate one metric over all the runs of each experiment setting.
 
-    A metric listed in :data:`CELL_ARRAYS` is summarized over the pooled
-    test episodes of the cell - every episode of every seed as one sample.
-    Every other metric has one value per run, so it is summarized over runs.
-
     Parameters
     ----------
     rows : list[dict]
@@ -337,10 +333,8 @@ def aggregate(rows: list[dict], by, metric: str) -> dict[tuple, dict]:
     dict[tuple, dict]
         Per setting: ``n`` (values that went in), ``n_total`` (runs in this
         setting), ``episodes`` (whether ``n`` counts episodes rather than runs),
-        ``mean``, ``std``, ``median``, ``min``, ``max``, ``values``, and -
-        for a pooled metric - ``n_episodes``, ``n_diverged``,
-        ``n_reference_diverged`` and ``divergence_rate``. A setting where
-        nothing finite survived has ``n = 0`` and ``nan`` statistics.
+        ``mean``, ``std``, ``median``, ``min``, ``max``, ``values``, ``n_episodes``,
+        ``n_diverged``,``n_reference_diverged`` and ``divergence_rate``.
     """
     column = CELL_ARRAYS.get(metric)
     pooled = _pooled_episodes(rows, by, column) if column is not None else {}
