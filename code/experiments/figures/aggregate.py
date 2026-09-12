@@ -10,14 +10,11 @@ from evaluation.records import RunRecord
 
 __all__ = [
     "tidy",
-    "pooled_values",
-    "EPISODE_ARRAYS",
+    "with_suboptimality",
     "group",
-    "group_key",
     "aggregate",
     "curve_band",
     "latest_per_experiment",
-    "SOLVER_LABELS",
     "label_for",
 ]
 
@@ -35,8 +32,14 @@ SOLVER_LABELS = {
     "pve": "Position-Velocity Encoder",
 }
 
-# Summary metrics that also have a per-episode array behind them
+# Summary metrics whose per-episode array is stored with the run
 EPISODE_ARRAYS = {"test_cost_mean": "test_costs"}
+
+# Metrics whose per-episode array is computed from other rows
+DERIVED_ARRAYS = {"subopt": "subopt_episodes"}
+
+# Every metric that is summarized over pooled episodes
+CELL_ARRAYS = {**EPISODE_ARRAYS, **DERIVED_ARRAYS}
 
 # How a condition value is named, mapped to a more readable format.
 VALUE_LABELS = {
@@ -101,6 +104,125 @@ def tidy(records: list[RunRecord]) -> list[dict]:
     return rows
 
 
+def with_suboptimality(
+    rows: list[dict],
+    reference: str = "baseline",
+    by=("seed", "size", "channel", "level"),
+    metric: str = "test_cost_mean",
+) -> list[dict]:
+    """Score every row against the reference solver, episode by episode.
+
+    Adds the suboptimality :math:`S` of the thesis, the relative excess cost
+    over the reference solver under the *same* condition. Because the test
+    protocol draws the same initial states and the same noise realizations for
+    every solver of a cell, episode :math:`i` of one solver and episode
+    :math:`i` of the reference differ only in the controller. They are therefore
+    paired, and
+
+    .. math:: S_i = (J_i - J_i^{\\mathrm{base}}) / J_i^{\\mathrm{base}}
+
+    isolates what the choice of controller contributed, with the initial state
+    cancelling instead of inflating the spread. It may legitimately be negative,
+    since the nominal LQR gain is not optimal once the loop is noisy.
+
+    Two columns are written: ``subopt_episodes``, the paired values, which
+    :func:`aggregate` pools across the seeds of a cell, and ``subopt``, their
+    mean, for the rows that carry no episodes.
+
+    Episodes are censored in two distinct ways. Where the solver's own episode
+    diverged there is no cost to compare, and the pair is dropped and counted by
+    :func:`aggregate` as diverged. Where the *reference* episode diverged the
+    ratio has no meaning at all, so the pair is dropped and counted separately -
+    the reference is one fixed gain under one condition, so that censoring
+    applies to every solver of the cell alike and must not be read as a failure
+    of the solver being scored.
+
+    Parameters
+    ----------
+    rows : list[dict]
+        From :func:`tidy`.
+    reference : str, optional
+        Solver key of the reference. Defaults to ``"baseline"``.
+    by : tuple of str, optional
+        What identifies a cell, and hence what has to agree between a row and
+        its reference. Must not contain ``"solver"``.
+    metric : str, optional
+        Cost column to compare. Its per-episode array is what gets paired.
+
+    Returns
+    -------
+    list[dict]
+        The same rows. Where no reference was found under the same condition,
+        ``subopt`` is ``None`` and ``subopt_episodes`` is absent.
+    """
+    column = EPISODE_ARRAYS.get(metric)
+
+    # The reference episodes of each cell, kept unfiltered: which episode
+    # diverged has to stay visible, so the pairing below can tell a reference
+    # failure apart from a solver failure. Position within the array is the
+    # pairing key, so nothing may be dropped here.
+    references = {}
+    for row in rows:
+        if row.get("solver") != reference:
+            continue
+        episodes = None if column is None else row.get(column)
+        if episodes is not None:
+            references[group_key(row, by)] = np.asarray(episodes, dtype=float)
+
+    # Falls back to the scalar cost where a run carries no episodes at all.
+    scalar_references = {}
+    for row in rows:
+        if row.get("solver") != reference:
+            continue
+        key = group_key(row, by)
+        if key in references:
+            continue
+        cost = row.get(metric)
+        if cost is not None and np.isfinite(float(cost)):
+            scalar_references[key] = float(cost)
+
+    for row in rows:
+        key = group_key(row, by)
+        episodes = None if column is None else row.get(column)
+        base = references.get(key)
+
+        if episodes is not None and base is not None:
+            episodes = np.asarray(episodes, dtype=float)
+
+            if episodes.shape != base.shape:
+                raise ValueError(
+                    f"Run {row.get('run_id')!r} has {episodes.size} test "
+                    f"episodes but its {reference!r} reference has {base.size}. "
+                    f"Paired suboptimality needs the protocol to have been run "
+                    f"identically; re-run the cell rather than comparing these."
+                )
+
+            paired = np.full(episodes.shape, np.nan)
+            # Where the reference diverged or is zero the ratio is undefined,
+            # and nan keeps it out of every statistic downstream.
+            usable = np.isfinite(base) & (base != 0.0)
+            with np.errstate(invalid="ignore", divide="ignore"):
+                paired[usable] = (
+                    episodes[usable] - base[usable]
+                ) / base[usable]
+
+            row["subopt_episodes"] = paired
+            finite = paired[np.isfinite(paired)]
+            row["subopt"] = float(np.mean(finite)) if finite.size else None
+            continue
+
+        # No episodes on either side: fall back to the scalar costs.
+        cost = row.get(metric)
+        j_ref = scalar_references.get(key)
+        finite = cost is not None and np.isfinite(float(cost))
+        row["subopt"] = (
+            (float(cost) - j_ref) / j_ref if finite and j_ref else None
+        )
+        row.pop("subopt_episodes", None)
+
+    return rows
+
+
 def latest_per_experiment(records: list[RunRecord], keys=("solver", "seed")) -> list[RunRecord]:
     """Keep only the newest run of each experiment setting.
 
@@ -147,7 +269,7 @@ def _finite(values) -> np.ndarray:
     return array[np.isfinite(array)]
 
 
-def pooled_values(rows: list[dict], by, column: str) -> dict[tuple, np.ndarray]:
+def _pooled_episodes(rows: list[dict], by, column: str) -> dict[tuple, dict]:
     """Concatenate a per-episode array across the seeds of each cell.
 
     Parameters
@@ -161,8 +283,9 @@ def pooled_values(rows: list[dict], by, column: str) -> dict[tuple, np.ndarray]:
 
     Returns
     -------
-    dict[tuple, np.ndarray]
-        Every episode of every seed of the cell, finite entries only.
+    dict[tuple, dict]
+        Per cell: ``values`` (the finite episodes), ``n_episodes``,
+        ``n_diverged`` (non-finite values) and ``n_reference_diverged``.
     """
     out = {}
 
@@ -176,56 +299,82 @@ def pooled_values(rows: list[dict], by, column: str) -> dict[tuple, np.ndarray]:
             continue
 
         stacked = np.concatenate(arrays)
-        out[key] = stacked[np.isfinite(stacked)]
+        finite = np.isfinite(stacked)
+
+        # Count how many times the baseline solution diverged
+        reference_diverged = int(np.count_nonzero(np.isnan(stacked)))
+
+        out[key] = {
+            "values": stacked[finite],
+            "n_episodes": int(stacked.size),
+            "n_diverged": int(stacked.size - np.count_nonzero(finite))
+            - reference_diverged,
+            "n_reference_diverged": reference_diverged,
+        }
 
     return out
 
 
-def aggregate(rows: list[dict], by, metric: str, pool: bool | None = None) -> dict[tuple, dict]:
-    """Aggregate metrics over all the seeds for one experiment setting.
+def aggregate(rows: list[dict], by, metric: str) -> dict[tuple, dict]:
+    """Aggregate one metric over all the runs of each experiment setting.
+
+    A metric listed in :data:`CELL_ARRAYS` is summarized over the pooled
+    test episodes of the cell - every episode of every seed as one sample.
+    Every other metric has one value per run, so it is summarized over runs.
 
     Parameters
     ----------
     rows : list[dict]
         From :func:`tidy`.
     by : str or tuple of str
-        What defines an experiment setting, e.g. ``"solver"`` or ``("solver", "level")``.
+        What defines an experiment setting, e.g. ``"solver"`` or
+        ``("solver", "level")``.
     metric : str
-        Column to summarize, e.g. ``"subopt_final"``.
-    pool : bool or None, optional
-        Force the per-episode array on or off. ``None`` uses it whenever the
-        metric has one and the rows contain it.
+        Column to summarize, e.g. ``"subopt"``.
 
     Returns
     -------
     dict[tuple, dict]
-        Per setting: ``n`` (values that went in), ``n_total`` (runs in this setting),
-        ``pooled`` (whether ``n`` counts episodes rather than runs), ``mean``,
-        ``std``, ``median``, ``min``, ``max`` and ``values``. A setting where every
-        seed diverged has ``n = 0`` and ``nan`` statistics.
+        Per setting: ``n`` (values that went in), ``n_total`` (runs in this
+        setting), ``episodes`` (whether ``n`` counts episodes rather than runs),
+        ``mean``, ``std``, ``median``, ``min``, ``max``, ``values``, and -
+        for a pooled metric - ``n_episodes``, ``n_diverged``,
+        ``n_reference_diverged`` and ``divergence_rate``. A setting where
+        nothing finite survived has ``n = 0`` and ``nan`` statistics.
     """
-    episodes = {}
-    if pool is not False and metric in EPISODE_ARRAYS:
-        episodes = pooled_values(rows, by, EPISODE_ARRAYS[metric])
+    column = CELL_ARRAYS.get(metric)
+    pooled = _pooled_episodes(rows, by, column) if column is not None else {}
 
     out = {}
 
     for key, bucket in group(rows, by).items():
-        pooled = key in episodes
-        values = episodes[key] if pooled else _finite(
-            [row.get(metric) for row in bucket]
-        )
+        cell = pooled.get(key)
+
+        if cell is None:
+            values = _finite([row.get(metric) for row in bucket])
+            counts = {
+                "n_episodes": 0,
+                "n_diverged": 0,
+                "n_reference_diverged": 0,
+            }
+        else:
+            values = cell["values"]
+            counts = {k: v for k, v in cell.items() if k != "values"}
+
+        seen = counts["n_episodes"]
 
         out[key] = {
             "n": int(values.size),
             "n_total": len(bucket),
-            "pooled": pooled,
+            "episodes": cell is not None,
             "values": values,
             "mean": float(np.mean(values)) if values.size else float("nan"),
             "std": float(np.std(values, ddof=1)) if values.size > 1 else 0.0,
             "median": float(np.median(values)) if values.size else float("nan"),
             "min": float(np.min(values)) if values.size else float("nan"),
             "max": float(np.max(values)) if values.size else float("nan"),
+            **counts,
+            "divergence_rate": (counts["n_diverged"] / seen) if seen else 0.0,
         }
 
     return out

@@ -10,18 +10,19 @@ from experiments.figures.style import table_dir
 __all__ = [
     "metric_table",
     "write_table",
-    "DEFAULT_METRICS",
-    "METRIC_ROWS",
-    "POOLED_MARKER",
-    "CENSUS_ROWS",
-    "usable",
 ]
 
 # Counts for system identification tables
 CENSUS_ROWS = ("Identified", "Stable")
 
-# Marks a row whose statistics are over test episodes rather than over seeds.
-POOLED_MARKER = r"$^{\dagger}$"
+# Marks a row whose statistics are over pooled test episodes rather than runs.
+EPISODE_MARKER = r"$^{\dagger}$"
+
+# Label of the row with the divergence rate of the metric above it.
+DIVERGED_ROW = r"\quad diverged"
+
+# Label of the row counting episodes for which the baseline diverged
+UNPAIRED_ROW = r"\quad no reference"
 
 # Appended to the caption of a table that carries the census rows.
 CENSUS_NOTE = (
@@ -35,19 +36,17 @@ CENSUS_NOTE_STABLE_ONLY = (
 # Row label and formatting per metric.
 METRIC_ROWS = {
     "J_final": (r"True cost $J$", "{:.4g}"),
-    "J_best": (r"Best true cost $J$", "{:.4g}"),
-    "subopt_final": (r"Suboptimality $(J-J^*)/J^*$", "{:.3f}"),
-    "subopt_best": (r"Best suboptimality", "{:.3f}"),
+    "training_subopt_final": (r"Training suboptimality $(J-J^*)/J^*$", "{:.3f}"),
     "test_cost_mean": (r"Test cost", "{:.4g}"),
+    "subopt": (r"Suboptimality $S$", "{:+.3f}"),
     "policy_complexity": (r"Policy parameters", "{:.0f}"),
-    "n_params_dense": (r"Dense parameters", "{:.0f}"),
     "rank_final": (r"Gain rank", "{:.1f}"),
     "total_env_steps": (r"Environment steps", "{:.3g}"),
     "total_time": (r"Wall time (s)", "{:.1f}"),
     "spectral_radius_final": (r"Spectral radius", "{:.4f}"),
 }
 
-DEFAULT_METRICS = ("J_final", "subopt_final", "test_cost_mean")
+DEFAULT_METRICS = ("J_final", "training_subopt_final", "test_cost_mean")
 
 
 def _escape(text: str) -> str:
@@ -62,13 +61,23 @@ def _escape(text: str) -> str:
 
 def usable(row: dict) -> bool:
     """Whether a run produced a usable controller.
+
+    Depends on ``J_final`` where a run has one.
     """
     if row.get("identification_failed"):
         return False
 
     cost = row.get("J_final")
+    if cost is not None:
+        return bool(np.isfinite(float(cost)))
 
-    return cost is not None and np.isfinite(float(cost))
+    episodes = row.get("test_costs")
+    if episodes is not None:
+        return bool(np.any(np.isfinite(np.asarray(episodes, dtype=float))))
+
+    cost = row.get("test_cost_mean")
+
+    return cost is not None and bool(np.isfinite(float(cost)))
 
 
 def identifies(rows: list[dict]) -> bool:
@@ -114,7 +123,7 @@ def _math(value: float, fmt: str) -> str:
     return f"{mantissa} \\times 10^{{{power}}}"
 
 
-def _provenance(stats: dict, pooled_metrics: list, show_spread: bool) -> str:
+def _provenance(stats: dict, episode_metrics: list, show_spread: bool) -> str:
     """Sentence stating what the numbers were taken over.
     """
     if not show_spread:
@@ -125,27 +134,28 @@ def _provenance(stats: dict, pooled_metrics: list, show_spread: bool) -> str:
         return ""
 
     runs = max(cell["n_total"] for cell in cells)
-    per_seed = [m for m in stats if m not in pooled_metrics]
+    per_run_metrics = [m for m in stats if m not in episode_metrics]
 
-    if not pooled_metrics:
-        return f" Mean $\\pm$ standard deviation over {runs} seeds."
+    if not episode_metrics:
+        return f" Mean $\\pm$ standard deviation over {runs} runs."
 
+    # The total episodes seen
     episodes = max(
-        (cell["n"] for metric in pooled_metrics
-         for cell in stats[metric].values() if cell["pooled"]),
+        (cell["n_episodes"] for metric in episode_metrics
+         for cell in stats[metric].values() if cell["episodes"]),
         default=0,
     )
-    per_run = episodes // runs if runs else episodes
+    per_seed = episodes // runs if runs else episodes
 
-    pooled_clause = (
-        f" {POOLED_MARKER} mean $\\pm$ standard deviation over all {episodes} test "
-        f"episodes ({per_run} per seed, {runs} seeds)"
+    clause = (
+        f" {EPISODE_MARKER} mean $\\pm$ standard deviation over all {episodes} "
+        f"test episodes ({per_seed} per seed, {runs} seeds) pooled"
     )
 
-    if not per_seed:
-        return pooled_clause + "."
+    if not per_run_metrics:
+        return clause + "."
 
-    return pooled_clause + f"; every other row over the {runs} seeds."
+    return clause + f"; every other row over the {runs} runs."
 
 
 def _fit(tabular: str) -> str:
@@ -162,7 +172,7 @@ def _cell(stats: dict, fmt: str, show_spread: bool) -> str:
     """One table cell, containing its mean, optionally with its spread.
     """
     if stats is None or stats["n"] == 0:
-        # A cell where every seed diverged is a result, not a gap.
+        # A cell where every seed diverged
         return r"\multicolumn{1}{c}{--}"
 
     mean = _math(stats["mean"], fmt)
@@ -170,7 +180,44 @@ def _cell(stats: dict, fmt: str, show_spread: bool) -> str:
     if not show_spread or stats["n"] < 2:
         return f"${mean}$"
 
-    return f"${mean} \\pm {_math(stats['std'], fmt)}$"
+    return f"${mean} \\pm {_math(stats['std'], fmt.replace('+', ''))}$"
+
+
+def _share(count: int, total: int) -> str:
+    """A share of episodes, rounded to whole percent
+    """
+    if not total:
+        return r"\multicolumn{1}{c}{--}"
+
+    if count == 0:
+        return r"$0\,\%$"
+
+    percent = 100.0 * count / total
+
+    # Use less than one instead of 0
+    if f"{percent:.0f}" == "0":
+        return r"$<1\,\%$"
+
+    return f"${percent:.0f}\\,\\%$"
+
+
+def _diverged(stats: dict) -> str:
+    """The share of episodes that diverged."""
+    if stats is None:
+        return r"\multicolumn{1}{c}{--}"
+
+    return _share(stats.get("n_diverged", 0), stats.get("n_episodes", 0))
+
+
+def _unpaired(stats: dict) -> str:
+    """The share of episodes for which reference diverged.
+    """
+    if stats is None:
+        return r"\multicolumn{1}{c}{--}"
+
+    return _share(
+        stats.get("n_reference_diverged", 0), stats.get("n_episodes", 0)
+    )
 
 
 def metric_table(
@@ -183,7 +230,6 @@ def metric_table(
     show_spread: bool = True,
     column_header: str | None = None,
     fit: bool = True,
-    pool: bool | None = None,
     census: bool | None = None,
 ) -> str:
     """Render metrics-by-conditions as a table.
@@ -202,15 +248,11 @@ def metric_table(
         Wrap the tabular in a ``table`` float with this caption and
         ``\\label``.
     show_spread : bool, optional
-        Append ``\\pm`` the standard deviation across seeds.
+        Append ``\\pm`` the standard deviation across the sample.
     column_header : str or None, optional
         Text over the metric column, e.g. ``"Solver"``.
     fit : bool, optional
         Whether to wrap the tabular in the shrink-to-fit box of :func:`_fit`.
-    pool : bool or None, optional
-        Passed to :func:`~experiments.figures.aggregate.aggregate`. ``None``
-        summarizes the test cost over test episodes and everything else over
-        seeds.
     census : bool or None, optional
         Print how many seeds were identified and how many stayed stable, above
         the metrics.
@@ -230,7 +272,7 @@ def metric_table(
     kept = [row for row in rows if usable(row)]
 
     stats = {
-        metric: aggregate(kept, column_by, metric, pool=pool) for metric in metrics
+        metric: aggregate(kept, column_by, metric) for metric in metrics
     }
 
     keys = list(counts)
@@ -265,17 +307,34 @@ def metric_table(
         ) + r" \\")
         lines.append(r"\midrule")
 
-    pooled_metrics = []
+    episode_metrics = []
 
     for metric in metrics:
         row_label, fmt = METRIC_ROWS.get(metric, (_escape(metric), "{:.4g}"))
 
-        if any(cell["pooled"] for cell in stats[metric].values()):
-            pooled_metrics.append(metric)
-            row_label += POOLED_MARKER
+        if any(cell["episodes"] for cell in stats[metric].values()):
+            episode_metrics.append(metric)
+            row_label += EPISODE_MARKER
 
         cells = [_cell(stats[metric].get(key), fmt, show_spread) for key in keys]
         lines.append(" & ".join([row_label] + cells) + r" \\")
+
+        # Divergence rate of the solver
+        if any(
+            cell.get("n_diverged", 0) for cell in stats[metric].values()
+        ):
+            lines.append(" & ".join(
+                [DIVERGED_ROW] + [_diverged(stats[metric].get(key)) for key in keys]
+            ) + r" \\")
+
+        # Baseline divergence report
+        if any(
+            cell.get("n_reference_diverged", 0)
+            for cell in stats[metric].values()
+        ):
+            lines.append(" & ".join(
+                [UNPAIRED_ROW] + [_unpaired(stats[metric].get(key)) for key in keys]
+            ) + r" \\")
 
     lines += [r"\bottomrule", r"\end{tabular}"]
 
@@ -290,7 +349,7 @@ def metric_table(
     # Escaped first, then the provenance is appended.
     full_caption = (
         _escape(caption)
-        + _provenance(stats, pooled_metrics, show_spread)
+        + _provenance(stats, episode_metrics, show_spread)
         + ((CENSUS_NOTE if with_identification else CENSUS_NOTE_STABLE_ONLY)
            if show_census else "")
     )

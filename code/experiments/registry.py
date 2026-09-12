@@ -55,6 +55,9 @@ class SolverResult:
         The plant the learning curve was scored against.
     extra : dict
         Solver-specific summary entries, e.g. ``action_clips``.
+    save_policy : callable or None
+        Given the run's directory, writes what is needed to reload the
+        policy later.
     """
 
     K_final: np.ndarray | None
@@ -64,6 +67,7 @@ class SolverResult:
     solver_settings: Any
     scorer: Any
     extra: dict = field(default_factory=dict)
+    save_policy: Any = None
 
 
 def _train_and_score_plants(spec: RunSpec, problem: Problem):
@@ -416,7 +420,23 @@ def _run_rl(spec: RunSpec, problem: Problem) -> SolverResult:
         solver_settings=solver_settings,
         scorer=scorer,
         extra=extra,
+        save_policy=None if linear else _sb3_saver(model, solver_settings),
     )
+
+
+def _sb3_saver(model, solver_settings) -> Callable[[Any], dict]:
+    """A saver writing one stable-baselines3 model beside its record.
+    """
+    def save(directory) -> dict:
+        model.save(directory / "policy.zip")
+        return {
+            "kind": "sb3",
+            "algo": solver_settings.algo,
+            "file": "policy.zip",
+            "deterministic": True,
+        }
+
+    return save
 
 
 def _missing(name: str, what: str) -> Callable[[RunSpec, Problem], SolverResult]:

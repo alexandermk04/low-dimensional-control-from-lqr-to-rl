@@ -20,14 +20,13 @@ __all__ = [
     "learning_bands",
     "trajectory_overlay",
     "complexity_bars",
-    "METRIC_LABELS",
 ]
 
 METRIC_LABELS = {
     "J_final": r"True cost $J$",
-    "J_best": r"Best true cost $J$",
-    "subopt_final": r"Suboptimality $(J - J^*)/J^*$",
-    "subopt_best": r"Best suboptimality $(J - J^*)/J^*$",
+    "training_subopt_final": r"Training suboptimality $(J - J^*)/J^*$",
+    "subopt": r"Suboptimality $S$",
+    "subopt_episodes": r"Suboptimality $S$",
     "test_cost_mean": r"Accumulated test cost",
     "test_costs": r"Accumulated test cost",
     "policy_complexity": r"Policy parameters",
@@ -56,10 +55,9 @@ def _tick_label(key: tuple) -> str:
 def box_metric(
     rows: list[dict],
     group_by,
-    metric: str = "subopt_final",
+    metric: str = "training_subopt_final",
     order=None,
     log: bool = True,
-    pool: bool | None = None,
     ax=None,
     width: float = 1.0,
     aspect: float = 0.55,
@@ -77,11 +75,8 @@ def box_metric(
     order : sequence or None, optional
         Settings order along the x-axis.
     log : bool, optional
-        Log-scale the y-axis.
-    pool : bool or None, optional
-        Passed to :func:`~experiments.figures.aggregate.aggregate` to force the
-        per-episode array on or off. ``None`` uses it whenever the metric has
-        one and the records carry it.
+        Log-scale the y-axis. Must be ``False`` for a non-strictly
+        positive metric
     ax : matplotlib.axes.Axes or None, optional
     width, aspect : float, optional
         Figure size, as a fraction of the text width, when ``ax`` is created.
@@ -90,14 +85,14 @@ def box_metric(
     -------
     matplotlib.axes.Axes
     """
-    stats = aggregate(rows, group_by, metric, pool=pool)
+    stats = aggregate(rows, group_by, metric)
     keys = _ordered_keys(stats, order)
 
     if ax is None:
         _, ax = new_figure(width, aspect)
 
     positions, data, labels, notes = [], [], [], []
-    pooled = any(stats[key]["pooled"] for key in keys)
+    per_episode = any(stats[key]["episodes"] for key in keys)
 
     for position, key in enumerate(keys, start=1):
         cell = stats[key]
@@ -106,16 +101,26 @@ def box_metric(
         values = cell["values"]
 
         if values.size == 0:
-            # Every seed produced an infinite or missing value.
-            notes.append((position, f"all {cell['n_total']} diverged"))
+            # All diverged.
+            notes.append((
+                position,
+                f"all {cell['n_episodes'] or cell['n_total']} diverged",
+            ))
             continue
 
         if log:
-            # A log axis cannot show a non-positive value
+            # A log axis cannot show a non-positive value. 
             positive = values[values > 0]
             if positive.size == 0:
-                notes.append((position, f"$= {np.median(values):.3g}$"))
+                raise ValueError(
+                    f"All values for {key} are non-positive, cannot log-scale."
+                )
                 continue
+            dropped = values.size - positive.size
+            if dropped:
+                raise ValueError(
+                    f"Non-positive values for {key} detected, cannot log-scale."
+                )
             values = positive
 
         positions.append(position)
@@ -138,8 +143,7 @@ def box_metric(
             box.set_alpha(0.45)
             box.set_linewidth(0.8)
 
-        # Only show points if only seeds are points
-        if not pooled:
+        if not per_episode:
             jitter_rng = np.random.default_rng(0)
             for position, values in zip(positions, data):
                 jitter = (jitter_rng.random(values.size) - 0.5) * 0.18
@@ -244,7 +248,7 @@ def learning_bands(
         "iteration": "Solver iteration",
     }.get(x, x))
     ax.set_ylabel(
-        r"Suboptimality $(J - J^*)/J^*$" if normalize else r"True cost $J$"
+        r"Training suboptimality $(J - J^*)/J^*$" if normalize else r"True cost $J$"
     )
     ax.legend(frameon=False)
 
@@ -346,8 +350,8 @@ def complexity_bars(
         From :func:`~experiments.figures.aggregate.tidy`.
     group_by : str or tuple of str
     metric : str, optional
-        ``"policy_complexity"`` (the low-rank parameter count) or
-        ``"n_params_dense"``.
+        ``"policy_complexity"``, the policy size
+        :math:`\\min\\{mn,\\, r(m + n + 1)\\}`. 
     order : sequence or None, optional
     ax : matplotlib.axes.Axes or None, optional
     width, aspect : float, optional

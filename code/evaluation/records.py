@@ -116,15 +116,13 @@ class RunRecord:
     arrays : dict[str, np.ndarray]
         Learning-curve columns, trajectories and gains.
     policy : dict
-        How to rebuild the trained controller, e.g.
+        How to load the trained controller, e.g.
         ``{"kind": "linear", "array": "K_final"}`` or
         ``{"kind": "sb3", "algo": "ppo", "file": "policy.zip"}``. Read by
         :func:`~experiments.policies.load_policy`; empty for a record that
         stores no reloadable policy.
     save_policy : callable or None
         Writes the policy into the run directory and returns its descriptor.
-        Carried only until the record is stored, never serialized - it holds a
-        reference to a live model, which must not outlive the write.
     schema_version : str
         Version of this layout.
     timestamp : str
@@ -164,9 +162,6 @@ class RunRecord:
 
 def record_dir(record: RunRecord, root: Path | str = DEFAULT_ROOT) -> Path:
     """The directory one record lives in.
-
-    Shared with the policy side-car, so a saver and a loader can never disagree
-    about where the file went.
     """
     return Path(root) / record.experiment / record.run_id
 
