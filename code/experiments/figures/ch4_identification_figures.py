@@ -36,8 +36,8 @@ def _cell_value(rows: list[dict]) -> tuple[float, int, int, int]:
     no_id = len(rows) - len(identified)
 
     values = [
-        r["subopt_final"] for r in identified
-        if r.get("subopt_final") is not None and np.isfinite(r["subopt_final"])
+        r["training_subopt_final"] for r in identified
+        if r.get("training_subopt_final") is not None and np.isfinite(r["training_subopt_final"])
     ]
     unstable = len(identified) - len(values)
 
@@ -110,7 +110,7 @@ def identification_map(rows: list[dict], size: str):
 
     colormap = matplotlib.colormaps["viridis_r"].with_extremes(bad=NO_DATA_COLOR)
     image = ax.imshow(grid, aspect="auto", origin="lower", cmap=colormap)
-    figure.colorbar(image, ax=ax, label=r"$\log_{10}$ suboptimality")
+    figure.colorbar(image, ax=ax, label=r"$\log_{10}$ training suboptimality")
 
     for (row_index, column), note in notes.items():
         value = grid[row_index, column]
@@ -171,7 +171,7 @@ def render_length_sweep():
                 write_table(
                     metric_table(
                         at_horizon, "T",
-                        metrics=("subopt_final", "test_cost_mean", "total_time"),
+                        metrics=("training_subopt_final", "test_cost_mean", "total_time"),
                         column_order=settings.IDENTIFICATION_LENGTHS,
                         column_header=r"Trajectory length $T$",
                         caption=(

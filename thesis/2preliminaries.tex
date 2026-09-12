@@ -796,34 +796,46 @@ The resulting loop \eqref{eq:noisy_loop} under $c$ thus accumulates
 
 \begin{equation}
     \label{eq:empirical_return}
-    J_T^{(i)}(K; c)
+    J_T^{(i,s)}(K; c)
     = \sum_{k=0}^{T-1}
-      \left( x_k\T Q\, x_k + \tilde{u}_k\T R\, \tilde{u}_k \right) .
+      \left( x_k\T Q\, x_k + \tilde{u}_k\T R\, \tilde{u}_k \right) ,
 \end{equation}
 
-Averaging \eqref{eq:empirical_return} over the $N$ episodes of one seed $s$ and
-then over the $S$ seeds gives our cost estimate
+where $s$ indexes the seed the run was trained under and $i$ the episode
+within it.
+
+Writing $\mathcal{F}$ for the pairs $(s,i)$ whose episode stayed finite,
+the cost estimate becomes
 
 \begin{equation}
     \label{eq:empirical_cost}
-    \hat{J}^{s}_T(K; c) = \frac{1}{N} \sum_{i=1}^{N} J^{(i)}_T(K; c) ,
+    \hat{J}_T(K; c)
+    = \frac{1}{\lvert \mathcal{F} \rvert}
+      \sum_{(s,i) \in \mathcal{F}} J^{(i,s)}_T(K; c) ,
     \qquad
-    \hat{J}_T(K; c) = \frac{1}{S} \sum_{s=1}^{S} \hat{J}^{s}_T(K; c) ,
+    \mathcal{F} = \left\{ (s,i) \;:\; J^{(i,s)}_T(K; c) < \infty \right\} .
 \end{equation}
 
 Our final metric is the relative excess of the cost produced by a
 trained controller over the cost of the optimal controller $K^{*}$
-under a given condition:
+under the same condition. It is taken per \emph{per episode}, meaning
+an episode $(s,i)$ of a trained controller and episode $(s,i)$ of the baseline
+are compared here. Both start from the same $x_0$ and are affected by 
+the same noise. Overall this yields:
 
 \begin{equation}
     \label{eq:suboptimality}
-    S(K; c)
-        = \frac{\hat{J}_T(K; c) - \hat{J}_T(K^{*}; c)}
-                {\hat{J}_T(K^{*}; c)} .
+    S^{(i,s)}(K; c)
+        = \frac{J^{(i,s)}_T(K; c) - J^{(i,s)}_T(K^{*}; c)}
+                {J^{(i,s)}_T(K^{*}; c)} ,
+    \qquad
+    \hat{S}(K; c)
+        = \frac{1}{\lvert \mathcal{F} \rvert}
+          \sum_{(s,i) \in \mathcal{F}} S^{(i,s)}(K; c) ,
 \end{equation}
 
 where $S = 0$ means that the trained controller performed as well
-as our baseline and $S = 0.1$ that it did ten percent worse. 
+as our baseline and $S = 0.1$ that it did ten percent worse.
 
 Note that this metric can indeed be negative. $K^{*}$ is only optimal for
 the nominal problem \cref{sec:lqr}, which has exact state feedback on
@@ -837,7 +849,7 @@ For all evaluation throughout this thesis, we will use a standardized
 approach, so that only the trained controller varies between different runs.
 
 \begin{itemize}
-    \item \textbf{Seeds.} $S = 10$ fixed seeds, drawn once randomly.
+    \item \textbf{Seeds.} $M = 10$ fixed seeds, drawn once randomly.
     \item \textbf{Episodes.} $N = 100$ rollouts per seed, each from an
           independently sampled $x_0 \sim \mathcal{D}$.
     \item \textbf{Horizon.} $T = 2000$ steps at $h = 0.01$, so a total
@@ -855,10 +867,14 @@ and report them separately as the divergence rate:
 
 \begin{equation}
     \label{eq:divergence_rate}
-    D(K; c) \coloneqq \frac{1}{S N}
-    \left| \left\{ (s, i) \;:\; J^{(i)}_T(K; c) = \infty \ \text{or}\
-    J^{(i)}_T(K; c) > J_{\max} \right\} \right| .
+    D(K; c) \coloneqq \frac{1}{M N}
+    \left| \left\{ (s, i) \;:\; J^{(i,s)}_T(K; c) = \infty \ \right\} \right| .
 \end{equation}
+
+An individual episode can be missing from the result due to another reason. 
+Where the \emph{baseline} evaluation of episode $(s,i)$ diverged,
+$S^{(i,s)}$ has no value at all, since \eqref{eq:suboptimality} would divide 
+by an infinity. Those episodes are excluded from $\hat{S}$ and named seperately.
 
 \subsection{Noise Intensity}
 \label{subsec:noise_strength}
