@@ -19,6 +19,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from basetypes import StateSpaceModel
+from lqr_base.inflated_lqr import LQRInflated, LQRInflatedSettings
 from lqr_base.simple_lqr import LQRBase, LQRDiscrete, LQRDiscreteSettings
 
 __all__ = [
@@ -29,6 +30,7 @@ __all__ = [
     "collect_identification_data",
     "identify",
     "to_plant",
+    "to_inflated_plant",
 ]
 
 
@@ -61,6 +63,10 @@ class IdentificationSettings:
         Skip the order search and identify at this order.
     input_rank_tol : float, optional
         Relative singular-value cutoff deciding ``m_hat = rank(B)``.
+    reduce_input : bool, optional
+        Whether to collapse the ``q`` controller inputs onto ``m_hat``
+        inputs. Defaults to ``True``. Is needed `True`` for the
+        Riccatti equation, to be able to estimate R correctly.
     """
 
     trajectory_length: int
@@ -71,6 +77,7 @@ class IdentificationSettings:
     order_threshold: float = 1e-3
     fixed_order: int | None = None
     input_rank_tol: float = 1e-3
+    reduce_input: bool = True
 
 
 @dataclass
@@ -269,15 +276,42 @@ def effective_max_order(settings: IdentificationSettings) -> int:
     return min(int(settings.max_order), int(settings.horizon))
 
 
-def _symmetric_basis(dim: int) -> list[np.ndarray]:
-    """Basis of the symmetric ``dim x dim`` matrices, as used by the cost fit."""
-    basis = []
-    for i in range(dim):
-        for j in range(i, dim):
-            element = np.zeros((dim, dim))
-            element[i, j] = element[j, i] = 1.0
-            basis.append(element)
-    return basis
+def _upper_indices(dim: int) -> tuple[np.ndarray, np.ndarray]:
+    """Row and column indices of the upper triangle, including the diagonal.
+    """
+    return np.triu_indices(dim)
+
+
+def _quadratic_design(M: np.ndarray) -> np.ndarray:
+    """Columns of the design matrix contributed by one signal.
+
+    Parameters
+    ----------
+    M : np.ndarray
+        Signal of shape ``(dim, T)``.
+
+    Returns
+    -------
+    np.ndarray
+        Of shape ``(T, dim * (dim + 1) / 2)``.
+    """
+    rows, cols = _upper_indices(M.shape[0])
+
+    products = M[rows] * M[cols]
+    products[rows != cols] *= 2.0
+
+    return products.T
+
+
+def _symmetric_from_coefficients(theta: np.ndarray, dim: int) -> np.ndarray:
+    """Rebuild a symmetric matrix from its upper-triangle coefficients."""
+    rows, cols = _upper_indices(dim)
+
+    M = np.zeros((dim, dim))
+    M[rows, cols] = theta
+    M[cols, rows] = theta
+
+    return M
 
 
 def _project_psd(M: np.ndarray) -> np.ndarray:
@@ -294,21 +328,19 @@ def _fit_cost_weights(Z, W, costs):
     tuple[np.ndarray, np.ndarray, float]
         ``(Q, R, relative_residual)``, both weights projected onto the PSD cone.
     """
-    state_basis = _symmetric_basis(Z.shape[0])
-    action_basis = _symmetric_basis(W.shape[0])
+    state_design = _quadratic_design(Z)
+    action_design = _quadratic_design(W)
 
-    columns = [np.einsum("it,ij,jt->t", Z, element, Z) for element in state_basis]
-    columns += [np.einsum("it,ij,jt->t", W, element, W) for element in action_basis]
-    design = np.asarray(columns).T
+    design = np.hstack([state_design, action_design])
 
     theta, *_ = np.linalg.lstsq(design, costs, rcond=None)
 
     scale = np.linalg.norm(costs)
     residual = float(np.linalg.norm(design @ theta - costs) / scale) if scale > 0 else 0.0
 
-    split = len(state_basis)
-    Q = sum(c * element for c, element in zip(theta[:split], state_basis))
-    R = sum(c * element for c, element in zip(theta[split:], action_basis))
+    split = state_design.shape[1]
+    Q = _symmetric_from_coefficients(theta[:split], Z.shape[0])
+    R = _symmetric_from_coefficients(theta[split:], W.shape[0])
 
     return _project_psd(Q), _project_psd(R), residual
 
@@ -362,7 +394,11 @@ def identify(
             "IdentificationSettings.trajectory_length."
         )
 
-    B, encode, m_hat = _reduce_input_space(B, settings.input_rank_tol)
+    if settings.reduce_input:
+        B, encode, m_hat = _reduce_input_space(B, settings.input_rank_tol)
+    else:
+        encode = np.eye(B.shape[1])
+        m_hat = B.shape[1]
 
     # C is orthonormal after normalization, so its transpose is its
     # pseudo-inverse
@@ -426,4 +462,54 @@ def to_plant(model: IdentifiedModel, seed_seq: np.random.SeedSequence) -> LQRDis
         noise_settings=None,
         seed_seq=seed_seq,
         dt=model.dt,
+    ))
+
+
+class _IdentifiedInflatedLQR(LQRInflated):
+    """An identified model in the controller's inflated space.
+
+    Ensures identified matrices are not discretized again.
+    """
+
+    def __init__(self, settings: LQRInflatedSettings):
+        LQRBase.__init__(self, settings)
+        self.dt = settings.dt
+
+        self.U_1 = settings.U_1
+        self.U_2 = settings.U_2
+        self.validate_dimensions()
+
+
+def to_inflated_plant(
+    model: IdentifiedModel, seed_seq: np.random.SeedSequence
+) -> LQRInflated:
+    """Create an inflated plant from an identified model.
+
+    Parameters
+    ----------
+    model : IdentifiedModel
+        The identified system.
+    seed_seq : np.random.SeedSequence
+        Seeds the surrogate's initial state.
+
+    Returns
+    -------
+    LQRInflated
+        A surrogate on ``(A, B, Q, R)`` of the identified model, whose gains
+        live in the controller's ``(q, p)`` space.
+    """
+    # Initial state covariance equal to the identity, as in ``to_plant``.
+    box = np.sqrt(3.0) * np.ones(model.n_hat)
+
+    return _IdentifiedInflatedLQR(settings=LQRInflatedSettings(
+        model=StateSpaceModel(A=model.A, B=model.B),
+        Q=model.Q,
+        R=model.R,
+        max_initial_state=box,
+        resample_initial_state=True,
+        noise_settings=None,
+        seed_seq=seed_seq,
+        dt=model.dt,
+        U_1=model.decode.T,
+        U_2=model.encode.T,
     ))
