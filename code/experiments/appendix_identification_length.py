@@ -17,6 +17,17 @@ import settings
 from experiments.problem import RunSpec
 from experiments.runner import run_grid
 
+def _sizes():
+    """The (name, (p, q)) pairs chapter 4 sweeps.
+
+    ``settings.INFLATION_SIZES`` also carries chapter 5's ``"pixel"`` cell,
+    which no identification or rollout solver can reach; see
+    ``settings.CH4_INFLATION_SIZES``.
+    """
+    return [(name, settings.INFLATION_SIZES[name])
+            for name in settings.CH4_INFLATION_SIZES]
+
+
 EXPERIMENT = "ch4_identification_length"
 
 
@@ -38,7 +49,7 @@ def build_specs() -> list[RunSpec]:
             condition={"size": name, "T": trajectory_length, "hankel": horizon},
         )
         for solver in settings.CH4_IDENTIFICATION_SOLVERS
-        for name, inflation in settings.INFLATION_SIZES.items()
+        for name, inflation in _sizes()
         for trajectory_length in settings.IDENTIFICATION_LENGTHS
         for horizon in settings.IDENTIFICATION_HORIZONS
         for seed in settings.SEEDS
@@ -53,7 +64,7 @@ def main():
             "solvers": settings.CH4_IDENTIFICATION_SOLVERS,
             "identification_lengths": settings.IDENTIFICATION_LENGTHS,
             "identification_horizons": settings.IDENTIFICATION_HORIZONS,
-            "inflation_sizes": settings.INFLATION_SIZES,
+            "inflation_sizes": dict(_sizes()),
             "iterations": settings.SOLVER_ITERATIONS,
             "hyperparams": {
                 s: settings.SOLVER_HYPERPARAMS.get(s, {})
