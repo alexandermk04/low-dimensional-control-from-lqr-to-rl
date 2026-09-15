@@ -10,7 +10,7 @@ Doesn't check all the inflation sizes, due to runtime constraints.
 
 Run with::
 
-    python -m experiments.ch4_sample_size
+    python -m experiments.appendix_sample_size
 """
 
 import settings
@@ -28,7 +28,7 @@ def _sizes():
             for name in settings.CH4_INFLATION_SIZES]
 
 
-EXPERIMENT = "ch4_sample_size"
+EXPERIMENT = "appendix_sample_size"
 
 
 def build_specs() -> list[RunSpec]:

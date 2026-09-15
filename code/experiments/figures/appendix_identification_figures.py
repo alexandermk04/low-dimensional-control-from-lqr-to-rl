@@ -1,10 +1,10 @@
-"""Figures and tables for chapter 4's identification length experiment.
+"""Figures and tables for the appendix identification length experiment.
 
-Reads ``experiment_results/ch4_identification_length``.
+Reads ``experiment_results/appendix_identification_length``.
 
 Run with::
 
-    python -m experiments.figures.ch4_identification_figures
+    python -m experiments.figures.appendix_identification_figures
 """
 
 import matplotlib
@@ -16,7 +16,7 @@ from experiments.figures.style import new_figure, save
 from experiments.figures.tables import metric_table, write_table
 from experiments.store import load_experiment
 
-LENGTH_EXPERIMENT = "ch4_identification_length"
+LENGTH_EXPERIMENT = "appendix_identification_length"
 
 # Suboptimality below this counts as "system identified exactly"
 EXACT = 100 * np.finfo(float).eps
@@ -157,7 +157,7 @@ def render_length_sweep():
                 continue
 
             rows = tidy(subset)
-            stem = f"ch4_identification_{solver}_{size}"
+            stem = f"appendix_identification_{solver}_{size}"
 
             ax = identification_map(rows, size)
             save(ax.figure, f"{stem}_map")
@@ -179,7 +179,7 @@ def render_length_sweep():
                             f"horizon of {horizon}."
                         ),
                         label=(
-                            "tab:ch4-identification-"
+                            "tab:appendix-identification-"
                             f"{solver.replace('_', '-')}-{size}-h{horizon}"
                         ),
                     ),

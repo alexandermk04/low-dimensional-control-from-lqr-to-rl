@@ -10,7 +10,7 @@ controllers on these identified systems via our test protocol.
 
 Run with::
 
-    python -m experiments.ch4_identification_length
+    python -m experiments.appendix_identification_length
 """
 
 import settings
@@ -28,7 +28,7 @@ def _sizes():
             for name in settings.CH4_INFLATION_SIZES]
 
 
-EXPERIMENT = "ch4_identification_length"
+EXPERIMENT = "appendix_identification_length"
 
 
 def build_specs() -> list[RunSpec]:
