@@ -26,10 +26,13 @@ SOLVER_LABELS = {
     "mf_npg": "Model-free NPG",
     "spi": "S-PI",
     "spi_mf": "S-PI (model-free)",
+    "ce_dare": "N4SID + DARE",
+    "spi_est": "S-PI + N4SID",
     "ppo_linear": "Linear PPO",
+    "ppo_bottleneck": "Bottleneck PPO",
     "ppo_mlp": "Fully-connected PPO",
     "ppo_encoder": "State encoder + PPO",
-    "pve": "Position-Velocity Encoder",
+    "ppo_encoder_scalable": "Scalable encoder + PPO",
 }
 
 # Summary metrics whose per-episode array is stored with the run
