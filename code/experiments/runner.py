@@ -48,7 +48,9 @@ def _summarize(
 
     j_final = records[-1].cost if records else np.inf
 
-    one_pct = time_to_threshold(records, problem.j_star, 0.01)
+    j_star = problem.j_star if result.j_star is None else result.j_star
+
+    one_pct = time_to_threshold(records, j_star, 0.01)
 
     K_eff = (
         result.scorer.effective_gain(result.K_final)
@@ -56,9 +58,9 @@ def _summarize(
     )
 
     summary = {
-        "J_star": float(problem.j_star),
+        "J_star": float(j_star),
         "J_final": float(j_final),
-        "training_subopt_final": suboptimality(j_final, problem.j_star),
+        "training_subopt_final": suboptimality(j_final, j_star),
         "steps_to_thresh_1pct": one_pct["env_steps"],
         "total_env_steps": int(records[-1].env_steps) if records else 0,
         "total_time": float(records[-1].total_time) if records else 0.0,
@@ -120,12 +122,19 @@ def train(spec: RunSpec, test_kwargs: dict | None = None) -> RunRecord:
 
     result = run_solver(spec, problem)
 
-    test = evaluate_policy(problem, result.policy, **(test_kwargs or {}))
+    test = (
+        result.evaluate_test(**(test_kwargs or {}))
+        if result.evaluate_test is not None
+        else evaluate_policy(problem, result.policy, **(test_kwargs or {}))
+    )
 
     arrays = _curve_arrays(result.records)
     arrays["test_costs"] = test.returns
 
-    trajectory = figure_trajectory(problem, result.policy)
+    trajectory = (
+        result.trajectory() if result.trajectory is not None
+        else figure_trajectory(problem, result.policy)
+    )
     arrays["x_traj"] = trajectory.x_traj
     arrays["u_traj"] = trajectory.u_traj
 

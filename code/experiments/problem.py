@@ -57,6 +57,9 @@ class RunSpec:
         Solver allowed iterations.
     condition : dict
         The experiment condition settings, e.g. ``{"l": 500, "m": 200}``
+    hyperparam_overrides : dict
+        Overrides the solver's entry in
+        ``settings.SOLVER_HYPERPARAMS`` locally
     """
 
     experiment: str
@@ -67,10 +70,16 @@ class RunSpec:
     n_trajectories: int | None = None
     iterations: int = settings.SOLVER_ITERATIONS
     condition: dict = field(default_factory=dict)
+    hyperparam_overrides: dict = field(default_factory=dict)
 
     def hyperparams(self) -> dict:
-        """This solver's entry in ``settings.SOLVER_HYPERPARAMS``."""
-        return dict(settings.SOLVER_HYPERPARAMS.get(self.solver, {}))
+        """This solver's entry in ``settings.SOLVER_HYPERPARAMS``.
+
+        With :attr:`hyperparam_overrides` applied on top.
+        """
+        merged = dict(settings.SOLVER_HYPERPARAMS.get(self.solver, {}))
+        merged.update(self.hyperparam_overrides)
+        return merged
 
 
 @dataclass
