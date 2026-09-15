@@ -20,7 +20,7 @@ TEST_EPISODES = 20
 TEST_HORIZON = 400
 
 # The inflation sizes checked
-SIZES = (settings.REFERENCE_INFLATION,)
+SIZES = (settings.CH4_REFERENCE_INFLATION,)
 
 
 def build_specs() -> list[RunSpec]:
@@ -32,7 +32,7 @@ def build_specs() -> list[RunSpec]:
     specs = []
     for size in SIZES:
         require_choice(
-            size, "REFERENCE_INFLATION", settings.INFLATION_SIZES,
+            size, "CH4_REFERENCE_INFLATION", settings.INFLATION_SIZES,
             "pick one of settings.INFLATION_SIZES",
         )
         rollout_length, n_trajectories = chosen[size]

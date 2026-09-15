@@ -37,11 +37,11 @@ SOLVER_ITERATIONS = 500
 K0_ALPHA = 0.5
 
 # ---------------------------------------------------------------------------
-# Sample sizes (chapter 4)
+# Sample sizes (appendix)
 # ---------------------------------------------------------------------------
 # l = rollout lengths, m = trajectory counts.
 ROLLOUT_LENGTHS = (200, 500, 800)
-TRAJECTORY_COUNTS = (100, 200, 500)
+TRAJECTORY_COUNTS = (100, 200)
 SAMPLE_GRID = tuple((l, m) for l in ROLLOUT_LENGTHS for m in TRAJECTORY_COUNTS)
 
 # Reduced rollout lengths for the larger inflations
@@ -55,7 +55,7 @@ def sample_grid_for(size: str) -> tuple[tuple[int, int], ...]:
 
 # Per inflation size sample sizes for model-free approach 
 
-# TODO: fill from `python -m experiments.ch4_sample_size`; values are (l, m).
+# TODO: fill from `python -m experiments.appendix_sample_size`; values are (l, m).
 CHOSEN_SAMPLE_CELL = {
     "base": None,
     "small": None,
@@ -69,7 +69,7 @@ IDENTIFICATION_LENGTHS = (500, 1000, 2000, 4000, 8000)
 # Past/future horizon of the block Hankel matrices for N4SID
 IDENTIFICATION_HORIZONS = (5, 10, 20)
 
-# TODO: fill from `python -m experiments.ch4_identification_length`;
+# TODO: fill from `python -m experiments.appendix_identification_length`;
 # values are (trajectory_length, hankel_horizon).
 CHOSEN_IDENTIFICATION = {
     "base": None,
@@ -148,42 +148,95 @@ INFLATION_SIZES = {
     "small": (10, 5),
     "medium": (50, 25),
     "large": (200, 100),
+    "pixel": (18432, 256), # size for chapter 6 experiments
 }
 
-# The size comparisons of chapter 5 will be run at
-REFERENCE_INFLATION = "medium"
+# Which sizes each chapter looks at
+CH4_INFLATION_SIZES = ("base", "small", "medium", "large")
+
+# Chapter 5 drops ``base`` - a (2, 1) "inflation" is not one - and adds the pixel
+# cell. Its arms are all reinforcement learning, so none of the above ceilings
+# apply.
+CH5_INFLATION_SIZES = ("small", "medium", "large", "pixel")
+
+# The size the chapter-4 noise grid is drawn at, beside ``base``.
+CH4_REFERENCE_INFLATION = "medium"
+
+# The size chapter 5's all-arm comparison and its noise grid are drawn at.
+CH5_REFERENCE_INFLATION = "large"
+
+
+# ---------------------------------------------------------------------------
+# Appendix: model-free S-PI hyperparameters
+# ---------------------------------------------------------------------------
+SPI_MF_LAMBDAS = (4e2, 4e3, 4e4, 4e5, 4e6)
+SPI_MF_STEPSIZES = (3.5e-9, 3.5e-8, 3.5e-7, 3.5e-6, 3.5e-5)
 
 
 # ---------------------------------------------------------------------------
 # Solvers per chapter
 # ---------------------------------------------------------------------------
-# Sample size solver to compare rollout lengths for
+# Sample size solver to compare rollout lengths for (appendix sweep).
 CH4_SAMPLE_SOLVERS = ("mf_npg",)
 
-# System ID solver
+# System ID solver (appendix sweep).
 CH4_IDENTIFICATION_SOLVERS = ("mb_est",)
 
-# What we evaluate on in the end
-CH4_SOLVERS = ("baseline", "mb_pg", "mb_est", "mf_npg")
+# Every solver whose training budget is an ``(l, m)`` combination
+ROLLOUT_SOLVERS = ("mf_npg", "spi_mf")
 
-# Compare the effect of different inflation sizes on api
-CH5_INFLATION_SOLVERS = ("spi",)
+# Every solver that can learn from an identified model
+IDENTIFICATION_SOLVERS = ("mb_est", "ce_dare", "spi_est", "spi_est", "ppo_encoder")
 
-# Do the same for RL approach with only inflation sizes
-CH5_RL_SOLVERS = ("ppo_encoder",)
+# --- Chapter 4: true model ------------------------------------
+CH4_TRUE_SOLVERS = ("baseline", "mb_pg", "spi")
 
-# Final evaluation in chapter 5
-CH5_SOLVERS = (
+# --- Chapter 4: unknown model ------------------------------
+CH4_IDENTIFIED_SOLVERS = (
     "baseline",
+    "ce_dare",
     "mb_est",
-    "spi",
-    "ppo_linear",
-    "ppo_mlp",
-    "ppo_encoder",
+    "spi_est",
+    "mf_npg",
+    "spi_mf",
 )
 
-# Goal for chap 6
-CH6_SOLVERS = ("baseline", "ppo_encoder", "pve")
+# --- Chapter 5: reinforcement learning -------------------------------------
+CH5_SOLVERS = (
+    "baseline",
+    "ppo_linear",
+    "ppo_bottleneck",
+    "ppo_encoder",
+    "ppo_encoder_scalable",
+    "ppo_mlp",
+)
+
+# Algorithms that cannot be run at a given inflation size, and why.
+UNSUPPORTED_CELLS = {
+    ("ppo_encoder", "pixel"): (
+        "N4SID cannot identify an 18432-dimensional observation; "
+        "ppo_encoder_scalable is replacement"
+    ),
+}
+
+
+# Episodes per learning-curve sample for chap 6
+PIXEL_PROBE_EPISODES = 100
+
+# Frames collected, and epochs used for chap 6 pretraining.
+PIXEL_PRETRAIN_STEPS = 20_000
+PIXEL_PRETRAIN_EPOCHS = 20
+
+# Chapter 6: control from a camera observation
+CH6_SOLVERS = (
+    "oracle_coarse",
+    "ppo_pixel_fc",
+    "ppo_pixel_ortho",
+    "ppo_pixel_estimator",
+    "ppo_pixel_posvel",
+    "ce_dare_pixel",
+    "spi_est_pixel",
+)
 
 
 # ---------------------------------------------------------------------------
@@ -211,8 +264,35 @@ SOLVER_HYPERPARAMS = {
         "stepsize": 3.5e-7,
         "smoothing": 0.5,
     },
+    # Certainty equivalence. Identification settings only
+    "ce_dare": {
+        "excitation": 1.0,
+        "order_threshold": 1e-3,
+        "max_order": 10,
+        "horizon": 10,
+        "input_rank_tol": 1e-3,
+    },
+    # S-PI on the identified model
+    "spi_est": {
+        "excitation": 1.0,
+        "order_threshold": 1e-3,
+        "max_order": 10,
+        "horizon": 10,
+        "lambda_": 50.0,
+        "beta": 0.5,
+        "epsilon": 1e-8,
+        "max_linesearch_iter": 10,
+    },
     "mb_est": {
         "gradient_lr": 1.2e-3,
+        "excitation": 1.0, # std of variation added to input
+        "order_threshold": 1e-3,
+        "max_order": 10, # maximum order to consider for model identification
+        "horizon": 10, # Block Hankel past/future horizon
+        "input_rank_tol": 1e-3,
+    },
+    # Identification only: ppo_encoder uses N4SID for its ``decode``
+    "ppo_encoder": {
         "excitation": 1.0, # std of variation added to input
         "order_threshold": 1e-3,
         "max_order": 10, # maximum order to consider for model identification

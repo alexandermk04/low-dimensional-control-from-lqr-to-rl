@@ -1,7 +1,5 @@
 """Chapter 4: comparison of robustness of the trained controllers.
 
-Reuses the previously trained controllers from ``ch4_solver_comparison``.
-
 Run with::
 
     python -m experiments.ch4_noise
@@ -31,9 +29,9 @@ from experiments.store import (
 
 EXPERIMENT = "ch4_noise"
 
-SOURCE = "ch4_solver_comparison"
+SOURCE = "ch4_identified_model"
 
-SIZES = ("base", settings.REFERENCE_INFLATION)
+SIZES = ("base", settings.CH4_REFERENCE_INFLATION)
 
 
 @keep_running()
