@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Trajectory length $T$ & 500 & 1000 & 2000 & 4000 & 8000 \\
+\midrule
+Identified & $0/10$ & $10/10$ & $10/10$ & $10/10$ & $10/10$ \\
+Stable & $0/10$ & $4/10$ & $10/10$ & $10/10$ & $10/10$ \\
+\midrule
+Training suboptimality $(J-J^*)/J^*$ & \multicolumn{1}{c}{--} & $0.121 \pm 0.067$ & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ \\
+Test cost$^{\dagger}$ & \multicolumn{1}{c}{--} & $6756 \pm 5986$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ \\
+Wall time (s) & \multicolumn{1}{c}{--} & $0.3 \pm 0.0$ & $0.7 \pm 0.0$ & $1.0 \pm 0.0$ & $2.0 \pm 0.0$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{mb\_est on a system with medium inflation with a Hankel horizon of 20. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs. Identified counts the seeds a model was obtained from and stable those whose controller left the plant stable.}
+\label{tab:appendix-identification-mb-est-medium-h20}
+\end{table}

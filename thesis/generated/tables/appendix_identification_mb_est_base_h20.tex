@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Trajectory length $T$ & 500 & 1000 & 2000 & 4000 & 8000 \\
+\midrule
+Training suboptimality $(J-J^*)/J^*$ & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ \\
+Test cost$^{\dagger}$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ \\
+Wall time (s) & $0.1 \pm 0.0$ & $0.1 \pm 0.0$ & $0.1 \pm 0.0$ & $0.1 \pm 0.0$ & $0.1 \pm 0.0$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{mb\_est on a system with base inflation with a Hankel horizon of 20. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
+\label{tab:appendix-identification-mb-est-base-h20}
+\end{table}
