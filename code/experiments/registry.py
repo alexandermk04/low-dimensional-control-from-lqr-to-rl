@@ -58,6 +58,15 @@ class SolverResult:
     save_policy : callable or None
         Given the run's directory, writes what is needed to reload the
         policy later.
+    j_star : float or None
+        Reference cost the learning curve is scored against, when it is not
+        ``problem.j_star``. Chapter 6 sets it: its plant is the thruster ring
+        driven at the agent rate, so the chapter-5 optimum is the wrong
+        yardstick.
+    evaluate_test : callable or None
+        ``() -> TestResult``.
+    trajectory : callable or None
+        ``() -> SimulationResult``.
     """
 
     K_final: np.ndarray | None
@@ -68,11 +77,15 @@ class SolverResult:
     scorer: Any
     extra: dict = field(default_factory=dict)
     save_policy: Any = None
+    j_star: float | None = None
+    evaluate_test: Any = None
+    trajectory: Any = None
 
 
-def _train_and_score_plants(spec: RunSpec, problem: Problem):
-    """A plant to learn on and an independent, clean plant to score against."""
-    lqr = build_plant(problem, f"train:{spec.solver}")
+def _train_and_score_plants(spec: RunSpec, problem: Problem, purpose: str = "train"):
+    """A plant to learn on and an independent, clean plant to score against.
+    """
+    lqr = build_plant(problem, f"{purpose}:{spec.solver}")
     lqr.reset()
 
     scorer = build_plant(problem, f"score:{spec.solver}")
@@ -163,17 +176,77 @@ def _run_mb_pg(spec: RunSpec, problem: Problem) -> SolverResult:
     return _linear_result(ks[-1], probe, solver_settings, scorer)
 
 
-def _run_mb_est(spec: RunSpec, problem: Problem) -> SolverResult:
-    """Exact-gradient policy descent on an identified model.
+# ---------------------------------------------------------------------------
+# Identification
+# ---------------------------------------------------------------------------
+
+@dataclass
+class _Identification:
+    """Class for an identification run.
+
+    Attributes
+    ----------
+    lqr : LQRBase
+        The plant the trajectory was drawn from.
+    scorer : LQRBase
+        Independent clean plant every iterate is scored against.
+    settings : IdentificationSettings
+        Identification settings
+    probe : Probe
+        The probe to be passed to the inner solver.
+    model : IdentifiedModel or None
+        The identified system, or ``None`` when identification failed.
+    failure : IdentificationError or None
+        The reason for failure, if happened.
+    """
+
+    lqr: Any
+    scorer: Any
+    settings: Any
+    probe: Probe
+    model: Any = None
+    failure: Any = None
+
+    def failed_result(self, problem: Problem) -> SolverResult:
+        """The run's result when identification did not produce a model."""
+        return _identification_failed(
+            problem, self.scorer, self.settings, self.failure
+        )
+
+
+def _identify_for(
+    spec: RunSpec, problem: Problem, to_controller=None, purpose: str = "train",
+    reduce_input: bool = True,
+) -> _Identification:
+    """Run the excitation trajectory and identify the plant of one run.
+
+    Parameters
+    ----------
+    spec : RunSpec
+        The run settings.
+    problem : Problem
+        Its problem.
+    to_controller : callable or None, optional
+        ``(IdentifiedModel, K) -> np.ndarray`` mapping a gain as the inner
+        solver produces it onto the controller's ``(q, p)`` space. ``None`` builds no
+        probe.
+    purpose : str, optional
+        Seed-stream label.
+    reduce_input : bool, optional
+        Passed through to
+        :class:`~lqr_solvers.system_identification.IdentificationSettings`.
+
+    Returns
+    -------
+    _Identification
     """
     from lqr_solvers.system_identification import (
         IdentificationError,
         IdentificationSettings,
         identify,
-        to_plant,
     )
 
-    lqr, scorer = _train_and_score_plants(spec, problem)
+    lqr, scorer = _train_and_score_plants(spec, problem, purpose=purpose)
     hyper = spec.hyperparams()
 
     id_settings = IdentificationSettings(
@@ -183,44 +256,39 @@ def _run_mb_est(spec: RunSpec, problem: Problem) -> SolverResult:
         max_order=hyper["max_order"],
         horizon=spec.condition.get("hankel", hyper["horizon"]),
         order_threshold=hyper["order_threshold"],
-        input_rank_tol=hyper["input_rank_tol"],
+        input_rank_tol=hyper.get("input_rank_tol", 1e-3), # only for reducing input
+        reduce_input=reduce_input,
     )
 
-    identified = None
-    probe = Probe(
-        lqr,
-        evaluate=lambda K: expected_true_cost(
-            scorer, scorer.effective_gain(identified.to_controller_gain(K))
-        ),
+    context = _Identification(
+        lqr=lqr, scorer=scorer, settings=id_settings, probe=None
     )
-    probe.start()
+
+    if to_controller is not None:
+        context.probe = Probe(
+            lqr,
+            evaluate=lambda K: expected_true_cost(
+                scorer, scorer.effective_gain(to_controller(context.model, K))
+            ),
+        )
+        context.probe.start()
 
     try:
-        identified = identify(lqr, problem.K_0, id_settings)
+        context.model = identify(lqr, problem.K_0, id_settings)
     except IdentificationError as failure:
-        return _identification_failed(problem, scorer, id_settings, failure)
+        context.failure = failure
 
-    surrogate = to_plant(identified, sub_seed(spec.seed, "surrogate", spec.solver))
+    return context
 
-    solver_settings = ModelBasedPolicyGradientSettings(
-        K_0=identified.to_identified_gain(problem.K_0),
-        gradient_steps=spec.iterations,
-        gradient_lr=hyper["gradient_lr"],
-        probe=probe,
-    )
-    ks, _ = gradient_descent_discrete(surrogate, solver_settings)
 
-    result = _linear_result(
-        identified.to_controller_gain(ks[-1]), probe, solver_settings, scorer
-    )
-
-    result.extra.update(
-        n_hat=identified.n_hat,
-        m_hat=identified.m_hat,
-        effective_max_order=identified.effective_max_order,
-        cost_residual=identified.cost_residual,
-    )
-    return result
+def _identification_extra(identified) -> dict:
+    """The additional summary entries from the identification."""
+    return {
+        "n_hat": identified.n_hat,
+        "m_hat": identified.m_hat,
+        "effective_max_order": identified.effective_max_order,
+        "cost_residual": identified.cost_residual,
+    }
 
 
 def _identification_failed(problem, scorer, id_settings, failure) -> SolverResult:
@@ -246,6 +314,100 @@ def _identification_failed(problem, scorer, id_settings, failure) -> SolverResul
         scorer=scorer,
         extra={"identification_failed": str(failure)},
     )
+
+
+def _run_mb_est(spec: RunSpec, problem: Problem) -> SolverResult:
+    """Exact-gradient policy descent on an identified model.
+    """
+
+    from lqr_solvers.system_identification import to_inflated_plant
+
+    context = _identify_for(spec, problem, lambda model, K: K, reduce_input=False)
+    if context.model is None:
+        return context.failed_result(problem)
+
+    identified = context.model
+    surrogate = to_inflated_plant(
+        identified, sub_seed(spec.seed, "surrogate", spec.solver)
+    )
+
+    solver_settings = ModelBasedPolicyGradientSettings(
+        K_0=problem.K_0,
+        gradient_steps=spec.iterations,
+        gradient_lr=spec.hyperparams()["gradient_lr"],
+        probe=context.probe,
+    )
+    ks, _ = gradient_descent_discrete(surrogate, solver_settings)
+
+    result = _linear_result(ks[-1], context.probe, solver_settings, context.scorer)
+
+    result.extra.update(_identification_extra(identified))
+    return result
+
+
+def _run_ce_dare(spec: RunSpec, problem: Problem) -> SolverResult:
+    """Certainty equivalence: identify the plant, then solve its Riccati equation.
+    """
+
+    from lqr_base.simple_lqr import get_optimal_K_and_cost_discrete
+    from lqr_solvers.system_identification import to_plant
+
+    context = _identify_for(
+        spec, problem, lambda model, K: model.to_controller_gain(K)
+    )
+    if context.model is None:
+        return context.failed_result(problem)
+
+    identified = context.model
+    surrogate = to_plant(identified, sub_seed(spec.seed, "surrogate", spec.solver))
+
+    K_identified, _ = get_optimal_K_and_cost_discrete(surrogate)
+    K_final = identified.to_controller_gain(K_identified)
+
+    context.probe.record(0, K_identified)
+
+    result = _linear_result(
+        K_final, context.probe,
+        {"solver": "ce_dare", "trajectory_length": context.settings.trajectory_length},
+        context.scorer,
+    )
+
+    result.extra.update(_identification_extra(identified))
+    return result
+
+
+def _run_spi_est(spec: RunSpec, problem: Problem) -> SolverResult:
+    """S-PI on an identified model.
+    """
+    from lqr_solvers.system_identification import to_inflated_plant
+
+    context = _identify_for(
+        spec, problem, lambda model, K: K, reduce_input=False
+    )
+    if context.model is None:
+        return context.failed_result(problem)
+
+    identified = context.model
+    surrogate = to_inflated_plant(
+        identified, sub_seed(spec.seed, "surrogate", spec.solver)
+    )
+
+    hyper = spec.hyperparams()
+    solver_settings = StructuredPolicySettings(
+        K_0=problem.K_0,
+        beta=hyper["beta"],
+        lambda_=hyper["lambda_"],
+        epsilon=hyper["epsilon"],
+        limit=spec.iterations,
+        max_linesearch_iter=hyper["max_linesearch_iter"],
+        probe=context.probe,
+    )
+    ks, _ = structured_policy_iteration(surrogate, solver_settings)
+
+    result = _linear_result(ks[-1], context.probe, solver_settings, context.scorer)
+
+    result.extra.update(_identification_extra(identified))
+    return result
 
 
 def _run_mf_npg(spec: RunSpec, problem: Problem) -> SolverResult:
@@ -337,14 +499,29 @@ def _linear_result(K_final, probe, solver_settings, scorer) -> SolverResult:
 # Reinforcement learning
 # ---------------------------------------------------------------------------
 
-def _run_rl(spec: RunSpec, problem: Problem) -> SolverResult:
+def _run_rl(
+    spec: RunSpec,
+    problem: Problem,
+    encoder: np.ndarray | None = None,
+    env_steps_offset: int = 0,
+) -> SolverResult:
     """Train one stable-baselines3 policy on the LQR environment.
+
+    Parameters
+    ----------
+    spec, problem
+        The run.
+    encoder : np.ndarray or None, optional
+        ``(k, p)`` matrix the policy observes through.
+    env_steps_offset : int, optional
+        Added to every recorded ``env_steps``.
     """
     import dataclasses as dc
 
     from reinforcement_learning.callbacks import ProbeCallback
     from reinforcement_learning.lqr_env import LQREnv
     from reinforcement_learning.solvers import (
+        ENCODER_PPO,
         LINEAR_PPO,
         MLP_PPO,
         SB3Policy,
@@ -354,7 +531,11 @@ def _run_rl(spec: RunSpec, problem: Problem) -> SolverResult:
     )
     from evaluation.metrics import monte_carlo_cost
 
-    presets = {"ppo_linear": LINEAR_PPO, "ppo_mlp": MLP_PPO}
+    presets = {
+        "ppo_linear": LINEAR_PPO,
+        "ppo_mlp": MLP_PPO,
+        "ppo_encoder": ENCODER_PPO,
+    }
     preset = presets[spec.solver]
     linear = is_linear_solver(preset)
 
@@ -371,6 +552,7 @@ def _run_rl(spec: RunSpec, problem: Problem) -> SolverResult:
         horizon=settings.TRAIN_HORIZON,
         reward_scale=problem.dt,
         action_limit=problem.action_limit,
+        encoder=encoder,
     )
 
     scorer = build_plant(problem, f"score:{spec.solver}")
@@ -384,13 +566,17 @@ def _run_rl(spec: RunSpec, problem: Problem) -> SolverResult:
                 int(np.linalg.matrix_rank(K)),
             )
         mean, _ = monte_carlo_cost(
-            scorer, SB3Policy(model),
+            scorer, SB3Policy(model, encoder=encoder),
             n_episodes=max(20, settings.TEST_EPISODES // 10),
             horizon=settings.PROBE_HORIZON,
         )
         return mean, None
 
-    callback = ProbeCallback(evaluate, eval_freq=solver_settings.eval_freq)
+    callback = ProbeCallback(
+        evaluate,
+        eval_freq=solver_settings.eval_freq,
+        env_steps_offset=env_steps_offset,
+    )
     model = build_model(env, solver_settings, seed=spec.seed)
     model.learn(
         total_timesteps=solver_settings.total_timesteps,
@@ -410,7 +596,7 @@ def _run_rl(spec: RunSpec, problem: Problem) -> SolverResult:
     else:
         K_final = None
         complexity = policy_complexity_mlp(model)
-        policy = SB3Policy(model)
+        policy = SB3Policy(model, encoder=encoder)
 
     return SolverResult(
         K_final=K_final,
@@ -420,21 +606,46 @@ def _run_rl(spec: RunSpec, problem: Problem) -> SolverResult:
         solver_settings=solver_settings,
         scorer=scorer,
         extra=extra,
-        save_policy=None if linear else _sb3_saver(model, solver_settings),
+        save_policy=None if linear else _sb3_saver(model, solver_settings, encoder),
     )
 
 
-def _sb3_saver(model, solver_settings) -> Callable[[Any], dict]:
-    """A saver writing one stable-baselines3 model beside its record.
+def _run_ppo_encoder(spec: RunSpec, problem: Problem) -> SolverResult:
+    """PPO behind the linear encoder of an identified model.
+    """
+    context = _identify_for(spec, problem, purpose="identify")
+
+    if context.model is None:
+        return context.failed_result(problem)
+
+    result = _run_rl(
+        spec, problem,
+        encoder=context.model.decode,
+        env_steps_offset=context.settings.trajectory_length,
+    )
+
+    result.extra.update(_identification_extra(context.model))
+    return result
+
+
+def _sb3_saver(model, solver_settings, encoder=None) -> Callable[[Any], dict]:
+    """A saver saving a stable-baselines3 model next to its record.
     """
     def save(directory) -> dict:
         model.save(directory / "policy.zip")
-        return {
+
+        manifest = {
             "kind": "sb3",
             "algo": solver_settings.algo,
             "file": "policy.zip",
             "deterministic": True,
         }
+
+        if encoder is not None:
+            np.save(directory / "encoder.npy", np.asarray(encoder))
+            manifest["encoder"] = "encoder.npy"
+
+        return manifest
 
     return save
 
@@ -455,17 +666,20 @@ SOLVER_REGISTRY: dict[str, Callable[[RunSpec, Problem], SolverResult]] = {
     "mb_est": _run_mb_est,
     "mf_npg": _run_mf_npg,
     "spi": _run_spi,
+    "ce_dare": _run_ce_dare,
+    "spi_est": _run_spi_est,
     "spi_mf": _run_spi_mf,
     "ppo_linear": _run_rl,
     "ppo_mlp": _run_rl,
-    "ppo_encoder": _missing(
-        "ppo_encoder",
-        "PPO on top of a learned state encoder (chapter 5). Needs an encoder "
-        "policy in reinforcement_learning/solvers.py.",
+    "ppo_encoder": _run_ppo_encoder,
+    # Not yet implemented
+    "ppo_bottleneck": _missing(
+        "ppo_bottleneck",
+        "PPO with an orthonomal projection layer"
     ),
-    "pve": _missing(
-        "pve",
-        "the Position-Velocity Encoder of chapter 6. Currently not implemented."
+    "ppo_encoder_scalable": _missing(
+        "ppo_encoder_scalable",
+        "observation encoder that replaces N4SID at large scale"
     ),
 }
 
