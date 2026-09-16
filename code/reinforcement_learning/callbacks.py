@@ -26,6 +26,11 @@ class ProbeCallback(BaseCallback):
         Evaluate every this many environment steps.
     verbose : int, optional
         Passed to :class:`~stable_baselines3.common.callbacks.BaseCallback`.
+    env_steps_offset : int, optional
+        Added to every recorded ``env_steps``.
+    env_steps_scale : int, optional
+        Multiplies the algorithm's step count before the offset is added.
+        Used for agents acting slower than the environment. Defaults to ``1``.
 
     Attributes
     ----------
@@ -33,11 +38,17 @@ class ProbeCallback(BaseCallback):
         The learning curve, in order.
     """
 
-    def __init__(self, evaluate, eval_freq: int, verbose: int = 0):
+    def __init__(self, evaluate, eval_freq: int, verbose: int = 0,
+                 env_steps_offset: int = 0, env_steps_scale: int = 1):
         super().__init__(verbose)
+
+        if env_steps_scale < 1:
+            raise ValueError(f"env_steps_scale must be positive, got {env_steps_scale}.")
 
         self.evaluate = evaluate
         self.eval_freq = eval_freq
+        self.env_steps_offset = int(env_steps_offset)
+        self.env_steps_scale = int(env_steps_scale)
 
         self.records: list[IterationRecord] = []
 
@@ -63,7 +74,7 @@ class ProbeCallback(BaseCallback):
 
         record = IterationRecord(
             iteration=len(self.records),
-            env_steps=int(self.num_timesteps),
+            env_steps=int(self.num_timesteps) * self.env_steps_scale + self.env_steps_offset,
             total_time=elapsed,
             cost=float(cost),
             cost_estimate=None,

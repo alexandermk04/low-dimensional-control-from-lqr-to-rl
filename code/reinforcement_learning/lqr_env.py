@@ -31,11 +31,17 @@ class LQREnv(gym.Env):
         Half-width of the observation box. Defaults to ``1e4``.
     render_mode : str or None, optional
         ``"human"`` opens a pygame window displaying the environment.
+    encoder : np.ndarray or None, optional
+        ``(k, p)`` matrix applied to every observation, so the policy observes
+        ``encoder @ y`` instead of ``y``. ``None`` means the policy receives the full observation.
 
     Attributes
     ----------
     lqr : LQRBase
-        The wrapped system. ``lqr.env_steps`` is the sample budget.
+        The wrapped system.
+    observation_dim : int
+        ``lqr.observation_dim``, or the
+        encoder's output dimension when one is given.
     steps : int
         Steps taken in the current episode.
     n_action_clips : int
@@ -53,6 +59,7 @@ class LQREnv(gym.Env):
         action_limit: float,
         obs_limit: float = 1e4,
         render_mode: str | None = None,
+        encoder: np.ndarray | None = None,
     ):
         super().__init__()
 
@@ -63,9 +70,20 @@ class LQREnv(gym.Env):
         self.obs_limit = obs_limit
         self.render_mode = render_mode
 
+        self.encoder = None if encoder is None else np.asarray(encoder, dtype=np.float64)
+        if self.encoder is not None and self.encoder.shape[1] != lqr.observation_dim:
+            raise ValueError(
+                f"encoder maps from {self.encoder.shape[1]} dimensions but the "
+                f"plant observes {lqr.observation_dim}."
+            )
+
+        self.observation_dim = (
+            lqr.observation_dim if self.encoder is None else self.encoder.shape[0]
+        )
+
         self.observation_space = spaces.Box(
             low=-obs_limit, high=obs_limit,
-            shape=(lqr.observation_dim,), dtype=np.float32,
+            shape=(self.observation_dim,), dtype=np.float32,
         )
         self.action_space = spaces.Box(
             low=-action_limit, high=action_limit,
@@ -80,8 +98,11 @@ class LQREnv(gym.Env):
         self.screen_dim = 500
 
     def _obs(self) -> np.ndarray:
-        """Current observation, cast to the dtype SB3 expects."""
-        return np.asarray(self.lqr.observe(), dtype=np.float32)
+        """Current observation, encoded if asked, cast to the dtype SB3 expects."""
+        y = self.lqr.observe()
+        if self.encoder is not None:
+            y = self.encoder @ y
+        return np.asarray(y, dtype=np.float32)
 
     def reset(self, *, seed: int | None = None, options: dict | None = None):
         """Start a new episode.
@@ -145,7 +166,7 @@ class LQREnv(gym.Env):
 
         observation = (
             self._obs() if not terminated
-            else np.zeros(self.lqr.observation_dim, dtype=np.float32)
+            else np.zeros(self.observation_dim, dtype=np.float32)
         )
 
         return observation, float(reward), bool(terminated), bool(truncated), info
