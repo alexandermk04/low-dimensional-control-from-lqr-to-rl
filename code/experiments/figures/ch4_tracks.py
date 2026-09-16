@@ -48,12 +48,12 @@ def render_size(records, size: str, order, stem_prefix: str, track_caption: str)
     ax = box_metric(rows, "solver", "subopt", order=order, log=False)
     save(ax.figure, f"{stem}_subopt")
 
-    # Table 2, without policy complexity.
+    # Table 2
     write_table(
         metric_table(
             rows, "solver",
             metrics=("J_final", "training_subopt_final", "test_cost_mean",
-                     "subopt", "total_env_steps"),
+                     "subopt", "total_env_steps", "policy_complexity", "rank_final"),
             column_order=order,
             column_header="Solver",
             caption=f"{track_caption} at the {size} inflation, without noise.",
@@ -87,7 +87,7 @@ def render_across_sizes(records, solvers, stem_prefix: str, caption: str):
     write_table(
         metric_table(
             rows, ("size", "solver"),
-            metrics=("training_subopt_final", "test_cost_mean", "subopt"),
+            metrics=("training_subopt_final", "test_cost_mean", "subopt", "policy_complexity", "rank_final"),
             column_order=order,
             column_header="(size, solver)",
             caption=caption,
