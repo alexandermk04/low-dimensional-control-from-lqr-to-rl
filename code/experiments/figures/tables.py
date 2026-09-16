@@ -364,21 +364,24 @@ def metric_table(
     ])
 
 
-def write_table(text: str, name: str):
-    """Write a table fragment to ``settings.TABLE_OUTPUT``.
+def write_table(text: str, name: str, experiment: str):
+    """Write a table fragment to the experiment's table directory.
 
     Parameters
     ----------
     text : str
         As returned by :func:`metric_table`.
     name : str
-        File stem. ``\\input{generated/tables/<name>.tex}`` to use in latex.
+        File stem. ``\\input{generated/<experiment>/tables/<name>.tex}`` to use
+        in latex.
+    experiment : str
+        Name for the output directory
 
     Returns
     -------
     Path
         The file written.
     """
-    path = table_dir() / f"{name}.tex"
+    path = table_dir(experiment) / f"{name}.tex"
     path.write_text(text + "\n")
     return path

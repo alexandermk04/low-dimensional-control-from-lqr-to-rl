@@ -109,28 +109,30 @@ PGF_PREAMBLE_GUARD = (
 )
 
 
-def figure_dir() -> Path:
+def figure_dir(experiment: str) -> Path:
     """Where ``.pgf`` files go, created if missing."""
-    path = Path(settings.FIGURE_OUTPUT)
+    path = Path(settings.GENERATED_ROOT) / experiment / settings.FIGURE_OUTPUT
     path.mkdir(parents=True, exist_ok=True)
     return path
 
 
-def table_dir() -> Path:
+def table_dir(experiment: str) -> Path:
     """Where ``.tex`` table fragments go, created if missing."""
-    path = Path(settings.TABLE_OUTPUT)
+    path = Path(settings.GENERATED_ROOT) / experiment / settings.TABLE_OUTPUT
     path.mkdir(parents=True, exist_ok=True)
     return path
 
 
-def save(figure, name: str, also_pdf: bool = True) -> Path:
+def save(figure, name: str, experiment: str, also_pdf: bool = True) -> Path:
     """Write a figure as ``.pgf``, and optionally a ``.pdf`` for previews.
 
     Parameters
     ----------
     figure : matplotlib.figure.Figure
     name : str
-        File stem. ``\\input{generated/figures/<name>.pgf}`` in the thesis.
+        File stem. 
+    experiment : str
+        Name for the output directory.
     also_pdf : bool, optional
         Whether to create the PDF version.
 
@@ -139,7 +141,7 @@ def save(figure, name: str, also_pdf: bool = True) -> Path:
     Path
         The ``.pgf`` file.
     """
-    directory = figure_dir()
+    directory = figure_dir(experiment)
     path = directory / f"{name}.pgf"
 
     figure.savefig(path, bbox_inches="tight")

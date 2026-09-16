@@ -8,7 +8,7 @@ Run with::
 import settings
 from experiments.figures.aggregate import latest_per_experiment, tidy
 from experiments.figures.panels import learning_bands, box_metric
-from experiments.figures.style import save
+from experiments.figures.style import figure_dir, save, table_dir
 from experiments.figures.tables import metric_table, write_table
 from experiments.store import load_experiment
 
@@ -40,16 +40,16 @@ def main():
             # Plot 1: true cost per sample-size combination.
             ax = box_metric(rows, ("l", "m"), "training_subopt_final", order=cell_order)
             ax.set_xlabel(CELL_LABEL)
-            save(ax.figure, f"{stem}_subopt")
+            save(ax.figure, f"{stem}_subopt", EXPERIMENT)
 
             # Plot 6: accumulated cost under test protocol.
             ax = box_metric(rows, ("l", "m"), "test_cost_mean", order=cell_order)
             ax.set_xlabel(CELL_LABEL)
-            save(ax.figure, f"{stem}_testcost")
+            save(ax.figure, f"{stem}_testcost", EXPERIMENT)
 
             # Plot 2: the training process against env steps
             ax = learning_bands(subset, ("l", "m"), x="env_steps", order=cell_order)
-            save(ax.figure, f"{stem}_curves")
+            save(ax.figure, f"{stem}_curves", EXPERIMENT)
 
             # Table 1.
             write_table(
@@ -69,10 +69,11 @@ def main():
                     ),
                 ),
                 stem,
+                EXPERIMENT,
             )
 
-    print("wrote figures to", settings.FIGURE_OUTPUT)
-    print("wrote tables  to", settings.TABLE_OUTPUT)
+    print("wrote figures to", figure_dir(EXPERIMENT))
+    print("wrote tables  to", table_dir(EXPERIMENT))
 
 
 if __name__ == "__main__":

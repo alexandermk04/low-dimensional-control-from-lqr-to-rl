@@ -8,6 +8,7 @@ Run with::
 import settings
 from experiments.appendix_spi_mf import EXPERIMENT, SIZES
 from experiments.figures.aggregate import latest_per_experiment, tidy
+from experiments.figures.style import table_dir
 from experiments.figures.tables import metric_table, write_table
 from experiments.store import MissingExperimentError, load_experiment
 
@@ -47,6 +48,7 @@ def render():
                     label=f"tab:appendix-spimf-{size}-{_slug(lambda_)}",
                 ),
                 f"appendix_spi_mf_{size}_{_slug(lambda_)}",
+                EXPERIMENT,
             )
 
 
@@ -57,7 +59,7 @@ def main():
         print(f"skipping {EXPERIMENT}: {error}")
         return
 
-    print("wrote tables to", settings.TABLE_OUTPUT)
+    print("wrote tables to", table_dir(EXPERIMENT))
 
 
 if __name__ == "__main__":

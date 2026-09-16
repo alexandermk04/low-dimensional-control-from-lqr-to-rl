@@ -12,7 +12,7 @@ import numpy as np
 
 import settings
 from experiments.figures.aggregate import latest_per_experiment, tidy
-from experiments.figures.style import new_figure, save
+from experiments.figures.style import figure_dir, new_figure, save, table_dir
 from experiments.figures.tables import metric_table, write_table
 from experiments.store import load_experiment
 
@@ -160,7 +160,7 @@ def render_length_sweep():
             stem = f"appendix_identification_{solver}_{size}"
 
             ax = identification_map(rows, size)
-            save(ax.figure, f"{stem}_map")
+            save(ax.figure, f"{stem}_map", LENGTH_EXPERIMENT)
 
             # One table per horizon & size
             for horizon in settings.IDENTIFICATION_HORIZONS:
@@ -184,14 +184,15 @@ def render_length_sweep():
                         ),
                     ),
                     f"{stem}_h{horizon}",
+                    LENGTH_EXPERIMENT,
                 )
 
 
 def main():
     render_length_sweep()
 
-    print("wrote figures to", settings.FIGURE_OUTPUT)
-    print("wrote tables  to", settings.TABLE_OUTPUT)
+    print("wrote figures to", figure_dir(LENGTH_EXPERIMENT))
+    print("wrote tables  to", table_dir(LENGTH_EXPERIMENT))
 
 
 if __name__ == "__main__":

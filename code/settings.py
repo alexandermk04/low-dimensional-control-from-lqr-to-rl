@@ -306,5 +306,6 @@ SOLVER_HYPERPARAMS = {
 # Output locations, relative to ``code/``
 # ---------------------------------------------------------------------------
 EXPERIMENT_ROOT = "experiment_results"
-FIGURE_OUTPUT = "../thesis/generated/figures"
-TABLE_OUTPUT = "../thesis/generated/tables"
+GENERATED_ROOT = "../thesis/generated"
+FIGURE_OUTPUT = "figures"
+TABLE_OUTPUT = "tables"

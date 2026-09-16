@@ -12,7 +12,7 @@ from experiments.figures.aggregate import (
     with_suboptimality,
 )
 from experiments.figures.panels import trajectory_overlay, box_metric
-from experiments.figures.style import save
+from experiments.figures.style import figure_dir, save, table_dir
 from experiments.figures.tables import metric_table, write_table
 from experiments.settings_guard import require_choice
 from experiments.ch4_noise import SIZES
@@ -86,12 +86,12 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
 
         ax = box_metric(subset, group_by, "test_cost_mean", order=order)
         ax.set_title(title)
-        save(ax.figure, f"{prefix}_testcost_{name}")
+        save(ax.figure, f"{prefix}_testcost_{name}", experiment)
 
         # Suboptimality can be negative
         ax = box_metric(subset, group_by, "subopt", order=order, log=False)
         ax.set_title(title)
-        save(ax.figure, f"{prefix}_subopt_{name}")
+        save(ax.figure, f"{prefix}_subopt_{name}", experiment)
 
     for solver in solvers:
         solver_rows = [r for r in rows if r["solver"] == solver]
@@ -110,7 +110,7 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
             axes = trajectory_overlay(
                 solver_levels, "level", dt=0.01, order=level_order
             )
-            save(axes[0].figure, f"{prefix}_traj_levels_{solver}")
+            save(axes[0].figure, f"{prefix}_traj_levels_{solver}", experiment)
 
         # Plot 5
         solver_channels = [
@@ -121,7 +121,7 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
             axes = trajectory_overlay(
                 solver_channels, "channel", dt=0.01, order=channel_order
             )
-            save(axes[0].figure, f"{prefix}_traj_channels_{solver}")
+            save(axes[0].figure, f"{prefix}_traj_channels_{solver}", experiment)
 
         # Table 3
         write_table(
@@ -135,6 +135,7 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
                 label=f"tab:{slug}-levels-{short}",
             ),
             f"{prefix}_levels_{solver}",
+            experiment,
         )
 
         # Table 4
@@ -151,10 +152,11 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
                 label=f"tab:{slug}-channels-{short}",
             ),
             f"{prefix}_channels_{solver}",
+            experiment,
         )
 
-    print("wrote figures to", settings.FIGURE_OUTPUT)
-    print("wrote tables  to", settings.TABLE_OUTPUT)
+    print("wrote figures to", figure_dir(experiment))
+    print("wrote tables  to", table_dir(experiment))
 
 
 def main():

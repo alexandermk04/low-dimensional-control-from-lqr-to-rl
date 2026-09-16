@@ -13,7 +13,7 @@ from experiments.figures.panels import (
     trajectory_overlay,
     box_metric,
 )
-from experiments.figures.style import save
+from experiments.figures.style import figure_dir, save, table_dir
 from experiments.figures.tables import metric_table, write_table
 from experiments.store import MissingExperimentError, load_experiment
 
@@ -37,25 +37,25 @@ def render(experiment: str):
         # Plot 1
         ax = box_metric(rows, "size", "training_subopt_final", order=SIZE_ORDER)
         ax.set_xlabel("Inflation size")
-        save(ax.figure, f"ch5_inflation_subopt_{solver}")
+        save(ax.figure, f"ch5_inflation_subopt_{solver}", experiment)
 
         # Plot 2
         ax = learning_bands(subset, "size", x="env_steps", order=SIZE_ORDER)
-        save(ax.figure, f"ch5_inflation_curves_{solver}")
+        save(ax.figure, f"ch5_inflation_curves_{solver}", experiment)
 
         # Plot 3
         axes = trajectory_overlay(subset, "size", dt=0.01, order=SIZE_ORDER)
-        save(axes[0].figure, f"ch5_inflation_trajectories_{solver}")
+        save(axes[0].figure, f"ch5_inflation_trajectories_{solver}", experiment)
 
         # Plot 6
         ax = box_metric(rows, "size", "test_cost_mean", order=SIZE_ORDER)
         ax.set_xlabel("Inflation size")
-        save(ax.figure, f"ch5_inflation_testcost_{solver}")
+        save(ax.figure, f"ch5_inflation_testcost_{solver}", experiment)
 
         # Plot 7
         ax = complexity_bars(rows, "size", order=SIZE_ORDER)
         ax.set_xlabel("Inflation size")
-        save(ax.figure, f"ch5_inflation_complexity_{solver}")
+        save(ax.figure, f"ch5_inflation_complexity_{solver}", experiment)
 
         # Table 2
         write_table(
@@ -69,6 +69,7 @@ def render(experiment: str):
                 label=f"tab:ch5-inflation-{short}",
             ),
             f"ch5_inflation_{solver}",
+            experiment,
         )
 
 
@@ -78,9 +79,10 @@ def main():
             render(experiment)
         except MissingExperimentError as error:
             print(f"skipping {experiment}: {error}")
+            continue
 
-    print("wrote figures to", settings.FIGURE_OUTPUT)
-    print("wrote tables  to", settings.TABLE_OUTPUT)
+        print("wrote figures to", figure_dir(experiment))
+        print("wrote tables  to", table_dir(experiment))
 
 
 if __name__ == "__main__":

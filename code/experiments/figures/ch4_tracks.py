@@ -12,7 +12,7 @@ from experiments.figures.panels import (
     trajectory_overlay,
     box_metric,
 )
-from experiments.figures.style import save
+from experiments.figures.style import figure_dir, save, table_dir
 from experiments.figures.tables import metric_table, write_table
 from config import DEFAULT_DT
 from experiments.store import load_experiment
@@ -20,7 +20,10 @@ from experiments.store import load_experiment
 __all__ = ["render_track"]
 
 
-def render_size(records, size: str, order, stem_prefix: str, track_caption: str):
+def render_size(
+    records, size: str, order, stem_prefix: str, track_caption: str,
+    experiment: str,
+):
     """The per-size figures and table, grouped by the solver."""
     subset = [r for r in records if r.condition.get("size") == size]
     if not subset:
@@ -31,22 +34,22 @@ def render_size(records, size: str, order, stem_prefix: str, track_caption: str)
     stem = f"{stem_prefix}_{size}"
 
     ax = box_metric(rows, "solver", "training_subopt_final", order=order)
-    save(ax.figure, f"{stem}_training_subopt")
+    save(ax.figure, f"{stem}_training_subopt", experiment)
 
     # Training process
     ax = learning_bands(subset, "solver", x="env_steps", order=order)
-    save(ax.figure, f"{stem}_curves_steps")
+    save(ax.figure, f"{stem}_curves_steps", experiment)
 
     # Trajectories
     axes = trajectory_overlay(subset, "solver", dt=DEFAULT_DT, order=order)
-    save(axes[0].figure, f"{stem}_trajectories")
+    save(axes[0].figure, f"{stem}_trajectories", experiment)
 
     # Test costs and suboptimality
     ax = box_metric(rows, "solver", "test_cost_mean", order=order)
-    save(ax.figure, f"{stem}_testcost")
+    save(ax.figure, f"{stem}_testcost", experiment)
 
     ax = box_metric(rows, "solver", "subopt", order=order, log=False)
-    save(ax.figure, f"{stem}_subopt")
+    save(ax.figure, f"{stem}_subopt", experiment)
 
     # Table 2
     write_table(
@@ -60,10 +63,13 @@ def render_size(records, size: str, order, stem_prefix: str, track_caption: str)
             label=f"tab:{stem.replace('_', '-')}",
         ),
         stem,
+        experiment,
     )
 
 
-def render_across_sizes(records, solvers, stem_prefix: str, caption: str):
+def render_across_sizes(
+    records, solvers, stem_prefix: str, caption: str, experiment: str,
+):
     """How a solver degrades as the dimension grows.
     """
     rows = with_suboptimality(tidy(records), by=("seed", "size"))
@@ -78,11 +84,11 @@ def render_across_sizes(records, solvers, stem_prefix: str, caption: str):
 
     ax = box_metric(rows, ("size", "solver"), "test_cost_mean", order=order)
     ax.set_xlabel("Inflation size / solver")
-    save(ax.figure, f"{stem}_testcost")
+    save(ax.figure, f"{stem}_testcost", experiment)
 
     ax = box_metric(rows, ("size", "solver"), "subopt", order=order, log=False)
     ax.set_xlabel("Inflation size / solver")
-    save(ax.figure, f"{stem}_subopt")
+    save(ax.figure, f"{stem}_subopt", experiment)
 
     write_table(
         metric_table(
@@ -94,6 +100,7 @@ def render_across_sizes(records, solvers, stem_prefix: str, caption: str):
             label=f"tab:{stem.replace('_', '-')}",
         ),
         stem,
+        experiment,
     )
 
 
@@ -120,9 +127,13 @@ def render_track(
     order = tuple(solvers)
 
     for size in settings.CH4_INFLATION_SIZES:
-        render_size(records, size, order, stem_prefix, track_caption)
+        render_size(
+            records, size, order, stem_prefix, track_caption, experiment
+        )
 
-    render_across_sizes(records, order, stem_prefix, across_caption)
+    render_across_sizes(
+        records, order, stem_prefix, across_caption, experiment
+    )
 
-    print("wrote figures to", settings.FIGURE_OUTPUT)
-    print("wrote tables  to", settings.TABLE_OUTPUT)
+    print("wrote figures to", figure_dir(experiment))
+    print("wrote tables  to", table_dir(experiment))
