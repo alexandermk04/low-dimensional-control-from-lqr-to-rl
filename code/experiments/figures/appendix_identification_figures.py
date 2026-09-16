@@ -25,6 +25,10 @@ EXACT = 100 * np.finfo(float).eps
 NO_DATA_COLOR = "#DDDDDD"
 NO_DATA_HATCH = "///"
 
+# Fixed log10 suboptimality color range
+LOG_SUBOPT_MIN = -16
+LOG_SUBOPT_MAX = -1
+
 
 def _cell_value(rows: list[dict]) -> tuple[float, int, int, int]:
     """``(median suboptimality, no-id, unstable, total)`` for one grid cell.
@@ -104,13 +108,18 @@ def identification_map(rows: list[dict], size: str):
 
             median, no_id, unstable, total = _cell_value(cell)
             grid[row_index, column] = (
-                np.log10(max(median, 1e-16)) if np.isfinite(median) else np.nan
+                np.log10(max(median, 10.0 ** LOG_SUBOPT_MIN)) if np.isfinite(median) else np.nan
             )
             notes[(row_index, column)] = (median, no_id, unstable, total)
 
     colormap = matplotlib.colormaps["viridis_r"].with_extremes(bad=NO_DATA_COLOR)
-    image = ax.imshow(grid, aspect="auto", origin="lower", cmap=colormap)
-    figure.colorbar(image, ax=ax, label=r"$\log_{10}$ training suboptimality")
+    image = ax.imshow(
+        grid, aspect="auto", origin="lower", cmap=colormap,
+        vmin=LOG_SUBOPT_MIN, vmax=LOG_SUBOPT_MAX,
+    )
+    figure.colorbar(
+        image, ax=ax, extend="max", label=r"$\log_{10}$ training suboptimality",
+    )
 
     for (row_index, column), note in notes.items():
         value = grid[row_index, column]
