@@ -192,9 +192,12 @@ def estimate_gradient(lqr: LQRDiscrete, K: np.ndarray, m: int, l: int, r: float,
         K_i_plus = K + U
         K_i_minus = K - U
 
+        state_rng_state = lqr.state_rng.bit_generator.state
         lqr.reset()
         cost_estimate_plus, sigma_estimate_plus = run_trajectory(lqr, K_i_plus, l)
 
+        # Use same initial state
+        lqr.state_rng.bit_generator.state = state_rng_state
         lqr.reset()
         cost_estimate_minus, sigma_estimate_minus = run_trajectory(lqr, K_i_minus, l)
 
