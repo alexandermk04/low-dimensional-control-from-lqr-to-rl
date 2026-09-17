@@ -137,3 +137,49 @@ def make_full_rank_K0(
         return K_low_rank
 
     return K_low_rank + alpha * N / norm_N
+
+
+# --- Chapter 6: pixel observations and ring of thrusters ---------------------
+
+DEFAULT_FRAME_SIZE = 96
+DEFAULT_FRAME_STACK = 2
+
+# Simulation steps one agent command is held for
+DEFAULT_ACTION_REPEAT = 30
+
+# Visible half-track
+DEFAULT_VIEW_SCALE = 1.2
+
+# Number of thrusters over a half circle
+DEFAULT_N_THRUSTERS = 256
+DEFAULT_THRUSTER_PHASE = 0.0
+
+DEFAULT_THRUST_SCALE = 0.140625
+
+
+def thruster_lifts(
+    n_thrusters: int = DEFAULT_N_THRUSTERS,
+    phase: float = DEFAULT_THRUSTER_PHASE,
+    thrust_scale: float = DEFAULT_THRUST_SCALE,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Observation and actuation lifts of the chapter-6 thruster ring.
+
+    Parameters
+    ----------
+    n_thrusters : int, optional
+        Number of thrusters, ``N``. Defaults to :data:`DEFAULT_N_THRUSTERS`.
+    phase : float, optional
+        Rigid rotation of the ring, in radians. Defaults to
+        :data:`DEFAULT_THRUSTER_PHASE`.
+    thrust_scale : float, optional
+        Force of a fully commanded thruster. Defaults to
+        :data:`DEFAULT_THRUST_SCALE`.
+
+    Returns
+    -------
+    tuple[np.ndarray, np.ndarray]
+        ``(U_1, U_2)`` of shapes ``(2, 2)`` and ``(1, N)``.
+    """
+    from lqr_base.thruster_ring import thruster_ring_lift
+
+    return thruster_ring_lift(n_thrusters, phase, thrust_scale)
