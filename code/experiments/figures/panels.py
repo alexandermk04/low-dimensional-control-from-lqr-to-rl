@@ -61,6 +61,7 @@ def box_metric(
     ax=None,
     width: float = 1.0,
     aspect: float = 0.55,
+    color_by: int | None = None,
 ):
     """Box plot for a specific metric, one box per setting combination.
 
@@ -80,6 +81,9 @@ def box_metric(
     ax : matplotlib.axes.Axes or None, optional
     width, aspect : float, optional
         Figure size, as a fraction of the text width, when ``ax`` is created.
+    color_by : int or None, optional
+        Position of the key part that picks the colour, e.g. ``1`` for the
+        solver in ``("size", "solver")``.
 
     Returns
     -------
@@ -87,6 +91,14 @@ def box_metric(
     """
     stats = aggregate(rows, group_by, metric)
     keys = _ordered_keys(stats, order)
+
+    if color_by is None:
+        box_colors = [color_for(i, key[0]) for i, key in enumerate(keys)]
+    else:
+        hues = list(dict.fromkeys(key[color_by] for key in keys))
+        box_colors = [
+            color_for(hues.index(key[color_by]), key[color_by]) for key in keys
+        ]
 
     if ax is None:
         _, ax = new_figure(width, aspect)
@@ -139,7 +151,7 @@ def box_metric(
             whiskerprops=dict(linewidth=0.8),
         )
         for box, position in zip(artists["boxes"], positions):
-            box.set_facecolor(color_for(position - 1, keys[position - 1][0]))
+            box.set_facecolor(box_colors[position - 1])
             box.set_alpha(0.45)
             box.set_linewidth(0.8)
 
@@ -160,12 +172,43 @@ def box_metric(
 
     if log:
         ax.set_yscale("log")
-    ax.set_xticks(range(1, len(keys) + 1))
-    ax.set_xticklabels(labels)
+    if color_by is None:
+        ax.set_xticks(range(1, len(keys) + 1))
+        ax.set_xticklabels(labels)
+    else:
+        _label_runs(ax, keys, color_by, box_colors)
     ax.set_ylabel(METRIC_LABELS.get(metric, metric))
     ax.set_xlim(0.4, len(keys) + 0.6)
 
     return ax
+
+
+def _label_runs(ax, keys: list, color_by: int, box_colors: list):
+    """Coloring for x-ticks"""
+    from matplotlib.patches import Patch
+
+    rest = [key[:color_by] + key[color_by + 1:] for key in keys]
+    ticks, names, start = [], [], 0
+    for end in range(1, len(keys) + 1):
+        if end == len(keys) or rest[end] != rest[start]:
+            ticks.append((start + end + 1) / 2)
+            names.append(_tick_label(rest[start]))
+            if end < len(keys):
+                ax.axvline(end + 0.5, color="black", linewidth=0.5, alpha=0.3)
+            start = end
+    ax.set_xticks(ticks)
+    ax.set_xticklabels(names)
+    ax.grid(False, axis="x")
+
+    handles = {}
+    for key, color in zip(keys, box_colors):
+        handles.setdefault(
+            key[color_by], Patch(facecolor=color, alpha=0.45, label=label_for(key[color_by]))
+        )
+    ax.legend(
+        handles=list(handles.values()), frameon=False, loc="lower center",
+        bbox_to_anchor=(0.5, 1.0), ncol=len(handles),
+    )
 
 
 def learning_bands(
@@ -223,6 +266,8 @@ def learning_bands(
         label = _tick_label(key).replace("\n", ", ")
 
         if band["flat"]:
+            if normalize and not float(rescale(band["median"])) > 0:
+                continue
             ax.axhline(
                 float(rescale(band["median"])), linestyle=":", linewidth=1.5,
                 color=color, label=f"{label} (no samples)",

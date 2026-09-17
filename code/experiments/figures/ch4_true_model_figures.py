@@ -24,6 +24,8 @@ def main():
         across_caption=(
             "Policy architectures on the true model, across every inflation size."
         ),
+        # Count in iterations as we don't sample
+        curve_x="iteration",
     )
 
 

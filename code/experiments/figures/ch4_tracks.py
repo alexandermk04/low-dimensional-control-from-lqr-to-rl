@@ -19,10 +19,13 @@ from experiments.store import load_experiment
 
 __all__ = ["render_track"]
 
+# What to show on x-axis
+CURVE_SUFFIX = {"env_steps": "steps", "iteration": "iterations", "total_time": "time"}
+
 
 def render_size(
     records, size: str, order, stem_prefix: str, track_caption: str,
-    experiment: str,
+    experiment: str, curve_x: str = "env_steps",
 ):
     """The per-size figures and table, grouped by the solver."""
     subset = [r for r in records if r.condition.get("size") == size]
@@ -33,12 +36,16 @@ def render_size(
     rows = with_suboptimality(tidy(subset), by=("seed", "size"))
     stem = f"{stem_prefix}_{size}"
 
-    ax = box_metric(rows, "solver", "training_subopt_final", order=order)
+    # baseline is 0 for suboptimality
+    learned = [r for r in rows if r["solver"] != "baseline"]
+    ax = box_metric(learned, "solver", "training_subopt_final", order=order)
     save(ax.figure, f"{stem}_training_subopt", experiment)
 
     # Training process
-    ax = learning_bands(subset, "solver", x="env_steps", order=order)
-    save(ax.figure, f"{stem}_curves_steps", experiment)
+    ax = learning_bands(
+        subset, "solver", x=curve_x, order=order, logx=curve_x != "iteration"
+    )
+    save(ax.figure, f"{stem}_curves_{CURVE_SUFFIX.get(curve_x, curve_x)}", experiment)
 
     # Trajectories
     axes = trajectory_overlay(subset, "solver", dt=DEFAULT_DT, order=order)
@@ -82,12 +89,16 @@ def render_across_sizes(
 
     stem = f"{stem_prefix}_across_sizes"
 
-    ax = box_metric(rows, ("size", "solver"), "test_cost_mean", order=order)
-    ax.set_xlabel("Inflation size / solver")
+    ax = box_metric(
+        rows, ("size", "solver"), "test_cost_mean", order=order, color_by=1
+    )
+    ax.set_xlabel("Inflation size")
     save(ax.figure, f"{stem}_testcost", experiment)
 
-    ax = box_metric(rows, ("size", "solver"), "subopt", order=order, log=False)
-    ax.set_xlabel("Inflation size / solver")
+    ax = box_metric(
+        rows, ("size", "solver"), "subopt", order=order, log=False, color_by=1
+    )
+    ax.set_xlabel("Inflation size")
     save(ax.figure, f"{stem}_subopt", experiment)
 
     write_table(
@@ -106,7 +117,7 @@ def render_across_sizes(
 
 def render_track(
     experiment: str, solvers, stem_prefix: str,
-    track_caption: str, across_caption: str,
+    track_caption: str, across_caption: str, curve_x: str = "env_steps",
 ):
     """Draw one chapter-4 setting.
 
@@ -122,13 +133,16 @@ def render_track(
         Clause of the per-size table captions.
     across_caption : str
         Full caption of the cross-size table.
+    curve_x : str, optional
+        x-axis of the learning curves.
     """
     records = latest_per_experiment(load_experiment(experiment))
     order = tuple(solvers)
 
     for size in settings.CH4_INFLATION_SIZES:
         render_size(
-            records, size, order, stem_prefix, track_caption, experiment
+            records, size, order, stem_prefix, track_caption, experiment,
+            curve_x,
         )
 
     render_across_sizes(
