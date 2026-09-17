@@ -11,6 +11,7 @@
 set -euo pipefail
 
 VENV=${VENV:-$WORK/venvs/thesis}
+PARTITION=${PARTITION:-smp}
 
 if [[ -n "${SLURM_JOB_ID:-}" ]]; then
     # Inside the job: pin every thread pool to the reserved cores
@@ -29,6 +30,7 @@ mkdir -p cluster/logs
 
 sbatch \
     --job-name="$EXPERIMENT" \
+    --partition="$PARTITION" \
     --array="0-$((SHARDS - 1))" \
     --time="$TIME" \
     --ntasks=1 \
