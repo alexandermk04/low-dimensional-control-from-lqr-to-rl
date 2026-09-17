@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrr}
+\toprule
+Solver & Baseline & Model-based PG & S-PI \\
+\midrule
+True cost $J$ & $5848 \pm 9.587 \times 10^{-13}$ & $5849 \pm 0.2183$ & $5851 \pm 1.83 \times 10^{-5}$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ \\
+Test cost$^{\dagger}$ & $5968 \pm 5272$ & $5969 \pm 5273$ & $5971 \pm 5275$ \\
+Suboptimality $S$$^{\dagger}$ & $+0.000 \pm 0.000$ & $+0.000 \pm 0.000$ & $+0.001 \pm 0.000$ \\
+Environment steps & $0 \pm 0$ & $0 \pm 0$ & $0 \pm 0$ \\
+Policy parameters & $301 \pm 0$ & $20000 \pm 0$ & $301 \pm 0$ \\
+Gain rank & $1.0 \pm 0.0$ & $100.0 \pm 0.0$ & $1.0 \pm 0.0$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{Policy architectures optimized by the exact gradients on the true model at the large inflation, without noise. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
+\label{tab:ch4-true-large}
+\end{table}
