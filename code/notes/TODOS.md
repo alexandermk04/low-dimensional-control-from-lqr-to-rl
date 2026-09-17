@@ -4,3 +4,5 @@
 - Dreamer: Action in low-latent space, mapping from high dimensional observation
 - explain why CE_DARE needs a collapsed & simplified identified model
 - reason why N4SID is not scalable to pixel size
+- explain how we score how we compare the latent vector to pos-vel via ridge regression
+- pixel_solver in sovlers has "timesteps", which refers to agent steps, overriden by setting.RL_steps, but is not the same env steps as in chap5
