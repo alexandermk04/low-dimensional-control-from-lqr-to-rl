@@ -18,7 +18,7 @@ def main():
     # sizes imported from the experiment
     for size in SIZES:
         render(
-            EXPERIMENT, f"{PREFIX}_{size}", settings.CH5_SOLVERS,
+            EXPERIMENT, f"{PREFIX}_{size}", settings.CH5_COMPARISON_SOLVERS,
             set_by="python -m experiments.ch5_noise",
             size=size,
         )
