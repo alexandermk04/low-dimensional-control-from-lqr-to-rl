@@ -64,22 +64,33 @@ accumulated cost averaged over runs and seeds
 3. Table as in 2., but instead of different solvers, one solver with one noise at different strengths applied
 4. Table as in 3., but with different noise channels at one strength as columns
 
+
+## Appendix
+- Sweep l, m combinations to determine values for remaining experiments
+- Sweep T, hankel combinations to determine values for remaining experiments
+- Sweep different lambda, stepsize combination for spi_mf to determine divergence
+
 ## Chapter 4
-Comparison of Baseline Solution with Model-based, Model-based + System Identification, Model-free Policy Gradient Solvers - first noise free comparison using plots 1-3, 6, and table 1, 2 (but without policy complexity here), then tables 3,4 and and plots 4,5. So we compare the base controllers performance under normal behavior, as well as noise application. Inflation is also introduced here. Overall: Basic solvers, set data sample sizes based on experiments with different inflation intensities (base (2 in, 1 out), small (10 in, 5 out), medium (50 in, 25 out), large (200 in, 100 out)).
 
-## Chapter 5
-First introduction of model-based spi, explanation why model-free is excluded. Experiments with model-based spi + model-estimator; plots 1-3, 6 and tables 2,3 (here we use sample sizes selected based on results from 4) for comparison only with mb + model-estimator between different inflation sizes.
+Both run over all inflation sizes
 
-Introduce linear-ppo, fully-connected ppo and state-encoder, do same comparisons with different inflation sizes for the state-encoder only.
+### Track 1: true model, exact gradient
+- baseline, mb_pg, mb_spi comparison (pure)
+- TODO: comparison under noise on one inflation size
 
-Then afterwards same plots and tables for comparison between all those newly introduced solvers (with only medium sized inflation), as well as the baseline and mb + model-estimator from chapter 4 in the inflated dimensions, include additionally policy complexity here.
+### Track 2: unknown model
+- baseline, ce_dare, mb_est, spi_est, mf_npg, spi_mf (if possible)
+- comparison under noise (one size)
+- TODO: Comparison with suboptimal identification under noise (only one size)
 
-Afterwards a section comparing only baseline with model-based + estimator of policy gradient and spi and fully-connected ppo and fully connected + state encoder under the different noises, like we did in chapter four, but here with medium inflation.
+## Chapter 5 
+- comparison across sizes of baseline, ppo_linear, ppo_mlp, ppo_encoder (N4SID), ppo_encoder_scalable (TODO), ppo_bottleneck (TODO)
+- comparison under noise (one size)
+- comparison of selected from ch4 and ch5 under pixel size with noise
 
 ## Chapter 6
-Introduce how we now observe our environment via a camera, explain which assumptions we take. Introduce the Position Velocity Encoder shortly, mainly link the real paper. Only do comparison of performance with plots 1-3, 6, maybe 7 if shows difference, as well as table 2 between baseline, state-encoder + fully connected ppo and pve. No noise comparison with be done here.
-
-Add additional plots analyzing how well each solver captures velocity and position during testing - bar plots with accuracy per solver side by side.
+- comparison of ppo_full, ppo_bottleneck, ppo_encoder_scalable, ppo_posvel with base
+- show how well each identify the correct state as well
 
 ## Plotting & Table goals
-The goal would be to create the table and plots within latex, to have a uniform styling of my paper - whatever the best approach would be for that.
+The goal would be to create the table and plots within latex, to have a uniform styling of my paper.

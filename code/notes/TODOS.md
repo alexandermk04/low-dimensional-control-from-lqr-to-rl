@@ -1,0 +1,6 @@
+- explain & understand deeply how we recover cost matrices via N4SID
+- cite "Underactuated Robotics" for most of the control theory in preliminaries
+- mohamadi et al for sample complexity in model-free?
+- Dreamer: Action in low-latent space, mapping from high dimensional observation
+- explain why CE_DARE needs a collapsed & simplified identified model
+- reason why N4SID is not scalable to pixel size
