@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+$(l, m)$ & 200, 100 & 200, 200 & 500, 100 & 500, 200 & 800, 100 & 800, 200 \\
+\midrule
+True cost $J$ & $7628 \pm 19.49$ & $7614 \pm 13.41$ & $6184 \pm 5.841$ & $6180 \pm 3.193$ & $6021 \pm 3.57$ & $6019 \pm 2.264$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.304 \pm 0.003$ & $0.302 \pm 0.002$ & $0.057 \pm 0.001$ & $0.057 \pm 0.001$ & $0.030 \pm 0.001$ & $0.029 \pm 0.000$ \\
+Test cost$^{\dagger}$ & $7802 \pm 6918$ & $7787 \pm 6904$ & $6313 \pm 5576$ & $6309 \pm 5572$ & $6146 \pm 5427$ & $6144 \pm 5425$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{mf\_npg at the base inflation: cost after training, suboptimality and accumulated test cost for each sample-size combination. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
+\label{tab:appendix-sample-size-mf-npg-base}
+\end{table}

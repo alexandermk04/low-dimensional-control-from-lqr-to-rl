@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lr}
+\toprule
+$(l, m)$ & 200, 100 \\
+\midrule
+True cost $J$ & $8988 \pm 211.1$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.537 \pm 0.036$ \\
+Test cost$^{\dagger}$ & $9174 \pm 8134$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{mf\_npg at the large inflation: cost after training, suboptimality and accumulated test cost for each sample-size combination. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
+\label{tab:appendix-sample-size-mf-npg-large}
+\end{table}
