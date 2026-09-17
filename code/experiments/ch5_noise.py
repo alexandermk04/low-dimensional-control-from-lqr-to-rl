@@ -11,7 +11,7 @@ from experiments.settings_guard import require_choice
 
 EXPERIMENT = "ch5_noise"
 
-SOURCE = "ch5_solver_comparison"
+SOURCE = "ch5_inflation_sizes"
 
 # The chosen inflation size for comparison
 SIZES = (settings.CH5_REFERENCE_INFLATION,)
@@ -20,7 +20,7 @@ SIZES = (settings.CH5_REFERENCE_INFLATION,)
 def main():
     require_choice(
         settings.CH5_REFERENCE_INFLATION, "CH5_REFERENCE_INFLATION",
-        settings.INFLATION_SIZES, "pick one of settings.CH5_INFLATION_SIZES",
+        settings.INFLATION_SIZES, "pick one of settings.INFLATION_SIZES",
     )
 
     evaluate_grid(SOURCE, EXPERIMENT, SIZES)

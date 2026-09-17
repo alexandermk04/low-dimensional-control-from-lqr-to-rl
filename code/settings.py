@@ -154,16 +154,16 @@ INFLATION_SIZES = {
 # Which sizes each chapter looks at
 CH4_INFLATION_SIZES = ("base", "small", "medium", "large")
 
-# Chapter 5 drops ``base`` - a (2, 1) "inflation" is not one - and adds the pixel
-# cell. Its arms are all reinforcement learning, so none of the above ceilings
-# apply.
-CH5_INFLATION_SIZES = ("small", "medium", "large", "pixel")
-
-# The size the chapter-4 noise grid is drawn at, beside ``base``.
+# The chapter-4 noise grid setting
 CH4_REFERENCE_INFLATION = "medium"
 
-# The size chapter 5's all-arm comparison and its noise grid are drawn at.
+# Chapter 5 different inflation sizes
+CH5_INFLATION_SIZES = ("small", "medium", "large")
+
+# The size chapter 5's noise setting
 CH5_REFERENCE_INFLATION = "large"
+
+CH5_PIXEL_INFLATION = "pixel"
 
 
 # ---------------------------------------------------------------------------
@@ -202,6 +202,7 @@ CH4_IDENTIFIED_SOLVERS = (
 )
 
 # --- Chapter 5: reinforcement learning -------------------------------------
+# The inflation sweep.
 CH5_SOLVERS = (
     "baseline",
     "ppo_linear",
@@ -210,6 +211,21 @@ CH5_SOLVERS = (
     "ppo_encoder_scalable",
     "ppo_mlp",
 )
+
+# The comparison at CH5_REFERENCE_INFLATION.
+CH5_COMPARISON_SOLVERS = (
+    "baseline",
+    "mf_npg",
+    "ppo_linear",
+    "ppo_bottleneck",
+    "ppo_encoder_scalable",
+    "ppo_mlp",
+)
+
+# Cells without a budget of their own
+BORROWED_BUDGETS = {
+    ("mf_npg", "pixel"): "large",
+}
 
 # Algorithms that cannot be run at a given inflation size, and why.
 UNSUPPORTED_CELLS = {
