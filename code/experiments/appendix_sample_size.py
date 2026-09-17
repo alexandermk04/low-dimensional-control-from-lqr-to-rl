@@ -6,8 +6,6 @@ combinations of:
 - Length of the rollout
 during the training process, and then evaluate via our test protocol.
 
-Doesn't check all the inflation sizes, due to runtime constraints.
-
 Run with::
 
     python -m experiments.appendix_sample_size
@@ -32,7 +30,7 @@ EXPERIMENT = "appendix_sample_size"
 
 
 def build_specs() -> list[RunSpec]:
-    """Solvers x inflation sizes x  x seeds."""
+    """Solvers x inflation sizes x (l, m) cells x seeds."""
     return [
         RunSpec(
             experiment=EXPERIMENT,
@@ -46,7 +44,7 @@ def build_specs() -> list[RunSpec]:
         )
         for solver in settings.CH4_SAMPLE_SOLVERS
         for name, inflation in _sizes()
-        for rollout_length, n_trajectories in settings.sample_grid_for(name)
+        for rollout_length, n_trajectories in settings.SAMPLE_GRID
         for seed in settings.SEEDS
     ]
 
@@ -60,8 +58,6 @@ def main():
         used_settings={
             "solvers": settings.CH4_SAMPLE_SOLVERS,
             "sample_grid": settings.SAMPLE_GRID,
-            "sample_grid_full_sizes": settings.SAMPLE_GRID_FULL_SIZES,
-            "sample_grid_reduced": settings.SAMPLE_GRID_REDUCED,
             "inflation_sizes": dict(_sizes()),
             "iterations": settings.SOLVER_ITERATIONS,
             "hyperparams": {

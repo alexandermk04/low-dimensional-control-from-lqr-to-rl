@@ -30,8 +30,7 @@ def main():
                 print(f"  no runs for {solver} at {size}, skipping")
                 continue
 
-            # Reduced grid for larger inflation
-            cell_order = tuple(settings.sample_grid_for(size))
+            cell_order = settings.SAMPLE_GRID
 
             rows = tidy(subset)
 

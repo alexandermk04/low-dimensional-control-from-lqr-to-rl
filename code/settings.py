@@ -44,15 +44,6 @@ ROLLOUT_LENGTHS = (200, 500, 800)
 TRAJECTORY_COUNTS = (100, 200)
 SAMPLE_GRID = tuple((l, m) for l in ROLLOUT_LENGTHS for m in TRAJECTORY_COUNTS)
 
-# Reduced rollout lengths for the larger inflations
-SAMPLE_GRID_FULL_SIZES = ("base", "small")
-SAMPLE_GRID_REDUCED = tuple((l, m) for l in (200,) for m in TRAJECTORY_COUNTS)
-
-
-def sample_grid_for(size: str) -> tuple[tuple[int, int], ...]:
-    """The (l, m) cells swept at one inflation size."""
-    return SAMPLE_GRID if size in SAMPLE_GRID_FULL_SIZES else SAMPLE_GRID_REDUCED
-
 # Per inflation size sample sizes for model-free approach 
 
 # TODO: fill from `python -m experiments.appendix_sample_size`; values are (l, m).
