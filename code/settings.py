@@ -60,13 +60,18 @@ IDENTIFICATION_LENGTHS = (500, 1000, 2000, 4000, 8000)
 # Past/future horizon of the block Hankel matrices for N4SID
 IDENTIFICATION_HORIZONS = (5, 10, 20)
 
-# TODO: fill from `python -m experiments.appendix_identification_length`;
+# Filled from `python -m experiments.appendix_identification_length`;
 # values are (trajectory_length, hankel_horizon).
 CHOSEN_IDENTIFICATION = {
-    "base": None,
-    "small": None,
-    "medium": None,
-    "large": None,
+    "base": (5, 500),
+    "small": (5, 500),
+    "medium": (5, 500),
+    "large": (5, 2000),
+}
+
+SUBOPTIMAL_IDENTIFICATION = {
+    "medium": (10, 500),
+    "large": (5, 1000),
 }
 
 # TODO: RL solvers should be chosen based on the above selection
