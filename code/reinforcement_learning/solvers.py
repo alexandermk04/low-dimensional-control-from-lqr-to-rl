@@ -1,17 +1,10 @@
 """The reinforcement-learning solvers, with different policy architectures.
-
-**Linear solver.** PPO with an empty policy network, so the actor is a single
-affine layer and the deterministic policy is exactly ``v = W y + b``. The gain
-``K = -W`` can then be scored by the *same closed form* the LQR solvers are
-scored by, and its rank measured.
-
-**Neural solver.** A standard MLP actor, scored by Monte-Carlo rollout only. 
 """
 
 from dataclasses import dataclass, field
 
 import numpy as np
-from stable_baselines3 import PPO, SAC
+from stable_baselines3 import PPO
 from stable_baselines3.common.base_class import BaseAlgorithm
 
 from evaluation.metrics import Policy
@@ -20,16 +13,18 @@ __all__ = [
     "RLSolverSettings",
     "LINEAR_PPO",
     "MLP_PPO",
-    "MLP_SAC",
+    "ENCODER_PPO",
     "build_model",
     "extract_linear_gain",
     "set_linear_gain",
     "freeze_actor_bias",
     "is_linear_solver",
+    "load_extractor",
     "SB3Policy",
+    "pixel_presets",
 ]
 
-ALGORITHMS = {"ppo": PPO, "sac": SAC}
+ALGORITHMS = {"ppo": PPO}
 
 
 @dataclass
@@ -68,6 +63,25 @@ class RLSolverSettings:
         directly comparable to the LQR solvers.
     policy_kwargs_extra : dict
         Merged into the constructed ``policy_kwargs``.
+    policy : str
+        Stable-Baselines3 policy class name. ``"MlpPolicy"`` for the chapter-5
+        solvers; ``"CnnPolicy"`` for the chapter-6 ones.
+    features_extractor_class : type or None
+        Custom feature extractor class. ``None`` uses the default for the policy.
+    features_extractor_kwargs : dict
+        Forwarded to the extractor's constructor.
+    normalize_images : bool
+        Default is ``True``.
+    pretrained_extractor : dict or None
+        ``state_dict`` to load into the extractor before training.
+    freeze_extractor : bool
+        Stop the extractor's parameters being trained, if one is passed.
+    linear : bool or None
+        Overrides :func:`is_linear_solver`.
+    n_steps, batch_size, n_epochs, ent_coef, clip_range, max_grad_norm : ...
+        PPO hyperparameters. Defaults to Stable-Baselines3 settings.
+    device : str
+        Torch device. ``"auto"`` follows Stable-Baselines3.
     """
 
     name: str
@@ -82,6 +96,23 @@ class RLSolverSettings:
     initial_gain: np.ndarray | None = None
     freeze_bias: bool = True
     policy_kwargs_extra: dict = field(default_factory=dict)
+
+    policy: str = "MlpPolicy"
+    features_extractor_class: type | None = None
+    features_extractor_kwargs: dict = field(default_factory=dict)
+    normalize_images: bool = True
+    pretrained_extractor: dict | None = None
+    freeze_extractor: bool = False
+    linear: bool | None = None
+
+    n_steps: int = 2048
+    batch_size: int = 64
+    n_epochs: int = 10
+    ent_coef: float = 0.0
+    clip_range: float = 0.2
+    max_grad_norm: float = 0.5
+    device: str = "auto"
+
 
 # Extractable gain matrix
 LINEAR_PPO = RLSolverSettings(
@@ -98,13 +129,95 @@ MLP_PPO = RLSolverSettings(
     learning_rate=3e-4,
 )
 
-MLP_SAC = RLSolverSettings(
-    name="sac_mlp",
-    algo="sac",
-    net_arch=[256, 256],
-    total_timesteps=100_000,
+# Sees an identified, low-dimensional state, acts in the full output
+ENCODER_PPO = RLSolverSettings(
+    name="ppo_encoder",
+    algo="ppo",
+    net_arch=dict(pi=[64, 64], vf=[64, 64]),
     learning_rate=3e-4,
 )
+
+
+# --- Chapter 6 -----------------------------------------
+
+def pixel_gamma(horizon_seconds: float = 10.0) -> float:
+    """Discount that holds the effective horizon fixed in *seconds*.
+
+    Parameters
+    ----------
+    horizon_seconds : float, optional
+        Effective horizon to hold fixed. Defaults to ``10.0``, chapter 5's.
+
+    Returns
+    -------
+    float
+        The discount to use at the chapter-6 agent rate.
+    """
+    from config import DEFAULT_ACTION_REPEAT, DEFAULT_DT
+
+    return 1.0 - (DEFAULT_DT * DEFAULT_ACTION_REPEAT) / horizon_seconds
+
+
+def _pixel_solver(name: str, extractor, **kwargs) -> RLSolverSettings:
+    """Chapter-6 preset, with shared settings.
+
+    Parameters
+    ----------
+    name : str
+        Solver label.
+    extractor : type
+        The feature extractor class.
+    **kwargs
+        Overrides.
+
+    Returns
+    -------
+    RLSolverSettings
+        The preset.
+    """
+    defaults = dict(
+        algo="ppo",
+        policy="CnnPolicy",
+        features_extractor_class=extractor,
+        net_arch=dict(pi=[64], vf=[64]),
+        linear=False,
+        freeze_bias=False,
+        gamma=pixel_gamma(),
+        learning_rate=3e-4,
+        log_std_init=-1.0,
+        total_timesteps=150_000,
+        eval_freq=10_000,
+        n_steps=2048,
+        batch_size=256,
+        n_epochs=10,
+        device="cpu",
+    )
+    defaults.update(kwargs)
+
+    return RLSolverSettings(name=name, **defaults)
+
+
+def pixel_presets() -> dict:
+    """The chapter-6 solvers, by name.
+
+    Returns
+    -------
+    dict
+        Mapping solver name to :class:`RLSolverSettings`.
+    """
+    from reinforcement_learning.pixel_features import (
+        FCExtractor,
+        PosVelExtractor,
+    )
+
+    return {
+        "ppo_pixel_fc": _pixel_solver("ppo_pixel_fc", FCExtractor),
+        "ppo_pixel_posvel": _pixel_solver(
+            "ppo_pixel_posvel", PosVelExtractor,
+            features_extractor_kwargs={"n_keypoints": 4},
+            freeze_extractor=True,
+        ),
+    }
 
 
 def is_linear_solver(settings: RLSolverSettings) -> bool:
@@ -120,7 +233,11 @@ def is_linear_solver(settings: RLSolverSettings) -> bool:
     bool
         ``True`` only for PPO with an empty actor network. SAC is excluded even
         with an empty network, because its policy isnon-linear.
+
     """
+    if settings.linear is not None:
+        return settings.linear
+
     if settings.algo != "ppo":
         return False
 
@@ -165,15 +282,38 @@ def build_model(env, settings: RLSolverSettings, seed: int) -> BaseAlgorithm:
         policy_kwargs.setdefault("ortho_init", False)
         policy_kwargs.setdefault("log_std_init", settings.log_std_init)
 
+    if settings.features_extractor_class is not None:
+        policy_kwargs["features_extractor_class"] = settings.features_extractor_class
+        policy_kwargs["features_extractor_kwargs"] = dict(settings.features_extractor_kwargs)
+        policy_kwargs["normalize_images"] = settings.normalize_images
+
+    algorithm_kwargs = {}
+    if settings.algo == "ppo":
+        algorithm_kwargs = {
+            "n_steps": settings.n_steps,
+            "batch_size": settings.batch_size,
+            "n_epochs": settings.n_epochs,
+            "ent_coef": settings.ent_coef,
+            "clip_range": settings.clip_range,
+            "max_grad_norm": settings.max_grad_norm,
+        }
+
     model = ALGORITHMS[settings.algo](
-        "MlpPolicy",
+        settings.policy,
         env,
         seed=seed,
         gamma=settings.gamma,
         learning_rate=settings.learning_rate,
         policy_kwargs=policy_kwargs,
+        device=settings.device,
         verbose=0,
+        **algorithm_kwargs,
     )
+
+    if settings.pretrained_extractor is not None:
+        load_extractor(model, settings.pretrained_extractor, freeze=settings.freeze_extractor)
+    elif settings.freeze_extractor:
+        raise ValueError("freeze_extractor=True without a pretrained_extractor freezes noise.")
 
     if settings.initial_gain is not None:
         set_linear_gain(model, settings.initial_gain)
@@ -182,6 +322,32 @@ def build_model(env, settings: RLSolverSettings, seed: int) -> BaseAlgorithm:
         freeze_actor_bias(model)
 
     return model
+
+
+def load_extractor(model: BaseAlgorithm, state_dict: dict, freeze: bool = True) -> None:
+    """Reload pre-fitted weights into a policy's feature extractor.
+
+    Parameters
+    ----------
+    model : stable_baselines3.common.base_class.BaseAlgorithm
+        The model whose extractor should be replaced.
+    state_dict : dict
+        Weights, as produced by the pretraining routines in
+        :mod:`reinforcement_learning.pixel_features`.
+    freeze : bool, optional
+        Also stop the extractor being trained. Defaults to ``True``.
+
+    Returns
+    -------
+    None
+
+    """
+    extractor = model.policy.features_extractor
+    extractor.load_state_dict(state_dict)
+
+    if freeze:
+        for parameter in extractor.parameters():
+            parameter.requires_grad_(False)
 
 
 def freeze_actor_bias(model: BaseAlgorithm) -> None:
@@ -292,14 +458,22 @@ class SB3Policy:
         A trained model.
     deterministic : bool, optional
         Use the distribution's mean rather than a sample. Defaults to ``True``.
+    encoder : np.ndarray or None, optional
+        ``(k, p)`` matrix applied to the observation before the model sees it.
     """
 
-    def __init__(self, model: BaseAlgorithm, deterministic: bool = True):
+    def __init__(self, model: BaseAlgorithm, deterministic: bool = True,
+                 encoder: np.ndarray | None = None):
         self.model = model
         self.deterministic = deterministic
+        self.encoder = None if encoder is None else np.asarray(encoder, dtype=np.float64)
 
     def __call__(self, y: np.ndarray) -> np.ndarray:
         """Return the control for one observation."""
+        y = np.asarray(y, dtype=np.float64)
+        if self.encoder is not None:
+            y = self.encoder @ y
+
         action, _ = self.model.predict(
             np.asarray(y, dtype=np.float32), deterministic=self.deterministic
         )

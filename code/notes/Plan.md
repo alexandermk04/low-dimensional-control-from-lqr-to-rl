@@ -89,8 +89,9 @@ Both run over all inflation sizes
 - comparison of selected from ch4 and ch5 under pixel size with noise
 
 ## Chapter 6
-- comparison of ppo_full, ppo_bottleneck, ppo_encoder_scalable, ppo_posvel with base
+- comparison of ppo_full, ppo_bottleneck (TODO), ppo_encoder_scalable (TODO), ppo_posvel with base
 - show how well each identify the correct state as well
+- show some example renderings to explain the architecture
 
 ## Plotting & Table goals
 The goal would be to create the table and plots within latex, to have a uniform styling of my paper.

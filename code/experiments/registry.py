@@ -32,6 +32,12 @@ __all__ = ["SolverResult", "SOLVER_REGISTRY", "run_solver", "known_solvers"]
 # Solvers whose training happens through stable-baselines3.
 RL_SOLVERS = ("ppo_linear", "ppo_mlp", "ppo_encoder")
 
+# Chapter 6: trained through stable-baselines3 too, but on a pixel
+# environment and a thruster ring rather than on an inflated LQR.
+PIXEL_SOLVERS = (
+    "ppo_pixel_fc", "ppo_pixel_ortho", "ppo_pixel_estimator", "ppo_pixel_posvel",
+)
+
 
 @dataclass
 class SolverResult:
@@ -64,9 +70,9 @@ class SolverResult:
         driven at the agent rate, so the chapter-5 optimum is the wrong
         yardstick.
     evaluate_test : callable or None
-        ``() -> TestResult``.
+        ``() -> TestResult``
     trajectory : callable or None
-        ``() -> SimulationResult``.
+        ``() -> SimulationResult``
     """
 
     K_final: np.ndarray | None
@@ -319,10 +325,9 @@ def _identification_failed(problem, scorer, id_settings, failure) -> SolverResul
 def _run_mb_est(spec: RunSpec, problem: Problem) -> SolverResult:
     """Exact-gradient policy descent on an identified model.
     """
-
     from lqr_solvers.system_identification import to_inflated_plant
 
-    context = _identify_for(spec, problem, lambda model, K: K, reduce_input=False)
+    context = _identify_for(spec, problem, lambda model, K: K)
     if context.model is None:
         return context.failed_result(problem)
 
@@ -348,7 +353,6 @@ def _run_mb_est(spec: RunSpec, problem: Problem) -> SolverResult:
 def _run_ce_dare(spec: RunSpec, problem: Problem) -> SolverResult:
     """Certainty equivalence: identify the plant, then solve its Riccati equation.
     """
-
     from lqr_base.simple_lqr import get_optimal_K_and_cost_discrete
     from lqr_solvers.system_identification import to_plant
 
@@ -610,9 +614,214 @@ def _run_rl(
     )
 
 
-def _run_ppo_encoder(spec: RunSpec, problem: Problem) -> SolverResult:
-    """PPO behind the linear encoder of an identified model.
+# --- Chapter 6 ---------------------------------------
+
+
+def _pixel_setup(spec: RunSpec):
+    """Chapter 6 setup
+
+    Returns
+    -------
+    tuple
+        ``(K, j_star, horizon, action_repeat)``. ``K`` is the exact optimal
+        gain at the agent rate.
+
+    Raises
+    ------
+    ValueError
+        If the configured ring cannot deliver what ``K`` demands.
     """
+    import config as cfg
+    from evaluation.pixel_metrics import agent_horizon
+    from lqr_base.thruster_ring import check_thrust_calibration, optimal_coarse_gain
+
+    K, P, rho = optimal_coarse_gain(
+        cfg.double_integrator_model(), *cfg.default_costs(),
+        cfg.DEFAULT_DT, cfg.DEFAULT_ACTION_REPEAT,
+    )
+    check_thrust_calibration(cfg.thruster_lifts()[1][0], K, cfg.DEFAULT_MAX_INITIAL_STATE)
+
+    horizon = (
+        settings.TRAIN_HORIZON if settings.TRAIN_HORIZON is not None
+        else agent_horizon(rho)
+    )
+
+    # Exact expected infinite-horizon cost under perfect state feedback
+    sigma_0 = np.diag(np.asarray(cfg.DEFAULT_MAX_INITIAL_STATE, dtype=float) ** 2 / 3.0)
+    j_star = float(np.trace(P @ sigma_0))
+
+    return K, j_star, int(horizon), int(cfg.DEFAULT_ACTION_REPEAT)
+
+
+def _pixel_extra(env, diagnostics: dict) -> dict:
+    """Additional summary entries for pixel runs"""
+    import config as cfg
+
+    return {
+        "action_clips": env.n_action_clips,
+        **diagnostics,
+        "action_repeat": int(cfg.DEFAULT_ACTION_REPEAT),
+        "n_thrusters": int(cfg.DEFAULT_N_THRUSTERS),
+        "thrust_scale": float(cfg.DEFAULT_THRUST_SCALE),
+    }
+
+
+def _pixel_protocol(env, policy, horizon: int):
+    """The test protocol and the figure rollout for chapter 6"""
+    from evaluation.pixel_metrics import env_monte_carlo_cost, rollout_env
+    from experiments.evaluate import TestResult
+
+    def evaluate_test(episodes: int | None = None, horizon_override: int | None = None,
+                      **_ignored) -> TestResult:
+        episodes = settings.TEST_EPISODES if episodes is None else episodes
+        steps = horizon if horizon_override is None else horizon_override
+
+        mean, stderr, _ = env_monte_carlo_cost(
+            env, policy, n_episodes=episodes, horizon=steps
+        )
+
+        return TestResult(
+            summary={
+                "test_cost_mean": float(mean),
+                "test_cost_stderr": float(stderr),
+                "test_episodes": int(episodes),
+                "test_horizon": int(steps),
+            },
+            returns=np.full(1, float(mean)),
+        )
+
+    return evaluate_test, lambda: rollout_env(env, policy, horizon)
+
+
+def _run_oracle_coarse(spec: RunSpec, problem: Problem) -> SolverResult:
+    """Chapter 6's baseline, the exact optimum at the agent's decision rate.
+    """
+    from evaluation.pixel_metrics import StatePolicy, env_monte_carlo_cost
+    from lqr_base.thruster_ring import ThrusterOraclePolicy
+    from reinforcement_learning.pixel_env import build_pixel_env
+
+    K, j_star, horizon, repeat = _pixel_setup(spec)
+
+    env = build_pixel_env(sub_seed(spec.seed, "pixel", spec.solver), horizon=horizon)
+    policy = StatePolicy(ThrusterOraclePolicy(K, env.c))
+
+    mean, _, diagnostics = env_monte_carlo_cost(
+        env, policy, n_episodes=settings.PIXEL_PROBE_EPISODES, horizon=horizon
+    )
+
+    # No training
+    records = [IterationRecord(
+        iteration=0, env_steps=0, total_time=0.0,
+        cost=float(mean), cost_estimate=None, rank=int(np.linalg.matrix_rank(K)),
+    )]
+
+    evaluate_test, trajectory = _pixel_protocol(env, policy, horizon)
+
+    return SolverResult(
+        K_final=None,
+        policy=policy,
+        records=records,
+        complexity=policy_complexity_linear(K),
+        solver_settings={"solver": "oracle_coarse", "action_repeat": repeat, "K": K},
+        scorer=env,
+        extra=_pixel_extra(env, diagnostics),
+        j_star=j_star,
+        evaluate_test=evaluate_test,
+        trajectory=trajectory,
+    )
+
+
+def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
+    """Train a PPO policy with different feature extractors on the pixel environment.
+    """
+    import dataclasses as dc
+
+    from evaluation.pixel_metrics import SB3EnvPolicy, env_monte_carlo_cost
+    from evaluation.latent_probe import latent_extra
+    from reinforcement_learning.callbacks import ProbeCallback
+    from reinforcement_learning.pixel_env import build_pixel_env
+    from reinforcement_learning.pixel_features import fit_extractor_weights
+    from reinforcement_learning.solvers import build_model, pixel_presets
+
+    K, j_star, horizon, repeat = _pixel_setup(spec)
+
+    # Train env
+    train_env = build_pixel_env(sub_seed(spec.seed, "pixel-train", spec.solver), horizon=horizon)
+
+    # Test env
+    score_env = build_pixel_env(sub_seed(spec.seed, "pixel-score", spec.solver), horizon=horizon)
+
+    preset = pixel_presets()[spec.solver]
+
+    weights = None
+
+    # Pretain if extractor is frozen
+    if preset.freeze_extractor:
+        fit_env = build_pixel_env(sub_seed(spec.seed, "pixel-fit", spec.solver), horizon=horizon)
+        weights = fit_extractor_weights(
+            spec.solver, fit_env, K, seed=spec.seed,
+            n_steps=settings.PIXEL_PRETRAIN_STEPS,
+            epochs=settings.PIXEL_PRETRAIN_EPOCHS,
+        )
+
+    solver_settings = dc.replace(
+        preset,
+        total_timesteps=settings.RL_TIMESTEPS,
+        eval_freq=settings.RL_EVAL_FREQ,
+        pretrained_extractor=weights,
+    )
+
+    def evaluate(model):
+        mean, _, _ = env_monte_carlo_cost(
+            score_env, SB3EnvPolicy(model),
+            n_episodes=settings.PIXEL_PROBE_EPISODES,
+            horizon=horizon,
+        )
+        return mean, None
+
+    callback = ProbeCallback(
+        evaluate,
+        eval_freq=solver_settings.eval_freq,
+        env_steps_scale=repeat,
+    )
+
+    model = build_model(train_env, solver_settings, seed=spec.seed)
+    model.learn(
+        total_timesteps=solver_settings.total_timesteps,
+        callback=callback,
+        progress_bar=False,
+    )
+
+    policy = SB3EnvPolicy(model)
+
+    _, _, diagnostics = env_monte_carlo_cost(
+        score_env, policy,
+        n_episodes=settings.PIXEL_PROBE_EPISODES,
+        horizon=horizon,
+    )
+
+    extra = _pixel_extra(train_env, diagnostics)
+    extra.update(latent_extra(model, score_env, policy))
+
+    evaluate_test, trajectory = _pixel_protocol(score_env, policy, horizon)
+
+    return SolverResult(
+        K_final=None,
+        policy=policy,
+        records=callback.records,
+        complexity=policy_complexity_mlp(model),
+        solver_settings=solver_settings,
+        scorer=score_env,
+        extra=extra,
+        save_policy=_sb3_saver(model, solver_settings, None),
+        j_star=j_star,
+        evaluate_test=evaluate_test,
+        trajectory=trajectory,
+    )
+
+
+def _run_ppo_encoder(spec: RunSpec, problem: Problem) -> SolverResult:
+    """PPO behind N4SID."""
     context = _identify_for(spec, problem, purpose="identify")
 
     if context.model is None:
@@ -672,14 +881,25 @@ SOLVER_REGISTRY: dict[str, Callable[[RunSpec, Problem], SolverResult]] = {
     "ppo_linear": _run_rl,
     "ppo_mlp": _run_rl,
     "ppo_encoder": _run_ppo_encoder,
-    # Not yet implemented
+    "oracle_coarse": _run_oracle_coarse,
+    "ppo_pixel_fc": _run_pixel_rl,
+    "ppo_pixel_posvel": _run_pixel_rl,
+    # not yet implemented
+    "ppo_pixel_ortho": _missing(
+        "ppo_pixel_ortho",
+        "PPO with an orthonormal projection layer",
+    ),
+    "ppo_pixel_estimator": _missing(
+        "ppo_pixel_estimator",
+        "PPO with a spatial estimator layer",
+    ),
     "ppo_bottleneck": _missing(
         "ppo_bottleneck",
-        "PPO with an orthonomal projection layer"
+        "PPO with an orthonormal projection layer",
     ),
     "ppo_encoder_scalable": _missing(
         "ppo_encoder_scalable",
-        "observation encoder that replaces N4SID at large scale"
+        "observation encoder that replaces N4SID at large scale",
     ),
 }
 
