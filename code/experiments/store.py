@@ -11,6 +11,7 @@ Layout, one subfolder per experiment::
 """
 
 import json
+import os
 import time
 from pathlib import Path
 
@@ -34,6 +35,7 @@ __all__ = [
     "load_run_index",
     "run_key",
     "completed_runs",
+    "in_shard",
     "MissingExperimentError",
     "SettingsChangedError",
 ]
@@ -137,7 +139,10 @@ def write_manifest(experiment: str, used_settings: dict, grid: list | None = Non
         payload["created"] = previous.get("created", now)
         payload["resumed"] = previous.get("resumed", []) + [now]
 
-    path.write_text(json.dumps(payload, indent=2))
+    # Atomic writing to allow sharding
+    temporary = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+    temporary.write_text(json.dumps(payload, indent=2))
+    os.replace(temporary, path)
 
     return path
 
@@ -145,6 +150,16 @@ def write_manifest(experiment: str, used_settings: dict, grid: list | None = Non
 def run_key(solver: str, seed: int, condition: dict) -> tuple[str, int, str]:
     """What identifies one run within an experiment."""
     return solver, int(seed), condition_slug(condition)
+
+
+def in_shard(position: int) -> bool:
+    """Whether the grid entry at ``position`` belongs to this SLURM array task.
+
+    Always ``True`` outside of a job array.
+    """
+    count = int(os.environ.get("SLURM_ARRAY_TASK_COUNT", 1))
+    task = int(os.environ.get("SLURM_ARRAY_TASK_ID", 0))
+    return position % count == task
 
 
 def completed_runs(experiment: str) -> dict[tuple[str, int, str], dict]:

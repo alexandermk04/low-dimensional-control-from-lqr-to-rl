@@ -21,6 +21,7 @@ from experiments.settings_guard import require_noise
 from experiments.store import (
     MissingExperimentError,
     completed_runs,
+    in_shard,
     load_run_index,
     run_key,
     store_record,
@@ -128,7 +129,11 @@ def evaluate_grid(source: str, experiment: str, sizes=None, verbose: bool = True
     records = []
     index = 0
 
-    for key in sorted(source_runs):
+    for position, key in enumerate(sorted(source_runs)):
+        if not in_shard(position):
+            index += len(conditions)
+            continue
+
         source_record = source_runs[key]
         solver, seed = source_record.solver, source_record.seed
 

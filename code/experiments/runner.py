@@ -17,7 +17,13 @@ from experiments.keep_running import keep_running
 from experiments.evaluate import evaluate_policy, figure_trajectory
 from experiments.problem import Problem, RunSpec, make_problem
 from experiments.registry import SolverResult, run_solver
-from experiments.store import completed_runs, run_key, store_record, write_manifest
+from experiments.store import (
+    completed_runs,
+    in_shard,
+    run_key,
+    store_record,
+    write_manifest,
+)
 
 __all__ = ["train", "run_grid"]
 
@@ -208,6 +214,8 @@ def run_grid(
 
     records = []
     for index, spec in enumerate(specs, start=1):
+        if not in_shard(index - 1):
+            continue
         if run_key(spec.solver, spec.seed, spec.condition) in done:
             continue
 

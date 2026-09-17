@@ -61,3 +61,6 @@ __pycache__/
 code/results/
 
 code/experiment_results/
+
+# SLURM job logs
+code/cluster/logs/
