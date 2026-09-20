@@ -1,20 +1,20 @@
 \begin{table}[htbp]
 \centering
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lr}
+\begin{tabular}{lrrrrrr}
 \toprule
-Solver & Baseline \\
+Solver & Baseline & N4SID + DARE & Model-based PG + N4SID & S-PI + N4SID & Model-free NPG & S-PI (model-free) \\
 \midrule
-True cost $J$ & $5848 \pm 9.587 \times 10^{-13}$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.000 \pm 0.000$ \\
-Test cost$^{\dagger}$ & $5968 \pm 5272$ \\
-Suboptimality $S$$^{\dagger}$ & $+0.000 \pm 0.000$ \\
-Environment steps & $0 \pm 0$ \\
-Policy parameters & $76 \pm 0$ \\
-Gain rank & $1.0 \pm 0.0$ \\
+True cost $J$ & $5848 \pm 9.587 \times 10^{-13}$ & $5848 \pm 5.175 \times 10^{-5}$ & $5848 \pm 2.073 \times 10^{-5}$ & $5904 \pm 0.08024$ & $6105 \pm 13.51$ & $4.446 \times 10^{4} \pm 6762$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0$ & $< 10^{-6}$ & $< 10^{-6}$ & $0.010 \pm 0.000$ & $0.044 \pm 0.002$ & $6.603 \pm 1.156$ \\
+Test cost$^{\dagger}$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $6025 \pm 5322$ & $6233 \pm 5510$ & $2.684 \times 10^{4} \pm 2.153 \times 10^{4}$ \\
+Suboptimality $S$$^{\dagger}$ & $0$ & $< 10^{-6}$ & $< 10^{-6}$ & $+0.012 \pm 0.007$ & $+0.045 \pm 0.016$ & $+7.281 \pm 11.637$ \\
+Environment steps & $0 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $8 \times 10^{7} \pm 0$ & $8 \times 10^{7} \pm 0$ \\
+Policy parameters & $76 \pm 0$ & $76 \pm 0$ & $1250 \pm 0$ & $76 \pm 0$ & $1250 \pm 0$ & $1250 \pm 0$ \\
+Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $25.0 \pm 0.0$ & $1.0 \pm 0.0$ & $25.0 \pm 0.0$ & $21.2 \pm 1.8$ \\
 \bottomrule
 \end{tabular}
 }
-\caption{Solvers learning without the model at the medium inflation, without noise. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
+\caption{Solvers learning without the model at the medium inflation, without noise. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs. A bound rather than a value marks a cell at the numerical resolution of the Riccati solve, i.e. a controller that is optimal to within rounding.}
 \label{tab:ch4-identified-medium}
 \end{table}

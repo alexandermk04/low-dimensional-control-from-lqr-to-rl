@@ -1,18 +1,18 @@
 \begin{table}[htbp]
 \centering
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrrrrrrrrrrrrrrrrrrrrrr}
 \toprule
-(size, solver) & base, Baseline & small, Baseline & medium, Baseline & large, Baseline \\
+(size, solver) & base, Baseline & base, N4SID + DARE & base, Model-based PG + N4SID & base, S-PI + N4SID & base, Model-free NPG & base, S-PI (model-free) & small, Baseline & small, N4SID + DARE & small, Model-based PG + N4SID & small, S-PI + N4SID & small, Model-free NPG & small, S-PI (model-free) & medium, Baseline & medium, N4SID + DARE & medium, Model-based PG + N4SID & medium, S-PI + N4SID & medium, Model-free NPG & medium, S-PI (model-free) & large, Baseline & large, N4SID + DARE & large, Model-based PG + N4SID & large, S-PI + N4SID \\
 \midrule
-Training suboptimality $(J-J^*)/J^*$ & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ \\
-Test cost$^{\dagger}$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ \\
-Suboptimality $S$$^{\dagger}$ & $+0.000 \pm 0.000$ & $+0.000 \pm 0.000$ & $+0.000 \pm 0.000$ & $+0.000 \pm 0.000$ \\
-Policy parameters & $2 \pm 0$ & $16 \pm 0$ & $76 \pm 0$ & $301 \pm 0$ \\
-Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0$ & $< 10^{-6}$ & $< 10^{-6}$ & $0.010 \pm 0.000$ & $0.030 \pm 0.001$ & $0.521 \pm 0.012$ & $0$ & $< 10^{-6}$ & $< 10^{-6}$ & $0.010 \pm 0.000$ & $0.041 \pm 0.005$ & $2.089 \pm 0.192$ & $0$ & $< 10^{-6}$ & $< 10^{-6}$ & $0.010 \pm 0.000$ & $0.044 \pm 0.002$ & $6.603 \pm 1.156$ & $0$ & $< 10^{-6}$ & $< 10^{-6}$ & $0.120 \pm 0.054$ \\
+Test cost$^{\dagger}$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $6025 \pm 5322$ & $6146 \pm 5427$ & $9071 \pm 7922$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $6025 \pm 5322$ & $6216 \pm 5492$ & $1.71 \times 10^{4} \pm 1.447 \times 10^{4}$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $6025 \pm 5322$ & $6233 \pm 5510$ & $2.684 \times 10^{4} \pm 2.153 \times 10^{4}$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $6673 \pm 5881$ \\
+Suboptimality $S$$^{\dagger}$ & $0$ & $< 10^{-6}$ & $< 10^{-6}$ & $+0.012 \pm 0.007$ & $+0.036 \pm 0.024$ & $+0.655 \pm 0.409$ & $0$ & $< 10^{-6}$ & $< 10^{-6}$ & $+0.012 \pm 0.007$ & $+0.041 \pm 0.013$ & $+2.959 \pm 3.300$ & $0$ & $< 10^{-6}$ & $< 10^{-6}$ & $+0.012 \pm 0.007$ & $+0.045 \pm 0.016$ & $+7.281 \pm 11.637$ & $0$ & $< 10^{-6}$ & $< 10^{-6}$ & $+0.139 \pm 0.135$ \\
+Policy parameters & $2 \pm 0$ & $2 \pm 0$ & $2 \pm 0$ & $2 \pm 0$ & $2 \pm 0$ & $2 \pm 0$ & $16 \pm 0$ & $16 \pm 0$ & $50 \pm 0$ & $16 \pm 0$ & $50 \pm 0$ & $26 \pm 16$ & $76 \pm 0$ & $76 \pm 0$ & $1250 \pm 0$ & $76 \pm 0$ & $1250 \pm 0$ & $1250 \pm 0$ & $301 \pm 0$ & $301 \pm 0$ & $20000 \pm 0$ & $301 \pm 0$ \\
+Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $5.0 \pm 0.0$ & $1.0 \pm 0.0$ & $5.0 \pm 0.0$ & $1.8 \pm 1.4$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $25.0 \pm 0.0$ & $1.0 \pm 0.0$ & $25.0 \pm 0.0$ & $21.2 \pm 1.8$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $100.0 \pm 0.0$ & $1.0 \pm 0.0$ \\
 \bottomrule
 \end{tabular}
 }
-\caption{Solvers learning without the model, across every inflation size. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
+\caption{Solvers learning without the model, across every inflation size. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs. A bound rather than a value marks a cell at the numerical resolution of the Riccati solve, i.e. a controller that is optimal to within rounding.}
 \label{tab:ch4-identified-across-sizes}
 \end{table}
