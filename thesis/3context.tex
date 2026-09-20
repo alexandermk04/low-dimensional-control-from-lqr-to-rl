@@ -1,48 +1,71 @@
-\chapter{Background}\label{chap:background}
+\chapter{Background}
+\label{chap:background}
 
 \section{Motivation}
+\label{sec:motivation}
 
-An agent acting in its environment receives observational input, and responds to it with a commanded control input. 
-Differently said, the agent is a function in relation to its environment, and to find an optimal behavior, we need
-to approximate this optimal function as closely as possible. While Neural Networks are known to be universal approximators
-\needcite{#4 summary, #5 theorem 2.2}, and hence able to approximate any function, in the case of embodied agent, different
-constraints need to be taken into account. \needcite{#1, around formula 3} names additionally to external embodiment constraints
-possible intrinsic constraints, and argues that such can even be "beneficial" for the control structure. Additionally, less parameters
-for deployment are helpful due to energy usage and storage capacity, the core of the notion of cheap design\needcite{TODO}.
-So, for such embodied agents, the goal is to find an "embodied universal approximator" \needcite{#2, page 3}, which restricts the neural network
-architecture to an intrinsic, unknown dimension, encoding physical properties belonging to the agent and the environment, while disallowing impossible
-movements \needcite{#2, chap 3}.
+An agent acting in its environment receives observational input, and responds to it with a commanded
+control input.
+Differently said, the agent is a function in relation to its environment, and to find an optimal
+behavior, we need to approximate this optimal function as closely as possible. While Neural Networks
+are known to be universal approximators~\cite{Cybenko1989Approximation,Hornik1989Multilayer}, and
+hence able to approximate any function, in the case of an embodied agent, different constraints need to
+be taken into account. Ay~\cite{Ay2015Geometric} names additionally to external embodiment constraints
+possible intrinsic constraints, and argues that such can even be ``beneficial'' for the control
+structure. Additionally, less parameters for deployment are helpful due to energy usage and storage
+capacity, the core of the notion of cheap design\needcite{TODO}.
+So, for such embodied agents, the goal is to find an ``embodied universal
+approximator''~\cite[p.~3]{Montufar2015CheapControl}, which restricts the neural network
+architecture to an intrinsic, unknown dimension, encoding physical properties belonging to the agent
+and the environment, while disallowing impossible movements~\cite[Sec.~3]{Montufar2015CheapControl}.
 
-Biology motivates this approach even further: Here it is clear to see, that by commanding a body, some features of the control architecture can be
-simplified and delegated to the embodiment\needcite{TODO}. For example, \needcite{#9}'s passive walker clearly shows, that some movements can be
-produced by the body without any control input, just by choosing the right embodiment. While obviously here being simplified to not include any
-control at all, it can quite simply be extended with such \needcite{#9, reference to his previous paper}. \needcite{#10, p.4} mentions such
-combination, as a robot climbing up walls, whose design was inspired by geckos, indeed using energy for control, however very little compared to
-an approach not exploiting these specific embodiment design. Further, it can be seen that the complex behaviors are not only less energy intensive
-to produce, but also utilize muscle synergies \needcite{#12} and thus fewer control parameters. And while it is difficult to clearly attribute the effect of the embodiment \needcite{#11},
-for us, this gives us the reason to believe that the simplicity, and thus efficiency, comes from a low-dimensionality of the controller \needcite{#2}.
+Biology motivates this approach even further: Here it is clear to see, that by commanding a body,
+some features of the control architecture can be simplified and delegated to the
+embodiment\needcite{TODO}. For example, McGeer~\cite{McGeer1990Passive}'s passive walker clearly
+shows, that some movements can be produced by the body without any control input, just by choosing
+the right embodiment. While obviously here being simplified to not include any control at all, it
+can quite simply be extended with such \needcite{\#9, reference to his previous paper}.
+M{\"u}ller and Hoffmann~\cite[p.~4]{Mueller2017Morphological} mention such combination, as a robot
+climbing up walls, whose design was inspired by geckos, indeed using energy for control, however
+very little compared to an approach not exploiting these specific embodiment design. Further, it can
+be seen that the complex
+behaviors are not only less energy intensive to produce, but also utilize muscle
+synergies~\cite{DAvella2003Combinations} and thus fewer control parameters. And while it is
+difficult to clearly attribute the effect of the embodiment~\cite{Zahedi2013Quantifying}, for us,
+this gives us the reason to believe that the simplicity, and thus efficiency, comes from a
+low-dimensionality of the controller~\cite{Montufar2015CheapControl}.
 
-That this is indeed true for certain examples, has been shown both in theory and practice before \needcite{#3, #22, #24}. \needcite{#24} calls this 
-lower-dimension "intrinsic dimension", which is the dimensionality required for the model to be able to find policies. They show for example that 
-for achieving 90 percent of the performance of the full model, the dimensionality can be reduced by 99.6 percent. For a convolutional neural network,
-it is still 99.4 percent. Others show that the "least complex model which is able to learn an optimal policy does learn faster" \needcite{#22}. For
-a neural network reducing parameters can be done in different ways \needcite{TODO}, some of which we will take a look at in \needcite{ref chap 5}.
-In comparison, for LQR, where the controller is a gain matrix, the corresponding approach is reducing its rank \needcite{#23}. However,
-while these approaches are more parameter efficient while achieving similar, or slightly worse performance, it was also observed that they tend to perform
-even worse when encountering noise \needcite{#3}.
+That this is indeed true for certain examples, has been shown both in theory and practice
+before~\cite{Datar2025Universal,Montufar2015Geometry,Li2018Measuring}. Li et
+al.~\cite{Li2018Measuring} call this lower-dimension ``intrinsic dimension'', which is the
+dimensionality required for the model to be able to find policies. They show for example that for achieving 90 percent of the performance of
+the full model, the dimensionality can be reduced by 99.6 percent. For a convolutional neural
+network, it is still 99.4 percent. Others show that the ``least complex model which is able to learn
+an optimal policy does learn faster''~\cite{Montufar2015Geometry}. For a neural network reducing
+parameters can be done in different ways\needcite{TODO}, some of which we will take a look at in
+\cref{chap:inflation}. In comparison, for LQR, where the controller is a gain matrix, the
+corresponding approach is reducing its rank~\cite{Recht2010Guaranteed}. However, while these
+approaches are more parameter efficient while achieving similar, or slightly worse performance, it
+was also observed that they tend to perform even worse when encountering
+noise~\cite{Datar2025Universal}.
 
-Robustness to noise however, is one of the important characteristics of controllers acting under real-world conditions \needcite{#13, #16 p.3}. One approach
-of achieving this is in nature is the principle of "redundancy and diversity" \needcite{#17}, which stands in direct contrast to our goal of reducing 
-redundant parameterizations. Another reason for producing robust controllers is the difficult transfer from digital training environment to real-world
-embodiments, commonly referred to as the "reality gap" \needcite{#20, #21}. Approaches of training robust controllers typically introduce noise
-already during training, be it either by using a LQG or including variations to the dynamics \needcite{#13, #21}. These shown approaches however,
-don't look at low-dimensionality, which makes sense as \needcite{#17, p.8} poses that robustness automatically leads to "increased
-resource demands".
+Robustness to noise however, is one of the important characteristics of controllers acting under
+real-world conditions~\cite{Rao2001Naive,Roy2021MachineLearning}. One approach of achieving this
+in nature is the principle of ``redundancy and diversity''~\cite{Kitano2004Biological}, which stands
+in direct contrast to our goal of reducing redundant parameterizations. Another reason for producing
+robust controllers is the difficult transfer from digital training environment to real-world
+embodiments, commonly referred to as the ``reality gap''~\cite{Tobin2017Domain,Peng2018SimToReal}.
+Approaches of training robust controllers typically introduce noise already during training, be it
+either by using a LQG or including variations to the dynamics~\cite{Rao2001Naive,Peng2018SimToReal}.
+These shown approaches however, don't look at low-dimensionality, which makes sense as
+Kitano~\cite[p.~8]{Kitano2004Biological} poses that robustness automatically leads to ``increased resource
+demands''.
 
-Recent advancements in the research for low-rank policies for LQR...
-
+Recent advancements in the research for low-rank policies for LQR\ldots
 
 \section{Approach}
+\label{sec:approach}
+
 What I will do in the following sections
 
 % reason why SVD is the right choice #23
