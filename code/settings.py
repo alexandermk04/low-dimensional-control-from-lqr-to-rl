@@ -269,11 +269,10 @@ SOLVER_HYPERPARAMS = {
         "max_linesearch_iter": 10,
     },
     "spi_mf": {
-        "lambda_": 4e4,
+        "lambda_": 4000,
         "beta": 0.5,
         "epsilon": 1e-8,
-        "max_linesearch_iter": 10,
-        "stepsize": 3.5e-7,
+        "stepsize": 3.5e-6,
         "smoothing": 0.5,
     },
     # Certainty equivalence. Identification settings only
