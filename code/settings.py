@@ -63,15 +63,15 @@ IDENTIFICATION_HORIZONS = (5, 10, 20)
 # Filled from `python -m experiments.appendix_identification_length`;
 # values are (trajectory_length, hankel_horizon).
 CHOSEN_IDENTIFICATION = {
-    "base": (5, 500),
-    "small": (5, 500),
-    "medium": (5, 500),
-    "large": (5, 2000),
+    "base": (500, 5),
+    "small": (500, 5),
+    "medium": (500, 5),
+    "large": (2000, 5),
 }
 
 SUBOPTIMAL_IDENTIFICATION = {
-    "medium": (10, 500),
-    "large": (5, 1000),
+    "medium": (500, 10),
+    "large": (1000, 5),
 }
 
 # TODO: RL solvers should be chosen based on the above selection
