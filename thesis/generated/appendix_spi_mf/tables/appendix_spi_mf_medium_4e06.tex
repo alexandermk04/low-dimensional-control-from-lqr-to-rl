@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Step size & 3.5e-09 & 3.5e-08 & 3.5e-07 & 3.5e-06 & 3.5e-05 \\
+\midrule
+Stable & $0/10$ & $0/10$ & $0/10$ & $0/10$ & $0/10$ \\
+\midrule
+True cost $J$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Training suboptimality $(J-J^*)/J^*$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Gain rank & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Spectral radius & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Test cost & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+\bottomrule
+\end{tabular}
+}
+\caption{Model-free S-PI at lambda=4e+06, medium inflation, over 10 seeds. Stable counts the seeds whose controller left the plant stable.}
+\label{tab:appendix-spimf-medium-4e06}
+\end{table}

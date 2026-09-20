@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Step size & 3.5e-09 & 3.5e-08 & 3.5e-07 & 3.5e-06 & 3.5e-05 \\
+\midrule
+Stable & $10/10$ & $10/10$ & $10/10$ & $10/10$ & $5/10$ \\
+\midrule
+True cost $J$ & $1.158 \times 10^{4} \pm 29.39$ & $9455 \pm 39.97$ & $3.085 \times 10^{4} \pm 3196$ & $1.922 \times 10^{4} \pm 9017$ & $3.482 \times 10^{4} \pm 5.301 \times 10^{4}$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.981 \pm 0.005$ & $0.617 \pm 0.007$ & $4.276 \pm 0.546$ & $2.286 \pm 1.542$ & $4.954 \pm 9.065$ \\
+Gain rank & $25.0 \pm 0.0$ & $17.8 \pm 0.6$ & $15.9 \pm 3.2$ & $16.4 \pm 10.2$ & $8.0 \pm 9.2$ \\
+Spectral radius & $0.9975 \pm 0.0000$ & $0.9979 \pm 0.0000$ & $0.9997 \pm 0.0000$ & $0.9988 \pm 0.0015$ & $0.9877 \pm 0.0139$ \\
+Test cost$^{\dagger}$ & $9552 \pm 8623$ & $8433 \pm 7584$ & $9726 \pm 8707$ & $8323 \pm 7830$ & $3 \times 10^{4} \pm 5.527 \times 10^{4}$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{Model-free S-PI at lambda=40000, medium inflation, over 10 seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 200 test episodes (20 per seed, 10 seeds) pooled; every other row over the 10 runs. Stable counts the seeds whose controller left the plant stable.}
+\label{tab:appendix-spimf-medium-40000}
+\end{table}
