@@ -35,7 +35,10 @@ def render(experiment: str):
         short = solver.replace("_", "-")
 
         # Plot 1
-        ax = box_metric(rows, "size", "training_subopt_final", order=SIZE_ORDER)
+        ax = box_metric(
+            rows, "size", "training_subopt_final", order=SIZE_ORDER,
+            log="symlog",
+        )
         ax.set_xlabel("Inflation size")
         save(ax.figure, f"ch5_inflation_subopt_{solver}", experiment)
 

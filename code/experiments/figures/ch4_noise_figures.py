@@ -89,7 +89,7 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
         save(ax.figure, f"{prefix}_testcost_{name}", experiment)
 
         # Suboptimality can be negative
-        ax = box_metric(subset, group_by, "subopt", order=order, log=False)
+        ax = box_metric(subset, group_by, "subopt", order=order, log="symlog")
         ax.set_title(title)
         save(ax.figure, f"{prefix}_subopt_{name}", experiment)
 

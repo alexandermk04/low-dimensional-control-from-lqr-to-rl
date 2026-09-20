@@ -4,7 +4,7 @@ Metrics tables for comparison, emitted as .tex files.
 
 import numpy as np
 
-from experiments.figures.aggregate import aggregate, floor_for, group, label_for
+from experiments.figures.aggregate import aggregate, group, label_for
 from experiments.figures.style import table_dir
 
 __all__ = [
@@ -36,9 +36,9 @@ CENSUS_NOTE_STABLE_ONLY = (
 # Row label and formatting per metric.
 METRIC_ROWS = {
     "J_final": (r"True cost $J$", "{:.4g}"),
-    "training_subopt_final": (r"Training suboptimality $(J-J^*)/J^*$", "{:.3f}"),
+    "training_subopt_final": (r"Training suboptimality $(J-J^*)/J^*$", "{:.3g}"),
     "test_cost_mean": (r"Test cost", "{:.4g}"),
-    "subopt": (r"Suboptimality $S$", "{:+.3f}"),
+    "subopt": (r"Suboptimality $S$", "{:+.3g}"),
     "policy_complexity": (r"Policy parameters", "{:.0f}"),
     "rank_final": (r"Gain rank", "{:.1f}"),
     "total_env_steps": (r"Environment steps", "{:.3g}"),
@@ -168,9 +168,7 @@ def _fit(tabular: str) -> str:
     ])
 
 
-def _cell(
-    stats: dict, fmt: str, show_spread: bool, floor: float | None = None
-) -> str:
+def _cell(stats: dict, fmt: str, show_spread: bool) -> str:
     """One table cell, containing its mean, optionally with its spread.
 
     Parameters
@@ -181,17 +179,10 @@ def _cell(
         Format of the number.
     show_spread : bool
         Append the standard deviation.
-    floor : float or None, optional
-        Numerical-resolution floor of the metric.
     """
     if stats is None or stats["n"] == 0:
         # A cell where every seed diverged
         return r"\multicolumn{1}{c}{--}"
-
-    if floor is not None and abs(stats["mean"]) < floor:
-        if stats["mean"] == 0.0 and stats["std"] == 0.0:
-            return "$0$"
-        return f"$< 10^{{{int(round(np.log10(floor)))}}}$"
 
     mean = _math(stats["mean"], fmt)
 
@@ -326,7 +317,6 @@ def metric_table(
         lines.append(r"\midrule")
 
     episode_metrics = []
-    floored_metrics = []
 
     for metric in metrics:
         row_label, fmt = METRIC_ROWS.get(metric, (_escape(metric), "{:.4g}"))
@@ -335,14 +325,10 @@ def metric_table(
             episode_metrics.append(metric)
             row_label += EPISODE_MARKER
 
-        floor = floor_for(metric)
         cells = [
-            _cell(stats[metric].get(key), fmt, show_spread, floor)
-            for key in keys
+            _cell(stats[metric].get(key), fmt, show_spread) for key in keys
         ]
         lines.append(" & ".join([row_label] + cells) + r" \\")
-        if floor is not None and any(r"$<" in cell for cell in cells):
-            floored_metrics.append(row_label)
 
         # Divergence rate of the solver
         if any(

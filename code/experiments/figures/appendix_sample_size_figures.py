@@ -37,7 +37,10 @@ def main():
             stem = f"appendix_sample_size_{solver}_{size}"
 
             # Plot 1: true cost per sample-size combination.
-            ax = box_metric(rows, ("l", "m"), "training_subopt_final", order=cell_order)
+            ax = box_metric(
+                rows, ("l", "m"), "training_subopt_final",
+                order=cell_order, log="symlog",
+            )
             ax.set_xlabel(CELL_LABEL)
             save(ax.figure, f"{stem}_subopt", EXPERIMENT)
 

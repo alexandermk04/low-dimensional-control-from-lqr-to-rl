@@ -8,6 +8,7 @@ from experiments.figures.aggregate import (
     with_suboptimality,
 )
 from experiments.figures.panels import (
+    complexity_bars,
     learning_bands,
     trajectory_overlay,
     box_metric,
@@ -25,9 +26,10 @@ CURVE_SUFFIX = {"env_steps": "steps", "iteration": "iterations", "total_time": "
 
 def render_size(
     records, size: str, order, stem_prefix: str, track_caption: str,
-    experiment: str, curve_x: str = "env_steps",
+    experiment: str, curve_x: str = "env_steps", curves: bool = True,
 ):
-    """The per-size figures and table, grouped by the solver."""
+    """The per-size figures and table, grouped by the solver.
+    """
     subset = [r for r in records if r.condition.get("size") == size]
     if not subset:
         print(f"  no runs at {size}, skipping")
@@ -38,14 +40,21 @@ def render_size(
 
     # baseline is 0 for suboptimality
     learned = [r for r in rows if r["solver"] != "baseline"]
-    ax = box_metric(learned, "solver", "training_subopt_final", order=order)
+    ax = box_metric(
+        learned, "solver", "training_subopt_final", order=order, log="symlog"
+    )
     save(ax.figure, f"{stem}_training_subopt", experiment)
 
     # Training process
-    ax = learning_bands(
-        subset, "solver", x=curve_x, order=order, logx=curve_x != "iteration"
-    )
-    save(ax.figure, f"{stem}_curves_{CURVE_SUFFIX.get(curve_x, curve_x)}", experiment)
+    if curves:
+        ax = learning_bands(
+            subset, "solver", x=curve_x, order=order, logx=curve_x != "iteration"
+        )
+        save(
+            ax.figure,
+            f"{stem}_curves_{CURVE_SUFFIX.get(curve_x, curve_x)}",
+            experiment,
+        )
 
     # Trajectories
     axes = trajectory_overlay(subset, "solver", dt=DEFAULT_DT, order=order)
@@ -55,8 +64,11 @@ def render_size(
     ax = box_metric(rows, "solver", "test_cost_mean", order=order)
     save(ax.figure, f"{stem}_testcost", experiment)
 
-    ax = box_metric(rows, "solver", "subopt", order=order, log=False)
+    ax = box_metric(rows, "solver", "subopt", order=order, log="symlog")
     save(ax.figure, f"{stem}_subopt", experiment)
+
+    ax = complexity_bars(rows, "solver", order=order)
+    save(ax.figure, f"{stem}_complexity", experiment)
 
     # Table 2
     write_table(
@@ -96,10 +108,14 @@ def render_across_sizes(
     save(ax.figure, f"{stem}_testcost", experiment)
 
     ax = box_metric(
-        rows, ("size", "solver"), "subopt", order=order, log=False, color_by=1
+        rows, ("size", "solver"), "subopt", order=order, log="symlog", color_by=1
     )
     ax.set_xlabel("Inflation size")
     save(ax.figure, f"{stem}_subopt", experiment)
+
+    ax = complexity_bars(rows, ("size", "solver"), order=order, color_by=1)
+    ax.set_xlabel("Inflation size")
+    save(ax.figure, f"{stem}_complexity", experiment)
 
     write_table(
         metric_table(
@@ -118,6 +134,7 @@ def render_across_sizes(
 def render_track(
     experiment: str, solvers, stem_prefix: str,
     track_caption: str, across_caption: str, curve_x: str = "env_steps",
+    curves: bool = True,
 ):
     """Draw one chapter-4 setting.
 
@@ -135,6 +152,8 @@ def render_track(
         Full caption of the cross-size table.
     curve_x : str, optional
         x-axis of the learning curves.
+    curves : bool, optional
+        Whether to draw the learning curves.
     """
     records = latest_per_experiment(load_experiment(experiment))
     order = tuple(solvers)
@@ -142,7 +161,7 @@ def render_track(
     for size in settings.CH4_INFLATION_SIZES:
         render_size(
             records, size, order, stem_prefix, track_caption, experiment,
-            curve_x,
+            curve_x, curves=curves,
         )
 
     render_across_sizes(

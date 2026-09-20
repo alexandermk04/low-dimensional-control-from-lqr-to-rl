@@ -3,13 +3,14 @@ r"""Different plots used for visualization.
 Functions are reusable for different experiments.
 """
 
+import textwrap
+
 import numpy as np
 
 from evaluation.records import RunRecord
 from experiments.figures.aggregate import (
     aggregate,
     curve_band,
-    floor_for,
     group,
     label_for,
     latest_per_experiment,
@@ -53,41 +54,59 @@ def _ordered_keys(buckets: dict, order=None) -> list:
     return known + [k for k in keys if k not in known]
 
 
-def _tick_label(key: tuple) -> str:
-    """A short axis label for a cell key."""
-    return "\n".join(label_for(part) for part in key if part is not None)
-
-
-def _floor_label(floor: float) -> str:
-    """``$< 10^{-6}$`` for a floor of ``1e-6``."""
-    return rf"$< 10^{{{int(round(np.log10(floor)))}}}$"
-
-
-def _resolution_band(ax, floor: float, annotate: bool = True):
-    """Show only until a certain resolution.
+def _tick_label(key: tuple, wrap: int | None = None) -> str:
+    """A short axis label for a cell key.
 
     Parameters
     ----------
-    ax : matplotlib.axes.Axes
-        Must already have its log scale and its data.
-    floor : float
-        The value below which nothing is resolved.
-    annotate : bool, optional
-        Whether to write the band's name inside it.
+    key : tuple
+        A cell key, e.g. ``("large", "spi_est")``.
+    wrap : int or None, optional
+        Break a part longer than this many characters over several lines.
     """
-    bottom = floor / 4.0
-    ax.set_ylim(bottom=bottom)
+    parts = [label_for(part) for part in key if part is not None]
 
-    ax.axhspan(bottom, floor, color="0.85", alpha=0.6, linewidth=0, zorder=0)
-    ax.axhline(floor, color="0.45", linewidth=0.6, linestyle="--", zorder=1)
+    if wrap:
+        parts = [
+            "\n".join(
+                textwrap.wrap(
+                    part, wrap, break_on_hyphens=False, break_long_words=False,
+                ) or [part]
+            )
+            for part in parts
+        ]
 
-    if annotate:
-        ax.annotate(
-            "at numerical resolution",
-            xy=(0.015, np.sqrt(bottom * floor)),
-            xycoords=("axes fraction", "data"),
-            ha="left", va="center", fontsize=6, color="0.35", zorder=2,
-        )
+    return "\n".join(parts)
+
+
+def _wrap_width(n_labels: int) -> int:
+    """How wide a tick label may be before it is broken over several lines."""
+    return max(8, int(70 / max(n_labels, 1)))
+
+
+def _linthresh_for(cells: list[np.ndarray]) -> float:
+    """Where a symlog axis should switch from log to linear.
+
+    Parameters
+    ----------
+    cells : list of np.ndarray
+        The values of each box.
+
+    Returns
+    -------
+    float
+    """
+    smallest = []
+    for values in cells:
+        magnitudes = np.abs(values)
+        nonzero = magnitudes[magnitudes > 0]
+        if nonzero.size:
+            smallest.append(float(np.percentile(nonzero, 5)))
+
+    if not smallest:
+        return 1.0
+
+    return float(10.0 ** np.floor(np.log10(min(smallest))))
 
 
 def box_metric(
@@ -95,7 +114,7 @@ def box_metric(
     group_by,
     metric: str = "training_subopt_final",
     order=None,
-    log: bool = True,
+    log: bool | str = True,
     ax=None,
     width: float = 1.0,
     aspect: float = 0.55,
@@ -113,8 +132,9 @@ def box_metric(
         Which summary column to draw.
     order : sequence or None, optional
         Settings order along the x-axis.
-    log : bool, optional
-        Log-scale the y-axis.
+    log : bool or str, optional
+        ``True`` log-scales the y-axis, ``"symlog"`` log-scales both signs
+        around a linear window, ``False`` keeps the axis linear.
     ax : matplotlib.axes.Axes or None, optional
     width, aspect : float, optional
         Figure size, as a fraction of the text width, when ``ax`` is created.
@@ -143,12 +163,12 @@ def box_metric(
     positions, data, labels, notes = [], [], [], []
     per_episode = any(stats[key]["episodes"] for key in keys)
 
-    floor = floor_for(metric) if log else None
-    floored = []
+    symlog = log == "symlog"
+    wrap = _wrap_width(len(keys))
 
     for position, key in enumerate(keys, start=1):
         cell = stats[key]
-        labels.append(_tick_label(key))
+        labels.append(_tick_label(key, wrap))
 
         values = cell["values"]
 
@@ -160,12 +180,7 @@ def box_metric(
             ))
             continue
 
-        if log and floor is not None:
-            under = int(np.count_nonzero(values < floor))
-            if under:
-                floored.append((position, under, values.size))
-            values = np.maximum(values, floor)
-        elif log:
+        if log and not symlog:
             # A log axis cannot show a non-positive value.
             positive = values[values > 0]
             if positive.size == 0:
@@ -214,21 +229,10 @@ def box_metric(
             ha="center", va="bottom", fontsize=6,
         )
 
-    if log:
+    if symlog:
+        ax.set_yscale("symlog", linthresh=_linthresh_for(data), linscale=0.35)
+    elif log:
         ax.set_yscale("log")
-
-    if floored:
-        _resolution_band(ax, floor)
-        for position, under, total in floored:
-            note = (
-                _floor_label(floor) if under == total
-                else rf"{under}/{total} {_floor_label(floor)}"
-            )
-            ax.annotate(
-                note, xy=(position, floor), xytext=(0, 4),
-                textcoords="offset points", ha="center", va="bottom",
-                fontsize=6, color="0.25",
-            )
 
     if color_by is None:
         ax.set_xticks(range(1, len(keys) + 1))
@@ -246,16 +250,19 @@ def _label_runs(ax, keys: list, color_by: int, box_colors: list):
     from matplotlib.patches import Patch
 
     rest = [key[:color_by] + key[color_by + 1:] for key in keys]
-    ticks, names, start = [], [], 0
+    ticks, runs, start = [], [], 0
     for end in range(1, len(keys) + 1):
         if end == len(keys) or rest[end] != rest[start]:
             ticks.append((start + end + 1) / 2)
-            names.append(_tick_label(rest[start]))
+            runs.append(rest[start])
             if end < len(keys):
                 ax.axvline(end + 0.5, color="black", linewidth=0.5, alpha=0.3)
             start = end
+
+    wrap = _wrap_width(len(runs))
+
     ax.set_xticks(ticks)
-    ax.set_xticklabels(names)
+    ax.set_xticklabels([_tick_label(run, wrap) for run in runs])
     ax.grid(False, axis="x")
 
     handles = {}
@@ -310,20 +317,17 @@ def learning_bands(
         None,
     )
 
-    floor = floor_for("training_subopt_final") if normalize else None
-    hit_floor = False
-
     flat_drawn = 0
 
+    drawn = []
+
     def rescale(values):
-        nonlocal hit_floor
         if normalize and j_star:
             scaled = (np.asarray(values) - j_star) / j_star
-            if floor is not None:
-                hit_floor = hit_floor or bool(np.any(scaled < floor))
-                scaled = np.maximum(scaled, floor)
-            return scaled
-        return np.asarray(values)
+        else:
+            scaled = np.asarray(values)
+        drawn.append(np.atleast_1d(scaled))
+        return scaled
 
     if ax is None:
         _, ax = new_figure(width, aspect)
@@ -337,7 +341,7 @@ def learning_bands(
             median = float(rescale(band["median"]))
             if not np.isfinite(median):
                 continue
-            exact = floor is not None and median <= floor
+            exact = median <= 0.0
             suffix = "exact, no curve" if exact else "no curve"
             ax.axhline(
                 median, linestyle=(2 * flat_drawn % 8, (2, 6)), linewidth=1.5,
@@ -358,10 +362,11 @@ def learning_bands(
 
     if logx:
         ax.set_xscale("log")
-    ax.set_yscale("log")
 
-    if hit_floor:
-        _resolution_band(ax, floor)
+    if normalize:
+        ax.set_yscale("symlog", linthresh=_linthresh_for(drawn), linscale=0.35)
+    else:
+        ax.set_yscale("log")
 
     ax.set_xlabel({
         "env_steps": "Environment steps",
@@ -384,7 +389,7 @@ def trajectory_overlay(
     order=None,
     axes=None,
     width: float = 1.0,
-    aspect: float = 0.30,
+    aspect: float = 0.62,
 ):
     """Comparison of different trajectories per settings combination.
 
@@ -400,13 +405,14 @@ def trajectory_overlay(
         Draw only this seed
     order : sequence or None, optional
     axes : array of Axes or None, optional
-        Three axes. Created if omitted.
+        Four axes. Created if
+        omitted.
     width, aspect : float, optional
 
     Returns
     -------
     np.ndarray
-        The three axes.
+        The four axes, the last of which holds the legend.
     """
     if seed is None:
         seed = min(r.seed for r in records)
@@ -422,8 +428,8 @@ def trajectory_overlay(
     if axes is None:
         import matplotlib.pyplot as plt
         from experiments.figures.style import figure_size
-        _, axes = plt.subplots(1, 3, figsize=figure_size(width, aspect))
-    axes = np.asarray(axes)
+        _, axes = plt.subplots(2, 2, figsize=figure_size(width, aspect))
+    axes = np.asarray(axes).reshape(-1)
 
     for index, key in enumerate(keys):
         record = buckets[key][0]["_record"]
@@ -448,7 +454,14 @@ def trajectory_overlay(
         ax.set_xlabel("Time (s)")
         ax.set_ylabel(ylabel)
 
-    axes[0].legend(frameon=False)
+    # for the legend
+    handles, labels = axes[0].get_legend_handles_labels()
+    axes[3].axis("off")
+    if handles:
+        axes[3].legend(
+            handles, labels, frameon=False, loc="center",
+            ncol=1 if len(handles) <= 6 else 2,
+        )
 
     return axes
 
@@ -462,6 +475,7 @@ def complexity_bars(
     width: float = 1.0,
     aspect: float = 0.5,
     log: bool = True,
+    color_by: int | None = None,
 ):
     """Policy complexity as a bar plot.
 
@@ -477,6 +491,9 @@ def complexity_bars(
     ax : matplotlib.axes.Axes or None, optional
     width, aspect : float, optional
     log : bool, optional
+    color_by : int or None, optional
+        Position of the key part that picks the colour, e.g. ``1`` for the
+        solver in ``("size", "solver")``.
 
     Returns
     -------
@@ -484,6 +501,14 @@ def complexity_bars(
     """
     stats = aggregate(rows, group_by, metric)
     keys = _ordered_keys(stats, order)
+
+    if color_by is None:
+        bar_colors = [color_for(i, key[0]) for i, key in enumerate(keys)]
+    else:
+        hues = list(dict.fromkeys(key[color_by] for key in keys))
+        bar_colors = [
+            color_for(hues.index(key[color_by]), key[color_by]) for key in keys
+        ]
 
     if ax is None:
         _, ax = new_figure(width, aspect)
@@ -494,7 +519,7 @@ def complexity_bars(
             continue
         ax.bar(
             position, cell["mean"], width=0.6,
-            color=color_for(position - 1, key[0]), alpha=0.8,
+            color=bar_colors[position - 1], alpha=0.8,
         )
 
         # Only show if complexity varies across seeds
@@ -507,8 +532,13 @@ def complexity_bars(
 
     if log:
         ax.set_yscale("log")
-    ax.set_xticks(range(1, len(keys) + 1))
-    ax.set_xticklabels([_tick_label(k) for k in keys])
+
+    if color_by is None:
+        ax.set_xticks(range(1, len(keys) + 1))
+        ax.set_xticklabels([_tick_label(k, _wrap_width(len(keys))) for k in keys])
+    else:
+        _label_runs(ax, keys, color_by, bar_colors)
+
     ax.set_ylabel(METRIC_LABELS.get(metric, metric))
     ax.set_xlim(0.4, len(keys) + 0.6)
 

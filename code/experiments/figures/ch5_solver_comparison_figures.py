@@ -30,7 +30,9 @@ def main():
     records = latest_per_experiment(load_experiment(EXPERIMENT))
     rows = with_suboptimality(tidy(records), by=("seed",))
 
-    ax = box_metric(rows, "solver", "training_subopt_final", order=ORDER)
+    ax = box_metric(
+        rows, "solver", "training_subopt_final", order=ORDER, log="symlog"
+    )
     save(ax.figure, "ch5_solvers_training_subopt", EXPERIMENT)
 
     ax = learning_bands(records, "solver", x="env_steps", order=ORDER)
@@ -42,7 +44,7 @@ def main():
     ax = box_metric(rows, "solver", "test_cost_mean", order=ORDER)
     save(ax.figure, "ch5_solvers_testcost", EXPERIMENT)
 
-    ax = box_metric(rows, "solver", "subopt", order=ORDER, log=False)
+    ax = box_metric(rows, "solver", "subopt", order=ORDER, log="symlog")
     save(ax.figure, "ch5_solvers_subopt", EXPERIMENT)
 
     ax = complexity_bars(rows, "solver", order=ORDER)

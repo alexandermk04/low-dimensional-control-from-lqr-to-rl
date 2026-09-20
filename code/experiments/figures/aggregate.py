@@ -16,35 +16,7 @@ __all__ = [
     "curve_band",
     "latest_per_experiment",
     "label_for",
-    "RESOLUTION_FLOOR",
-    "FLOORED_METRICS",
-    "floor_for",
 ]
-
-# Resolution for relative metrics
-RESOLUTION_FLOOR = 1e-6
-
-FLOORED_METRICS = frozenset({
-    "subopt",
-    "subopt_episodes",
-    "training_subopt_final",
-})
-
-
-def floor_for(metric: str) -> float | None:
-    """The numerical-resolution floor of a metric, or ``None`` if it has none.
-
-    Parameters
-    ----------
-    metric : str
-        A column name, e.g. ``"subopt"``.
-
-    Returns
-    -------
-    float or None
-        :data:`RESOLUTION_FLOOR` for the metrics of :data:`FLOORED_METRICS`.
-    """
-    return RESOLUTION_FLOOR if metric in FLOORED_METRICS else None
 
 # How a solver is named in a legend or a table header.
 SOLVER_LABELS = {
