@@ -1,7 +1,31 @@
 \chapter{Background}\label{chap:background}
 
 \section{Motivation}
-Reviewing content of past papers, state of the art, and what the open problems are.
+
+An agent acting in its environment receives observational input, and responds to it with a commanded control input. 
+Differently said, the agent is a function in relation to its environment, and to find an optimal behavior, we need
+to approximate this optimal function as closely as possible. While Neural Networks are known to be universal approximators
+\needcite{#4 summary, #5 theorem 2.2}, and hence able to approximate any function, in the case of embodied agent, different
+constraints need to be taken into account. \needcite{#1, around formula 3} names additionally to external embodiment constraints
+possible intrinsic constraints, and argues that such can even be "beneficial" for the control structure. Additionally, less parameters
+for deployment are helpful due to energy usage and storage capacity, the core of the notion of cheap design\needcite{TODO}.
+So, for such embodied agents, the goal is to find an "embodied universal approximator" \needcite{#2, page 3}, which restricts the neural network
+architecture to an intrinsic, unknown dimension, encoding physical properties belonging to the agent and the environment, while disallowing impossible
+movements \needcite{#2, chap 3}.
+
+Biology motivates this approach even further: Here it is clear to see, that by commanding a body, some features of the control architecture can be
+simplified and delegated to the embodiment\needcite{TODO}. For example, \needcite{#9}'s passive walker clearly shows, that some movements can be
+produced by the body without any control input, just by choosing the right embodiment. While obviously here being simplified to not include any
+control at all, it can quite simply be extended with such \needcite{#9, reference to his previous paper}. \needcite{#10, p.4} mentions such
+combination, as a robot climbing up walls, whose design was inspired by geckos, indeed using energy for control, however very little compared to
+an approach not exploiting these specific embodiment design. Further, it can be seen that the complex behaviors are not only less energy intensive
+to produce, but also utilize muscle synergies \needcite{#12} and thus fewer control parameters. And while it is difficult to clearly attribute the effect of the embodiment \needcite{#11},
+for us, this gives us the reason to believe that the simplicity, and thus efficiency, comes from a low-dimensionality of the controller \needcite{#2}.
+
+
+sec D instead of c first
+
+
 
 \section{Approach}
 What I will do in the following sections
