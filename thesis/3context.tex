@@ -22,10 +22,28 @@ an approach not exploiting these specific embodiment design. Further, it can be 
 to produce, but also utilize muscle synergies \needcite{#12} and thus fewer control parameters. And while it is difficult to clearly attribute the effect of the embodiment \needcite{#11},
 for us, this gives us the reason to believe that the simplicity, and thus efficiency, comes from a low-dimensionality of the controller \needcite{#2}.
 
+That this is indeed true for certain examples, has been shown both in theory and practice before \needcite{#3, #22, #24}. \needcite{#24} calls this 
+lower-dimension "intrinsic dimension", which is the dimensionality required for the model to be able to find policies. They show for example that 
+for achieving 90 percent of the performance of the full model, the dimensionality can be reduced by 99.6 percent. For a convolutional neural network,
+it is still 99.4 percent. Others show that the "least complex model which is able to learn an optimal policy does learn faster" \needcite{#22}. For
+a neural network reducing parameters can be done in different ways \needcite{TODO}, some of which we will take a look at in \needcite{ref chap 5}.
+In comparison, for LQR, where the controller is a gain matrix, the corresponding approach is reducing its rank \needcite{#23}. However,
+while these approaches are more parameter efficient while achieving similar, or slightly worse performance, it was also observed that they tend to perform
+even worse when encountering noise \needcite{#3}.
 
-sec D instead of c first
+Robustness to noise however, is one of the important characteristics of controllers acting under real-world conditions \needcite{#13, #16 p.3}. One approach
+of achieving this is in nature is the principle of "redundancy and diversity" \needcite{#17}, which stands in direct contrast to our goal of reducing 
+redundant parameterizations. Another reason for producing robust controllers is the difficult transfer from digital training environment to real-world
+embodiments, commonly referred to as the "reality gap" \needcite{#20, #21}. Approaches of training robust controllers typically introduce noise
+already during training, be it either by using a LQG or including variations to the dynamics \needcite{#13, #21}. These shown approaches however,
+don't look at low-dimensionality, which makes sense as \needcite{#17, p.8} poses that robustness automatically leads to "increased
+resource demands".
 
+Recent advancements in the research for low-rank policies for LQR...
 
 
 \section{Approach}
 What I will do in the following sections
+
+% reason why SVD is the right choice #23
+% #17 bow tie structure in biological systems
