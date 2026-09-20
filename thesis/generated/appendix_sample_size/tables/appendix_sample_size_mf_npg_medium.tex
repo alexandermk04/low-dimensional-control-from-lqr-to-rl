@@ -1,13 +1,13 @@
 \begin{table}[htbp]
 \centering
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrr}
+\begin{tabular}{lrrrrrr}
 \toprule
-$(l, m)$ & 200, 100 & 200, 200 \\
+$(l, m)$ & 200, 100 & 200, 200 & 500, 100 & 500, 200 & 800, 100 & 800, 200 \\
 \midrule
-True cost $J$ & $8954 \pm 272.6$ & $9007 \pm 189.1$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.531 \pm 0.047$ & $0.540 \pm 0.032$ \\
-Test cost$^{\dagger}$ & $9132 \pm 8080$ & $9286 \pm 8113$ \\
+True cost $J$ & $8954 \pm 272.6$ & $8979 \pm 199.2$ & $6203 \pm 65.94$ & $6209 \pm 57.52$ & $6105 \pm 13.51$ & $6106 \pm 10.38$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.531 \pm 0.047$ & $0.535 \pm 0.034$ & $0.061 \pm 0.011$ & $0.062 \pm 0.010$ & $0.044 \pm 0.002$ & $0.044 \pm 0.002$ \\
+Test cost$^{\dagger}$ & $9132 \pm 8080$ & $9158 \pm 8103$ & $6333 \pm 5597$ & $6338 \pm 5601$ & $6233 \pm 5510$ & $6234 \pm 5510$ \\
 \bottomrule
 \end{tabular}
 }

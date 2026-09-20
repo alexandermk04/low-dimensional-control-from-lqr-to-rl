@@ -46,12 +46,12 @@ SAMPLE_GRID = tuple((l, m) for l in ROLLOUT_LENGTHS for m in TRAJECTORY_COUNTS)
 
 # Per inflation size sample sizes for model-free approach 
 
-# TODO: fill from `python -m experiments.appendix_sample_size`; values are (l, m).
+# Filled from `python -m experiments.appendix_sample_size`; values are (l, m).
 CHOSEN_SAMPLE_CELL = {
-    "base": None,
-    "small": None,
-    "medium": None,
-    "large": None,
+    "base": (800, 100),
+    "small": (800, 100),
+    "medium": (800, 100),
+    "large": (800, 100),
 }
 
 # Length of excitation rollouts
