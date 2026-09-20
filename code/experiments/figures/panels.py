@@ -9,6 +9,7 @@ from evaluation.records import RunRecord
 from experiments.figures.aggregate import (
     aggregate,
     curve_band,
+    floor_for,
     group,
     label_for,
     latest_per_experiment,
@@ -57,6 +58,38 @@ def _tick_label(key: tuple) -> str:
     return "\n".join(label_for(part) for part in key if part is not None)
 
 
+def _floor_label(floor: float) -> str:
+    """``$< 10^{-6}$`` for a floor of ``1e-6``."""
+    return rf"$< 10^{{{int(round(np.log10(floor)))}}}$"
+
+
+def _resolution_band(ax, floor: float, annotate: bool = True):
+    """Show only until a certain resolution.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Must already have its log scale and its data.
+    floor : float
+        The value below which nothing is resolved.
+    annotate : bool, optional
+        Whether to write the band's name inside it.
+    """
+    bottom = floor / 4.0
+    ax.set_ylim(bottom=bottom)
+
+    ax.axhspan(bottom, floor, color="0.85", alpha=0.6, linewidth=0, zorder=0)
+    ax.axhline(floor, color="0.45", linewidth=0.6, linestyle="--", zorder=1)
+
+    if annotate:
+        ax.annotate(
+            "at numerical resolution",
+            xy=(0.015, np.sqrt(bottom * floor)),
+            xycoords=("axes fraction", "data"),
+            ha="left", va="center", fontsize=6, color="0.35", zorder=2,
+        )
+
+
 def box_metric(
     rows: list[dict],
     group_by,
@@ -81,8 +114,7 @@ def box_metric(
     order : sequence or None, optional
         Settings order along the x-axis.
     log : bool, optional
-        Log-scale the y-axis. Must be ``False`` for a non-strictly
-        positive metric
+        Log-scale the y-axis.
     ax : matplotlib.axes.Axes or None, optional
     width, aspect : float, optional
         Figure size, as a fraction of the text width, when ``ax`` is created.
@@ -111,6 +143,9 @@ def box_metric(
     positions, data, labels, notes = [], [], [], []
     per_episode = any(stats[key]["episodes"] for key in keys)
 
+    floor = floor_for(metric) if log else None
+    floored = []
+
     for position, key in enumerate(keys, start=1):
         cell = stats[key]
         labels.append(_tick_label(key))
@@ -125,14 +160,18 @@ def box_metric(
             ))
             continue
 
-        if log:
-            # A log axis cannot show a non-positive value. 
+        if log and floor is not None:
+            under = int(np.count_nonzero(values < floor))
+            if under:
+                floored.append((position, under, values.size))
+            values = np.maximum(values, floor)
+        elif log:
+            # A log axis cannot show a non-positive value.
             positive = values[values > 0]
             if positive.size == 0:
                 raise ValueError(
                     f"All values for {key} are non-positive, cannot log-scale."
                 )
-                continue
             dropped = values.size - positive.size
             if dropped:
                 raise ValueError(
@@ -177,6 +216,20 @@ def box_metric(
 
     if log:
         ax.set_yscale("log")
+
+    if floored:
+        _resolution_band(ax, floor)
+        for position, under, total in floored:
+            note = (
+                _floor_label(floor) if under == total
+                else rf"{under}/{total} {_floor_label(floor)}"
+            )
+            ax.annotate(
+                note, xy=(position, floor), xytext=(0, 4),
+                textcoords="offset points", ha="center", va="bottom",
+                fontsize=6, color="0.25",
+            )
+
     if color_by is None:
         ax.set_xticks(range(1, len(keys) + 1))
         ax.set_xticklabels(labels)
@@ -257,9 +310,19 @@ def learning_bands(
         None,
     )
 
+    floor = floor_for("training_subopt_final") if normalize else None
+    hit_floor = False
+
+    flat_drawn = 0
+
     def rescale(values):
+        nonlocal hit_floor
         if normalize and j_star:
-            return (np.asarray(values) - j_star) / j_star
+            scaled = (np.asarray(values) - j_star) / j_star
+            if floor is not None:
+                hit_floor = hit_floor or bool(np.any(scaled < floor))
+                scaled = np.maximum(scaled, floor)
+            return scaled
         return np.asarray(values)
 
     if ax is None:
@@ -271,12 +334,16 @@ def learning_bands(
         label = _tick_label(key).replace("\n", ", ")
 
         if band["flat"]:
-            if normalize and not float(rescale(band["median"])) > 0:
+            median = float(rescale(band["median"]))
+            if not np.isfinite(median):
                 continue
+            exact = floor is not None and median <= floor
+            suffix = "exact, no curve" if exact else "no curve"
             ax.axhline(
-                float(rescale(band["median"])), linestyle=":", linewidth=1.5,
-                color=color, label=f"{label} (no samples)",
+                median, linestyle=(2 * flat_drawn % 8, (2, 6)), linewidth=1.5,
+                color=color, label=f"{label} ({suffix})",
             )
+            flat_drawn += 1
             low, high = float(rescale(band["low"])), float(rescale(band["high"]))
             if np.isfinite(low) and np.isfinite(high) and high > low:
                 ax.axhspan(low, high, color=color, alpha=0.12, linewidth=0)
@@ -292,6 +359,10 @@ def learning_bands(
     if logx:
         ax.set_xscale("log")
     ax.set_yscale("log")
+
+    if hit_floor:
+        _resolution_band(ax, floor)
+
     ax.set_xlabel({
         "env_steps": "Environment steps",
         "total_time": "Run time (s)",

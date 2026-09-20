@@ -4,7 +4,7 @@ Metrics tables for comparison, emitted as .tex files.
 
 import numpy as np
 
-from experiments.figures.aggregate import aggregate, group, label_for
+from experiments.figures.aggregate import aggregate, floor_for, group, label_for
 from experiments.figures.style import table_dir
 
 __all__ = [
@@ -168,12 +168,30 @@ def _fit(tabular: str) -> str:
     ])
 
 
-def _cell(stats: dict, fmt: str, show_spread: bool) -> str:
+def _cell(
+    stats: dict, fmt: str, show_spread: bool, floor: float | None = None
+) -> str:
     """One table cell, containing its mean, optionally with its spread.
+
+    Parameters
+    ----------
+    stats : dict or None
+        One cell of :func:`~experiments.figures.aggregate.aggregate`.
+    fmt : str
+        Format of the number.
+    show_spread : bool
+        Append the standard deviation.
+    floor : float or None, optional
+        Numerical-resolution floor of the metric.
     """
     if stats is None or stats["n"] == 0:
         # A cell where every seed diverged
         return r"\multicolumn{1}{c}{--}"
+
+    if floor is not None and abs(stats["mean"]) < floor:
+        if stats["mean"] == 0.0 and stats["std"] == 0.0:
+            return "$0$"
+        return f"$< 10^{{{int(round(np.log10(floor)))}}}$"
 
     mean = _math(stats["mean"], fmt)
 
@@ -308,6 +326,7 @@ def metric_table(
         lines.append(r"\midrule")
 
     episode_metrics = []
+    floored_metrics = []
 
     for metric in metrics:
         row_label, fmt = METRIC_ROWS.get(metric, (_escape(metric), "{:.4g}"))
@@ -316,8 +335,14 @@ def metric_table(
             episode_metrics.append(metric)
             row_label += EPISODE_MARKER
 
-        cells = [_cell(stats[metric].get(key), fmt, show_spread) for key in keys]
+        floor = floor_for(metric)
+        cells = [
+            _cell(stats[metric].get(key), fmt, show_spread, floor)
+            for key in keys
+        ]
         lines.append(" & ".join([row_label] + cells) + r" \\")
+        if floor is not None and any(r"$<" in cell for cell in cells):
+            floored_metrics.append(row_label)
 
         # Divergence rate of the solver
         if any(
