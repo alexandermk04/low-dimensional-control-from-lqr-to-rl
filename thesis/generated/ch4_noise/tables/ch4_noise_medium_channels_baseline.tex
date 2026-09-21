@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Channel & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Test cost$^{\dagger}$ & $5968 \pm 5272$ & $7977 \pm 5275$ & $5998 \pm 5298$ & $6360 \pm 5999$ & $6031 \pm 5281$ & $8464 \pm 5955$ \\
+Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+0 \pm 0$ & $+0 \pm 0$ & $+0 \pm 0$ & $+0 \pm 0$ & $+0 \pm 0$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{baseline under each noise channel at intensity 'standard'. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled.}
+\label{tab:ch4-noise-medium-channels-baseline}
+\end{table}

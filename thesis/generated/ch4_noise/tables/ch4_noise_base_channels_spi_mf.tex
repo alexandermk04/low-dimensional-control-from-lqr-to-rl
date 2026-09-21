@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Channel & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Test cost$^{\dagger}$ & $6475 \pm 5709$ & $7025 \pm 5709$ & $6680 \pm 5889$ & $7060 \pm 6880$ & $6573 \pm 5725$ & $8329 \pm 8388$ \\
+Suboptimality $S$$^{\dagger}$ & $+0.105 \pm 0.0634$ & $-0.249 \pm 0.231$ & $+0.0899 \pm 0.0528$ & $+0.125 \pm 0.112$ & $+0.128 \pm 0.103$ & $-0.251 \pm 0.274$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{spi\_mf under each noise channel at intensity 'standard'. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled.}
+\label{tab:ch4-noise-base-channels-spi-mf}
+\end{table}

@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Channel & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Test cost$^{\dagger}$ & $5968 \pm 5272$ & $7976 \pm 5271$ & $6229 \pm 5505$ & $6360 \pm 5999$ & $6031 \pm 5281$ & $9385 \pm 6434$ \\
+Suboptimality $S$$^{\dagger}$ & $+9.11 \times 10^{-18} \pm 1.49 \times 10^{-15}$ & $+2.65 \times 10^{-14} \pm 1.73 \times 10^{-13}$ & $+1.99 \times 10^{-15} \pm 1.13 \times 10^{-14}$ & $-1.02 \times 10^{-15} \pm 3.36 \times 10^{-14}$ & $-1.21 \times 10^{-15} \pm 2.83 \times 10^{-14}$ & $+2.68 \times 10^{-14} \pm 1.76 \times 10^{-13}$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{ce\_dare under each noise channel at intensity 'standard'. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled.}
+\label{tab:ch4-noise-base-channels-ce-dare}
+\end{table}

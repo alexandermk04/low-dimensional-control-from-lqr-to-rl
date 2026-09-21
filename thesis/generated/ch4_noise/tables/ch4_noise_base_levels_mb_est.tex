@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Intensity & none & weak & standard & strong & divergent \\
+\midrule
+Test cost$^{\dagger}$ & $5968 \pm 5272$ & $6048 \pm 5272$ & $7976 \pm 5271$ & $3.81 \times 10^{4} \pm 5346$ & $3.219 \times 10^{6} \pm 1.03 \times 10^{5}$ \\
+Suboptimality $S$$^{\dagger}$ & $+6.57 \times 10^{-17} \pm 1.53 \times 10^{-15}$ & $+1.05 \times 10^{-14} \pm 7.34 \times 10^{-14}$ & $+4.55 \times 10^{-14} \pm 1.66 \times 10^{-13}$ & $+9.85 \times 10^{-14} \pm 2.76 \times 10^{-13}$ & $+1.16 \times 10^{-13} \pm 3.19 \times 10^{-13}$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{mb\_est under measurement noise of increasing intensity. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled.}
+\label{tab:ch4-noise-base-levels-mb-est}
+\end{table}

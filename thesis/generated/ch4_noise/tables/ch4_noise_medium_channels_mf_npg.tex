@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Channel & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Test cost$^{\dagger}$ & $6233 \pm 5510$ & $7280 \pm 5512$ & $6250 \pm 5524$ & $7111 \pm 8860$ & $6302 \pm 5526$ & $7976 \pm 6732$ \\
+Suboptimality $S$$^{\dagger}$ & $+0.0447 \pm 0.0161$ & $-0.173 \pm 0.152$ & $+0.0424 \pm 0.0156$ & $+0.0749 \pm 0.174$ & $+0.045 \pm 0.0313$ & $-0.155 \pm 0.172$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{mf\_npg under each noise channel at intensity 'standard'. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled.}
+\label{tab:ch4-noise-medium-channels-mf-npg}
+\end{table}

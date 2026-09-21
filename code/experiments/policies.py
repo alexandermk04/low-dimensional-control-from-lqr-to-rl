@@ -3,6 +3,8 @@
 
 from pathlib import Path
 
+import numpy as np
+
 from evaluation.metrics import LinearPolicy, Policy
 from evaluation.records import RunRecord, record_dir
 from experiments.store import ROOT
@@ -71,7 +73,21 @@ def load_policy(record: RunRecord, root: Path | str = ROOT) -> Policy:
 
         model = PPO.load(path, device="cpu")
 
-        return SB3Policy(model, deterministic=spec.get("deterministic", True))
+        encoder = None
+        if spec.get("encoder"):
+            encoder_path = record_dir(record, root) / spec["encoder"]
+            if not encoder_path.exists():
+                raise MissingPolicyError(
+                    f"{record.run_id} names an encoder at {encoder_path} that is "
+                    f"not there."
+                )
+            encoder = np.load(encoder_path)
+
+        return SB3Policy(
+            model,
+            deterministic=spec.get("deterministic", True),
+            encoder=encoder,
+        )
 
     raise MissingPolicyError(
         f"{record.run_id} stores no reloadable policy "
