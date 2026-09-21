@@ -389,8 +389,9 @@ class MFStructuredPolicySettings:
         Frobenius convergence tolerance.
     limit : int
         Iteration cap.
-    max_linesearch_iter : int
-        Backtracking cap per iteration.
+    max_linesearch_iter : int or None
+        Backtracking cap per iteration. ``None`` disables backtracking and
+        requires ``stepsize``.
     m : int
         Trajectories per gradient estimate.
     l : int
@@ -409,7 +410,7 @@ class MFStructuredPolicySettings:
     lambda_: float # regularization parameter for low-rank structure
     epsilon: float # stopping criterion for convergence
     limit: int # maximum number of iterations to prevent infinite loop in case of non-convergence
-    max_linesearch_iter: int
+    max_linesearch_iter: int | None  # None disables backtracking
     m: int  # Number of trajectories
     l: int  # Length of steps in each trajectory
     r: float  # Smoothing parameter
@@ -448,20 +449,24 @@ def calculate_next_K_mf(
         The next gain.
     """
 
+    if settings.stepsize is not None:
+        # Fixed step size, no backtracking.
+        return prox_grad_nuclear_norm(
+            K_t, grad_K, settings.stepsize, lambda_=settings.lambda_
+        )
+
+    if settings.max_linesearch_iter is None or settings.max_linesearch_iter < 1:
+        raise ValueError(
+            "backtracking needs max_linesearch_iter >= 1; pass a fixed stepsize "
+            "instead to run without it"
+        )
+
     # Paper suggests O(1/lambda) for initial stepsize
     step = 1.0 / settings.lambda_
-
-    linesearch_enabled = True
-    if settings.stepsize is not None:
-        linesearch_enabled = False
-        step = settings.stepsize
 
     linsearch_iter = 0
     while linsearch_iter < settings.max_linesearch_iter:
         K_plus = prox_grad_nuclear_norm(K_t, grad_K, step, lambda_=settings.lambda_)
-
-        if not linesearch_enabled:
-            return K_plus
 
         _, _, f_K_plus = estimate_gradient(lqr, K_plus, m=settings.m, l=settings.l, r=settings.r, rngen=rngen)
         #print(f"Line search step: {step}, f_K: {f_K}, f_K_plus: {f_K_plus}")

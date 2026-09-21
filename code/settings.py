@@ -272,6 +272,7 @@ SOLVER_HYPERPARAMS = {
         "lambda_": 4000,
         "beta": 0.5,
         "epsilon": 1e-8,
+        "max_linesearch_iter": None,
         "stepsize": 3.5e-6,
         "smoothing": 0.5,
     },
