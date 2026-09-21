@@ -27,8 +27,7 @@ def build_specs() -> list[RunSpec]:
         if not supported(solver, size):
             continue
 
-        budget_size = settings.BORROWED_BUDGETS.get((solver, size), size)
-        rollout_length, n_trajectories = budget(solver, budget_size)
+        rollout_length, n_trajectories = budget(solver, size)
 
         specs += [
             RunSpec(
@@ -54,10 +53,6 @@ def main():
         used_settings={
             "solvers": settings.CH5_COMPARISON_SOLVERS,
             "inflation": settings.CH5_REFERENCE_INFLATION,
-            "borrowed_budgets": {
-                f"{solver}@{size}": source
-                for (solver, size), source in settings.BORROWED_BUDGETS.items()
-            },
             "chosen_identification": settings.CHOSEN_IDENTIFICATION,
             "iterations": settings.SOLVER_ITERATIONS,
             "rl_timesteps": settings.RL_TIMESTEPS,

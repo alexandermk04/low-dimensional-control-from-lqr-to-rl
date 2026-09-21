@@ -121,7 +121,7 @@ def _train_and_score_plants(spec: RunSpec, problem: Problem, purpose: str = "tra
     lqr = build_plant(problem, f"{purpose}:{spec.solver}")
     lqr.reset()
 
-    scorer = build_plant(problem, f"score:{spec.solver}")
+    scorer = build_plant(problem, "score")
     scorer.reset()
 
     return lqr, scorer
@@ -165,7 +165,7 @@ def _require_trajectory_length(spec: RunSpec) -> int:
 def _run_baseline(spec: RunSpec, problem: Problem) -> SolverResult:
     """The optimal controller, so the optimum appears as a row in every figure.
     """
-    scorer = build_plant(problem, f"score:{spec.solver}")
+    scorer = build_plant(problem, "score")
     scorer.reset()
 
     if problem.inflation is None:
@@ -642,7 +642,7 @@ def _run_rl(
         pretrained_extractor=weights,
     )
 
-    scorer = build_plant(problem, f"score:{spec.solver}")
+    scorer = build_plant(problem, "score")
     scorer.reset()
 
     def evaluate(model):
@@ -654,7 +654,7 @@ def _run_rl(
             )
         mean, _ = monte_carlo_cost(
             scorer, SB3Policy(model, encoder=encoder),
-            n_episodes=max(20, settings.TEST_EPISODES // 10),
+            n_episodes=settings.PROBE_EPISODES,
             horizon=settings.PROBE_HORIZON,
         )
         return mean, None

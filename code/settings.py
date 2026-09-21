@@ -27,6 +27,9 @@ FIGURE_HORIZON = 800
 # Rollout length of the mid-training Monte Carlo probe for non-linear RL policies.
 PROBE_HORIZON = 800
 
+# Episodes to evaluate during training run
+PROBE_EPISODES = 100
+
 # ---------------------------------------------------------------------------
 # Training
 # ---------------------------------------------------------------------------
@@ -74,13 +77,14 @@ SUBOPTIMAL_IDENTIFICATION = {
     "large": (1000, 5),
 }
 
-# TODO: RL solvers should be chosen based on the above selection
-# Episode length the RL solvers train on.
-TRAIN_HORIZON = None
+# Rollout length for training
+TRAIN_HORIZON = 800
 
-# Environment-step budget for the RL solvers.
-RL_TIMESTEPS = None
-RL_EVAL_FREQ = None #25_000
+# Environment-step budget for the RL solvers
+RL_TIMESTEPS = 1_000_000
+
+# Environment steps between learning-curve samples
+RL_EVAL_FREQ = 25_000
 
 
 # ---------------------------------------------------------------------------
@@ -211,17 +215,11 @@ CH5_SOLVERS = (
 # The comparison at CH5_REFERENCE_INFLATION.
 CH5_COMPARISON_SOLVERS = (
     "baseline",
-    "mf_npg",
     "ppo_linear",
     "ppo_bottleneck",
     "ppo_encoder_scalable",
     "ppo_mlp",
 )
-
-# Cells without a budget of their own
-BORROWED_BUDGETS = {
-    ("mf_npg", "pixel"): "large",
-}
 
 # Algorithms that cannot be run at a given inflation size, and why.
 UNSUPPORTED_CELLS = {

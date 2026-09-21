@@ -20,3 +20,4 @@
 ## Code
 - check ppo_linear, mlp and N4SID encoder
 - check pixel_fc, pixel_posvel
+- rework noise plots
