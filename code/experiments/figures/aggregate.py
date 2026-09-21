@@ -37,6 +37,8 @@ SOLVER_LABELS = {
     "oracle_coarse": "Oracle (true state)",
     "ppo_pixel_fc": "Pixels + PPO",
     "ppo_pixel_posvel": "Position-Velocity Encoder + PPO",
+    "ppo_pixel_ortho": "Bottleneck PPO",
+    "ppo_pixel_estimator": "Scalable encoder + PPO",
 }
 
 # Summary metrics whose per-episode array is stored with the run

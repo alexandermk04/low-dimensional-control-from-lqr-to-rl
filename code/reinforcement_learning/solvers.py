@@ -1,4 +1,14 @@
 """The reinforcement-learning solvers, with different policy architectures.
+
+Every solver of chapters 5 and 6 is PPO [1]_ through Stable-Baselines3 [2]_.
+
+References
+----------
+.. [1] J. Schulman, F. Wolski, P. Dhariwal, A. Radford, O. Klimov, "Proximal
+       Policy Optimization Algorithms", 2017. https://arxiv.org/abs/1707.06347
+.. [2] A. Raffin, A. Hill, A. Gleave, A. Kanervisto, M. Ernestus, N. Dormann,
+       "Stable-Baselines3: Reliable Reinforcement Learning Implementations",
+       JMLR 22(268), 2021. https://github.com/DLR-RM/stable-baselines3
 """
 
 from dataclasses import dataclass, field
@@ -11,9 +21,6 @@ from evaluation.metrics import Policy
 
 __all__ = [
     "RLSolverSettings",
-    "LINEAR_PPO",
-    "MLP_PPO",
-    "ENCODER_PPO",
     "build_model",
     "extract_linear_gain",
     "set_linear_gain",
@@ -21,10 +28,9 @@ __all__ = [
     "is_linear_solver",
     "load_extractor",
     "SB3Policy",
+    "vector_presets",
     "pixel_presets",
 ]
-
-ALGORITHMS = {"ppo": PPO}
 
 
 @dataclass
@@ -67,7 +73,9 @@ class RLSolverSettings:
         Stable-Baselines3 policy class name. ``"MlpPolicy"`` for the chapter-5
         solvers; ``"CnnPolicy"`` for the chapter-6 ones.
     features_extractor_class : type or None
-        Custom feature extractor class. ``None`` uses the default for the policy.
+        Custom feature extractor class, from
+        :mod:`reinforcement_learning.features`. ``None`` uses the default for
+        the policy.
     features_extractor_kwargs : dict
         Forwarded to the extractor's constructor.
     normalize_images : bool
@@ -138,6 +146,63 @@ ENCODER_PPO = RLSolverSettings(
 )
 
 
+def _extractor_solver(name: str, extractor, **kwargs) -> RLSolverSettings:
+    """Preset for a solver whose policy observes through an extractor.
+
+    Parameters
+    ----------
+    name : str
+        Solver label.
+    extractor : type
+        The feature extractor class.
+    **kwargs
+        Overrides.
+
+    Returns
+    -------
+    RLSolverSettings
+        The preset.
+    """
+    defaults = dict(
+        algo="ppo",
+        policy="MlpPolicy",
+        features_extractor_class=extractor,
+        net_arch=dict(pi=[64, 64], vf=[64, 64]),
+        linear=False,
+        learning_rate=3e-4,
+    )
+    defaults.update(kwargs)
+
+    return RLSolverSettings(name=name, **defaults)
+
+
+def vector_presets() -> dict:
+    """Solvers for chapter 5
+
+    Returns
+    -------
+    dict
+        Mapping solver name to :class:`RLSolverSettings`.
+    """
+    import settings
+    from reinforcement_learning.features import OrthoBottleneck, StateEncoder
+
+    return {
+        "ppo_linear": LINEAR_PPO,
+        "ppo_mlp": MLP_PPO,
+        "ppo_encoder": ENCODER_PPO,
+        "ppo_bottleneck": _extractor_solver(
+            "ppo_bottleneck", OrthoBottleneck,
+            features_extractor_kwargs={"bottleneck_dim": settings.BOTTLENECK_DIM},
+        ),
+        "ppo_encoder_scalable": _extractor_solver(
+            "ppo_encoder_scalable", StateEncoder,
+            features_extractor_kwargs={"latent_dim": settings.ENCODER_LATENT_DIM},
+            freeze_extractor=True,
+        ),
+    }
+
+
 # --- Chapter 6 -----------------------------------------
 
 def pixel_gamma(horizon_seconds: float = 10.0) -> float:
@@ -198,23 +263,38 @@ def _pixel_solver(name: str, extractor, **kwargs) -> RLSolverSettings:
 
 
 def pixel_presets() -> dict:
-    """The chapter-6 solvers, by name.
+    """Solvers for chapter 6
 
     Returns
     -------
     dict
         Mapping solver name to :class:`RLSolverSettings`.
     """
-    from reinforcement_learning.pixel_features import (
+    import config as cfg
+    import settings
+    from reinforcement_learning.features import (
         FCExtractor,
+        OrthoBottleneck,
         PosVelExtractor,
+        StateEncoder,
     )
+
+    dt_agent = cfg.DEFAULT_DT * cfg.DEFAULT_ACTION_REPEAT
 
     return {
         "ppo_pixel_fc": _pixel_solver("ppo_pixel_fc", FCExtractor),
         "ppo_pixel_posvel": _pixel_solver(
             "ppo_pixel_posvel", PosVelExtractor,
-            features_extractor_kwargs={"n_keypoints": 4},
+            features_extractor_kwargs={"n_keypoints": 4, "dt_agent": dt_agent},
+            freeze_extractor=True,
+        ),
+        "ppo_pixel_ortho": _pixel_solver(
+            "ppo_pixel_ortho", OrthoBottleneck,
+            features_extractor_kwargs={"bottleneck_dim": settings.BOTTLENECK_DIM},
+        ),
+        "ppo_pixel_estimator": _pixel_solver(
+            "ppo_pixel_estimator", StateEncoder,
+            features_extractor_kwargs={"latent_dim": settings.ENCODER_LATENT_DIM},
             freeze_extractor=True,
         ),
     }
@@ -271,34 +351,31 @@ def build_model(env, settings: RLSolverSettings, seed: int) -> BaseAlgorithm:
     ValueError
         If ``settings.algo`` is not a known algorithm.
     """
-    if settings.algo not in ALGORITHMS:
+    if settings.algo != "ppo":
         raise ValueError(
-            f"Unknown algorithm {settings.algo!r}; expected one of {sorted(ALGORITHMS)}."
+            f"Unknown algorithm {settings.algo!r}; expected 'ppo'."
         )
 
     policy_kwargs = {"net_arch": settings.net_arch, **settings.policy_kwargs_extra}
 
-    if settings.algo == "ppo":
-        policy_kwargs.setdefault("ortho_init", False)
-        policy_kwargs.setdefault("log_std_init", settings.log_std_init)
+    policy_kwargs.setdefault("ortho_init", False)
+    policy_kwargs.setdefault("log_std_init", settings.log_std_init)
 
     if settings.features_extractor_class is not None:
         policy_kwargs["features_extractor_class"] = settings.features_extractor_class
         policy_kwargs["features_extractor_kwargs"] = dict(settings.features_extractor_kwargs)
         policy_kwargs["normalize_images"] = settings.normalize_images
 
-    algorithm_kwargs = {}
-    if settings.algo == "ppo":
-        algorithm_kwargs = {
-            "n_steps": settings.n_steps,
-            "batch_size": settings.batch_size,
-            "n_epochs": settings.n_epochs,
-            "ent_coef": settings.ent_coef,
-            "clip_range": settings.clip_range,
-            "max_grad_norm": settings.max_grad_norm,
-        }
+    algorithm_kwargs = {
+        "n_steps": settings.n_steps,
+        "batch_size": settings.batch_size,
+        "n_epochs": settings.n_epochs,
+        "ent_coef": settings.ent_coef,
+        "clip_range": settings.clip_range,
+        "max_grad_norm": settings.max_grad_norm,
+    }
 
-    model = ALGORITHMS[settings.algo](
+    model = PPO(
         settings.policy,
         env,
         seed=seed,
@@ -333,7 +410,7 @@ def load_extractor(model: BaseAlgorithm, state_dict: dict, freeze: bool = True) 
         The model whose extractor should be replaced.
     state_dict : dict
         Weights, as produced by the pretraining routines in
-        :mod:`reinforcement_learning.pixel_features`.
+        :mod:`reinforcement_learning.features`.
     freeze : bool, optional
         Also stop the extractor being trained. Defaults to ``True``.
 

@@ -17,8 +17,8 @@ def collect_latents(env, extractor, policy, n_episodes: int, horizon: int | None
 
     Parameters
     ----------
-    env : PixelLQREnv
-        Environment to roll out; restored afterwards.
+    env : PixelLQREnv or LQREnv
+        Environment to roll out; restored afterwards if it can be.
     extractor : PixelExtractor
         Architecture whose ``latent`` is probed.
     policy : callable
@@ -33,8 +33,9 @@ def collect_latents(env, extractor, policy, n_episodes: int, horizon: int | None
     tuple[np.ndarray, np.ndarray, np.ndarray]
         Latents ``(T, d)``, true states ``(T, n)`` and episode indices ``(T,)``.
     """
-    horizon = env.config.horizon if horizon is None else horizon
-    snap = env.snapshot()
+    if horizon is None:
+        horizon = getattr(env, "horizon", None) or env.config.horizon
+    snap = env.snapshot() if hasattr(env, "snapshot") else None
     latents, states, episodes = [], [], []
 
     try:
@@ -54,7 +55,8 @@ def collect_latents(env, extractor, policy, n_episodes: int, horizon: int | None
                 if terminated or truncated:
                     break
     finally:
-        env.restore(snap)
+        if snap is not None:
+            env.restore(snap)
 
     return np.asarray(latents, dtype=float), np.asarray(states, dtype=float), np.asarray(episodes)
 
@@ -101,7 +103,9 @@ def linear_probe_r2(Z: np.ndarray, S: np.ndarray, episodes: np.ndarray,
         "latent_dim": int(Z.shape[1]),
     }
 
-def latent_extra(model, env, policy) -> dict:
+def latent_extra(model, env, policy, horizon: int | None = None) -> dict:
     """How well a policy encodes the true state."""
-    Z, S, episodes = collect_latents(env, model.policy.features_extractor, policy, n_episodes=20)
+    Z, S, episodes = collect_latents(
+        env, model.policy.features_extractor, policy, n_episodes=20, horizon=horizon
+    )
     return linear_probe_r2(Z, S, episodes)

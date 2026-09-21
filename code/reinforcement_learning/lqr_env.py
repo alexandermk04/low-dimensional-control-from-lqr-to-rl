@@ -122,7 +122,7 @@ class LQREnv(gym.Env):
         self.lqr.reset()
         self.steps = 0
 
-        return self._obs(), {}
+        return self._obs(), {"state": self.lqr.x.copy()}
 
     def step(self, action):
         """Apply one control and charge the LQR stage cost.
@@ -160,6 +160,7 @@ class LQREnv(gym.Env):
         info = {
             "stage_cost": result.cost,
             "x": result.x_t,
+            "state": result.x_t,
             "u": result.u_t,
             "action_clipped": self.n_action_clips,
         }

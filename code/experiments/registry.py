@@ -1,4 +1,28 @@
 """Contains all the available problem solvers.
+
+References
+----------
+.. [1] M. Fazel, R. Ge, S. M. Kakade, M. Mesbahi, "Global Convergence of Policy
+       Gradient Methods for the Linear Quadratic Regulator", ICML 2018.
+       https://arxiv.org/abs/1801.05039
+       The exact and the rollout-based policy gradient, in
+       :mod:`lqr_solvers.mb_policy_gradient` and
+       :mod:`lqr_solvers.mf_policy_gradient`.
+.. [2] Y. Park, R. A. Rossi, Z. Wen, G. Wu, H. Zhao, "Structured Policy
+       Iteration for Linear Quadratic Regulator", ICML 2020.
+       https://arxiv.org/abs/2007.06202
+       S-PI, model-based and model-free, in
+       :mod:`lqr_solvers.structured_policy_iteration`.
+.. [3] P. Van Overschee, B. De Moor, "N4SID: Subspace algorithms for the
+       identification of combined deterministic-stochastic systems",
+       Automatica 30(1), 1994.
+       The identification we use for ``*_est`` solvers, in
+       :mod:`lqr_solvers.system_identification`, through the SIPPY package.
+.. [4] J. Schulman, F. Wolski, P. Dhariwal, A. Radford, O. Klimov, "Proximal
+       Policy Optimization Algorithms", 2017. https://arxiv.org/abs/1707.06347
+       Every ``ppo_*`` solver, through Stable-Baselines3.
+.. [5] The chapter-5 and chapter-6 policy architectures, cited individually in
+       :mod:`reinforcement_learning.features`.
 """
 
 from dataclasses import dataclass, field
@@ -9,6 +33,7 @@ import numpy as np
 import settings
 from evaluation.analysis import policy_complexity_linear, policy_complexity_mlp
 from evaluation.metrics import LinearPolicy, Policy, expected_true_cost
+from evaluation.latent_probe import latent_extra
 from evaluation.probe import IterationRecord, Probe
 from experiments.problem import Problem, RunSpec, build_plant
 from seeding import sub_seed
@@ -29,8 +54,10 @@ from lqr_solvers.structured_policy_iteration import (
 
 __all__ = ["SolverResult", "SOLVER_REGISTRY", "run_solver", "known_solvers"]
 
-# Solvers whose training happens through stable-baselines3.
-RL_SOLVERS = ("ppo_linear", "ppo_mlp", "ppo_encoder")
+# Solvers who are trained through stable-baselines3.
+RL_SOLVERS = (
+    "ppo_linear", "ppo_mlp", "ppo_encoder", "ppo_bottleneck", "ppo_encoder_scalable",
+)
 
 # Chapter 6: trained through stable-baselines3 too, but on a pixel
 # environment and a thruster ring rather than on an inflated LQR.
@@ -166,7 +193,10 @@ def _run_baseline(spec: RunSpec, problem: Problem) -> SolverResult:
 # ---------------------------------------------------------------------------
 
 def _run_mb_pg(spec: RunSpec, problem: Problem) -> SolverResult:
-    """Exact-gradient policy descent (Fazel et al., 2018)."""
+    """Exact-gradient policy descent on the true model.
+
+    The algorithm of Fazel et al. [1]_.
+    """
     lqr, scorer = _train_and_score_plants(spec, problem)
     probe = _probe(lqr, scorer)
     probe.start()
@@ -324,6 +354,8 @@ def _identification_failed(problem, scorer, id_settings, failure) -> SolverResul
 
 def _run_mb_est(spec: RunSpec, problem: Problem) -> SolverResult:
     """Exact-gradient policy descent on an identified model.
+
+    Fazel et al. [1]_ run on a plant identified by N4SID [3]_.
     """
     from lqr_solvers.system_identification import to_inflated_plant
 
@@ -352,6 +384,8 @@ def _run_mb_est(spec: RunSpec, problem: Problem) -> SolverResult:
 
 def _run_ce_dare(spec: RunSpec, problem: Problem) -> SolverResult:
     """Certainty equivalence: identify the plant, then solve its Riccati equation.
+
+    Identification by N4SID [3]_.
     """
     from lqr_base.simple_lqr import get_optimal_K_and_cost_discrete
     from lqr_solvers.system_identification import to_plant
@@ -382,6 +416,8 @@ def _run_ce_dare(spec: RunSpec, problem: Problem) -> SolverResult:
 
 def _run_spi_est(spec: RunSpec, problem: Problem) -> SolverResult:
     """S-PI on an identified model.
+
+    Park et al. [2]_ run on a plant identified by N4SID [3]_.
     """
     from lqr_solvers.system_identification import to_inflated_plant
 
@@ -415,7 +451,10 @@ def _run_spi_est(spec: RunSpec, problem: Problem) -> SolverResult:
 
 
 def _run_mf_npg(spec: RunSpec, problem: Problem) -> SolverResult:
-    """Rollout-based natural policy gradient."""
+    """Rollout-based natural policy gradient.
+
+    The model-free variant of Fazel et al. [1]_.
+    """
     rollout_length, n_trajectories = _require_samples(spec)
 
     lqr, scorer = _train_and_score_plants(spec, problem)
@@ -439,7 +478,10 @@ def _run_mf_npg(spec: RunSpec, problem: Problem) -> SolverResult:
 
 
 def _run_spi(spec: RunSpec, problem: Problem) -> SolverResult:
-    """Model-based low-rank structured policy iteration (Park et al., 2020)."""
+    """Model-based low-rank structured policy iteration.
+
+    The algorithm of Park et al. [2]_.
+    """
     lqr, scorer = _train_and_score_plants(spec, problem)
     probe = _probe(lqr, scorer)
     probe.start()
@@ -460,7 +502,10 @@ def _run_spi(spec: RunSpec, problem: Problem) -> SolverResult:
 
 
 def _run_spi_mf(spec: RunSpec, problem: Problem) -> SolverResult:
-    """Model-free structured policy iteration."""
+    """Model-free structured policy iteration.
+
+    The model-free variant of Park et al. [2]_.
+    """
     rollout_length, n_trajectories = _require_samples(spec)
 
     lqr, scorer = _train_and_score_plants(spec, problem)
@@ -503,6 +548,33 @@ def _linear_result(K_final, probe, solver_settings, scorer) -> SolverResult:
 # Reinforcement learning
 # ---------------------------------------------------------------------------
 
+def _explore(control, seed: int, scale) -> Callable:
+    """A random policy that collects observations for a pretrained extractor.
+
+    Parameters
+    ----------
+    control : callable
+        ``control(observation, info) -> action``.
+    seed : int
+        Seeds the mixture.
+    scale : array-like or float
+        Half-width of the box the random actions are drawn from.
+
+    Returns
+    -------
+    callable
+        ``(observation, info) -> action``.
+    """
+    rng = np.random.default_rng(seed)
+
+    def act(observation, info):
+        if rng.random() < 0.3:
+            return rng.uniform(-scale, scale, size=np.shape(control(observation, info)))
+        return control(observation, info)
+
+    return act
+
+
 def _run_rl(
     spec: RunSpec,
     problem: Problem,
@@ -510,6 +582,8 @@ def _run_rl(
     env_steps_offset: int = 0,
 ) -> SolverResult:
     """Train one stable-baselines3 policy on the LQR environment.
+
+    PPO [4]_ used throughout.
 
     Parameters
     ----------
@@ -523,40 +597,49 @@ def _run_rl(
     import dataclasses as dc
 
     from reinforcement_learning.callbacks import ProbeCallback
+    from reinforcement_learning.features import fit_extractor_weights
     from reinforcement_learning.lqr_env import LQREnv
     from reinforcement_learning.solvers import (
-        ENCODER_PPO,
-        LINEAR_PPO,
-        MLP_PPO,
         SB3Policy,
         build_model,
         extract_linear_gain,
         is_linear_solver,
+        vector_presets,
     )
-    from evaluation.metrics import monte_carlo_cost
+    from evaluation.metrics import LinearPolicy, monte_carlo_cost
+    from evaluation.pixel_metrics import SB3EnvPolicy
 
-    presets = {
-        "ppo_linear": LINEAR_PPO,
-        "ppo_mlp": MLP_PPO,
-        "ppo_encoder": ENCODER_PPO,
-    }
-    preset = presets[spec.solver]
+    preset = vector_presets()[spec.solver]
     linear = is_linear_solver(preset)
+
+    def make_env(purpose: str) -> LQREnv:
+        return LQREnv(
+            build_plant(problem, f"{purpose}:{spec.solver}"),
+            horizon=settings.TRAIN_HORIZON,
+            reward_scale=problem.dt,
+            action_limit=problem.action_limit,
+            encoder=encoder,
+        )
+
+    env = make_env("train")
+
+    weights = None
+    if preset.freeze_extractor:
+        stabilizing = LinearPolicy(problem.K_0)
+        weights = fit_extractor_weights(
+            preset, make_env("fit"),
+            _explore(lambda y, info: stabilizing(y), spec.seed, problem.action_limit / 10.0),
+            n_steps=settings.PRETRAIN_STEPS,
+            epochs=settings.PRETRAIN_EPOCHS,
+        )
+        env_steps_offset += settings.PRETRAIN_STEPS
 
     solver_settings = dc.replace(
         preset,
         total_timesteps=settings.RL_TIMESTEPS,
         eval_freq=settings.RL_EVAL_FREQ,
         initial_gain=problem.K_0 if linear else None,
-    )
-
-    train = build_plant(problem, f"train:{spec.solver}")
-    env = LQREnv(
-        train,
-        horizon=settings.TRAIN_HORIZON,
-        reward_scale=problem.dt,
-        action_limit=problem.action_limit,
-        encoder=encoder,
+        pretrained_extractor=weights,
     )
 
     scorer = build_plant(problem, f"score:{spec.solver}")
@@ -590,6 +673,11 @@ def _run_rl(
 
     extra = {"action_clips": env.n_action_clips}
 
+    if preset.features_extractor_class is not None:
+        extra.update(latent_extra(
+            model, make_env("probe"), SB3EnvPolicy(model), horizon=settings.PROBE_HORIZON,
+        ))
+
     if linear:
         K_final, bias = extract_linear_gain(model)
         complexity = policy_complexity_linear(K_final)
@@ -612,6 +700,24 @@ def _run_rl(
         extra=extra,
         save_policy=None if linear else _sb3_saver(model, solver_settings, encoder),
     )
+
+
+def _run_ppo_encoder(spec: RunSpec, problem: Problem) -> SolverResult:
+    """PPO [4]_ behind a plant identified by N4SID [3]_.
+    """
+    context = _identify_for(spec, problem, purpose="identify")
+
+    if context.model is None:
+        return context.failed_result(problem)
+
+    result = _run_rl(
+        spec, problem,
+        encoder=context.model.decode,
+        env_steps_offset=context.settings.trajectory_length,
+    )
+
+    result.extra.update(_identification_extra(context.model))
+    return result
 
 
 # --- Chapter 6 ---------------------------------------
@@ -733,6 +839,8 @@ def _run_oracle_coarse(spec: RunSpec, problem: Problem) -> SolverResult:
 
 def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
     """Train a PPO policy with different feature extractors on the pixel environment.
+
+    PPO [4]_ used throughout.
     """
     import dataclasses as dc
 
@@ -740,7 +848,7 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
     from evaluation.latent_probe import latent_extra
     from reinforcement_learning.callbacks import ProbeCallback
     from reinforcement_learning.pixel_env import build_pixel_env
-    from reinforcement_learning.pixel_features import fit_extractor_weights
+    from reinforcement_learning.features import fit_extractor_weights
     from reinforcement_learning.solvers import build_model, pixel_presets
 
     K, j_star, horizon, repeat = _pixel_setup(spec)
@@ -754,14 +862,16 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
     preset = pixel_presets()[spec.solver]
 
     weights = None
-
-    # Pretain if extractor is frozen
     if preset.freeze_extractor:
+        from lqr_base.thruster_ring import ThrusterOraclePolicy
+
         fit_env = build_pixel_env(sub_seed(spec.seed, "pixel-fit", spec.solver), horizon=horizon)
+        oracle = ThrusterOraclePolicy(K, fit_env.c)
         weights = fit_extractor_weights(
-            spec.solver, fit_env, K, seed=spec.seed,
-            n_steps=settings.PIXEL_PRETRAIN_STEPS,
-            epochs=settings.PIXEL_PRETRAIN_EPOCHS,
+            preset, fit_env,
+            _explore(lambda observation, info: oracle(info["state"]), spec.seed, 1.0),
+            n_steps=settings.PRETRAIN_STEPS,
+            epochs=settings.PRETRAIN_EPOCHS,
         )
 
     solver_settings = dc.replace(
@@ -783,6 +893,7 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
         evaluate,
         eval_freq=solver_settings.eval_freq,
         env_steps_scale=repeat,
+        env_steps_offset=settings.PRETRAIN_STEPS * repeat if weights is not None else 0,
     )
 
     model = build_model(train_env, solver_settings, seed=spec.seed)
@@ -818,23 +929,6 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
         evaluate_test=evaluate_test,
         trajectory=trajectory,
     )
-
-
-def _run_ppo_encoder(spec: RunSpec, problem: Problem) -> SolverResult:
-    """PPO behind N4SID."""
-    context = _identify_for(spec, problem, purpose="identify")
-
-    if context.model is None:
-        return context.failed_result(problem)
-
-    result = _run_rl(
-        spec, problem,
-        encoder=context.model.decode,
-        env_steps_offset=context.settings.trajectory_length,
-    )
-
-    result.extra.update(_identification_extra(context.model))
-    return result
 
 
 def _sb3_saver(model, solver_settings, encoder=None) -> Callable[[Any], dict]:
@@ -881,26 +975,13 @@ SOLVER_REGISTRY: dict[str, Callable[[RunSpec, Problem], SolverResult]] = {
     "ppo_linear": _run_rl,
     "ppo_mlp": _run_rl,
     "ppo_encoder": _run_ppo_encoder,
+    "ppo_bottleneck": _run_rl,
+    "ppo_encoder_scalable": _run_rl,
     "oracle_coarse": _run_oracle_coarse,
     "ppo_pixel_fc": _run_pixel_rl,
     "ppo_pixel_posvel": _run_pixel_rl,
-    # not yet implemented
-    "ppo_pixel_ortho": _missing(
-        "ppo_pixel_ortho",
-        "PPO with an orthonormal projection layer",
-    ),
-    "ppo_pixel_estimator": _missing(
-        "ppo_pixel_estimator",
-        "PPO with a spatial estimator layer",
-    ),
-    "ppo_bottleneck": _missing(
-        "ppo_bottleneck",
-        "PPO with an orthonormal projection layer",
-    ),
-    "ppo_encoder_scalable": _missing(
-        "ppo_encoder_scalable",
-        "observation encoder that replaces N4SID at large scale",
-    ),
+    "ppo_pixel_ortho": _run_pixel_rl,
+    "ppo_pixel_estimator": _run_pixel_rl,
 }
 
 

@@ -58,8 +58,8 @@ def main():
             "rl_timesteps": settings.RL_TIMESTEPS,
             "rl_eval_freq": settings.RL_EVAL_FREQ,
             "probe_episodes": settings.PIXEL_PROBE_EPISODES,
-            "pretrain_steps": settings.PIXEL_PRETRAIN_STEPS,
-            "pretrain_epochs": settings.PIXEL_PRETRAIN_EPOCHS,
+            "pretrain_steps": settings.PRETRAIN_STEPS,
+            "pretrain_epochs": settings.PRETRAIN_EPOCHS,
         },
     )
 

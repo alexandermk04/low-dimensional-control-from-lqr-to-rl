@@ -14,7 +14,16 @@ Not so relevant: https://proceedings.neurips.cc/paper_files/paper/2024/hash/3717
 - AutoEncoder
 - using one nn for state estimation, then policy network
 
+### Robotic priors
+- Original paper: Jonschkowski & Brock, Learning State Representations with
+  Robotic Priors, Autonomous Robots 2015. Introduces five priors: simplicity, temporal coherence,
+  proportionality, causality, repeatability. Simplicity is imposed by
+  fixing a low dimensionality.
+- Using Botteghi et al., https://arxiv.org/pdf/2107.01667 for continuous action spaces
+
 ### Orthogonal bottlenecks: https://arxiv.org/abs/2605.26012
+- The projection B is sampled once by QR of a Gaussian and fixed
+- k=2 is sufficient for baseline performance on classic control
 - In deep linear networks, Saxe et al. (2014)
 and Hu et al. (2019) show that orthogonal initialization can provably accelerate gradient descent
 compared to Gaussian initialization

@@ -2,10 +2,12 @@
 numpy>=1.24
 scipy>=1.10
 matplotlib>=3.7
+tqdm>=4.66
 
-# Reinforcement learning: only needed by reinforcement_learning/
+# Reinforcement learning: only needed by reinforcement_learning/ and evaluation/latent_probe.py
 gymnasium>=0.29
 stable-baselines3>=2.0
+torch>=2.2
 pygame>=2.5
 
 # System identification: only needed by lqr_solvers/system_identification.py

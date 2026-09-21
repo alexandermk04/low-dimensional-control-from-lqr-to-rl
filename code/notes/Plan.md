@@ -83,14 +83,16 @@ Both run over all inflation sizes
 - comparison under noise (one size)
 - TODO: Comparison with suboptimal identification under noise (only one size)
 
-## Chapter 5 
-- comparison across sizes of baseline, ppo_linear, ppo_mlp, ppo_encoder (N4SID), ppo_encoder_scalable (TODO), ppo_bottleneck (TODO)
+## Chapter 5
+- comparison across sizes of baseline, ppo_linear, ppo_mlp, ppo_encoder (N4SID), ppo_encoder_scalable, ppo_bottleneck
 - comparison under noise (one size)
 - comparison of selected from ch4 and ch5 under pixel size with noise
+- ppo_encoder is unsupported at pixel size (N4SID cannot identify 18432 dimensions), replaced with ppo_encoder_scalable here
 
 ## Chapter 6
-- comparison of ppo_full, ppo_bottleneck (TODO), ppo_encoder_scalable (TODO), ppo_posvel with base
-- show how well each identify the correct state as well
+- comparison of oracle_coarse, ppo_pixel_fc, ppo_pixel_ortho, ppo_pixel_estimator,
+  ppo_pixel_posvel
+- r2_position, r2_velocity for how well they identify the real state
 - show some example renderings to explain the architecture
 
 ## Plotting & Table goals

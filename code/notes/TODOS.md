@@ -6,12 +6,17 @@
 - Igl: Bottleneck appraoch
 - Li: Intrinsic Dimensions, also interesting as a low-dimensional approach
 
+
+## Text explanations
 - explain & understand deeply how we recover cost matrices via N4SID
 - explain why CE_DARE needs a collapsed & simplified identified model
 - reason why N4SID is not scalable to pixel size
 - explain how we score how we compare the latent vector to pos-vel via ridge regression
+- attribute ridge regresseion against ground truth state in code
 - pixel_solver in sovlers has "timesteps", which refers to agent steps, overriden by setting.RL_steps, but is not the same env steps as in chap5
+- justify dimension 2 for the different ppo models (ortho an est)
 
 
-- add policy complexity to chap4 identified model
-- explore suboptimality as a log y-axis
+## Code
+- check ppo_linear, mlp and N4SID encoder
+- check pixel_fc, pixel_posvel

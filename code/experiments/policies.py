@@ -53,13 +53,13 @@ def load_policy(record: RunRecord, root: Path | str = ROOT) -> Policy:
         return LinearPolicy(gain)
 
     if kind == "sb3":
-        from reinforcement_learning.solvers import ALGORITHMS, SB3Policy
+        from reinforcement_learning.solvers import SB3Policy
+        from stable_baselines3 import PPO
 
         algo = spec.get("algo")
-        if algo not in ALGORITHMS:
+        if algo != "ppo":
             raise MissingPolicyError(
-                f"{record.run_id} names algorithm {algo!r}, which is not one "
-                f"of {sorted(ALGORITHMS)}."
+                f"{record.run_id} names algorithm {algo!r}, which is not 'ppo'."
             )
 
         path = record_dir(record, root) / spec.get("file", "policy.zip")
@@ -69,7 +69,7 @@ def load_policy(record: RunRecord, root: Path | str = ROOT) -> Policy:
                 f"there."
             )
 
-        model = ALGORITHMS[algo].load(path, device="cpu")
+        model = PPO.load(path, device="cpu")
 
         return SB3Policy(model, deterministic=spec.get("deterministic", True))
 

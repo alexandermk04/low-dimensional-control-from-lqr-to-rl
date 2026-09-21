@@ -235,9 +235,15 @@ UNSUPPORTED_CELLS = {
 # Episodes per learning-curve sample for chap 6
 PIXEL_PROBE_EPISODES = 100
 
-# Frames collected, and epochs used for chap 6 pretraining.
-PIXEL_PRETRAIN_STEPS = 20_000
-PIXEL_PRETRAIN_EPOCHS = 20
+# Steps collected, and epochs used for pretraining
+PRETRAIN_STEPS = 20_000
+PRETRAIN_EPOCHS = 20
+
+# Width of the orthonormal projection, as suggested by the paper
+BOTTLENECK_DIM = 2
+
+# Used for encoder_scalable and pixel_estimator as the estimated dimension
+ENCODER_LATENT_DIM = 2
 
 # Chapter 6: control from a camera observation
 CH6_SOLVERS = (
@@ -246,8 +252,6 @@ CH6_SOLVERS = (
     "ppo_pixel_ortho",
     "ppo_pixel_estimator",
     "ppo_pixel_posvel",
-    "ce_dare_pixel",
-    "spi_est_pixel",
 )
 
 
@@ -302,6 +306,12 @@ SOLVER_HYPERPARAMS = {
         "max_order": 10, # maximum order to consider for model identification
         "horizon": 10, # Block Hankel past/future horizon
         "input_rank_tol": 1e-3,
+    },
+    # Robotic priors for state estimator
+    "ppo_encoder_scalable": {
+        "alpha": 1.0,
+        "beta": 1.0,
+        "weights": (1.0, 1.0, 1.0, 2.0),
     },
     # Identification only: ppo_encoder uses N4SID for its ``decode``
     "ppo_encoder": {
