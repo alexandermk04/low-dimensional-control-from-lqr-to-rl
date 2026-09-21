@@ -5,16 +5,16 @@
 \toprule
 Solver & Baseline & N4SID + DARE & Model-based PG + N4SID & S-PI + N4SID & Model-free NPG & S-PI (model-free) \\
 \midrule
-True cost $J$ & $5848 \pm 9.587 \times 10^{-13}$ & $5848 \pm 8.258 \times 10^{-12}$ & $5848 \pm 7.019 \times 10^{-12}$ & $5904 \pm 4.801 \times 10^{-5}$ & $6021 \pm 3.57$ & $8898 \pm 67.66$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0$ & $< 10^{-6}$ & $< 10^{-6}$ & $0.010 \pm 0.000$ & $0.030 \pm 0.001$ & $0.521 \pm 0.012$ \\
-Test cost$^{\dagger}$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $6025 \pm 5322$ & $6146 \pm 5427$ & $9071 \pm 7922$ \\
-Suboptimality $S$$^{\dagger}$ & $0$ & $< 10^{-6}$ & $< 10^{-6}$ & $+0.012 \pm 0.007$ & $+0.036 \pm 0.024$ & $+0.655 \pm 0.409$ \\
+True cost $J$ & $5848 \pm 9.587 \times 10^{-13}$ & $5848 \pm 8.258 \times 10^{-12}$ & $5848 \pm 7.019 \times 10^{-12}$ & $5904 \pm 4.801 \times 10^{-5}$ & $6021 \pm 3.57$ & $6344 \pm 11.3$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $1.71 \times 10^{-15} \pm 1.41 \times 10^{-15}$ & $1.99 \times 10^{-15} \pm 1.2 \times 10^{-15}$ & $0.00951 \pm 8.21 \times 10^{-9}$ & $0.0296 \pm 0.00061$ & $0.0847 \pm 0.00193$ \\
+Test cost$^{\dagger}$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $6025 \pm 5322$ & $6146 \pm 5427$ & $6475 \pm 5709$ \\
+Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+9.11 \times 10^{-18} \pm 1.49 \times 10^{-15}$ & $+6.57 \times 10^{-17} \pm 1.53 \times 10^{-15}$ & $+0.0116 \pm 0.00734$ & $+0.0365 \pm 0.0236$ & $+0.105 \pm 0.0634$ \\
 Environment steps & $0 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $8 \times 10^{7} \pm 0$ & $8 \times 10^{7} \pm 0$ \\
 Policy parameters & $2 \pm 0$ & $2 \pm 0$ & $2 \pm 0$ & $2 \pm 0$ & $2 \pm 0$ & $2 \pm 0$ \\
 Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ \\
 \bottomrule
 \end{tabular}
 }
-\caption{Solvers learning without the model at the base inflation, without noise. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs. A bound rather than a value marks a cell at the numerical resolution of the Riccati solve, i.e. a controller that is optimal to within rounding.}
+\caption{Solvers learning without the model at the base inflation, without noise. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
 \label{tab:ch4-identified-base}
 \end{table}

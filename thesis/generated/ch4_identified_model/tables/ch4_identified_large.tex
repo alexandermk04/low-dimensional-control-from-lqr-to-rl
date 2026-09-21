@@ -1,20 +1,20 @@
 \begin{table}[htbp]
 \centering
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrrrrrr}
 \toprule
-Solver & Baseline & N4SID + DARE & Model-based PG + N4SID & S-PI + N4SID \\
+Solver & Baseline & N4SID + DARE & Model-based PG + N4SID & S-PI + N4SID & Model-free NPG & S-PI (model-free) \\
 \midrule
-True cost $J$ & $5848 \pm 9.587 \times 10^{-13}$ & $5848 \pm 2.476 \times 10^{-5}$ & $5848 \pm 0.000171$ & $6547 \pm 317.4$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0$ & $< 10^{-6}$ & $< 10^{-6}$ & $0.120 \pm 0.054$ \\
-Test cost$^{\dagger}$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $6673 \pm 5881$ \\
-Suboptimality $S$$^{\dagger}$ & $0$ & $< 10^{-6}$ & $< 10^{-6}$ & $+0.139 \pm 0.135$ \\
-Environment steps & $0 \pm 0$ & $2 \times 10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ \\
-Policy parameters & $301 \pm 0$ & $301 \pm 0$ & $20000 \pm 0$ & $301 \pm 0$ \\
-Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $100.0 \pm 0.0$ & $1.0 \pm 0.0$ \\
+True cost $J$ & $5848 \pm 9.587 \times 10^{-13}$ & $5848 \pm 2.476 \times 10^{-5}$ & $5848 \pm 0.000171$ & $6547 \pm 317.4$ & $6115 \pm 21.3$ & $7277 \pm 63.82$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $1.6 \times 10^{-9} \pm 4.23 \times 10^{-9}$ & $1.21 \times 10^{-8} \pm 2.92 \times 10^{-8}$ & $0.12 \pm 0.0543$ & $0.0457 \pm 0.00364$ & $0.244 \pm 0.0109$ \\
+Test cost$^{\dagger}$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $6673 \pm 5881$ & $6243 \pm 5518$ & $7438 \pm 6548$ \\
+Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+1.64 \times 10^{-9} \pm 4.26 \times 10^{-9}$ & $+1.17 \times 10^{-8} \pm 2.69 \times 10^{-8}$ & $+0.139 \pm 0.135$ & $+0.0463 \pm 0.0163$ & $+0.321 \pm 0.253$ \\
+Environment steps & $0 \pm 0$ & $2 \times 10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ & $8 \times 10^{7} \pm 0$ & $8 \times 10^{7} \pm 0$ \\
+Policy parameters & $301 \pm 0$ & $301 \pm 0$ & $20000 \pm 0$ & $301 \pm 0$ & $20000 \pm 0$ & $20000 \pm 0$ \\
+Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $100.0 \pm 0.0$ & $1.0 \pm 0.0$ & $100.0 \pm 0.0$ & $92.3 \pm 3.5$ \\
 \bottomrule
 \end{tabular}
 }
-\caption{Solvers learning without the model at the large inflation, without noise. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs. A bound rather than a value marks a cell at the numerical resolution of the Riccati solve, i.e. a controller that is optimal to within rounding.}
+\caption{Solvers learning without the model at the large inflation, without noise. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
 \label{tab:ch4-identified-large}
 \end{table}

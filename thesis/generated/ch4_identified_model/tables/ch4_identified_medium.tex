@@ -5,16 +5,16 @@
 \toprule
 Solver & Baseline & N4SID + DARE & Model-based PG + N4SID & S-PI + N4SID & Model-free NPG & S-PI (model-free) \\
 \midrule
-True cost $J$ & $5848 \pm 9.587 \times 10^{-13}$ & $5848 \pm 5.175 \times 10^{-5}$ & $5848 \pm 2.073 \times 10^{-5}$ & $5904 \pm 0.08024$ & $6105 \pm 13.51$ & $4.446 \times 10^{4} \pm 6762$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0$ & $< 10^{-6}$ & $< 10^{-6}$ & $0.010 \pm 0.000$ & $0.044 \pm 0.002$ & $6.603 \pm 1.156$ \\
-Test cost$^{\dagger}$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $6025 \pm 5322$ & $6233 \pm 5510$ & $2.684 \times 10^{4} \pm 2.153 \times 10^{4}$ \\
-Suboptimality $S$$^{\dagger}$ & $0$ & $< 10^{-6}$ & $< 10^{-6}$ & $+0.012 \pm 0.007$ & $+0.045 \pm 0.016$ & $+7.281 \pm 11.637$ \\
+True cost $J$ & $5848 \pm 9.587 \times 10^{-13}$ & $5848 \pm 5.175 \times 10^{-5}$ & $5848 \pm 2.073 \times 10^{-5}$ & $5904 \pm 0.08024$ & $6105 \pm 13.51$ & $7265 \pm 47.92$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $5.05 \times 10^{-9} \pm 8.85 \times 10^{-9}$ & $1.84 \times 10^{-9} \pm 3.55 \times 10^{-9}$ & $0.00952 \pm 1.37 \times 10^{-5}$ & $0.044 \pm 0.00231$ & $0.242 \pm 0.00819$ \\
+Test cost$^{\dagger}$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $6025 \pm 5322$ & $6233 \pm 5510$ & $7422 \pm 6531$ \\
+Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+5.08 \times 10^{-9} \pm 8.61 \times 10^{-9}$ & $+2 \times 10^{-9} \pm 3.85 \times 10^{-9}$ & $+0.0116 \pm 0.00734$ & $+0.0447 \pm 0.0161$ & $+0.318 \pm 0.248$ \\
 Environment steps & $0 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $8 \times 10^{7} \pm 0$ & $8 \times 10^{7} \pm 0$ \\
-Policy parameters & $76 \pm 0$ & $76 \pm 0$ & $1250 \pm 0$ & $76 \pm 0$ & $1250 \pm 0$ & $1250 \pm 0$ \\
-Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $25.0 \pm 0.0$ & $1.0 \pm 0.0$ & $25.0 \pm 0.0$ & $21.2 \pm 1.8$ \\
+Policy parameters & $76 \pm 0$ & $76 \pm 0$ & $1250 \pm 0$ & $76 \pm 0$ & $1250 \pm 0$ & $965 \pm 221$ \\
+Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $25.0 \pm 0.0$ & $1.0 \pm 0.0$ & $25.0 \pm 0.0$ & $12.7 \pm 2.9$ \\
 \bottomrule
 \end{tabular}
 }
-\caption{Solvers learning without the model at the medium inflation, without noise. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs. A bound rather than a value marks a cell at the numerical resolution of the Riccati solve, i.e. a controller that is optimal to within rounding.}
+\caption{Solvers learning without the model at the medium inflation, without noise. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
 \label{tab:ch4-identified-medium}
 \end{table}
