@@ -10,6 +10,7 @@ References
 .. [1] P. Van Overschee, B. De Moor, "N4SID: Subspace algorithms for the
        identification of combined deterministic-stochastic systems",
        Automatica 30(1), 1994.
+       Called through [2]_.
 .. [2] G. Armenise et al., "SIPPY: Systems Identification Package for Python".
        https://github.com/CPCLAB-UNIPI/SIPPY
 """
