@@ -1,0 +1,22 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrr}
+\toprule
+Solver & Baseline & Linear PPO & Fully-connected PPO \\
+\midrule
+Stable & $10/10$ & $0/9$ & $9/10$ \\
+\midrule
+True cost $J$ & $5848 \pm 9.587 \times 10^{-13}$ & \multicolumn{1}{c}{--} & $3.003 \times 10^{6} \pm 4.333 \times 10^{6}$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & \multicolumn{1}{c}{--} & $507 \pm 732$ \\
+Test cost$^{\dagger}$ & $5968 \pm 5272$ & \multicolumn{1}{c}{--} & $2.721 \times 10^{8} \pm 3.847 \times 10^{8}$ \\
+Policy parameters & $18689 \pm 0$ & \multicolumn{1}{c}{--} & $1200512 \pm 0$ \\
+Gain rank & $1.0 \pm 0.0$ & \multicolumn{1}{c}{--} & $-1.0 \pm 0.0$ \\
+Environment steps & $0 \pm 0$ & \multicolumn{1}{c}{--} & $10^{6} \pm 0$ \\
+Wall time (s) & $0.0 \pm 0.0$ & \multicolumn{1}{c}{--} & $3205.0 \pm 746.1$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{Chapter 5 solvers at pixel inflation, without noise. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs. Stable counts the seeds whose controller left the plant stable.}
+\label{tab:ch5-solvers}
+\end{table}
