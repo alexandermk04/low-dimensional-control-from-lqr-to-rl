@@ -61,7 +61,45 @@ These shown approaches however, don't look at low-dimensionality, which makes se
 Kitano~\cite[p.~8]{Kitano2004Biological} poses that robustness automatically leads to ``increased resource
 demands''.
 
-Recent advancements in the research for low-rank policies for LQR\ldots
+Before taking a look at the more complex case of reinforcement learning, we start simpler by
+using the simpler, and more well understood Linear Quadratic Regulator. This approach has been taken before \needcite{#32}
+and does make sense given the guarantees regarding convergence and effectiveness of Policy Optimization for it\needcite{#27, #28, #29}.
+It also offers methods which produce certain structures in its controller, like sparsity or our desired low-dimensionality, as given
+by Structured Policy Iteration \needcite{#26}. Approaches can generally be categorized into two groups if the underlying dynamics
+are unknown and only data is available: Estimating the model, and then applying a model-based solver (indirect) or using the data
+to estimate the gain matrix (direct) \needcite{#34}. Both settings have been studied in regards to robustness \needcite{#36, #37},
+however to our knowledge not in combination with low-rank policies.
+
+Research evaluating RL on control tasks have also shown that there is room for simplification, for
+example using linear policies instead of complex, fully connected neural networks \needcite{#43, #44}. This, together with the
+fact that parameters in neural networks are highly dependent, and thus redundant \needcite{#47}, allows us to assume that
+low-dimensionality can improve efficiency here. Examples for this exist, for example by LR factorization in the policy \needcite{#46}
+or by introducing an orthogonal projection inside the layer structure \needcite{#39}. Also called "bottlenecks", these type of policies
+usually generalize better than fully parameterized policies under fewer data \needcite{#45, sec. 4.2}, which again
+could help us with robustness.
+
+A clear case where low-dimensional dynamics underly a high-dimensional observational space is in perception-based tasks.
+Agents observing only images instead of the states of simple control tasks are posed with the challenge of extracting
+these states from a high-dimensional, often non-linear encoding \needcite{#55, sec.1}. Many approaches, based on 
+state representation learning (SRL), exist, which use different variants to create a latent embedding of the image,
+used as a state \needcite{#53}. The most interesting approach, especially for us looking at embodied agents, is
+the usage of so-called "priors", which restrict the latent space by using knowledge about the environment \needcite{#53}.
+This brings us back to Ay's argument, that the embodiment actively defines the action space \needcite{#1}. Robotic priors
+have been introduced by Jonschkowski et al. in 2015 \needcite{#54}, and then further refined by Botthegi et al. for continuous
+action spaces \needcite{#52}. A more specific version related to only position and velocity also exists here,
+effectively training a model to learn a 2-dimensional representation from an image \needcite{#51}.
+While all that sounds promising, in contrast stand findings hinting that perception-based control is not
+as robust against noise \needcite{#49} and thus need approaches for improving it \needcite{#57}.
+
+Our goal for this thesis is therefore to look a bit deeper at the combination of low-dimensionality
+and robustness in an empirical way, motivated by the findings of Datar and Ay \needcite{#3}. LQR
+serves as the perfect, well-investigated basis \needcite{#32}, offering low-rank approaches that have been proven
+theoretically, however not yet been applied in practice and under noise \needcite{#26}. Previously
+investigated policies for LQR under noise in comparison didn't look at low-dimensionality specifically.
+For reinforcement learning, low-dimensionality has been explored previously \needcite{#40, #41}, and also
+in comparison with robustness \needcite{#58}, but doesn't take into account the embodiment we are interested in.
+Closing this gap, our main interest is to compare robustness properties for low-dimensional policies for embodied
+agents under increasingly more complex, and noisier environments.
 
 \section{Approach}
 \label{sec:approach}
@@ -70,3 +108,4 @@ What I will do in the following sections
 
 % reason why SVD is the right choice #23
 % #17 bow tie structure in biological systems
+% #56 dreamer used to reason mb approach
