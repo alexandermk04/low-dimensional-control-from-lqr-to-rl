@@ -31,8 +31,14 @@ from typing import Any, Callable
 import numpy as np
 
 import settings
+from basetypes import SimulationResult
 from evaluation.analysis import policy_complexity_linear, policy_complexity_mlp
-from evaluation.metrics import LinearPolicy, Policy, expected_true_cost
+from evaluation.metrics import (
+    LinearPolicy,
+    Policy,
+    expected_true_cost,
+    monte_carlo_cost,
+)
 from evaluation.latent_probe import latent_extra
 from evaluation.probe import IterationRecord, Probe
 from experiments.problem import Problem, RunSpec, build_plant
@@ -168,10 +174,7 @@ def _run_baseline(spec: RunSpec, problem: Problem) -> SolverResult:
     scorer = build_plant(problem, "score")
     scorer.reset()
 
-    if problem.inflation is None:
-        K = problem.K_star.copy()
-    else:
-        K = np.linalg.pinv(problem.U_2) @ problem.K_star @ np.linalg.pinv(problem.U_1)
+    K = optimal_controller_gain(problem)
 
     records = [IterationRecord(
         iteration=0, env_steps=0, total_time=0.0, cost=problem.j_star,
@@ -350,6 +353,49 @@ def _identification_failed(problem, scorer, id_settings, failure) -> SolverResul
         scorer=scorer,
         extra={"identification_failed": str(failure)},
     )
+
+
+def optimal_controller_gain(problem: Problem) -> np.ndarray:
+    """The optimal gain expressed in the controller's own space.
+
+    Parameters
+    ----------
+    problem : Problem
+        The run's problem.
+
+    Returns
+    -------
+    np.ndarray
+        ``K_star`` itself for the plain plant, its lift ``pinv(U_2) K_star
+        pinv(U_1)`` of shape ``(q, p)`` for an inflated one.
+    """
+    if problem.inflation is None:
+        return problem.K_star.copy()
+
+    return np.linalg.pinv(problem.U_2) @ problem.K_star @ np.linalg.pinv(problem.U_1)
+
+
+def probe_reference_cost(scorer, problem: Problem) -> float:
+    """The optimal policy's cost measured during training.
+
+    Parameters
+    ----------
+    scorer : LQRBase
+        The plant the learning curve is probed against.
+    problem : Problem
+        The run's problem, for the optimal gain.
+
+    Returns
+    -------
+    float
+        Reference cost for :attr:`SolverResult.j_star`.
+    """
+    mean, _ = monte_carlo_cost(
+        scorer, LinearPolicy(optimal_controller_gain(problem)),
+        n_episodes=settings.PROBE_EPISODES,
+        horizon=settings.PROBE_HORIZON,
+    )
+    return float(mean)
 
 
 def _run_mb_est(spec: RunSpec, problem: Problem) -> SolverResult:
@@ -665,11 +711,20 @@ def _run_rl(
         env_steps_offset=env_steps_offset,
     )
     model = build_model(env, solver_settings, seed=spec.seed)
-    model.learn(
-        total_timesteps=solver_settings.total_timesteps,
-        callback=callback,
-        progress_bar=False,
-    )
+
+    try:
+        model.learn(
+            total_timesteps=solver_settings.total_timesteps,
+            callback=callback,
+            progress_bar=False,
+        )
+    except ValueError as error:
+        if _policy_is_finite(model):
+            raise
+        return _training_diverged(
+            spec, problem, scorer, solver_settings, callback.records, error,
+            j_star=None if linear else probe_reference_cost(scorer, problem),
+        )
 
     extra = {"action_clips": env.n_action_clips}
 
@@ -699,6 +754,96 @@ def _run_rl(
         scorer=scorer,
         extra=extra,
         save_policy=None if linear else _sb3_saver(model, solver_settings, encoder),
+        j_star=None if linear else probe_reference_cost(scorer, problem),
+    )
+
+
+def _policy_is_finite(model) -> bool:
+    """Whether every parameter of an SB3 policy is a finite number.
+
+    Parameters
+    ----------
+    model : stable_baselines3.common.base_class.BaseAlgorithm
+        The model that raised.
+
+    Returns
+    -------
+    bool
+    """
+    import torch
+
+    return all(
+        bool(torch.isfinite(parameter).all())
+        for parameter in model.policy.parameters()
+    )
+
+
+def _training_diverged(
+    spec: RunSpec, problem: Problem, scorer, solver_settings, records, failure,
+    j_star: float | None = None,
+) -> SolverResult:
+    """Report a run whose policy diverged to ``nan``.
+
+    Parameters
+    ----------
+    spec, problem : RunSpec, Problem
+        The run.
+    scorer : LQRBase
+        The plant the curve was probed against.
+    solver_settings : RLSolverSettings
+        What was being trained.
+    records : list[IterationRecord]
+        Whatever the probe collected before the blow-up.
+    failure : Exception
+        The error raised.
+    j_star : float or None, optional
+        Reference cost, as for :attr:`SolverResult.j_star`.
+
+    Returns
+    -------
+    SolverResult
+    """
+    from experiments.evaluate import TestResult
+
+    steps = records[-1].env_steps if records else 0
+
+    records = list(records) + [IterationRecord(
+        iteration=len(records),
+        env_steps=steps,
+        total_time=records[-1].total_time if records else 0.0,
+        cost=float("inf"),
+        rank=None,
+    )]
+
+    def evaluate_test(**_) -> TestResult:
+        """An infinite test cost."""
+        return TestResult(
+            summary={
+                "test_cost_mean": float("inf"),
+                "test_episodes": settings.TEST_EPISODES,
+                "test_horizon": settings.TEST_HORIZON,
+            },
+            returns=np.full(settings.TEST_EPISODES, np.inf),
+        )
+
+    def trajectory() -> SimulationResult:
+        """A blank trajectory."""
+        return SimulationResult(
+            x_traj=np.full((settings.FIGURE_HORIZON, problem.model.A.shape[0]), np.nan),
+            u_traj=np.full((settings.FIGURE_HORIZON, problem.model.B.shape[1]), np.nan),
+        )
+
+    return SolverResult(
+        K_final=None,
+        policy=LinearPolicy(optimal_controller_gain(problem)),
+        records=records,
+        complexity={"rank": -1, "n_params": -1},
+        solver_settings=solver_settings,
+        scorer=scorer,
+        extra={"training_diverged": str(failure).splitlines()[0]},
+        j_star=j_star,
+        evaluate_test=evaluate_test,
+        trajectory=trajectory,
     )
 
 
