@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrr}
+\toprule
+Inflation & small & medium \\
+\midrule
+True cost $J$ & $7719 \pm 1734$ & $7.703 \times 10^{4} \pm 1.724 \times 10^{5}$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.302 \pm 0.27$ & $13.5 \pm 32.7$ \\
+Test cost$^{\dagger}$ & $7938 \pm 8296$ & $3.815 \times 10^{6} \pm 8.847 \times 10^{6}$ \\
+Policy parameters & $4677 \pm 0$ & $5977 \pm 0$ \\
+Gain rank & $-1.0 \pm 0.0$ & $-1.0 \pm 0.0$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{ppo\_encoder across inflation sizes. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
+\label{tab:ch5-inflation-ppo-encoder}
+\end{table}

@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrr}
+\toprule
+Inflation & small & medium & large \\
+\midrule
+True cost $J$ & $5848 \pm 9.587 \times 10^{-13}$ & $5848 \pm 9.587 \times 10^{-13}$ & $5848 \pm 8.445 \times 10^{-12}$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $0 \pm 0$ & $0 \pm 0$ \\
+Test cost$^{\dagger}$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ \\
+Policy parameters & $16 \pm 0$ & $76 \pm 0$ & $301 \pm 0$ \\
+Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{baseline across inflation sizes. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
+\label{tab:ch5-inflation-baseline}
+\end{table}
