@@ -64,64 +64,64 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
     level_order = tuple(settings.NOISE_LEVELS)
     channel_order = ("clean",) + tuple(settings.NOISE_CHANNELS) + ("all",)
 
-    levels_of_channel = [
-        r for r in rows if r.get("channel") in (channel, "clean")
-    ]
-    channels_at_level = [
-        r for r in rows if r.get("level") in (level, "none")
+    cells = [("clean", "none")] + [
+        (ch, lvl)
+        for lvl in level_order if lvl != "none"
+        for ch in channel_order if ch != "clean"
     ]
 
-    slices = (
-        ("levels", levels_of_channel, ("level", "solver"),
-         [(lvl, s) for lvl in level_order for s in solvers],
-         f"Channel: {channel}"),
-        ("channels", channels_at_level, ("channel", "solver"),
-         [(ch, s) for ch in channel_order for s in solvers],
-         f"Intensity: {level}"),
-    )
-
-    for name, subset, group_by, order, title in slices:
+    for cell_channel, cell_level in cells:
+        subset = [
+            r for r in rows
+            if r.get("channel") == cell_channel and r.get("level") == cell_level
+        ]
         if not subset:
             continue
 
-        ax = box_metric(subset, group_by, "test_cost_mean", order=order)
+        if cell_channel == "clean":
+            title, stem = "No noise", "clean"
+        else:
+            title = f"Channel: {cell_channel}, intensity: {cell_level}"
+            stem = f"{cell_channel}-{cell_level}"
+
+        ax = box_metric(subset, "solver", "test_cost_mean", order=solvers)
         ax.set_title(title)
-        save(ax.figure, f"{prefix}_testcost_{name}", experiment)
+        save(ax.figure, f"{prefix}_testcost_{stem}", experiment)
 
         # Suboptimality can be negative
-        ax = box_metric(subset, group_by, "subopt", order=order, log="symlog")
+        ax = box_metric(subset, "solver", "subopt", order=solvers, log="symlog")
         ax.set_title(title)
-        save(ax.figure, f"{prefix}_subopt_{name}", experiment)
+        save(ax.figure, f"{prefix}_subopt_{stem}", experiment)
+
+    reference = "baseline" if "baseline" in solvers else solvers[0]
+    reference_records = [r for r in records if r.solver == reference]
+
+    reference_levels = [
+        r for r in reference_records
+        if r.condition.get("channel") in (channel, "clean")
+    ]
+    if reference_levels:
+        axes = trajectory_overlay(
+            reference_levels, "level", dt=0.01, order=level_order
+        )
+        save(axes[0].figure, f"{prefix}_traj_levels_{reference}", experiment)
+
+    reference_channels = [
+        r for r in reference_records
+        if r.condition.get("level") in (level, "none")
+    ]
+    if reference_channels:
+        axes = trajectory_overlay(
+            reference_channels, "channel", dt=0.01, order=channel_order
+        )
+        save(axes[0].figure, f"{prefix}_traj_channels_{reference}", experiment)
 
     for solver in solvers:
         solver_rows = [r for r in rows if r["solver"] == solver]
-        solver_records = [r for r in records if r.solver == solver]
         if not solver_rows:
             continue
 
         short = solver.replace("_", "-")
-
-        # Plot 4
-        solver_levels = [
-            r for r in solver_records
-            if r.condition.get("channel") in (channel, "clean")
-        ]
-        if solver_levels:
-            axes = trajectory_overlay(
-                solver_levels, "level", dt=0.01, order=level_order
-            )
-            save(axes[0].figure, f"{prefix}_traj_levels_{solver}", experiment)
-
-        # Plot 5
-        solver_channels = [
-            r for r in solver_records
-            if r.condition.get("level") in (level, "none")
-        ]
-        if solver_channels:
-            axes = trajectory_overlay(
-                solver_channels, "channel", dt=0.01, order=channel_order
-            )
-            save(axes[0].figure, f"{prefix}_traj_channels_{solver}", experiment)
 
         # Table 3
         write_table(
