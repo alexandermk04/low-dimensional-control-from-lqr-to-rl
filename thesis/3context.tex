@@ -24,7 +24,7 @@ some features of the control architecture can be simplified and delegated to the
 embodiment\needcite{TODO}. For example, McGeer~\cite{McGeer1990Passive}'s passive walker clearly
 shows, that some movements can be produced by the body without any control input, just by choosing
 the right embodiment. While obviously here being simplified to not include any control at all, it
-can quite simply be extended with such \needcite{\#9, reference to his previous paper}.
+can quite simply be extended with such \needcite{\#9, McGeer reference to his previous paper}.
 M{\"u}ller and Hoffmann~\cite[p.~4]{Mueller2017Morphological} mention such combination, as a robot
 climbing up walls, whose design was inspired by geckos, indeed using energy for control, however
 very little compared to an approach not exploiting these specific embodiment design. Further, it can
@@ -38,9 +38,11 @@ low-dimensionality of the controller~\cite{Montufar2015CheapControl}.
 That this is indeed true for certain examples, has been shown both in theory and practice
 before~\cite{Datar2025Universal,Montufar2015Geometry,Li2018Measuring}. Li et
 al.~\cite{Li2018Measuring} call this lower-dimension ``intrinsic dimension'', which is the
-dimensionality required for the model to be able to find policies. They show for example that for achieving 90 percent of the performance of
-the full model, the dimensionality can be reduced by 99.6 percent. For a convolutional neural
-network, it is still 99.4 percent. Others show that the ``least complex model which is able to learn
+dimensionality required for the model to be able to find policies. They show for example that 
+for achieving 90 percent of the performance of a fully connected network on MNIST,
+the dimensionality can be reduced by 99.6 percent. For a convolutional neural
+network, it is still a 99.3 percent reduction.
+Others show that the ``least complex model which is able to learn
 an optimal policy does learn faster''~\cite{Montufar2015Geometry}. For a neural network reducing
 parameters can be done in different ways\needcite{TODO}, some of which we will take a look at in
 \cref{chap:inflation}. In comparison, for LQR, where the controller is a gain matrix, the
@@ -58,46 +60,60 @@ embodiments, commonly referred to as the ``reality gap''~\cite{Tobin2017Domain,P
 Approaches of training robust controllers typically introduce noise already during training, be it
 either by using a LQG or including variations to the dynamics~\cite{Rao2001Naive,Peng2018SimToReal}.
 These shown approaches however, don't look at low-dimensionality, which makes sense as
-Kitano~\cite[p.~8]{Kitano2004Biological} poses that robustness automatically leads to ``increased resource
+Kitano~\cite[p.~833]{Kitano2004Biological} poses that robustness cannot be increased
+without sacrificing performance or accepting ``increased resource
 demands''.
 
 Before taking a look at the more complex case of reinforcement learning, we start simpler by
-using the simpler, and more well understood Linear Quadratic Regulator. This approach has been taken before \needcite{#32}
-and does make sense given the guarantees regarding convergence and effectiveness of Policy Optimization for it\needcite{#27, #28, #29}.
-It also offers methods which produce certain structures in its controller, like sparsity or our desired low-dimensionality, as given
-by Structured Policy Iteration \needcite{#26}. Approaches can generally be categorized into two groups if the underlying dynamics
+using the simpler, and more well understood Linear Quadratic Regulator. This approach has been taken
+before~\cite{Recht2019Tour} and does make sense given the guarantees regarding convergence and
+effectiveness of Policy Optimization for it~\cite{Fazel2018Global,Takakura2023Structured}, as well
+as the understanding of its geometry~\cite{Talebi2024Policy}.
+It also offers methods which produce certain structures in its controller, like sparsity or our desired
+low-dimensionality, as given by Structured Policy
+Iteration~\cite{Park2020Structured}. Approaches can generally be categorized into two groups if the underlying dynamics
 are unknown and only data is available: Estimating the model, and then applying a model-based solver (indirect) or using the data
-to estimate the gain matrix (direct) \needcite{#34}. Both settings have been studied in regards to robustness \needcite{#36, #37},
-however to our knowledge not in combination with low-rank policies.
+to estimate the gain matrix (direct)~\cite{Zhao2024DataEnabled}. Both the indirect, as in system identification
+with uncertainty bounds~\cite{Dean2020Sample}, and the direct setting, with an $\Hinf$ constraint
+that bounds the closed-loop gain from disturbance to output~\cite{Zhang2021Policy},
+have been studied in regards to robustness, however to our knowledge not in combination with low-rank policies.
 
 Research evaluating RL on control tasks have also shown that there is room for simplification, for
-example using linear policies instead of complex, fully connected neural networks \needcite{#43, #44}. This, together with the
-fact that parameters in neural networks are highly dependent, and thus redundant \needcite{#47}, allows us to assume that
-low-dimensionality can improve efficiency here. Examples for this exist, for example by LR factorization in the policy \needcite{#46}
-or by introducing an orthogonal projection inside the layer structure \needcite{#39}. Also called "bottlenecks", these type of policies
-usually generalize better than fully parameterized policies under fewer data \needcite{#45, sec. 4.2}, which again
-could help us with robustness.
+example using linear policies instead of complex, fully connected neural
+networks~\cite{Mania2018Simple,Rajeswaran2017Towards}. This, together with the
+fact that parameters in neural networks are highly dependent, and thus redundant~\cite{Denil2013Predicting}, allows us to assume that
+low-dimensionality can improve efficiency here. Examples for this exist, for example by factorizing a discretized low-rank
+policy into a thin and wide matrix~\cite{Rozada2024Matrix} or by introducing an orthogonal projection inside the layer
+structure~\cite{Todorov2026Orthogonal}. While they produce lower dimensionality, a different approach uses ``information bottlenecks'',
+which exhibit better generalization behavior in unseen environments~\cite[Sec.~4.2]{Igl2019Generalization},
+which again could help us with robustness.
 
 A clear case where low-dimensional dynamics underly a high-dimensional observational space is in perception-based tasks.
 Agents observing only images instead of the states of simple control tasks are posed with the challenge of extracting
-these states from a high-dimensional, often non-linear encoding \needcite{#55, sec.1}. Many approaches, based on 
+these states from a high-dimensional, often non-linear encoding~\cite[Sec.~1]{Watter2015Embed}. Many approaches, based on
 state representation learning (SRL), exist, which use different variants to create a latent embedding of the image,
-used as a state \needcite{#53}. The most interesting approach, especially for us looking at embodied agents, is
-the usage of so-called "priors", which restrict the latent space by using knowledge about the environment \needcite{#53}.
-This brings us back to Ay's argument, that the embodiment actively defines the action space \needcite{#1}. Robotic priors
-have been introduced by Jonschkowski et al. in 2015 \needcite{#54}, and then further refined by Botthegi et al. for continuous
-action spaces \needcite{#52}. A more specific version related to only position and velocity also exists here,
-effectively training a model to learn a 2-dimensional representation from an image \needcite{#51}.
-While all that sounds promising, in contrast stand findings hinting that perception-based control is not
-as robust against noise \needcite{#49} and thus need approaches for improving it \needcite{#57}.
+used as a state~\cite{Lesort2018State}. The most interesting approach, especially for us looking at embodied agents, is
+the usage of so-called ``priors'', which restrict the latent space by using knowledge about the
+environment~\cite{Lesort2018State}.
+This brings us back to Ay's argument, that the embodiment actively defines the action space~\cite{Ay2015Geometric}.
+Robotic priors have been introduced by Jonschkowski and Brock in 2015~\cite{Jonschkowski2015Learning}, and then further
+refined by Botteghi et al. for continuous action spaces~\cite{Botteghi2021LowDimensional}. A more specific version
+restricted to position and velocity also exists here, training a model to encode an image into a low-dimensional
+position state, from which the velocity is calculated by finite differences~\cite{Jonschkowski2017PVE}.
+While all that sounds promising, in contrast stand findings hinting that the problems of robust control
+also apply to perception-based control, as noise induced through perception directly affects
+the performance~\cite{Xu2021Perception} and thus needs approaches for improving
+it~\cite{Dean2020Robust}.
 
 Our goal for this thesis is therefore to look a bit deeper at the combination of low-dimensionality
-and robustness in an empirical way, motivated by the findings of Datar and Ay \needcite{#3}. LQR
-serves as the perfect, well-investigated basis \needcite{#32}, offering low-rank approaches that have been proven
-theoretically, however not yet been applied in practice and under noise \needcite{#26}. Previously
-investigated policies for LQR under noise in comparison didn't look at low-dimensionality specifically.
-For reinforcement learning, low-dimensionality has been explored previously \needcite{#40, #41}, and also
-in comparison with robustness \needcite{#58}, but doesn't take into account the embodiment we are interested in.
+and robustness in an empirical way, motivated by the findings of Datar and Ay~\cite{Datar2025Universal}. LQR
+serves as the perfect, well-investigated basis~\cite{Recht2019Tour}, offering low-rank approaches that have been proposed
+and analysed theoretically, however not yet been applied in practice and under noise~\cite{Park2020Structured}. Previously
+investigated policies for LQR under noise in comparison didn't look at low-dimensionality
+specifically~\cite{Zhang2021Policy}.
+For reinforcement learning, low-dimensionality has been explored
+previously~\cite{Agarwal2020FLAMBE,Stojanovic2024ModelFree}, and also
+in comparison with robustness~\cite{Li2025AdaRL}, but doesn't take into account the embodiment we are interested in.
 Closing this gap, our main interest is to compare robustness properties for low-dimensional policies for embodied
 agents under increasingly more complex, and noisier environments.
 
