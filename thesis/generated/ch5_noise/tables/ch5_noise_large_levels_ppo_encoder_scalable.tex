@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Intensity & none & weak & standard & strong & divergent \\
+\midrule
+Test cost$^{\dagger}$ & $1.568 \times 10^{7} \pm 4.696 \times 10^{7}$ & $1.568 \times 10^{7} \pm 4.696 \times 10^{7}$ & $1.571 \times 10^{7} \pm 4.703 \times 10^{7}$ & $1.589 \times 10^{7} \pm 4.749 \times 10^{7}$ & $1.934 \times 10^{7} \pm 4.971 \times 10^{7}$ \\
+Suboptimality $S$$^{\dagger}$ & $+2.82 \times 10^{4} \pm 3.04 \times 10^{5}$ & $+1.42 \times 10^{4} \pm 9.88 \times 10^{4}$ & $+3.1 \times 10^{3} \pm 1.15 \times 10^{4}$ & $+422 \pm 1.28 \times 10^{3}$ & $+5 \pm 15.4$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{ppo\_encoder\_scalable under measurement noise of increasing intensity. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled.}
+\label{tab:ch5-noise-large-levels-ppo-encoder-scalable}
+\end{table}

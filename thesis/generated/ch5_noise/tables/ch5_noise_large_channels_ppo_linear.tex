@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Channel & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Test cost$^{\dagger}$ & $6282 \pm 5583$ & $7862 \pm 5607$ & $6486 \pm 5772$ & $7059 \pm 7906$ & $6354 \pm 5596$ & $8883 \pm 8337$ \\
+Suboptimality $S$$^{\dagger}$ & $+0.0503 \pm 0.0466$ & $-0.0598 \pm 0.129$ & $+0.0817 \pm 0.0523$ & $+0.0767 \pm 0.185$ & $+0.0548 \pm 0.0568$ & $-0.00492 \pm 0.204$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{ppo\_linear under each noise channel at intensity 'standard'. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled.}
+\label{tab:ch5-noise-large-channels-ppo-linear}
+\end{table}

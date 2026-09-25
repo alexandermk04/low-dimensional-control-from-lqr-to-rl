@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Channel & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Test cost$^{\dagger}$ & $1.568 \times 10^{7} \pm 4.696 \times 10^{7}$ & $1.571 \times 10^{7} \pm 4.703 \times 10^{7}$ & $1.568 \times 10^{7} \pm 4.695 \times 10^{7}$ & $1.716 \times 10^{11} \pm 2.359 \times 10^{12}$ & $1.557 \times 10^{7} \pm 4.661 \times 10^{7}$ & $3.506 \times 10^{10} \pm 6.333 \times 10^{11}$ \\
+Suboptimality $S$$^{\dagger}$ & $+2.82 \times 10^{4} \pm 3.04 \times 10^{5}$ & $+3.1 \times 10^{3} \pm 1.15 \times 10^{4}$ & $+2.8 \times 10^{4} \pm 3 \times 10^{5}$ & $+2.16 \times 10^{7} \pm 3.59 \times 10^{8}$ & $+1.6 \times 10^{4} \pm 1.21 \times 10^{5}$ & $+4.61 \times 10^{6} \pm 1.05 \times 10^{8}$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{ppo\_encoder\_scalable under each noise channel at intensity 'standard'. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled.}
+\label{tab:ch5-noise-large-channels-ppo-encoder-scalable}
+\end{table}
