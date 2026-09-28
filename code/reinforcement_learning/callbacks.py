@@ -34,7 +34,8 @@ class ProbeCallback(BaseCallback):
         Used for agents acting slower than the environment. Defaults to ``1``.
     stopper : evaluation.analysis.Plateau or None, optional
         Fed at every sample with the mean cost of the training episodes
-        finished since the previous one.
+        finished since the previous one. That signal is also stored as the
+        record's ``cost_estimate``.
 
     Attributes
     ----------
@@ -80,19 +81,21 @@ class ProbeCallback(BaseCallback):
         cost, rank = self.evaluate(self.model)
         self._overhead += time.perf_counter() - start
 
+        # Mean training return
+        signal = -float(np.mean(self._returns)) if self._returns else None
+
         record = IterationRecord(
             iteration=len(self.records),
             env_steps=int(self.num_timesteps) * self.env_steps_scale + self.env_steps_offset,
             total_time=elapsed,
             cost=float(cost),
-            cost_estimate=None,
+            cost_estimate=signal,
             rank=None if rank is None else int(rank),
         )
         self.records.append(record)
         self._next_eval = self.num_timesteps + self.eval_freq
 
-        if self.stopper is not None and self._returns:
-            signal = -float(np.mean(self._returns))
+        if self.stopper is not None and signal is not None:
             self._stop = self.stopper.update(
                 signal, copy.deepcopy(self.model.policy.state_dict()),
                 record.iteration, record.env_steps,

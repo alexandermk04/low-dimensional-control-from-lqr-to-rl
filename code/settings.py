@@ -166,7 +166,7 @@ INFLATION_SIZES = {
 CH4_INFLATION_SIZES = ("base", "small", "medium", "large")
 
 # The chapter-4 noise grid setting
-CH4_REFERENCE_INFLATION = "medium"
+CH4_REFERENCE_INFLATION = "large"
 
 # Chapter 5 different inflation sizes
 CH5_INFLATION_SIZES = ("small", "medium", "large")
@@ -182,6 +182,27 @@ CH5_PIXEL_INFLATION = "pixel"
 # ---------------------------------------------------------------------------
 SPI_MF_LAMBDAS = (4e2, 4e3, 4e4, 4e5, 4e6)
 SPI_MF_STEPSIZES = (3.5e-9, 3.5e-8, 3.5e-7, 3.5e-6, 3.5e-5)
+
+
+# ---------------------------------------------------------------------------
+# Appendix: hyperparameter calibration
+# ---------------------------------------------------------------------------
+# Nuclear-norm weights swept for the model-based S-PI (spi, spi_est).
+SPI_LAMBDAS = (1, 5, 20, 50, 200, 1000)
+
+# Learning rates swept per policy gradient solver.
+PG_LEARNING_RATES = {
+    "mb_pg": (1e-6, 3e-6, 1e-5, 3e-5, 1e-4, 1.2e-3),
+    "mb_est": (1e-6, 3e-6, 1e-5, 3e-5, 1e-4, 1.2e-3),
+    "mf_npg": (3e-4, 1e-3, 3e-3, 1e-2),
+}
+
+# Stopping-rule settings for RL runs.
+RL_CONVERGENCE_GRID = dict(
+    rel_tol=(1e-3, 3e-3, 1e-2, 3e-2),
+    patience=(5, 10, 20, 40),
+    window=(1, 3, 5, 10),
+)
 
 
 # ---------------------------------------------------------------------------
@@ -331,6 +352,13 @@ SOLVER_HYPERPARAMS = {
         "input_rank_tol": 1e-3,
     },
 }
+
+
+# Per inflation size overrides of SOLVER_HYPERPARAMS
+# Filled from
+# `python -m experiments.figures.appendix_spi_lambda_figures` and
+# `python -m experiments.figures.appendix_learning_rate_figures`.
+SIZE_HYPERPARAMS = {}
 
 
 # ---------------------------------------------------------------------------

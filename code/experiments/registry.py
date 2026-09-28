@@ -144,9 +144,9 @@ def _probe(lqr, scorer) -> Probe:
     )
 
 
-def _stopper(kind: str) -> Plateau:
-    """The convergence criterion of ``settings.CONVERGENCE[kind]``."""
-    return Plateau(**settings.CONVERGENCE[kind])
+def _stopper(kind: str, overrides: dict | None = None) -> Plateau:
+    """The convergence criterion of ``settings.CONVERGENCE[kind]``, with ``overrides`` on top."""
+    return Plateau(**{**settings.CONVERGENCE[kind], **(overrides or {})})
 
 
 def _require_samples(spec: RunSpec) -> tuple[int, int]:
@@ -707,7 +707,7 @@ def _run_rl(
 
     solver_settings = dc.replace(
         preset,
-        total_timesteps=settings.RL_MAX_TIMESTEPS,
+        total_timesteps=spec.hyperparams().get("total_timesteps", settings.RL_MAX_TIMESTEPS),
         eval_freq=settings.RL_EVAL_FREQ,
         initial_gain=problem.K_0 if linear else None,
         pretrained_extractor=weights,
@@ -734,7 +734,7 @@ def _run_rl(
         evaluate,
         eval_freq=solver_settings.eval_freq,
         env_steps_offset=env_steps_offset,
-        stopper=_stopper("rl"),
+        stopper=_stopper("rl", spec.hyperparams().get("convergence")),
     )
     model = build_model(env, solver_settings, seed=spec.seed)
 

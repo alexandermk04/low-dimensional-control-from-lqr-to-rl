@@ -71,6 +71,7 @@ def _summarize(
         "J_final": float(j_final),
         "training_subopt_final": suboptimality(j_final, j_star),
         "steps_to_thresh_1pct": one_pct["env_steps"],
+        "iters_to_thresh_1pct": one_pct["iterations"],
         "iterations": int(records[-1].iteration) + 1 if records else 0,
         "total_env_steps": int(records[-1].env_steps) if records else 0,
         "total_time": float(records[-1].total_time) if records else 0.0,
