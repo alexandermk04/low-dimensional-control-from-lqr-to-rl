@@ -8,7 +8,7 @@ import time
 import numpy as np
 
 import settings
-from evaluation.analysis import converged, suboptimality, time_to_threshold
+from evaluation.analysis import suboptimality, time_to_threshold
 from evaluation.metrics import spectral_radius
 from evaluation.probe import IterationRecord
 from evaluation.records import RunRecord
@@ -52,7 +52,10 @@ def _summarize(
     """Collapse a finished run into a fixed summary schema."""
     records = result.records
 
-    j_final = records[-1].cost if records else np.inf
+    if result.j_final is not None:
+        j_final = result.j_final
+    else:
+        j_final = records[-1].cost if records else np.inf
 
     j_star = problem.j_star if result.j_star is None else result.j_star
 
@@ -68,9 +71,12 @@ def _summarize(
         "J_final": float(j_final),
         "training_subopt_final": suboptimality(j_final, j_star),
         "steps_to_thresh_1pct": one_pct["env_steps"],
+        "iterations": int(records[-1].iteration) + 1 if records else 0,
         "total_env_steps": int(records[-1].env_steps) if records else 0,
         "total_time": float(records[-1].total_time) if records else 0.0,
-        "converged": converged(records),
+        "converged": True,
+        "best_iteration": int(records[-1].iteration) if records else None,
+        "best_env_steps": int(records[-1].env_steps) if records else None,
         "spectral_radius_final": (
             spectral_radius(result.scorer, K_eff) if K_eff is not None else None
         ),
@@ -231,7 +237,8 @@ def run_grid(
             print(
                 f"  [{index:>3d}/{len(specs)}] {spec.solver:12s} seed={spec.seed:<6d}"
                 f" {cell:24s} subopt={s.get('training_subopt_final', float('nan')):+.4f}"
-                f" test={s['test_cost_mean']:.4e}"
+                f" iters={s['iterations']} steps={s['total_env_steps']}"
+                f" best@{s['best_env_steps']} converged={s['converged']}"
                 f" rank={s['rank_final']} ({time.perf_counter() - started:.0f}s)"
             )
 

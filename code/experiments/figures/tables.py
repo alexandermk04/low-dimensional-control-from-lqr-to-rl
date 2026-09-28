@@ -37,16 +37,17 @@ CENSUS_NOTE_STABLE_ONLY = (
 METRIC_ROWS = {
     "J_final": (r"True cost $J$", "{:.4g}"),
     "training_subopt_final": (r"Training suboptimality $(J-J^*)/J^*$", "{:.3g}"),
-    "test_cost_mean": (r"Test cost", "{:.4g}"),
     "subopt": (r"Suboptimality $S$", "{:+.3g}"),
     "policy_complexity": (r"Policy parameters", "{:.0f}"),
     "rank_final": (r"Gain rank", "{:.1f}"),
-    "total_env_steps": (r"Environment steps", "{:.3g}"),
+    "iterations": (r"Iterations", "{:.0f}"),
+    "total_env_steps": (r"Env.\ steps to convergence", "{:.3g}"),
+    "best_env_steps": (r"Env.\ steps to best policy", "{:.3g}"),
     "total_time": (r"Wall time (s)", "{:.1f}"),
     "spectral_radius_final": (r"Spectral radius", "{:.4f}"),
 }
 
-DEFAULT_METRICS = ("J_final", "training_subopt_final", "test_cost_mean")
+DEFAULT_METRICS = ("J_final", "training_subopt_final", "subopt")
 
 
 def _escape(text: str) -> str:

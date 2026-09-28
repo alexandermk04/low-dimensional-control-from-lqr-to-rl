@@ -29,8 +29,6 @@ METRIC_LABELS = {
     "training_subopt_final": r"Training suboptimality $(J - J^*)/J^*$",
     "subopt": r"Suboptimality $S$",
     "subopt_episodes": r"Suboptimality $S$",
-    "test_cost_mean": r"Accumulated test cost",
-    "test_costs": r"Accumulated test cost",
     "r2_position": r"Linear probe $R^2$, position",
     "r2_velocity": r"Linear probe $R^2$, velocity",
     "off_screen_rate": r"Fraction of steps off screen",

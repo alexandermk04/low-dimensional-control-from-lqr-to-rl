@@ -39,7 +39,8 @@ from lqr_base.simple_lqr import (
     get_optimal_K_and_cost_discrete as baseline_solution,
 )
 
-from evaluation.probe import Probe, record_iteration
+from evaluation.analysis import Plateau
+from evaluation.probe import Probe, record_iteration, should_stop
 
 from lqr_solvers.mf_policy_gradient import (
     estimate_gradient
@@ -81,6 +82,8 @@ class StructuredPolicySettings:
     probe : evaluation.probe.Probe or None, optional
         Instrumentation recording cost, sample budget and total time per
         iteration. Defaults to ``None`` 
+    stopper : evaluation.analysis.Plateau or None, optional
+        Stops on a plateau of the solver's cost and keeps the best gain.`
     """
 
     K_0: np.ndarray  # Initial policy
@@ -90,6 +93,7 @@ class StructuredPolicySettings:
     limit: int # maximum number of iterations to prevent infinite loop in case of non-convergence
     max_linesearch_iter: int
     probe: Probe | None = None  # Optional per-iteration instrumentation
+    stopper: Plateau | None = None  # Optional convergence criterion
 
 def solve_lyapunov(lqr: LQRDiscrete, K_t: np.ndarray, sigma_0: np.ndarray) -> np.ndarray:
     """Value matrix and state covariance of the closed loop under ``K_t``.
@@ -288,8 +292,10 @@ def calculate_next_K(
 
     Returns
     -------
-    np.ndarray
+    K_plus : np.ndarray
         The next gain.
+    f_K : float
+        Model cost of ``K_t``.
     """
 
     P_k, sigma_k = solve_lyapunov(lqr, K_t, sigma_0=sigma_0)
@@ -315,7 +321,7 @@ def calculate_next_K(
         linsearch_iter += 1
         stepsize *= settings.beta
 
-    return K_plus
+    return K_plus, f_K
 
 
 def structured_policy_iteration(lqr: LQRDiscrete, settings: StructuredPolicySettings) -> tuple[list[np.ndarray], list[float]]:
@@ -349,14 +355,23 @@ def structured_policy_iteration(lqr: LQRDiscrete, settings: StructuredPolicySett
 
     for i in progress_bar:
 
-        K_plus = calculate_next_K(lqr, K_t, sigma_0, settings)
+        K_plus, f_K = calculate_next_K(lqr, K_t, sigma_0, settings)
 
         ks.append(K_plus)
 
         # Used to collect run data
         record_iteration(settings, lqr, progress_bar, i, K_plus, show_rank=True)
 
+        # Stop on the objective
+        objective = f_K + settings.lambda_ * np.linalg.norm(K_t, ord='nuc')
+        if np.max(np.abs(np.linalg.eigvals(lqr.A - lqr.B @ lqr.effective_gain(K_t)))) >= 1:
+            objective = np.inf
+        if should_stop(settings, lqr, i, objective, K_t):
+            break
+
         if np.linalg.norm(K_plus - K_t, ord='fro') < settings.epsilon:
+            if settings.stopper:
+                settings.stopper.converged = True
             progress_bar.set_description(f"Structured Policy Iteration: Converged.")
             progress_bar.n = i + 1
             progress_bar.refresh()
@@ -403,6 +418,8 @@ class MFStructuredPolicySettings:
     probe : evaluation.probe.Probe or None, optional
         Instrumentation recording cost, sample budget and total time per
         iteration. Defaults to ``None`` 
+    stopper : evaluation.analysis.Plateau or None, optional
+        Stops on a plateau of the solver's cost and keeps the best gain.
     """
 
     K_0: np.ndarray  # Initial policy
@@ -417,6 +434,7 @@ class MFStructuredPolicySettings:
     stepsize: float | None  # Fixed stepsize disables linesearch
     seed_seq: np.random.SeedSequence # Seed sequence for reproducibility
     probe: Probe | None = None  # Optional per-iteration instrumentation
+    stopper: Plateau | None = None  # Optional convergence criterion
 
 def calculate_next_K_mf(
         lqr: LQRDiscrete,
@@ -530,7 +548,14 @@ def structured_policy_iteration_mf(lqr: LQRDiscrete, settings: MFStructuredPolic
         record_iteration(settings, lqr, progress_bar, i, K_plus, cost_estimate=f_K,
                          show_rank=True)
 
+        # Stop on the objective S-PI minimizes
+        objective = f_K + settings.lambda_ * np.linalg.norm(K_t, ord='nuc')
+        if should_stop(settings, lqr, i, objective, K_t):
+            break
+
         if np.linalg.norm(K_plus - K_t, ord='fro') < settings.epsilon:
+            if settings.stopper:
+                settings.stopper.converged = True
             progress_bar.set_description(f"Structured Policy Iteration (Model-Free): Converged.")
             progress_bar.n = i + 1
             progress_bar.refresh()

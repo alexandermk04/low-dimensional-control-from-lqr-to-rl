@@ -32,7 +32,7 @@ import numpy as np
 
 import settings
 from basetypes import SimulationResult
-from evaluation.analysis import policy_complexity_linear, policy_complexity_mlp
+from evaluation.analysis import Plateau, policy_complexity_linear, policy_complexity_mlp
 from evaluation.metrics import (
     LinearPolicy,
     Policy,
@@ -106,6 +106,8 @@ class SolverResult:
         ``() -> TestResult``
     trajectory : callable or None
         ``() -> SimulationResult``
+    j_final : float or None
+        True cost of the returned policy.
     """
 
     K_final: np.ndarray | None
@@ -119,6 +121,7 @@ class SolverResult:
     j_star: float | None = None
     evaluate_test: Any = None
     trajectory: Any = None
+    j_final: float | None = None
 
 
 def _train_and_score_plants(spec: RunSpec, problem: Problem, purpose: str = "train"):
@@ -139,6 +142,11 @@ def _probe(lqr, scorer) -> Probe:
         lqr,
         evaluate=lambda K: expected_true_cost(scorer, scorer.effective_gain(K)),
     )
+
+
+def _stopper(kind: str) -> Plateau:
+    """The convergence criterion of ``settings.CONVERGENCE[kind]``."""
+    return Plateau(**settings.CONVERGENCE[kind])
 
 
 def _require_samples(spec: RunSpec) -> tuple[int, int]:
@@ -209,6 +217,7 @@ def _run_mb_pg(spec: RunSpec, problem: Problem) -> SolverResult:
         gradient_steps=spec.iterations,
         gradient_lr=spec.hyperparams()["gradient_lr"],
         probe=probe,
+        stopper=_stopper("model_based"),
     )
     ks, _ = gradient_descent_discrete(lqr, solver_settings)
 
@@ -419,6 +428,7 @@ def _run_mb_est(spec: RunSpec, problem: Problem) -> SolverResult:
         gradient_steps=spec.iterations,
         gradient_lr=spec.hyperparams()["gradient_lr"],
         probe=context.probe,
+        stopper=_stopper("model_based"),
     )
     ks, _ = gradient_descent_discrete(surrogate, solver_settings)
 
@@ -487,6 +497,7 @@ def _run_spi_est(spec: RunSpec, problem: Problem) -> SolverResult:
         limit=spec.iterations,
         max_linesearch_iter=hyper["max_linesearch_iter"],
         probe=context.probe,
+        stopper=_stopper("model_based"),
     )
     ks, _ = structured_policy_iteration(surrogate, solver_settings)
 
@@ -517,6 +528,7 @@ def _run_mf_npg(spec: RunSpec, problem: Problem) -> SolverResult:
         gradient_lr=hyper["gradient_lr"],
         seed_seq=sub_seed(spec.seed, "solve", spec.solver),
         probe=probe,
+        stopper=_stopper("model_free"),
     )
     ks, _ = model_free_natural_policy_gradient(lqr, solver_settings)
 
@@ -541,6 +553,7 @@ def _run_spi(spec: RunSpec, problem: Problem) -> SolverResult:
         limit=spec.iterations,
         max_linesearch_iter=hyper["max_linesearch_iter"],
         probe=probe,
+        stopper=_stopper("model_based"),
     )
     ks, _ = structured_policy_iteration(lqr, solver_settings)
 
@@ -572,6 +585,7 @@ def _run_spi_mf(spec: RunSpec, problem: Problem) -> SolverResult:
         stepsize=hyper["stepsize"],
         seed_seq=sub_seed(spec.seed, "solve", spec.solver),
         probe=probe,
+        stopper=_stopper("model_free"),
     )
     ks, _ = structured_policy_iteration_mf(lqr, solver_settings)
 
@@ -579,7 +593,16 @@ def _run_spi_mf(spec: RunSpec, problem: Problem) -> SolverResult:
 
 
 def _linear_result(K_final, probe, solver_settings, scorer) -> SolverResult:
-    """Package a solver that produced a gain matrix."""
+    """Package a solver that produced a gain matrix.
+    """
+    stopper = getattr(solver_settings, "stopper", None)
+    extra, j_final = {}, None
+
+    if stopper is not None and stopper.best_payload is not None:
+        K_final = stopper.best_payload
+        extra = stopper.extra()
+        j_final = float(expected_true_cost(scorer, scorer.effective_gain(K_final)))
+
     return SolverResult(
         K_final=K_final,
         policy=LinearPolicy(K_final),
@@ -587,6 +610,8 @@ def _linear_result(K_final, probe, solver_settings, scorer) -> SolverResult:
         complexity=policy_complexity_linear(K_final),
         solver_settings=solver_settings,
         scorer=scorer,
+        extra=extra,
+        j_final=j_final,
     )
 
 
@@ -682,7 +707,7 @@ def _run_rl(
 
     solver_settings = dc.replace(
         preset,
-        total_timesteps=settings.RL_TIMESTEPS,
+        total_timesteps=settings.RL_MAX_TIMESTEPS,
         eval_freq=settings.RL_EVAL_FREQ,
         initial_gain=problem.K_0 if linear else None,
         pretrained_extractor=weights,
@@ -709,6 +734,7 @@ def _run_rl(
         evaluate,
         eval_freq=solver_settings.eval_freq,
         env_steps_offset=env_steps_offset,
+        stopper=_stopper("rl"),
     )
     model = build_model(env, solver_settings, seed=spec.seed)
 
@@ -726,7 +752,10 @@ def _run_rl(
             j_star=None if linear else probe_reference_cost(scorer, problem),
         )
 
-    extra = {"action_clips": env.n_action_clips}
+    callback.restore_best()
+    stopper = callback.stopper
+
+    extra = {"action_clips": env.n_action_clips, **stopper.extra()}
 
     if preset.features_extractor_class is not None:
         extra.update(latent_extra(
@@ -755,7 +784,15 @@ def _run_rl(
         extra=extra,
         save_policy=None if linear else _sb3_saver(model, solver_settings, encoder),
         j_star=None if linear else probe_reference_cost(scorer, problem),
+        j_final=_best_record_cost(callback.records, stopper),
     )
+
+
+def _best_record_cost(records, stopper) -> float | None:
+    """The probed cost of the policy the stopper kept, ``None`` if it kept none."""
+    if stopper.best_iteration is None:
+        return None
+    return float(records[stopper.best_iteration].cost)
 
 
 def _policy_is_finite(model) -> bool:
@@ -840,7 +877,7 @@ def _training_diverged(
         complexity={"rank": -1, "n_params": -1},
         solver_settings=solver_settings,
         scorer=scorer,
-        extra={"training_diverged": str(failure).splitlines()[0]},
+        extra={"training_diverged": str(failure).splitlines()[0], "converged": False},
         j_star=j_star,
         evaluate_test=evaluate_test,
         trajectory=trajectory,
@@ -1021,7 +1058,7 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
 
     solver_settings = dc.replace(
         preset,
-        total_timesteps=settings.RL_TIMESTEPS,
+        total_timesteps=settings.RL_MAX_TIMESTEPS,
         eval_freq=settings.RL_EVAL_FREQ,
         pretrained_extractor=weights,
     )
@@ -1039,6 +1076,7 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
         eval_freq=solver_settings.eval_freq,
         env_steps_scale=repeat,
         env_steps_offset=settings.PRETRAIN_STEPS * repeat if weights is not None else 0,
+        stopper=_stopper("rl"),
     )
 
     model = build_model(train_env, solver_settings, seed=spec.seed)
@@ -1047,6 +1085,7 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
         callback=callback,
         progress_bar=False,
     )
+    callback.restore_best()
 
     policy = SB3EnvPolicy(model)
 
@@ -1058,6 +1097,7 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
 
     extra = _pixel_extra(train_env, diagnostics)
     extra.update(latent_extra(model, score_env, policy))
+    extra.update(callback.stopper.extra())
 
     evaluate_test, trajectory = _pixel_protocol(score_env, policy, horizon)
 
@@ -1073,6 +1113,7 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
         j_star=j_star,
         evaluate_test=evaluate_test,
         trajectory=trajectory,
+        j_final=_best_record_cost(callback.records, callback.stopper),
     )
 
 

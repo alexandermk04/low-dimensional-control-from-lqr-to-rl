@@ -22,7 +22,8 @@ from scipy.linalg import solve_discrete_lyapunov
 from basetypes import StateSpaceModel
 
 from lqr_base.simple_lqr import LQRDiscrete, true_cost, initial_state_covariance
-from evaluation.probe import Probe, record_iteration
+from evaluation.analysis import Plateau
+from evaluation.probe import Probe, record_iteration, should_stop
 
 @dataclass
 class ModelBasedPolicyGradientSettings:
@@ -39,12 +40,16 @@ class ModelBasedPolicyGradientSettings:
     probe : evaluation.probe.Probe or None, optional
         Instrumentation recording cost, sample budget and total time per
         iteration. Defaults to ``None`` 
+    stopper : evaluation.analysis.Plateau or None, optional
+        Stops on a plateau of the model cost and keeps the best gain.
+        ``gradient_steps`` is then only a cap. Defaults to ``None``
     """
 
     K_0: np.ndarray  # Initial policy
     gradient_steps: int  # Number of gradient steps
     gradient_lr: float  # Gradient step size
     probe: Probe | None = None  # Optional per-iteration instrumentation
+    stopper: Plateau | None = None  # Optional convergence criterion
 
 # Global Convergence... Paper, page 5
 def calculate_gradient_model_based_discrete(
@@ -70,8 +75,8 @@ def calculate_gradient_model_based_discrete(
         ``2 E_k Sigma_k`` transformed into the controller's space, so it has
         the same shape as ``K_t``.
     expected_cost : float
-        ``x_0' P_k x_0``, the cost of the current policy from the sampled
-        initial state.
+        ``trace(sigma_0 P_k)``, the expected cost of the current policy over
+        the initial-state distribution; ``inf`` if the closed loop is unstable.
 
     Notes
     -----
@@ -99,7 +104,9 @@ def calculate_gradient_model_based_discrete(
         sigma_0 = initial_state_covariance(lqr)
 
     # Expected cost using current policy K_t
-    expected_cost = lqr.x_0.T @ P_k @ lqr.x_0
+    expected_cost = np.trace(sigma_0 @ P_k)
+    if np.max(np.abs(np.linalg.eigvals(lya_a))) >= 1:
+        expected_cost = np.inf
 
     # Compute the state covariance under the current policy K_t
     sigma_k = solve_discrete_lyapunov(lya_a, sigma_0)
@@ -148,5 +155,8 @@ def gradient_descent_discrete(lqr: LQRDiscrete, settings: ModelBasedPolicyGradie
 
         # data collection
         record_iteration(settings, lqr, progress_bar, i, K, cost_estimate=expected_cost)
+
+        if should_stop(settings, lqr, i, expected_cost, ks[-2]):
+            break
 
     return ks, costs

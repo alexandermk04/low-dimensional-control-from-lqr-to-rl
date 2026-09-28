@@ -33,8 +33,8 @@ PROBE_EPISODES = 100
 # ---------------------------------------------------------------------------
 # Training
 # ---------------------------------------------------------------------------
-# Fixed iterations for the LQR solvers.
-SOLVER_ITERATIONS = 500
+# Safety cap on iterations for the LQR solvers
+SOLVER_MAX_ITERATIONS = 20_000
 
 # Size of the full-rank component of the initial gain on an inflated system.
 K0_ALPHA = 0.5
@@ -80,11 +80,19 @@ SUBOPTIMAL_IDENTIFICATION = {
 # Rollout length for training
 TRAIN_HORIZON = 800
 
-# Environment-step budget for the RL solvers
-RL_TIMESTEPS = 1_000_000
+# Safety cap on environment steps for the RL solvers
+RL_MAX_TIMESTEPS = 10_000_000
 
 # Environment steps between learning-curve samples
 RL_EVAL_FREQ = 25_000
+
+# Convergence stopping rule. Stop once the moving mean over ``window`` updates 
+# is not ``rel_tol`` lower than ``patience`` updates ago.
+CONVERGENCE = {
+    "model_based": dict(rel_tol=1e-4, patience=50, window=1),
+    "model_free": dict(rel_tol=1e-3, patience=100, window=50),
+    "rl": dict(rel_tol=1e-2, patience=10, window=3),
+}
 
 
 # ---------------------------------------------------------------------------

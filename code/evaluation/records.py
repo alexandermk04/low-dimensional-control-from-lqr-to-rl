@@ -34,7 +34,7 @@ __all__ = [
     "DEFAULT_ROOT",
 ]
 
-SCHEMA_VERSION = "2"
+SCHEMA_VERSION = "3"
 
 # Where the records are saved to
 DEFAULT_ROOT = Path("results")
@@ -45,9 +45,12 @@ SUMMARY_KEYS = (
     "J_final",  # cost of the returned gain, on the standard plant
     "training_subopt_final",  # (J_final - J_star) / J_star
     "steps_to_thresh_1pct",  # sample efficiency
-    "total_env_steps",
+    "iterations",  # solver iterations / RL probe samples until the stop
+    "total_env_steps",  # environment steps until the stop
+    "best_iteration",  # iteration of the returned (best) policy
+    "best_env_steps",  # environment steps at the returned policy
     "total_time",  # overall time that has passed
-    "converged",  # boolean
+    "converged",  # stopping rule applied
     "spectral_radius_final",
     "rank_final",  # rank of gain matrix
     "policy_complexity",  # complexity in number of parameters

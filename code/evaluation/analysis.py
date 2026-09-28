@@ -9,6 +9,7 @@ __all__ = [
     "suboptimality",
     "time_to_threshold",
     "converged",
+    "Plateau",
     "policy_complexity_linear",
     "policy_complexity_mlp",
 ]
@@ -116,6 +117,78 @@ def converged(
         return False
 
     return bool((tail.max() - tail.min()) / abs(np.mean(tail)) < tol_rel)
+
+
+class Plateau:
+    """Stopping rule and best-iterate selection.
+
+    Parameters
+    ----------
+    rel_tol : float
+        Minimum relative improvement over ``patience`` updates that counts.
+    patience : int
+        Stop once the smoothed signal is not ``rel_tol`` lower than it was
+        ``patience`` updates ago.
+    window : int, optional
+        Moving-mean window the signal is smoothed over. Defaults to ``1``.
+
+    Attributes
+    ----------
+    best : float
+        Best smoothed signal so far.
+    best_payload : Any
+        What was passed with the best signal, e.g. the gain or policy weights.
+    best_iteration, best_steps : int or None
+        Iteration and environment steps at the best signal.
+    converged : bool
+        Whether the stopping rule was applied.
+    """
+
+    def __init__(self, rel_tol: float, patience: int, window: int = 1):
+        self.rel_tol = rel_tol
+        self.patience = patience
+        self.window = window
+
+        self._history: list[float] = []
+        self._smoothed: list[float] = []
+        self.best = np.inf
+        self.best_payload = None
+        self.best_iteration: int | None = None
+        self.best_steps: int | None = None
+        self.converged = False
+
+    def update(self, signal: float, payload, iteration: int, steps: int) -> bool:
+        """Add one signal value; return ``True`` once the solver should stop."""
+        self._history.append(float(signal))
+        smoothed = float(np.mean(self._history[-self.window:]))
+
+        # The trend only counts from the last unstable iterate on
+        if not np.isfinite(smoothed):
+            self._smoothed = []
+        self._smoothed.append(smoothed)
+
+        if self.best_payload is None or smoothed < self.best:
+            self.best = smoothed
+            self.best_payload = payload
+            self.best_iteration = int(iteration)
+            self.best_steps = int(steps)
+
+        if len(self._smoothed) <= self.patience:
+            return False
+
+        before = self._smoothed[-1 - self.patience]
+        improved = not np.isfinite(before) or smoothed < before - self.rel_tol * abs(before)
+
+        self.converged = not improved
+        return self.converged
+
+    def extra(self) -> dict:
+        """Summary entries describing where the run stopped and what it kept."""
+        return {
+            "converged": self.converged,
+            "best_iteration": self.best_iteration,
+            "best_env_steps": self.best_steps,
+        }
 
 
 def policy_complexity_linear(K: np.ndarray, tol: float | None = None) -> dict[str, int]:

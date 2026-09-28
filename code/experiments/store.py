@@ -17,6 +17,7 @@ from pathlib import Path
 
 import settings
 from evaluation.records import (
+    SCHEMA_VERSION,
     RunRecord,
     append_index,
     condition_slug,
@@ -176,6 +177,8 @@ def completed_runs(experiment: str) -> dict[tuple[str, int, str], dict]:
     # Directory names end in <timestamp>__seed<seed>
     for path in sorted((ROOT / experiment).glob("*/record.json")):
         payload = json.loads(path.read_text())
+        if payload.get("schema_version") != SCHEMA_VERSION:
+            continue
         key = run_key(payload["solver"], payload["seed"], payload.get("condition") or {})
         done[key] = payload
 

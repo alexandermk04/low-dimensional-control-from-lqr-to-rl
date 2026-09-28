@@ -20,7 +20,8 @@ from dataclasses import dataclass
 
 from seeding import rng
 
-from evaluation.probe import Probe, record_iteration
+from evaluation.analysis import Plateau
+from evaluation.probe import Probe, record_iteration, should_stop
 
 from lqr_base.simple_lqr import (
     LQRDiscrete,
@@ -50,6 +51,9 @@ class ModelFreePolicyGradientSettings:
     probe : evaluation.probe.Probe or None, optional
         Instrumentation recording cost, sample budget and total time per
         iteration. Defaults to ``None``
+    stopper : evaluation.analysis.Plateau or None, optional
+        Stops on a plateau of the rollout cost estimate and keeps the best
+        gain.
     """
 
     K_0: np.ndarray  # Initial policy
@@ -60,6 +64,7 @@ class ModelFreePolicyGradientSettings:
     gradient_lr: float  # Gradient step size
     seed_seq: np.random.SeedSequence  # Seed sequence for reproducibility
     probe: Probe | None = None  # Optional per-iteration instrumentation
+    stopper: Plateau | None = None  # Optional convergence criterion
 
 # Observation norm beyond which a rollout is treated as diverged.
 DIVERGENCE_THRESHOLD = 1e5
@@ -261,6 +266,9 @@ def model_free_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePolicyGradie
 
         record_iteration(settings, lqr, progress_bar, i, K, cost_estimate=mean_cost)
 
+        if should_stop(settings, lqr, i, mean_cost, ks[-2]):
+            break
+
     return ks, costs
 
 def model_free_natural_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePolicyGradientSettings):
@@ -312,5 +320,8 @@ def model_free_natural_policy_gradient(lqr: LQRDiscrete, settings: ModelFreePoli
         ks.append(K)
 
         record_iteration(settings, lqr, progress_bar, i, K, cost_estimate=mean_cost)
+
+        if should_stop(settings, lqr, i, mean_cost, ks[-2]):
+            break
 
     return ks, costs

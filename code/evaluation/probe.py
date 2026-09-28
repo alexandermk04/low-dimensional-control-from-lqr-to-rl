@@ -19,7 +19,7 @@ import numpy as np
 
 from lqr_base.simple_lqr import LQRDiscrete, true_cost
 
-__all__ = ["IterationRecord", "Probe", "record_iteration"]
+__all__ = ["IterationRecord", "Probe", "record_iteration", "should_stop"]
 
 
 @dataclass
@@ -228,3 +228,36 @@ def record_iteration(
         progress_bar.set_postfix(postfix)
 
     return record
+
+
+def should_stop(
+    settings, lqr: LQRDiscrete, iteration: int, signal: float, K: np.ndarray
+) -> bool:
+    """Feed the solver's own cost signal to its stopper, if it has one.
+
+    Parameters
+    ----------
+    settings : Any
+        The solver's settings object; acts only if it carries a ``stopper``.
+    lqr : LQRDiscrete
+        System being solved, for the step count when there is no probe.
+    iteration : int
+        Index of the iteration just completed.
+    signal : float
+        The solver's cost for ``K``: model cost or rollout estimate.
+    K : np.ndarray
+        The gain ``signal`` belongs to.
+
+    Returns
+    -------
+    bool
+        ``True`` once the solver should stop.
+    """
+    stopper = getattr(settings, "stopper", None)
+    if stopper is None:
+        return False
+
+    probe: Probe | None = getattr(settings, "probe", None)
+    steps = probe.last().env_steps if probe is not None and probe.last() else lqr.env_steps
+
+    return stopper.update(signal, K, iteration, steps)
