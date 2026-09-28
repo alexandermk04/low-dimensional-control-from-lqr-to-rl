@@ -75,22 +75,9 @@ $N$, $T$ & number of rollouts and rollout horizon \\
 \section{Noise intensities}
 \label{sec:app_noise_levels}
 
-The settings used for the different noise intensities. It is important to note
-that parametric noise is set to be time invariant, so drawn once per rollout,
+The settings used for the different noise intensities, obtained by the
+calibration \eqref{eq:noise_calibration} on the non-inflated system.
+It is important to note that parametric noise is resampled at every step,
 and that the disturbance noise uses its sinusoidal variant \eqref{eq:dist_sin}.
 
-\begin{table}[htbp]
-\centering
-\caption{Standard deviation per noise channel and intensity.}
-\label{tab:noise_levels}
-\begin{tabular}{@{}lrrrrr@{}}
-\toprule
-Channel & \emph{none} & \emph{weak} & \emph{standard} & \emph{strong} & \emph{divergent} \\
-\midrule
-Measurement $\sigma_{\mathrm{m}}$  & $0$ & $0.1$    & $0.5$   & $2.0$   & $20.0$ \\
-Control $\sigma_{\mathrm{c}}$      & $0$ & $0.1$    & $0.5$   & $2.0$   & $10.0$ \\
-Parametric $\sigma_{\mathrm{p}}$   & $0$ & $0.0005$ & $0.001$ & $0.005$ & $0.01$ \\
-Disturbance $\sigma_{\mathrm{d}}$  & $0$ & $0.0005$ & $0.001$ & $0.005$ & $0.05$ \\
-\bottomrule
-\end{tabular}
-\end{table}
+\input{generated/appendix_calibrate_noise/tables/noise_levels.tex}

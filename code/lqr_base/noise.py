@@ -7,7 +7,8 @@ Which point a channel attacks is the whole difference between them:
   control action is a noisier control action.
 - **parametric** - perturbs the model matrices themselves, optionally set
   once per system (``time_invariant=True``) to model a mis-identified model
-- **disturbance** - additive on the successor state, i.e. an external force.
+- **disturbance** - additive on the true position of the successor state, i.e. an
+  external force.
 
 Notes
 -----
@@ -154,7 +155,7 @@ class MeasurementNoiseSettings:
 
 
 class DisturbanceNoiseSettings:
-    """External disturbance added to the successor state.
+    """External force added to the position of the successor state.
 
     Parameters
     ----------
@@ -163,15 +164,14 @@ class DisturbanceNoiseSettings:
         types, and the amplitude for ``"sinusoidal"``.
     disturbance_type : {"gaussian", "sinusoidal", "constant"}
         - ``"gaussian"``  - newly drawn noise every step.
-        - ``"sinusoidal"`` - a deterministic ``std * sin(0.1 * k)`` applied
-          equally to every state entry, where ``k`` counts calls. Models a
-          slow periodic drift.
+        - ``"sinusoidal"`` - a deterministic ``std * sin(0.01 * k)``, where
+          ``k`` counts calls. Models a slow periodic drift.
         - ``"constant"``  - one random offset, drawn lazily on first use and
           held forever. Models a steady bias such as a wind.
 
     Attributes
     ----------
-    const_val : np.ndarray or None
+    const_val : float or None
         Cached offset for the ``"constant"`` type.
     step_count : int
         Call counter driving the ``"sinusoidal"`` phase.
@@ -180,7 +180,7 @@ class DisturbanceNoiseSettings:
     disturbance_noise_std: float
     disturbance_type: str
 
-    const_val: np.ndarray | None
+    const_val: float | None
     step_count: int
 
     def __init__(self, noise_std: float, disturbance_type: str):
@@ -211,7 +211,7 @@ class DisturbanceNoiseSettings:
         Returns
         -------
         np.ndarray
-            Disturbance of the same shape.
+            Disturbance of the same shape, non-zero only in the position.
 
         Raises
         ------
@@ -219,18 +219,21 @@ class DisturbanceNoiseSettings:
             If ``disturbance_type`` is not one of the three supported values.
         """
         if self.disturbance_type == "gaussian":
-            disturbance = rng.normal(0, self.disturbance_noise_std, size=x.shape)
-            return disturbance
+            push = rng.normal(0, self.disturbance_noise_std)
         elif self.disturbance_type == "sinusoidal":
-            disturbance = self.disturbance_noise_std * np.sin(0.01 * self.step_count) * np.ones_like(x)
+            push = self.disturbance_noise_std * np.sin(0.01 * self.step_count)
             self.step_count += 1
-            return disturbance
         elif self.disturbance_type == "constant":
             if self.const_val is None:
-                self.const_val = rng.normal(0, self.disturbance_noise_std, size=x.shape)
-            return self.const_val
+                self.const_val = rng.normal(0, self.disturbance_noise_std)
+            push = self.const_val
         else:
             raise ValueError(f"Unknown disturbance type: {self.disturbance_type}")
+
+        # Apply to position
+        disturbance = np.zeros_like(x)
+        disturbance[0] = push
+        return disturbance
 
 
 @dataclass

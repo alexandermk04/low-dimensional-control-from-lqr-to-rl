@@ -14,7 +14,7 @@ from lqr_base.noise import (
 __all__ = ["build_noise", "noise_conditions"]
 
 
-def build_noise(channels, level: str) -> LQRNoiseSettings | None:
+def build_noise(channels, level: str, std: dict | None = None) -> LQRNoiseSettings | None:
     """Assemble the bundle for setting of the noise grid.
 
     Parameters
@@ -24,6 +24,9 @@ def build_noise(channels, level: str) -> LQRNoiseSettings | None:
         ``settings.NOISE_CHANNELS`` activates all.
     level : str
         One of ``settings.NOISE_LEVELS``.
+    std : dict or None, optional
+        Per-channel intensities overriding ``settings.NOISE_STD``, used by
+        :mod:`experiments.appendix_calibrate_noise` to search for them.
 
     Returns
     -------
@@ -42,9 +45,9 @@ def build_noise(channels, level: str) -> LQRNoiseSettings | None:
     if level == "none":
         return None
 
-    require_noise(channels, levels=(level,))
-
-    std = {channel: settings.NOISE_STD[channel][level] for channel in channels}
+    if std is None:
+        require_noise(channels, levels=(level,))
+        std = {channel: settings.NOISE_STD[channel][level] for channel in channels}
 
     return LQRNoiseSettings(
         parametric_noise=(

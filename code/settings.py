@@ -93,42 +93,45 @@ RL_EVAL_FREQ = 25_000
 NOISE_LEVELS = ("none", "weak", "standard", "strong", "divergent")
 NOISE_CHANNELS = ("measurement", "control", "parametric", "disturbance")
 
+# Increase of the baseline controller test cost on the base system
+NOISE_COST_TARGETS = {"weak": 1.2, "standard": 1.5, "strong": 3.0, "divergent": 10.0}
+
 # Standard deviation per channel and level. ``none`` must stay 0.0.
-# Levels based on observation of optimal controller under these conditions.
+# Filled from `python -m experiments.appendix_calibrate_noise`.
 
 NOISE_STD = {
     "measurement": {
         "none": 0.0,
-        "weak": 0.1,
-        "standard": 0.5,
-        "strong": 2.0,
-        "divergent": 20.0,
+        "weak": 0.389,
+        "standard": 0.607,
+        "strong": 1.22,
+        "divergent": 2.58,
     },
     "control": {
         "none": 0.0,
-        "weak": 0.1,
-        "standard": 0.5,
-        "strong": 2.0,
-        "divergent": 10.0,
+        "weak": 1.07,
+        "standard": 1.67,
+        "strong": 3.19,
+        "divergent": 5.68,
     },
     "parametric": {
         "none": 0.0,
-        "weak": 0.0005,
-        "standard": 0.001,
-        "strong": 0.005,
-        "divergent": 0.01,
+        "weak": 0.0211,
+        "standard": 0.0304,
+        "strong": 0.0451,
+        "divergent": 0.0582,
     },
     "disturbance": {
         "none": 0.0,
-        "weak": 0.0005,
-        "standard": 0.001,
-        "strong": 0.005,
-        "divergent": 0.05,
+        "weak": 0.00767,
+        "standard": 0.0122,
+        "strong": 0.0246,
+        "divergent": 0.0519,
     },
 }
 
 # Shape of the two channels that have a mode besides their intensity.
-PARAMETRIC_TIME_INVARIANT = True
+PARAMETRIC_TIME_INVARIANT = False
 DISTURBANCE_TYPE = "sinusoidal"  # "gaussian" | "sinusoidal" | "constant"
 
 # The single level the per-channel comparison (table 4, plot 5) is drawn at.

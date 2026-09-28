@@ -708,19 +708,20 @@ what we compute actions on, and what actually happens.
 
 This noise models external influences, like a constant wind pushing on our
 agent, or periodic disturbances, for example rain
-hitting it with some frequency. Depending on the type, the disturbance
-$n^{\mathrm{d}}_k \in \R^{n}$ is drawn as
+hitting it with some frequency. It only affects the position, so
+the noise is $n^{\mathrm{d}}_k = d_k\, e_1 \in \R^{n}$ where $e_1$ is the first unit vector.
+Depending on the type, the push intensity $d_k$ is drawn as
 
 \begin{subequations}
 \label{eq:disturbance_noise}
 \begin{align}
     \text{Gaussian:} \quad
-        & n^{\mathrm{d}}_k \sim \mathcal{N}\!\left(0, \sigma_{\mathrm{d}}^{2} I_n\right)
+        & d_k \sim \mathcal{N}\!\left(0, \sigma_{\mathrm{d}}^{2}\right)
           \quad \text{independently at every step}, \label{eq:dist_gauss}\\
     \text{Sinusoidal:} \quad
-        & n^{\mathrm{d}}_k = \sigma_{\mathrm{d}} \sin(0.01\,k)\, \mathbf{1}_n , \label{eq:dist_sin}\\
+        & d_k = \sigma_{\mathrm{d}} \sin(0.01\,k) , \label{eq:dist_sin}\\
     \text{Constant:} \quad
-        & n^{\mathrm{d}}_k = n^{\mathrm{d}}_0 \sim \mathcal{N}\!\left(0, \sigma_{\mathrm{d}}^{2} I_n\right)
+        & d_k = d_0 \sim \mathcal{N}\!\left(0, \sigma_{\mathrm{d}}^{2}\right)
           \quad \text{for all } k . \label{eq:dist_const}
 \end{align}
 \end{subequations}
@@ -728,8 +729,10 @@ $n^{\mathrm{d}}_k \in \R^{n}$ is drawn as
 Only the first one can really be considered as noise; the other are more
 deterministic values, where $\sigma_{\mathrm{d}}$ acts as the amplitude of it. 
 The sinusoidal variant completes one period every
-$2\pi / 0.1 \approx 63$ steps, which at a sampling intervall of $h = 0.01$ 
-is relatively a rather slow drift than a rapid vibration. Including the
+$2\pi / 0.01 \approx 628$ steps, which at a sampling intervall of $h = 0.01$ 
+is about $6.3$ seconds, so rather a slow drift than a rapid vibration.
+As the disturbance acts on the true state $x_k$, it also enters before any
+lifting of the observation in \cref{chap:inflation}. Including the
 noise in our loop, the state transition becomes
 
 \begin{equation}
@@ -889,10 +892,29 @@ into five intensities,
 \end{center}
 
 where \emph{none} leaves the system as it is and thus serves as our
-control condition. All the other intensities were chosen by applying
-each channel to the optimal gain $K^{*}$ and observing its deviation
-from the optimal path. \emph{divergent}, contrary to the name,
-doesn't always cause divergence, but makes the controller unusable. 
+control condition. All the other intensities are calibrated by how much
+they increase the cost of the optimal gain $K^{*}$ on the uninflated system. 
+For each channel $c$ and intensity $\ell$, we choose the standard deviation 
+in a way such that with the test protocol of \cref{subsec:protocol}
+
+\begin{equation}
+    \label{eq:noise_calibration}
+    \hat{J}_T(K^{*}; c_{\ell}) = \rho_{\ell}\, \hat{J}_T(K^{*}; \varnothing),
+    \qquad
+    \rho_{\ell} \in \{1.2,\ 1.5,\ 3,\ 10\}
+\end{equation}
+
+applies for \emph{weak}, \emph{standard}, \emph{strong} and \emph{divergent}
+respectively.
+For $K^{*}$, the increase stays the same under inflation for all channels
+except control noise. As it acts elementwise on the inflated output, it
+is averaged out over the number of actuators: \emph{strong} control noise raises the
+cost of $K^{*}$ by a factor of $3.0$ without inflation, but only by $1.22$ and
+$1.05$ at the sizes $d_{in} \times d_{out} = 50 \times 25$ and $200 \times 100$.
+For simplicity however, we won't vary the levels by size, but instead accept this
+as a side effect.
+\emph{divergent}, contrary to the name,
+doesn't cause divergence of the baseline, but makes it ten times as costly. 
 The concrete standard deviations per channel are listed in 
 \cref{tab:noise_levels}.
 
