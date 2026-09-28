@@ -120,7 +120,51 @@ agents under increasingly more complex, and noisier environments.
 \section{Approach}
 \label{sec:approach}
 
-What I will do in the following sections
+As mentioned before, the Linear Quadratic Regulator (LQR) serves as the perfect starting example,
+which is exactly why we start our investigation here. For our investigations, we will
+use the double integrator, as mentioned in \needcite{chap 2}.
+
+% Reevaluate whether this section actually makes sense, as we can't reduce any rank here
+First, as a basis, we will start by comparing
+the standard policy gradient approach \needcite{Fazel2018Global} with the structured policy iteration
+\needcite{Park2020Structured} on the true model. Their relative performance will be evaluated
+
+Afterwards, we will take a look at the cases, where we don't have access to the real model. We compare
+the relative performance of both direct, and indirect approaches to our baseline, which is
+the optimal controller calculated via the ricatti equations on the true model. For the indirect
+approaches, we will use N4SID \needcite{TODO} to estimate the underlying model from one
+trajectory. A more detailed description, as well as the exact parameters selected 
+will be provided in the sections discussing the results. With this estimated model as
+the basis, we employ three different approaches on how to learn our policy, called 
+ce_dare, mb_est and spi_est. All these will also be discussed in \needcite{chap 4}.
+
+As we want to investigate higher dimensional controllers, with underlying low-dimensional
+dynamics, we need to create such a setup. Here, we chose to use orthonormal projection matrices,
+which can be used to transfer observations between the low-dimensional true state of the state-space model
+and the inflated one our controller sees. Conversely, for a high-dimensional actuation, we project into the
+lower dimensional space via a second matrix. In detail for inflated input dimension p and output dimension q:
+
+Formulas:
+- sampling of the matrices u_1 and u_2
+- how the loop is affected
+
+For \needcite{chap4} and the following chapter, we will use these preset lift-dimension under the following names:
+Table:
+- base - no inflation
+- small
+- medium
+- large
+
+Our first approach for chapter 4 is to compare our selected methods across these inflation sizes, and see how increasing
+the dimension affects the performance of each. As the next step, we will introduce the different noise channels
+named in \needcite{chap 4} first to the base double integrator, where no overparameterization exists. The results
+we observe here, will then be compared with evaluations of the controllers for a \emph{largely} inflated system
+under different noise channels and strengths.
+
+In \needcite{chap 5} we will then first introduce RL based approaches. With PPO \needcite{TODO} being one of
+the most used variants in robotics \needcite{TODO}, we choose this as our main architecture, and apply different
+variations of it. First, by doing xyz \needcite{TODO, missing text} we enforce the trained controller to be linear, which allows us to extract 
+it as a gain matrix, that we can closely compare with our LQR approaches. 
 
 % reason why SVD is the right choice #23
 % #17 bow tie structure in biological systems
