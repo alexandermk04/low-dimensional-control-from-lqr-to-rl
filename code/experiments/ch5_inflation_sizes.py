@@ -77,6 +77,7 @@ def main():
             "convergence": settings.CONVERGENCE,
             "rl_timesteps": settings.RL_MAX_TIMESTEPS,
             "train_horizon": settings.TRAIN_HORIZON,
+            "size_hyperparams": settings.SIZE_HYPERPARAMS,
             "hyperparams": {
                 s: settings.SOLVER_HYPERPARAMS.get(s, {})
                 for s in settings.CH5_SOLVERS

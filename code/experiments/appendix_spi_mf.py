@@ -8,7 +8,7 @@ Run with::
 import settings
 from experiments.problem import RunSpec
 from experiments.runner import run_grid
-from experiments.settings_guard import require_choice, require_per_size
+from experiments.settings_guard import require_per_size
 
 EXPERIMENT = "appendix_spi_mf"
 
@@ -20,7 +20,7 @@ TEST_EPISODES = 20
 TEST_HORIZON = 400
 
 # The inflation sizes checked
-SIZES = (settings.CH4_REFERENCE_INFLATION,)
+SIZES = settings.CH4_INFLATION_SIZES
 
 
 def build_specs() -> list[RunSpec]:
@@ -31,10 +31,6 @@ def build_specs() -> list[RunSpec]:
 
     specs = []
     for size in SIZES:
-        require_choice(
-            size, "CH4_REFERENCE_INFLATION", settings.INFLATION_SIZES,
-            "pick one of settings.INFLATION_SIZES",
-        )
         rollout_length, n_trajectories = chosen[size]
 
         for lambda_ in settings.SPI_MF_LAMBDAS:

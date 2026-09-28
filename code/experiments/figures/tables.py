@@ -45,6 +45,9 @@ METRIC_ROWS = {
     "best_env_steps": (r"Env.\ steps to best policy", "{:.3g}"),
     "total_time": (r"Wall time (s)", "{:.1f}"),
     "spectral_radius_final": (r"Spectral radius", "{:.4f}"),
+    "test_cost_mean": (r"Test cost", "{:.4g}"),
+    "steps_to_thresh_1pct": (r"Env.\ steps to 1\,\%", "{:.3g}"),
+    "iters_to_thresh_1pct": (r"Iterations to 1\,\%", "{:.0f}"),
 }
 
 DEFAULT_METRICS = ("J_final", "training_subopt_final", "subopt")

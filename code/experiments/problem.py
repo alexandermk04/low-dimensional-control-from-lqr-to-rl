@@ -75,9 +75,13 @@ class RunSpec:
     def hyperparams(self) -> dict:
         """This solver's entry in ``settings.SOLVER_HYPERPARAMS``.
 
-        With :attr:`hyperparam_overrides` applied on top.
+        With the size's ``settings.SIZE_HYPERPARAMS`` entry and then
+        :attr:`hyperparam_overrides` applied on top.
         """
         merged = dict(settings.SOLVER_HYPERPARAMS.get(self.solver, {}))
+        merged.update(
+            settings.SIZE_HYPERPARAMS.get(self.solver, {}).get(self.condition.get("size"), {})
+        )
         merged.update(self.hyperparam_overrides)
         return merged
 

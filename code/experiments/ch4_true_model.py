@@ -42,6 +42,7 @@ def main():
             },
             "iterations": settings.SOLVER_MAX_ITERATIONS,
             "convergence": settings.CONVERGENCE,
+            "size_hyperparams": settings.SIZE_HYPERPARAMS,
             "hyperparams": {
                 s: settings.SOLVER_HYPERPARAMS.get(s, {})
                 for s in settings.CH4_TRUE_SOLVERS
