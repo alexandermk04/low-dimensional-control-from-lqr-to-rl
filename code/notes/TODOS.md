@@ -14,7 +14,10 @@
 - explain how we score how we compare the latent vector to pos-vel via ridge regression
 - attribute ridge regresseion against ground truth state in code
 - pixel_solver in sovlers has "timesteps", which refers to agent steps, overriden by setting.RL_steps, but is not the same env steps as in chap5
-- justify dimension 2 for the different ppo models (ortho an est)
+- justify dimension 2 for the different ppo models (ortho and est)
+- explanation for how stopping works for the different solvers
+- explain the RL observation scaling s = sqrt(p/n), and why actions are not scaled
+- name the RL action clipping vs. LQR without it
 
 
 ## Code
@@ -22,9 +25,5 @@
 - check pixel_fc, pixel_posvel
 - rework noise plots
 - where is the bottleneck approach?
-
-
-- action_clips counter is broken, and generally not the same between RL and LQR
-- need to normalize the observations for the pixel size, or generally, as they are shrunken by the lifting
 
 - Do we need to calibrate Control Noise for each size?

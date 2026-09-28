@@ -34,6 +34,9 @@ class LQREnv(gym.Env):
     encoder : np.ndarray or None, optional
         ``(k, p)`` matrix applied to every observation, so the policy observes
         ``encoder @ y`` instead of ``y``. ``None`` means the policy receives the full observation.
+    obs_scale : float, optional
+        Multiplies the plant's observation before the encoder. ``sqrt(p/n)``
+        undoes the per-coordinate shrinking of an orthonormal lift. Defaults to ``1.0``.
 
     Attributes
     ----------
@@ -44,9 +47,6 @@ class LQREnv(gym.Env):
         encoder's output dimension when one is given.
     steps : int
         Steps taken in the current episode.
-    n_action_clips : int
-        How often the action box has bound, over the environment's lifetime.
-        Should stay at zero.
     """
 
     metadata = {"render_modes": ["human"], "render_fps": 30}
@@ -60,10 +60,12 @@ class LQREnv(gym.Env):
         obs_limit: float = 1e4,
         render_mode: str | None = None,
         encoder: np.ndarray | None = None,
+        obs_scale: float = 1.0,
     ):
         super().__init__()
 
         self.lqr = lqr
+        self.obs_scale = float(obs_scale)
         self.horizon = horizon
         self.reward_scale = reward_scale
         self.action_limit = action_limit
@@ -91,15 +93,14 @@ class LQREnv(gym.Env):
         )
 
         self.steps = 0
-        self.n_action_clips = 0
 
         self.screen = None
         self.clock = None
         self.screen_dim = 500
 
     def _obs(self) -> np.ndarray:
-        """Current observation, encoded if asked, cast to the dtype SB3 expects."""
-        y = self.lqr.observe()
+        """Current observation, scaled and encoded if asked, cast to the dtype SB3 expects."""
+        y = self.obs_scale * self.lqr.observe()
         if self.encoder is not None:
             y = self.encoder @ y
         return np.asarray(y, dtype=np.float32)
@@ -144,10 +145,7 @@ class LQREnv(gym.Env):
         """
         v = np.asarray(action, dtype=np.float64).reshape(self.lqr.action_dim)
 
-        clipped = np.clip(v, -self.action_limit, self.action_limit)
-        if not np.array_equal(clipped, v):
-            self.n_action_clips += 1
-        v = clipped
+        v = np.clip(v, -self.action_limit, self.action_limit)
 
         result = self.lqr.apply_control(v)
         self.steps += 1
@@ -162,7 +160,6 @@ class LQREnv(gym.Env):
             "x": result.x_t,
             "state": result.x_t,
             "u": result.u_t,
-            "action_clipped": self.n_action_clips,
         }
 
         observation = (

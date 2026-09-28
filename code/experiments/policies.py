@@ -87,6 +87,7 @@ def load_policy(record: RunRecord, root: Path | str = ROOT) -> Policy:
             model,
             deterministic=spec.get("deterministic", True),
             encoder=encoder,
+            obs_scale=spec.get("obs_scale", 1.0),
         )
 
     raise MissingPolicyError(

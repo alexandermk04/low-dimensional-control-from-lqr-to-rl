@@ -55,8 +55,9 @@ SUMMARY_KEYS = (
     "rank_final",  # rank of gain matrix
     "policy_complexity",  # complexity in number of parameters
     # RL-only stats below - None otherwise
-    "action_clips",  # should be 0 unless constrained problem is solved
+    "action_clips",  # env steps in which the RL action box bound during training
     "bias_ratio",  # whether extracted gain describes policy accurately
+    "obs_scale",  # sqrt(p/n) the policy's observation is multiplied by
     # Test evaluation metrics
     "test_cost_mean",  # accumulated cost, averaged over this run's episodes
     "test_episodes",  # contents of the pooled sample

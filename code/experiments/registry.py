@@ -646,6 +646,13 @@ def _explore(control, seed: int, scale) -> Callable:
     return act
 
 
+def _obs_scale(problem: Problem, encoder: np.ndarray | None) -> float:
+    """``sqrt(p/n)`` for a lifted observation the policy sees raw, else ``1``."""
+    if encoder is not None or problem.U_1 is None:
+        return 1.0
+    return float(np.sqrt(problem.U_1.shape[0] / problem.U_1.shape[1]))
+
+
 def _run_rl(
     spec: RunSpec,
     problem: Problem,
@@ -682,6 +689,7 @@ def _run_rl(
 
     preset = vector_presets()[spec.solver]
     linear = is_linear_solver(preset)
+    obs_scale = _obs_scale(problem, encoder)
 
     def make_env(purpose: str) -> LQREnv:
         return LQREnv(
@@ -690,13 +698,14 @@ def _run_rl(
             reward_scale=problem.dt,
             action_limit=problem.action_limit,
             encoder=encoder,
+            obs_scale=obs_scale,
         )
 
     env = make_env("train")
 
     weights = None
     if preset.freeze_extractor:
-        stabilizing = LinearPolicy(problem.K_0)
+        stabilizing = LinearPolicy(problem.K_0 / obs_scale)
         weights = fit_extractor_weights(
             preset, make_env("fit"),
             _explore(lambda y, info: stabilizing(y), spec.seed, problem.action_limit / 10.0),
@@ -709,7 +718,7 @@ def _run_rl(
         preset,
         total_timesteps=spec.hyperparams().get("total_timesteps", settings.RL_MAX_TIMESTEPS),
         eval_freq=settings.RL_EVAL_FREQ,
-        initial_gain=problem.K_0 if linear else None,
+        initial_gain=problem.K_0 / obs_scale if linear else None,
         pretrained_extractor=weights,
     )
 
@@ -718,13 +727,13 @@ def _run_rl(
 
     def evaluate(model):
         if linear:
-            K, _ = extract_linear_gain(model)
+            K = obs_scale * extract_linear_gain(model)[0]
             return (
                 expected_true_cost(scorer, scorer.effective_gain(K)),
                 int(np.linalg.matrix_rank(K)),
             )
         mean, _ = monte_carlo_cost(
-            scorer, SB3Policy(model, encoder=encoder),
+            scorer, SB3Policy(model, encoder=encoder, obs_scale=obs_scale),
             n_episodes=settings.PROBE_EPISODES,
             horizon=settings.PROBE_HORIZON,
         )
@@ -755,7 +764,11 @@ def _run_rl(
     callback.restore_best()
     stopper = callback.stopper
 
-    extra = {"action_clips": env.n_action_clips, **stopper.extra()}
+    extra = {
+        "action_clips": callback.n_action_clips,
+        "obs_scale": obs_scale,
+        **stopper.extra(),
+    }
 
     if preset.features_extractor_class is not None:
         extra.update(latent_extra(
@@ -764,6 +777,7 @@ def _run_rl(
 
     if linear:
         K_final, bias = extract_linear_gain(model)
+        K_final = obs_scale * K_final
         complexity = policy_complexity_linear(K_final)
         policy = LinearPolicy(K_final)
         extra["bias_ratio"] = float(
@@ -772,7 +786,7 @@ def _run_rl(
     else:
         K_final = None
         complexity = policy_complexity_mlp(model)
-        policy = SB3Policy(model, encoder=encoder)
+        policy = SB3Policy(model, encoder=encoder, obs_scale=obs_scale)
 
     return SolverResult(
         K_final=K_final,
@@ -782,7 +796,7 @@ def _run_rl(
         solver_settings=solver_settings,
         scorer=scorer,
         extra=extra,
-        save_policy=None if linear else _sb3_saver(model, solver_settings, encoder),
+        save_policy=None if linear else _sb3_saver(model, solver_settings, encoder, obs_scale),
         j_star=None if linear else probe_reference_cost(scorer, problem),
         j_final=_best_record_cost(callback.records, stopper),
     )
@@ -941,12 +955,12 @@ def _pixel_setup(spec: RunSpec):
     return K, j_star, int(horizon), int(cfg.DEFAULT_ACTION_REPEAT)
 
 
-def _pixel_extra(env, diagnostics: dict) -> dict:
+def _pixel_extra(action_clips: int, diagnostics: dict) -> dict:
     """Additional summary entries for pixel runs"""
     import config as cfg
 
     return {
-        "action_clips": env.n_action_clips,
+        "action_clips": int(action_clips),
         **diagnostics,
         "action_repeat": int(cfg.DEFAULT_ACTION_REPEAT),
         "n_thrusters": int(cfg.DEFAULT_N_THRUSTERS),
@@ -1012,7 +1026,7 @@ def _run_oracle_coarse(spec: RunSpec, problem: Problem) -> SolverResult:
         complexity=policy_complexity_linear(K),
         solver_settings={"solver": "oracle_coarse", "action_repeat": repeat, "K": K},
         scorer=env,
-        extra=_pixel_extra(env, diagnostics),
+        extra=_pixel_extra(env.n_action_clips, diagnostics),
         j_star=j_star,
         evaluate_test=evaluate_test,
         trajectory=trajectory,
@@ -1095,7 +1109,7 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
         horizon=horizon,
     )
 
-    extra = _pixel_extra(train_env, diagnostics)
+    extra = _pixel_extra(callback.n_action_clips, diagnostics)
     extra.update(latent_extra(model, score_env, policy))
     extra.update(callback.stopper.extra())
 
@@ -1117,7 +1131,7 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
     )
 
 
-def _sb3_saver(model, solver_settings, encoder=None) -> Callable[[Any], dict]:
+def _sb3_saver(model, solver_settings, encoder=None, obs_scale: float = 1.0) -> Callable[[Any], dict]:
     """A saver saving a stable-baselines3 model next to its record.
     """
     def save(directory) -> dict:
@@ -1128,6 +1142,7 @@ def _sb3_saver(model, solver_settings, encoder=None) -> Callable[[Any], dict]:
             "algo": solver_settings.algo,
             "file": "policy.zip",
             "deterministic": True,
+            "obs_scale": float(obs_scale),
         }
 
         if encoder is not None:

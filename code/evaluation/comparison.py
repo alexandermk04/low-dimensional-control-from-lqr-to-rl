@@ -410,7 +410,7 @@ def _run_rl_solver(solver, config, K_0, U_1, U_2, j_star, seeds) -> RunRecord:
     )
     record.arrays = arrays
     record.summary["n_params_dense"] = complexity.get("n_params_dense")
-    record.summary["action_clips"] = env.n_action_clips
+    record.summary["action_clips"] = callback.n_action_clips
     if bias is not None:
         record.summary["bias_ratio"] = float(
             np.linalg.norm(bias) / max(np.linalg.norm(K_final), 1e-12)

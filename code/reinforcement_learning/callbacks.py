@@ -41,6 +41,8 @@ class ProbeCallback(BaseCallback):
     ----------
     records : list[IterationRecord]
         The learning curve, in order.
+    n_action_clips : int
+        Environment steps in which the action box bound during training.
     """
 
     def __init__(self, evaluate, eval_freq: int, verbose: int = 0,
@@ -62,6 +64,7 @@ class ProbeCallback(BaseCallback):
         self._t0: float | None = None
         self._overhead = 0.0
         self._next_eval = 0
+        self.n_action_clips = 0
 
     def _on_training_start(self) -> None:
         """Start the clock and take the first sample, at zero steps."""
@@ -71,6 +74,7 @@ class ProbeCallback(BaseCallback):
         self._next_eval = 0
         self._returns: list[float] = []
         self._stop = False
+        self.n_action_clips = 0
         self._sample()
 
     def _sample(self) -> IterationRecord:
@@ -113,6 +117,11 @@ class ProbeCallback(BaseCallback):
         for info in self.locals.get("infos", ()):
             if "episode" in info:
                 self._returns.append(float(info["episode"]["r"]))
+
+        actions, clipped = self.locals.get("actions"), self.locals.get("clipped_actions")
+        if actions is not None and clipped is not None:
+            bound = np.any(np.reshape(actions != clipped, (len(actions), -1)), axis=1)
+            self.n_action_clips += int(bound.sum())
 
         if self.num_timesteps >= self._next_eval:
             self._sample()

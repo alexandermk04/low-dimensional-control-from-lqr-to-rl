@@ -537,17 +537,21 @@ class SB3Policy:
         Use the distribution's mean rather than a sample. Defaults to ``True``.
     encoder : np.ndarray or None, optional
         ``(k, p)`` matrix applied to the observation before the model sees it.
+    obs_scale : float, optional
+        Multiplies the observation before the encoder, matching
+        :class:`~reinforcement_learning.lqr_env.LQREnv`. Defaults to ``1.0``.
     """
 
     def __init__(self, model: BaseAlgorithm, deterministic: bool = True,
-                 encoder: np.ndarray | None = None):
+                 encoder: np.ndarray | None = None, obs_scale: float = 1.0):
         self.model = model
         self.deterministic = deterministic
         self.encoder = None if encoder is None else np.asarray(encoder, dtype=np.float64)
+        self.obs_scale = float(obs_scale)
 
     def __call__(self, y: np.ndarray) -> np.ndarray:
         """Return the control for one observation."""
-        y = np.asarray(y, dtype=np.float64)
+        y = self.obs_scale * np.asarray(y, dtype=np.float64)
         if self.encoder is not None:
             y = self.encoder @ y
 
