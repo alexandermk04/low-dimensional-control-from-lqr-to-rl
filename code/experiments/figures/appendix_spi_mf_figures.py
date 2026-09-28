@@ -13,7 +13,7 @@ from experiments.figures.tables import metric_table, write_table
 from experiments.store import MissingExperimentError, load_experiment
 
 METRICS = ("J_final", "training_subopt_final", "rank_final",
-           "spectral_radius_final", "test_cost_mean")
+           "spectral_radius_final", "iterations", "total_env_steps", "best_env_steps")
 
 
 def _slug(value: float) -> str:

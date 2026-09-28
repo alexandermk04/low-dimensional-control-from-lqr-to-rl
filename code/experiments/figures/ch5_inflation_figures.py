@@ -6,7 +6,7 @@ Run with::
 """
 
 import settings
-from experiments.figures.aggregate import latest_per_experiment, tidy
+from experiments.figures.aggregate import latest_per_experiment, tidy, with_suboptimality
 from experiments.figures.panels import (
     complexity_bars,
     learning_bands,
@@ -28,9 +28,11 @@ def render(experiment: str):
 
     solvers = sorted({r.solver for r in records})
 
+    all_rows = with_suboptimality(tidy(records), by=("seed", "size"))
+
     for solver in solvers:
         subset = [r for r in records if r.solver == solver]
-        rows = tidy(subset)
+        rows = [r for r in all_rows if r["solver"] == solver]
 
         short = solver.replace("_", "-")
 
@@ -51,9 +53,9 @@ def render(experiment: str):
         save(axes[0].figure, f"ch5_inflation_trajectories_{solver}", experiment)
 
         # Plot 6
-        ax = box_metric(rows, "size", "test_cost_mean", order=SIZE_ORDER)
+        ax = box_metric(rows, "size", "subopt", order=SIZE_ORDER, log="symlog")
         ax.set_xlabel("Inflation size")
-        save(ax.figure, f"ch5_inflation_testcost_{solver}", experiment)
+        save(ax.figure, f"ch5_inflation_test_subopt_{solver}", experiment)
 
         # Plot 7
         ax = complexity_bars(rows, "size", order=SIZE_ORDER)
@@ -64,8 +66,9 @@ def render(experiment: str):
         write_table(
             metric_table(
                 rows, "size",
-                metrics=("J_final", "training_subopt_final", "test_cost_mean",
-                         "policy_complexity", "rank_final"),
+                metrics=("J_final", "training_subopt_final", "subopt",
+                         "policy_complexity", "rank_final",
+                         "iterations", "total_env_steps", "best_env_steps"),
                 column_order=SIZE_ORDER,
                 column_header="Inflation",
                 caption=f"{solver} across inflation sizes.",

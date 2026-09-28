@@ -68,7 +68,7 @@ class RunSpec:
     inflation: tuple[int, int] | None = None
     rollout_length: int | None = None
     n_trajectories: int | None = None
-    iterations: int = settings.SOLVER_ITERATIONS
+    iterations: int = settings.SOLVER_MAX_ITERATIONS
     condition: dict = field(default_factory=dict)
     hyperparam_overrides: dict = field(default_factory=dict)
 

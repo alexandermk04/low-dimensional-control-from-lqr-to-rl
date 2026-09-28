@@ -21,7 +21,7 @@ def build_specs() -> list[RunSpec]:
             solver=solver,
             seed=seed,
             inflation=settings.INFLATION_SIZES[size],
-            iterations=settings.SOLVER_ITERATIONS,
+            iterations=settings.SOLVER_MAX_ITERATIONS,
             condition={"size": size},
         )
         for solver in settings.CH4_TRUE_SOLVERS
@@ -40,7 +40,8 @@ def main():
                 name: settings.INFLATION_SIZES[name]
                 for name in settings.CH4_INFLATION_SIZES
             },
-            "iterations": settings.SOLVER_ITERATIONS,
+            "iterations": settings.SOLVER_MAX_ITERATIONS,
+            "convergence": settings.CONVERGENCE,
             "hyperparams": {
                 s: settings.SOLVER_HYPERPARAMS.get(s, {})
                 for s in settings.CH4_TRUE_SOLVERS

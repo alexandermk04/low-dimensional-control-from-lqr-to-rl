@@ -60,10 +60,7 @@ def render_size(
     axes = trajectory_overlay(subset, "solver", dt=DEFAULT_DT, order=order)
     save(axes[0].figure, f"{stem}_trajectories", experiment)
 
-    # Test costs and suboptimality
-    ax = box_metric(rows, "solver", "test_cost_mean", order=order)
-    save(ax.figure, f"{stem}_testcost", experiment)
-
+    # Paired test suboptimality
     ax = box_metric(rows, "solver", "subopt", order=order, log="symlog")
     save(ax.figure, f"{stem}_subopt", experiment)
 
@@ -74,8 +71,8 @@ def render_size(
     write_table(
         metric_table(
             rows, "solver",
-            metrics=("J_final", "training_subopt_final", "test_cost_mean",
-                     "subopt", "total_env_steps", "policy_complexity", "rank_final"),
+            metrics=("J_final", "training_subopt_final", "subopt",
+                     "iterations", "total_env_steps", "best_env_steps", "policy_complexity", "rank_final"),
             column_order=order,
             column_header="Solver",
             caption=f"{track_caption} at the {size} inflation, without noise.",
@@ -102,12 +99,6 @@ def render_across_sizes(
     stem = f"{stem_prefix}_across_sizes"
 
     ax = box_metric(
-        rows, ("size", "solver"), "test_cost_mean", order=order, color_by=1
-    )
-    ax.set_xlabel("Inflation size")
-    save(ax.figure, f"{stem}_testcost", experiment)
-
-    ax = box_metric(
         rows, ("size", "solver"), "subopt", order=order, log="symlog", color_by=1
     )
     ax.set_xlabel("Inflation size")
@@ -120,7 +111,7 @@ def render_across_sizes(
     write_table(
         metric_table(
             rows, ("size", "solver"),
-            metrics=("training_subopt_final", "test_cost_mean", "subopt", "policy_complexity", "rank_final"),
+            metrics=("training_subopt_final", "subopt", "policy_complexity", "rank_final"),
             column_order=order,
             column_header="(size, solver)",
             caption=caption,

@@ -31,7 +31,7 @@ def build_specs() -> list[RunSpec]:
             solver=solver,
             seed=seed,
             inflation=None,
-            iterations=settings.SOLVER_ITERATIONS,
+            iterations=settings.SOLVER_MAX_ITERATIONS,
             condition=condition,
         )
         for solver in settings.CH6_SOLVERS
@@ -55,7 +55,8 @@ def main():
             "view_scale": cfg.DEFAULT_VIEW_SCALE,
             "n_thrusters": cfg.DEFAULT_N_THRUSTERS,
             "thrust_scale": cfg.DEFAULT_THRUST_SCALE,
-            "rl_timesteps": settings.RL_TIMESTEPS,
+            "rl_timesteps": settings.RL_MAX_TIMESTEPS,
+            "convergence": settings.CONVERGENCE,
             "rl_eval_freq": settings.RL_EVAL_FREQ,
             "probe_episodes": settings.PIXEL_PROBE_EPISODES,
             "pretrain_steps": settings.PRETRAIN_STEPS,

@@ -84,10 +84,6 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
             title = f"Channel: {cell_channel}, intensity: {cell_level}"
             stem = f"{cell_channel}-{cell_level}"
 
-        ax = box_metric(subset, "solver", "test_cost_mean", order=solvers)
-        ax.set_title(title)
-        save(ax.figure, f"{prefix}_testcost_{stem}", experiment)
-
         # Suboptimality can be negative
         ax = box_metric(subset, "solver", "subopt", order=solvers, log="symlog")
         ax.set_title(title)
@@ -128,7 +124,7 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
             metric_table(
                 [r for r in solver_rows if r.get("channel") in (channel, "clean")],
                 "level",
-                metrics=("test_cost_mean", "subopt"),
+                metrics=("subopt",),
                 column_order=level_order,
                 column_header="Intensity",
                 caption=f"{solver} under {channel} noise of increasing intensity.",
@@ -143,7 +139,7 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
             metric_table(
                 [r for r in solver_rows if r.get("level") in (level, "none")],
                 "channel",
-                metrics=("test_cost_mean", "subopt"),
+                metrics=("subopt",),
                 column_order=channel_order,
                 column_header="Channel",
                 caption=(

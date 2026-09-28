@@ -44,9 +44,6 @@ def main():
     axes = trajectory_overlay(records, "solver", dt=0.01, order=ORDER)
     save(axes[0].figure, "ch6_perception_trajectories", EXPERIMENT)
 
-    ax = box_metric(rows, "solver", "test_cost_mean", order=ORDER)
-    save(ax.figure, "ch6_perception_testcost", EXPERIMENT)
-
     ax = box_metric(rows, "solver", "subopt", order=ORDER, log="symlog")
     save(ax.figure, "ch6_perception_subopt", EXPERIMENT)
 
@@ -64,10 +61,10 @@ def main():
     write_table(
         metric_table(
             rows, "solver",
-            metrics=("J_final", "training_subopt_final", "test_cost_mean",
+            metrics=("J_final", "training_subopt_final", "subopt",
                      "r2_position", "r2_velocity", "latent_dim",
                      "off_screen_rate", "null_waste_mean",
-                     "policy_complexity", "total_env_steps", "total_time"),
+                     "policy_complexity", "iterations", "total_env_steps", "best_env_steps", "total_time"),
             order=ORDER,
         ),
         "ch6_perception",

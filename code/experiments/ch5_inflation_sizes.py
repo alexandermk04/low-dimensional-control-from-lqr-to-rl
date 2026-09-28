@@ -50,7 +50,7 @@ def build_specs(solvers=None, experiment: str = EXPERIMENT) -> list[RunSpec]:
                     inflation=settings.INFLATION_SIZES[size],
                     rollout_length=rollout_length,
                     n_trajectories=n_trajectories,
-                    iterations=settings.SOLVER_ITERATIONS,
+                    iterations=settings.SOLVER_MAX_ITERATIONS,
                     condition=condition(solver, size),
                 )
                 for seed in settings.SEEDS
@@ -73,8 +73,9 @@ def main():
                 f"{solver}@{size}" for solver, size in settings.UNSUPPORTED_CELLS
             ),
             "chosen_identification": settings.CHOSEN_IDENTIFICATION,
-            "iterations": settings.SOLVER_ITERATIONS,
-            "rl_timesteps": settings.RL_TIMESTEPS,
+            "iterations": settings.SOLVER_MAX_ITERATIONS,
+            "convergence": settings.CONVERGENCE,
+            "rl_timesteps": settings.RL_MAX_TIMESTEPS,
             "train_horizon": settings.TRAIN_HORIZON,
             "hyperparams": {
                 s: settings.SOLVER_HYPERPARAMS.get(s, {})

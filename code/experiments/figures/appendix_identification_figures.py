@@ -180,7 +180,7 @@ def render_length_sweep():
                 write_table(
                     metric_table(
                         at_horizon, "T",
-                        metrics=("training_subopt_final", "test_cost_mean", "total_time"),
+                        metrics=("training_subopt_final", "iterations", "total_env_steps", "best_env_steps", "total_time"),
                         column_order=settings.IDENTIFICATION_LENGTHS,
                         column_header=r"Trajectory length $T$",
                         caption=(

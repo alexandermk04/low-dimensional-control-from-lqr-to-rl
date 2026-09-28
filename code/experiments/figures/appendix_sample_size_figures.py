@@ -44,11 +44,6 @@ def main():
             ax.set_xlabel(CELL_LABEL)
             save(ax.figure, f"{stem}_subopt", EXPERIMENT)
 
-            # Plot 6: accumulated cost under test protocol.
-            ax = box_metric(rows, ("l", "m"), "test_cost_mean", order=cell_order)
-            ax.set_xlabel(CELL_LABEL)
-            save(ax.figure, f"{stem}_testcost", EXPERIMENT)
-
             # Plot 2: the training process against env steps
             ax = learning_bands(subset, ("l", "m"), x="env_steps", order=cell_order)
             save(ax.figure, f"{stem}_curves", EXPERIMENT)
@@ -57,13 +52,13 @@ def main():
             write_table(
                 metric_table(
                     rows, ("l", "m"),
-                    metrics=("J_final", "training_subopt_final", "test_cost_mean"),
+                    metrics=("J_final", "training_subopt_final", "iterations", "total_env_steps", "best_env_steps"),
                     column_order=cell_order,
                     column_header=r"$(l, m)$",
                     caption=(
                         f"{solver} at the {size} inflation: cost after "
-                        "training, suboptimality and accumulated test cost for "
-                        "each sample-size combination."
+                        "training, suboptimality and the samples used until "
+                        "convergence for each sample-size combination."
                     ),
                     label=(
                         "tab:appendix-sample-size-"

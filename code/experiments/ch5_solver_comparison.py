@@ -37,7 +37,7 @@ def build_specs() -> list[RunSpec]:
                 inflation=settings.INFLATION_SIZES[size],
                 rollout_length=rollout_length,
                 n_trajectories=n_trajectories,
-                iterations=settings.SOLVER_ITERATIONS,
+                iterations=settings.SOLVER_MAX_ITERATIONS,
                 condition=condition(solver, size),
             )
             for seed in settings.SEEDS
@@ -54,8 +54,9 @@ def main():
             "solvers": settings.CH5_COMPARISON_SOLVERS,
             "inflation": settings.CH5_REFERENCE_INFLATION,
             "chosen_identification": settings.CHOSEN_IDENTIFICATION,
-            "iterations": settings.SOLVER_ITERATIONS,
-            "rl_timesteps": settings.RL_TIMESTEPS,
+            "iterations": settings.SOLVER_MAX_ITERATIONS,
+            "convergence": settings.CONVERGENCE,
+            "rl_timesteps": settings.RL_MAX_TIMESTEPS,
         },
     )
 

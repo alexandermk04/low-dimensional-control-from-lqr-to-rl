@@ -39,7 +39,7 @@ def build_specs() -> list[RunSpec]:
             inflation=inflation,
             rollout_length=rollout_length,
             n_trajectories=n_trajectories,
-            iterations=settings.SOLVER_ITERATIONS,
+            iterations=settings.SOLVER_MAX_ITERATIONS,
             condition={"size": name, "l": rollout_length, "m": n_trajectories},
         )
         for solver in settings.CH4_SAMPLE_SOLVERS
@@ -59,7 +59,8 @@ def main():
             "solvers": settings.CH4_SAMPLE_SOLVERS,
             "sample_grid": settings.SAMPLE_GRID,
             "inflation_sizes": dict(_sizes()),
-            "iterations": settings.SOLVER_ITERATIONS,
+            "iterations": settings.SOLVER_MAX_ITERATIONS,
+            "convergence": settings.CONVERGENCE,
             "hyperparams": {
                 s: settings.SOLVER_HYPERPARAMS.get(s, {})
                 for s in settings.CH4_SAMPLE_SOLVERS

@@ -41,9 +41,6 @@ def main():
     axes = trajectory_overlay(records, "solver", dt=0.01, order=ORDER)
     save(axes[0].figure, "ch5_solvers_trajectories", EXPERIMENT)
 
-    ax = box_metric(rows, "solver", "test_cost_mean", order=ORDER)
-    save(ax.figure, "ch5_solvers_testcost", EXPERIMENT)
-
     ax = box_metric(rows, "solver", "subopt", order=ORDER, log="symlog")
     save(ax.figure, "ch5_solvers_subopt", EXPERIMENT)
 
@@ -53,9 +50,9 @@ def main():
     write_table(
         metric_table(
             rows, "solver",
-            metrics=("J_final", "training_subopt_final", "test_cost_mean",
+            metrics=("J_final", "training_subopt_final", "subopt",
                      "policy_complexity", "rank_final",
-                     "total_env_steps", "total_time"),
+                     "iterations", "total_env_steps", "best_env_steps", "total_time"),
             column_order=ORDER,
             column_header="Solver",
             caption=(

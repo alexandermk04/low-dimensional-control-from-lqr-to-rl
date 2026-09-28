@@ -45,7 +45,7 @@ def build_specs() -> list[RunSpec]:
             seed=seed,
             inflation=inflation,
             rollout_length=trajectory_length,
-            iterations=settings.SOLVER_ITERATIONS,
+            iterations=settings.SOLVER_MAX_ITERATIONS,
             condition={"size": name, "T": trajectory_length, "hankel": horizon},
         )
         for solver in settings.CH4_IDENTIFICATION_SOLVERS
@@ -65,7 +65,8 @@ def main():
             "identification_lengths": settings.IDENTIFICATION_LENGTHS,
             "identification_horizons": settings.IDENTIFICATION_HORIZONS,
             "inflation_sizes": dict(_sizes()),
-            "iterations": settings.SOLVER_ITERATIONS,
+            "iterations": settings.SOLVER_MAX_ITERATIONS,
+            "convergence": settings.CONVERGENCE,
             "hyperparams": {
                 s: settings.SOLVER_HYPERPARAMS.get(s, {})
                 for s in settings.CH4_IDENTIFICATION_SOLVERS
