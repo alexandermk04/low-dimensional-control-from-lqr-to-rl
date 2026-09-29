@@ -49,8 +49,8 @@ $L$ & observer gain \\
 \multicolumn{2}{@{}l}{\emph{Optimal control}} \\[2pt]
 $Q$, $R$ & state and input cost matrices, $Q \succeq 0$, $R \succ 0$ \\
 $K \in \R^{m \times n}$ & feedback gain, $u_k = -K x_k$ \\
-$K^{*}$ & optimal gain, solution of \eqref{eq:optimal_gain} \\
-$\mathcal{K}$ & set of stabilizing gains, \eqref{eq:stabilizing_set} \\
+$K^{*}$ & optimal gain, solution of \eqref{eq:optimal-gain} \\
+$\mathcal{K}$ & set of stabilizing gains, \eqref{eq:stabilizing-set} \\
 $J(x_0, u)$ & infinite-horizon cost of an input sequence \\
 $P$ & stabilizing solution of the DARE \eqref{eq:dare} \\
 $P_K$ & solution of the Lyapunov equation \eqref{eq:lyapunov} for a fixed $K$ \\
@@ -76,8 +76,8 @@ $N$, $T$ & number of rollouts and rollout horizon \\
 \label{sec:app_noise_levels}
 
 The settings used for the different noise intensities, obtained by the
-calibration \eqref{eq:noise_calibration} on the non-inflated system.
+calibration \eqref{eq:noise-calibration} on the non-inflated system.
 It is important to note that parametric noise is resampled at every step,
-and that the disturbance noise uses its sinusoidal variant \eqref{eq:dist_sin}.
+and that the disturbance noise uses its sinusoidal variant \eqref{eq:dist-sin}.
 
 \input{generated/appendix_calibrate_noise/tables/noise_levels.tex}
