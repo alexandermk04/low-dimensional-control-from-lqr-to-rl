@@ -5,11 +5,12 @@
 \toprule
 Solver & Baseline & N4SID + DARE & Model-based PG + N4SID & S-PI + N4SID & Model-free NPG & S-PI (model-free) \\
 \midrule
-True cost $J$ & $5848 \pm 9.587 \times 10^{-13}$ & $5848 \pm 8.258 \times 10^{-12}$ & $5848 \pm 7.019 \times 10^{-12}$ & $5904 \pm 4.801 \times 10^{-5}$ & $6021 \pm 3.57$ & $6344 \pm 11.3$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $1.71 \times 10^{-15} \pm 1.41 \times 10^{-15}$ & $1.99 \times 10^{-15} \pm 1.2 \times 10^{-15}$ & $0.00951 \pm 8.21 \times 10^{-9}$ & $0.0296 \pm 0.00061$ & $0.0847 \pm 0.00193$ \\
-Test cost$^{\dagger}$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $6025 \pm 5322$ & $6146 \pm 5427$ & $6475 \pm 5709$ \\
-Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+9.11 \times 10^{-18} \pm 1.49 \times 10^{-15}$ & $+6.57 \times 10^{-17} \pm 1.53 \times 10^{-15}$ & $+0.0116 \pm 0.00734$ & $+0.0365 \pm 0.0236$ & $+0.105 \pm 0.0634$ \\
-Environment steps & $0 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $8 \times 10^{7} \pm 0$ & $8 \times 10^{7} \pm 0$ \\
+True cost $J$ & $5848 \pm 6.374 \times 10^{-12}$ & $5848 \pm 8.258 \times 10^{-12}$ & $5848 \pm 8.671 \times 10^{-12}$ & $5861 \pm 1.063 \times 10^{-5}$ & $5865 \pm 7.096$ & $6248 \pm 52.56$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $1.71 \times 10^{-15} \pm 1.41 \times 10^{-15}$ & $3.87 \times 10^{-9} \pm 1.48 \times 10^{-15}$ & $0.00213 \pm 1.82 \times 10^{-9}$ & $0.00297 \pm 0.00121$ & $0.0685 \pm 0.00899$ \\
+Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+3.37 \times 10^{-17} \pm 1.55 \times 10^{-15}$ & $+4.73 \times 10^{-9} \pm 2.96 \times 10^{-9}$ & $+0.00259 \pm 0.00162$ & $+0.00331 \pm 0.00238$ & $+0.0852 \pm 0.053$ \\
+Iterations & $1 \pm 0$ & $1 \pm 0$ & $258 \pm 0$ & $28 \pm 1$ & $302 \pm 54$ & $431 \pm 38$ \\
+Env.\ steps to convergence & $0 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $4.82 \times 10^{7} \pm 8.58 \times 10^{6}$ & $6.9 \times 10^{7} \pm 6.05 \times 10^{6}$ \\
+Env.\ steps to best policy & $0 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $3.99 \times 10^{7} \pm 6.91 \times 10^{6}$ & $5.89 \times 10^{7} \pm 7.69 \times 10^{6}$ \\
 Policy parameters & $2 \pm 0$ & $2 \pm 0$ & $2 \pm 0$ & $2 \pm 0$ & $2 \pm 0$ & $2 \pm 0$ \\
 Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ \\
 \bottomrule

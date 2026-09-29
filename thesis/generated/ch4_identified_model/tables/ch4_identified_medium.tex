@@ -5,13 +5,14 @@
 \toprule
 Solver & Baseline & N4SID + DARE & Model-based PG + N4SID & S-PI + N4SID & Model-free NPG & S-PI (model-free) \\
 \midrule
-True cost $J$ & $5848 \pm 9.587 \times 10^{-13}$ & $5848 \pm 5.175 \times 10^{-5}$ & $5848 \pm 2.073 \times 10^{-5}$ & $5904 \pm 0.08024$ & $6105 \pm 13.51$ & $7265 \pm 47.92$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $5.05 \times 10^{-9} \pm 8.85 \times 10^{-9}$ & $1.84 \times 10^{-9} \pm 3.55 \times 10^{-9}$ & $0.00952 \pm 1.37 \times 10^{-5}$ & $0.044 \pm 0.00231$ & $0.242 \pm 0.00819$ \\
-Test cost$^{\dagger}$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $6025 \pm 5322$ & $6233 \pm 5510$ & $7422 \pm 6531$ \\
-Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+5.08 \times 10^{-9} \pm 8.61 \times 10^{-9}$ & $+2 \times 10^{-9} \pm 3.85 \times 10^{-9}$ & $+0.0116 \pm 0.00734$ & $+0.0447 \pm 0.0161$ & $+0.318 \pm 0.248$ \\
-Environment steps & $0 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $8 \times 10^{7} \pm 0$ & $8 \times 10^{7} \pm 0$ \\
-Policy parameters & $76 \pm 0$ & $76 \pm 0$ & $1250 \pm 0$ & $76 \pm 0$ & $1250 \pm 0$ & $965 \pm 221$ \\
-Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $25.0 \pm 0.0$ & $1.0 \pm 0.0$ & $25.0 \pm 0.0$ & $12.7 \pm 2.9$ \\
+True cost $J$ & $5848 \pm 0$ & $5848 \pm 5.175 \times 10^{-5}$ & $5848 \pm 3.085 \times 10^{-5}$ & $5861 \pm 0.03506$ & $6527 \pm 2069$ & $7284 \pm 46.48$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $5.05 \times 10^{-9} \pm 8.85 \times 10^{-9}$ & $6.96 \times 10^{-9} \pm 5.27 \times 10^{-9}$ & $0.00214 \pm 6 \times 10^{-6}$ & $0.116 \pm 0.354$ & $0.246 \pm 0.00795$ \\
+Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+5.08 \times 10^{-9} \pm 8.61 \times 10^{-9}$ & $+8.48 \times 10^{-9} \pm 8.25 \times 10^{-9}$ & $+0.00259 \pm 0.00162$ & $+0.141 \pm 0.522$ & $+0.322 \pm 0.25$ \\
+Iterations & $1 \pm 0$ & $1 \pm 0$ & $258 \pm 0$ & $63 \pm 0$ & $199 \pm 41$ & $192 \pm 24$ \\
+Env.\ steps to convergence & $0 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $3.04 \times 10^{7} \pm 1.05 \times 10^{7}$ & $3.08 \times 10^{7} \pm 3.85 \times 10^{6}$ \\
+Env.\ steps to best policy & $0 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $2.14 \times 10^{7} \pm 8.78 \times 10^{6}$ & $2.22 \times 10^{7} \pm 7.12 \times 10^{6}$ \\
+Policy parameters & $76 \pm 0$ & $76 \pm 0$ & $1250 \pm 0$ & $76 \pm 0$ & $1250 \pm 0$ & $828 \pm 231$ \\
+Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $25.0 \pm 0.0$ & $1.0 \pm 0.0$ & $25.0 \pm 0.0$ & $10.9 \pm 3.0$ \\
 \bottomrule
 \end{tabular}
 }
