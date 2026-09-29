@@ -5,11 +5,12 @@
 \toprule
 Solver & Baseline & Model-based PG & S-PI \\
 \midrule
-True cost $J$ & $5848 \pm 9.587 \times 10^{-13}$ & $5849 \pm 0.1758$ & $5851 \pm 9.781 \times 10^{-5}$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $0.000112 \pm 3.01 \times 10^{-5}$ & $0.000429 \pm 1.67 \times 10^{-8}$ \\
-Test cost$^{\dagger}$ & $5968 \pm 5272$ & $5969 \pm 5273$ & $5971 \pm 5275$ \\
-Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+0.000128 \pm 6.26 \times 10^{-5}$ & $+0.000524 \pm 0.000328$ \\
-Environment steps & $0 \pm 0$ & $0 \pm 0$ & $0 \pm 0$ \\
+True cost $J$ & $5848 \pm 9.587 \times 10^{-13}$ & $5849 \pm 3.335 \times 10^{-12}$ & $5848 \pm 0.0006144$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $0.000163 \pm 5.59 \times 10^{-16}$ & $4.73 \times 10^{-6} \pm 1.05 \times 10^{-7}$ \\
+Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+0.000199 \pm 0.000124$ & $+5.76 \times 10^{-6} \pm 3.59 \times 10^{-6}$ \\
+Iterations & $1 \pm 0$ & $454 \pm 0$ & $103 \pm 7$ \\
+Env.\ steps to convergence & $0 \pm 0$ & $0 \pm 0$ & $0 \pm 0$ \\
+Env.\ steps to best policy & $0 \pm 0$ & $0 \pm 0$ & $0 \pm 0$ \\
 Policy parameters & $16 \pm 0$ & $50 \pm 0$ & $16 \pm 0$ \\
 Gain rank & $1.0 \pm 0.0$ & $5.0 \pm 0.0$ & $1.0 \pm 0.0$ \\
 \bottomrule
