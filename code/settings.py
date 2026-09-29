@@ -300,7 +300,7 @@ SOLVER_HYPERPARAMS = {
         "lambda_": 50.0,
         "beta": 0.5,
         "epsilon": 1e-8,
-        "max_linesearch_iter": 10,
+        "max_linesearch_iter": 20,
     },
     "spi_mf": {
         "lambda_": 4000,
@@ -358,7 +358,38 @@ SOLVER_HYPERPARAMS = {
 # Filled from
 # `python -m experiments.figures.appendix_spi_lambda_figures` and
 # `python -m experiments.figures.appendix_learning_rate_figures`.
-SIZE_HYPERPARAMS = {}
+SIZE_HYPERPARAMS = {
+    "mb_pg": {
+        "base": {"gradient_lr": 1e-05},
+        "small": {"gradient_lr": 1e-05},
+        "medium": {"gradient_lr": 1e-05},
+        "large": {"gradient_lr": 1e-05},
+    },
+    "mb_est": {
+        "base": {"gradient_lr": 0.0012},
+        "small": {"gradient_lr": 0.0012},
+        "medium": {"gradient_lr": 0.0012},
+        "large": {"gradient_lr": 0.0012},
+    },
+    "mf_npg": {
+        "base": {"gradient_lr": 0.01},
+        "small": {"gradient_lr": 0.01},
+        "medium": {"gradient_lr": 0.01},
+        "large": {"gradient_lr": 0.01},
+    },
+    "spi": {
+        "base": {"lambda_": 5},
+        "small": {"lambda_": 5},
+        "medium": {"lambda_": 5},
+        "large": {"lambda_": 5},
+    },
+    "spi_est": {
+        "base": {"lambda_": 20},
+        "small": {"lambda_": 20},
+        "medium": {"lambda_": 20},
+        "large": {"lambda_": 20},
+    },
+}
 
 
 # ---------------------------------------------------------------------------
