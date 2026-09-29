@@ -4,100 +4,101 @@
 \section{Motivation}
 \label{sec:motivation}
 
-An agent acting in its environment receives observational input, and responds to it with a commanded
+An agent acting in its environment receives observational input and responds to it with a commanded
 control input.
-Differently said, the agent is a function in relation to its environment, and to find an optimal
-behavior, we need to approximate this optimal function as closely as possible. While Neural Networks
+In other words, the agent is a function in relation to its environment, and to find an optimal
+behavior, we need to approximate this optimal function as closely as possible. While neural networks
 are known to be universal approximators~\cite{Cybenko1989Approximation,Hornik1989Multilayer}, and
 hence able to approximate any function, in the case of an embodied agent, different constraints need to
 be taken into account. Ay~\cite{Ay2015Geometric} names additionally to external embodiment constraints
 possible intrinsic constraints, and argues that such can even be ``beneficial'' for the control
-structure. Additionally, less parameters for deployment are helpful due to energy usage and storage
+structure. Additionally, fewer parameters for deployment are helpful due to energy usage and storage
 capacity, the core of the notion of cheap design\needcite{TODO}.
 So, for such embodied agents, the goal is to find an ``embodied universal
 approximator''~\cite[p.~3]{Montufar2015CheapControl}, which restricts the neural network
 architecture to an intrinsic, unknown dimension, encoding physical properties belonging to the agent
 and the environment, while disallowing impossible movements~\cite[Sec.~3]{Montufar2015CheapControl}.
 
-Biology motivates this approach even further: Here it is clear to see, that by commanding a body,
+Biology motivates this approach even further: here it is clear to see that by commanding a body,
 some features of the control architecture can be simplified and delegated to the
-embodiment\needcite{TODO}. For example, McGeer~\cite{McGeer1990Passive}'s passive walker clearly
-shows, that some movements can be produced by the body without any control input, just by choosing
+embodiment\needcite{TODO}. For example, McGeer's passive walker~\cite{McGeer1990Passive} clearly
+shows that some movements can be produced by the body without any control input, just by choosing
 the right embodiment. While obviously here being simplified to not include any control at all, it
-can quite simply be extended with such \needcite{\#9, McGeer reference to his previous paper}.
-M{\"u}ller and Hoffmann~\cite[p.~4]{Mueller2017Morphological} mention such combination, as a robot
+can quite simply be extended with such\needcite{\#9, McGeer reference to his previous paper}.
+M{\"u}ller and Hoffmann~\cite[p.~4]{Mueller2017Morphological} mention such a combination, a robot
 climbing up walls, whose design was inspired by geckos, indeed using energy for control, however
-very little compared to an approach not exploiting these specific embodiment design. Further, it can
+very little compared to an approach not exploiting this specific embodiment design. Further, it can
 be seen that the complex
-behaviors are not only less energy intensive to produce, but also utilize muscle
+behaviors are not only less energy-intensive to produce, but also utilize muscle
 synergies~\cite{DAvella2003Combinations} and thus fewer control parameters. And while it is
 difficult to clearly attribute the effect of the embodiment~\cite{Zahedi2013Quantifying}, for us,
-this gives us the reason to believe that the simplicity, and thus efficiency, comes from a
+this gives reason to believe that the simplicity, and thus efficiency, comes from a
 low-dimensionality of the controller~\cite{Montufar2015CheapControl}.
 
-That this is indeed true for certain examples, has been shown both in theory and practice
+That this is indeed true for certain examples has been shown both in theory and practice
 before~\cite{Datar2025Universal,Montufar2015Geometry,Li2018Measuring}. Li et
-al.~\cite{Li2018Measuring} call this lower-dimension ``intrinsic dimension'', which is the
-dimensionality required for the model to be able to find policies. They show for example that 
-for achieving 90 percent of the performance of a fully connected network on MNIST,
-the dimensionality can be reduced by 99.6 percent. For a convolutional neural
-network, it is still a 99.3 percent reduction.
+al.~\cite{Li2018Measuring} call this lower dimension ``intrinsic dimension'', which is the
+dimensionality required for the model to be able to find policies. They show, for example, that
+for achieving $90\,\%$ of the performance of a fully connected network on MNIST,
+the dimensionality can be reduced by $99.6\,\%$. For a convolutional neural
+network, it is still a $99.3\,\%$ reduction.
 Others show that the ``least complex model which is able to learn
-an optimal policy does learn faster''~\cite{Montufar2015Geometry}. For a neural network reducing
-parameters can be done in different ways\needcite{TODO}, some of which we will take a look at in
+an optimal policy does learn faster''~\cite{Montufar2015Geometry}. For a neural network, reducing
+parameters can be done in different ways\needcite{TODO}, some of which we look at in
 \cref{chap:inflation}. In comparison, for LQR, where the controller is a gain matrix, the
 corresponding approach is reducing its rank~\cite{Recht2010Guaranteed}. However, while these
-approaches are more parameter efficient while achieving similar, or slightly worse performance, it
+approaches are more parameter-efficient while achieving similar or slightly worse performance, it
 was also observed that they tend to perform even worse when encountering
 noise~\cite{Datar2025Universal}.
 
-Robustness to noise however, is one of the important characteristics of controllers acting under
+Robustness to noise, however, is one of the important characteristics of controllers acting under
 real-world conditions~\cite{Rao2001Naive,Roy2021MachineLearning}. One approach of achieving this
 in nature is the principle of ``redundancy and diversity''~\cite{Kitano2004Biological}, which stands
 in direct contrast to our goal of reducing redundant parameterizations. Another reason for producing
 robust controllers is the difficult transfer from digital training environment to real-world
 embodiments, commonly referred to as the ``reality gap''~\cite{Tobin2017Domain,Peng2018SimToReal}.
 Approaches of training robust controllers typically introduce noise already during training, be it
-either by using a LQG or including variations to the dynamics~\cite{Rao2001Naive,Peng2018SimToReal}.
-These shown approaches however, don't look at low-dimensionality, which makes sense as
+either by using a linear quadratic Gaussian (LQG) controller or by including variations to the
+dynamics~\cite{Rao2001Naive,Peng2018SimToReal}.
+These approaches, however, do not look at low-dimensionality, which makes sense as
 Kitano~\cite[p.~833]{Kitano2004Biological} poses that robustness cannot be increased
 without sacrificing performance or accepting ``increased resource
 demands''.
 
-Before taking a look at the more complex case of reinforcement learning, we start simpler by
-using the simpler, and more well understood Linear Quadratic Regulator. This approach has been taken
+Before taking a look at the more complex case of RL, we start simpler by
+using the simpler and better-understood LQR. This approach has been taken
 before~\cite{Recht2019Tour} and does make sense given the guarantees regarding convergence and
-effectiveness of Policy Optimization for it~\cite{Fazel2018Global,Takakura2023Structured}, as well
+effectiveness of policy optimization for it~\cite{Fazel2018Global,Takakura2023Structured}, as well
 as the understanding of its geometry~\cite{Talebi2024Policy}.
 It also offers methods which produce certain structures in its controller, like sparsity or our desired
-low-dimensionality, as given by Structured Policy
-Iteration~\cite{Park2020Structured}. Approaches can generally be categorized into two groups if the underlying dynamics
-are unknown and only data is available: Estimating the model, and then applying a model-based solver (indirect) or using the data
+low-dimensionality, as given by structured policy
+iteration (S-PI)~\cite{Park2020Structured}. Approaches can generally be categorized into two groups if the underlying dynamics
+are unknown and only data is available: estimating the model and then applying a model-based solver (indirect), or using the data
 to estimate the gain matrix (direct)~\cite{Zhao2024DataEnabled}. Both the indirect, as in system identification
 with uncertainty bounds~\cite{Dean2020Sample}, and the direct setting, with an $\Hinf$ constraint
 that bounds the closed-loop gain from disturbance to output~\cite{Zhang2021Policy},
-have been studied in regards to robustness, however to our knowledge not in combination with low-rank policies.
+have been studied with regard to robustness, however, to our knowledge, not in combination with low-rank policies.
 
-Research evaluating RL on control tasks have also shown that there is room for simplification, for
+Research evaluating RL on control tasks has also shown that there is room for simplification, for
 example using linear policies instead of complex, fully connected neural
 networks~\cite{Mania2018Simple,Rajeswaran2017Towards}. This, together with the
 fact that parameters in neural networks are highly dependent, and thus redundant~\cite{Denil2013Predicting}, allows us to assume that
-low-dimensionality can improve efficiency here. Examples for this exist, for example by factorizing a discretized low-rank
+low-dimensionality can improve efficiency here. Examples of this exist, for example by factorizing a discretized low-rank
 policy into a thin and wide matrix~\cite{Rozada2024Matrix} or by introducing an orthogonal projection inside the layer
 structure~\cite{Todorov2026Orthogonal}. While they produce lower dimensionality, a different approach uses ``information bottlenecks'',
 which exhibit better generalization behavior in unseen environments~\cite[Sec.~4.2]{Igl2019Generalization},
 which again could help us with robustness.
 
-A clear case where low-dimensional dynamics underly a high-dimensional observational space is in perception-based tasks.
+A clear case where low-dimensional dynamics underlie a high-dimensional observational space is in perception-based tasks.
 Agents observing only images instead of the states of simple control tasks are posed with the challenge of extracting
-these states from a high-dimensional, often non-linear encoding~\cite[Sec.~1]{Watter2015Embed}. Many approaches, based on
+these states from a high-dimensional, often nonlinear encoding~\cite[Sec.~1]{Watter2015Embed}. Many approaches, based on
 state representation learning (SRL), exist, which use different variants to create a latent embedding of the image,
 used as a state~\cite{Lesort2018State}. The most interesting approach, especially for us looking at embodied agents, is
 the usage of so-called ``priors'', which restrict the latent space by using knowledge about the
 environment~\cite{Lesort2018State}.
-This brings us back to Ay's argument, that the embodiment actively defines the action space~\cite{Ay2015Geometric}.
-Robotic priors have been introduced by Jonschkowski and Brock in 2015~\cite{Jonschkowski2015Learning}, and then further
-refined by Botteghi et al. for continuous action spaces~\cite{Botteghi2021LowDimensional}. A more specific version
+This brings us back to Ay's argument that the embodiment actively defines the action space~\cite{Ay2015Geometric}.
+Robotic priors were introduced by Jonschkowski and Brock~\cite{Jonschkowski2015Learning} in 2015, and then further
+refined by Botteghi et al.~\cite{Botteghi2021LowDimensional} for continuous action spaces. A more specific version
 restricted to position and velocity also exists here, training a model to encode an image into a low-dimensional
 position state, from which the velocity is calculated by finite differences~\cite{Jonschkowski2017PVE}.
 While all that sounds promising, in contrast stand findings hinting that the problems of robust control
@@ -108,93 +109,127 @@ it~\cite{Dean2020Robust}.
 Our goal for this thesis is therefore to look a bit deeper at the combination of low-dimensionality
 and robustness in an empirical way, motivated by the findings of Datar and Ay~\cite{Datar2025Universal}. LQR
 serves as the perfect, well-investigated basis~\cite{Recht2019Tour}, offering low-rank approaches that have been proposed
-and analysed theoretically, however not yet been applied in practice and under noise~\cite{Park2020Structured}. Previously
-investigated policies for LQR under noise in comparison didn't look at low-dimensionality
+and analyzed theoretically, but have not yet been applied in practice and under noise~\cite{Park2020Structured}. Previously
+investigated policies for LQR under noise in comparison did not look at low-dimensionality
 specifically~\cite{Zhang2021Policy}.
-For reinforcement learning, low-dimensionality has been explored
+For RL, low-dimensionality has been explored
 previously~\cite{Agarwal2020FLAMBE,Stojanovic2024ModelFree}, and also
-in comparison with robustness~\cite{Li2025AdaRL}, but doesn't take into account the embodiment we are interested in.
+in comparison with robustness~\cite{Li2025AdaRL}, but does not take into account the embodiment we are interested in.
 Closing this gap, our main interest is to compare robustness properties for low-dimensional policies for embodied
-agents under increasingly more complex, and noisier environments.
+agents under increasingly more complex and noisier environments.
 
 \section{Approach}
 \label{sec:approach}
 
-As mentioned before, the Linear Quadratic Regulator (LQR) serves as the perfect starting example,
+As mentioned before, the LQR serves as the perfect starting example,
 which is exactly why we start our investigation here. For our investigations, we will
-use the double integrator, as mentioned in \needcite{chap 2}.
+use the double integrator, as mentioned in \cref{sec:double-integrator}.
 
 % Reevaluate whether this section actually makes sense, as we can't reduce any rank here
 First, as a basis, we will start by comparing
-the standard policy gradient approach \needcite{Fazel2018Global} with the structured policy iteration
-\needcite{Park2020Structured} on the true model. Their relative performance will be evaluated
+the standard policy gradient (PG) approach~\cite{Fazel2018Global} with S-PI~\cite{Park2020Structured}
+on the true model. Their relative performance will be evaluated
 
-Afterwards, we will take a look at the cases, where we don't have access to the real model. We compare
-the relative performance of both direct, and indirect approaches to our baseline, which is
-the optimal controller calculated via the ricatti equations on the true model. For the indirect
-approaches, we will use N4SID \needcite{TODO} to estimate the underlying model from one
-trajectory. A more detailed description, as well as the exact parameters selected 
+Afterwards, we will take a look at the cases where we do not have access to the real model. We compare
+the relative performance of both direct and indirect approaches to our baseline, which is
+the optimal controller calculated via the DARE \eqref{eq:dare} on the true model. For the indirect
+approaches, we will use numerical algorithms for subspace state space system identification
+(N4SID)\needcite{60 VanOverschee} to estimate the underlying model from one
+trajectory. A more detailed description, as well as the exact parameters selected,
 will be provided in the sections discussing the results. With this estimated model as
-the basis, we employ three different approaches on how to learn our policy, called 
-ce_dare, mb_est and spi_est. All these will also be discussed in \needcite{chap 4}.
+the basis, we employ three different approaches on how to learn our policy, called
+N4SID + DARE, N4SID + Model-based PG and N4SID + S-PI. All these will also be discussed in \cref{chap:lqr}.
 
-As we want to investigate higher dimensional controllers, with underlying low-dimensional
-dynamics, we need to create such a setup. Here, we chose to use orthonormal projection matrices,
+As we want to investigate higher-dimensional controllers with underlying low-dimensional
+dynamics, we need to create such a setup. Here, we choose to use orthonormal projection matrices,
 which can be used to transfer observations between the low-dimensional true state of the state-space model
 and the inflated one our controller sees. Conversely, for a high-dimensional actuation, we project into the
-lower dimensional space via a second matrix. In detail for inflated input dimension p and output dimension q:
+lower-dimensional space via a second matrix. In detail, for an inflated input dimension $d_{\mathrm{in}}$ and
+output dimension $d_{\mathrm{out}}$, the two lifts are constructed the following way:
+\begin{equation}
+    \label{eq:lifts}
+    U_1 \in \R^{d_{\mathrm{in}} \times n}, \quad U_1\T U_1 = I_n,
+    \qquad
+    U_2 \in \R^{m \times d_{\mathrm{out}}}, \quad U_2 U_2\T = I_m,
+\end{equation}
+where $U_1$ is the orthonormal factor of the QR decomposition of a random matrix, whose
+entries are sampled from the standard normal distribution. $U_2$ is the transpose of such a factor
+sampled from a seperately drawn matrix.
+The controller now only sees the lifted observation and acts through the lifted action, so a single
+step of the loop becomes
+\begin{subequations}
+\label{eq:inflated-loop}
+\begin{align}
+    y_k     &= U_1 x_k , \label{eq:inflated-obs}\\
+    v_k     &= -K y_k , \qquad K \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}} , \label{eq:inflated-ctrl}\\
+    u_k     &= U_2 v_k , \label{eq:inflated-act}\\
+    x_{k+1} &= A x_k + B u_k . \label{eq:inflated-dyn}
+\end{align}
+\end{subequations}
+The system is therefore controlled by the effective gain $U_2 K U_1 \in \R^{m \times n}$, whose rank is at most
+$\min(m, n)$.
 
-Formulas:
-- sampling of the matrices u_1 and u_2
-- how the loop is affected
+For \cref{chap:lqr} and the following chapter, we will use these preset inflation sizes under the
+names given in \cref{tab:inflation-sizes}.
+\begin{table}[htbp]
+    \centering
+    \caption{Preset inflation sizes.}
+    \label{tab:inflation-sizes}
+    \begin{tabular}{@{}lrr@{}}
+        \toprule
+        Name & $d_{\mathrm{in}}$ & $d_{\mathrm{out}}$ \\
+        \midrule
+        \emph{base}   & 2   & 1   \\
+        \emph{small}  & 10  & 5   \\
+        \emph{medium} & 50  & 25  \\
+        \emph{large}  & 200 & 100 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
-For \needcite{chap4} and the following chapter, we will use these preset lift-dimension under the following names:
-Table:
-- base - no inflation
-- small
-- medium
-- large
-
-Our first approach for chapter 4 is to compare our selected methods across these inflation sizes, and see how increasing
+Our first approach for \cref{chap:lqr} is to compare our selected methods across these inflation sizes, and see how increasing
 the dimension affects the performance of each. As the next step, we will introduce the different noise channels
-named in \needcite{chap 4} first to the base double integrator, where no overparameterization exists. The results
-we observe here, will then be compared with evaluations of the controllers for a \emph{largely} inflated system
+named in \cref{sec:uncertainty} first to the base double integrator, where no overparameterization exists. The results
+we observe here will then be compared with evaluations of the controllers for a system with \emph{large} inflation
 under different noise channels and strengths.
 
-In \needcite{chap 5} we will then first introduce RL based approaches. With PPO \needcite{TODO} being one of
-the most used variants in robotics \needcite{TODO}, we choose this as our main architecture, and apply different
-variations of it. First, by doing xyz \needcite{TODO, missing text} we enforce the trained controller to be linear, which allows us to extract 
-it as a gain matrix, that we can closely compare with our LQR approaches (ppo_linear). The fully connected, standard version is named
-\emph{ppo_mlp}, and will be also evaluated. Additionally, we will introduce structures, that force the observations through a low-dimensional latent
+In \cref{chap:inflation}, we will then first introduce RL-based approaches. With proximal policy optimization
+(PPO)\needcite{TODO} being one of
+the most used variants in robotics\needcite{TODO}, we choose this as our main architecture, and apply different
+variations of it. First, by doing xyz\needcite{TODO, missing text} we force the trained controller to be linear, which allows us to extract
+it as a gain matrix that we can closely compare with our LQR approaches (Linear PPO). The fully connected, standard version is named
+Fully-connected PPO, and will also be evaluated. Additionally, we will introduce structures that force the observations through a low-dimensional latent
 space. Here, we will reuse the N4SID system identifier from before, by creating an encoding matrix from the singular value elimination, that projects
-the high-dimensional observation first into the low-dimensionality, and then trains PPO with this as the input. Therefore, the name for it is \emph{ppo_encoder}.
-A similar approach is used for \emph{ppo_encoder_scalable}, which is based on \needcite{Jonschkowski2015Learning,Botteghi2021LowDimensional} and uses
-robotic priors do derive a low-dimensional latent state, via a trainable encoder. Again, the construction following this encoder is PPO. Lastly, we
-implement the proposed orthonormal bottlenecks introduced by Todorov et. al \needcite{Todorov2026Orthogonal}. It consists of sampling a fixed orthonormal matrix
-B of rank k, which is added at the end of a trainable feature extractor, and used to project the output into a k-dimensional space. Like with the other
-encoders, we follow by our PPO architecture. 
+the high-dimensional observation first into the low-dimensionality, and then trains PPO with this as the input. Therefore, the name for it is State encoder + PPO.
+A similar approach is used for Scalable encoder + PPO, which is based on Jonschkowski and Brock~\cite{Jonschkowski2015Learning} and
+Botteghi et al.~\cite{Botteghi2021LowDimensional}, and uses
+robotic priors to derive a low-dimensional latent state via a trainable encoder. Again, the construction following this encoder is PPO. Lastly, we
+implement the orthonormal bottlenecks introduced by Todorov et al.~\cite{Todorov2026Orthogonal} (Bottleneck PPO). It consists of sampling a fixed orthonormal matrix
+$B$ of rank $k$, which is added at the end of a trainable feature extractor, and used to project the output into a $k$-dimensional space. Like with the other
+encoders, we follow it with our PPO architecture.
 
-All these low-dimensional approaches, if visualized, exhibit a "bow-tie" shape, which in nature can actually
-improve robustness \needcite{Kitano2004Biological}. So this indeed interesting to investigate. However,
-first, like in \needcite{chap 4}, we start by comparing these different approaches across the different inflation
+All these low-dimensional approaches, if visualized, exhibit a ``bow-tie'' shape, which in nature can actually
+improve robustness~\cite{Kitano2004Biological}. So this is indeed interesting to investigate. However,
+first, like in \cref{chap:lqr}, we start by comparing these different approaches across the different inflation
 sizes, without any noise applied, to see how they generally behave. Then, we introduce noise, and compare
-our approaches under \emph{large} inflation dimensions. 
+our approaches under \emph{large} inflation dimensions.
 
 Taking our results from the experiments on the artificially inflated dimensions, we create a new setup, still using the double
 integrator as our underlying structure. Here, we will observe the mass via a simulated camera, and place a number of actuators
-evenly distributed among angles on a half-circle. This will give us an actual high-dimensional input, as well as an high-dimensional
-output, that is in reality governed by low-dimensional dynamics. 
+evenly distributed among angles on a half-circle. This will give us an actual high-dimensional input, as well as a high-dimensional
+output, that is in reality governed by low-dimensional dynamics.
 
-By inputing images into our existing solvers, the dimensionality increases drastically. To be able to cleanly seperate effects caused
-by the non-linearity of the image construction from architecture related effects, we will first artificially inflate our inputs to exactly the size that
-the images will be. Also, we set the output dimension to xyz \needcite{TODO}, mimicking the setting we will use for the pixelated
-environment. This evaluation will only be done on \emph{ppo_encoder_scalable}, \emph{ppo_mlp} and \emph{ppo_bottleneck}, as the other
-approaches either don't scale well or are not relevant to the comparison. 
+By inputting images into our existing solvers, the dimensionality increases drastically. To be able to cleanly separate effects caused
+by the nonlinearity of the image construction from architecture-related effects, we will first artificially inflate our inputs to exactly the size that
+the images will be. Also, we set the output dimension to xyz\needcite{TODO}, mimicking the setting we will use for the pixelated
+environment. This evaluation will only be done on Scalable encoder + PPO, Fully-connected PPO and Bottleneck PPO, as the other
+approaches either do not scale well or are not relevant to the comparison.
 
-Then, using the same architectural constructions for these solvers, but applied to our new environment, we compare them with the additionally
-introduced Position-velocity Encoder\needcite{Jonschkowski2017PVE}, which uses similar robotic priors to \emph{ppo_encoder_scalable}, but focusses
+Then, using the same architectural constructions for these solvers, but applied to our new environment,
+we compare them with the additionally introduced position-velocity encoder~\cite{Jonschkowski2017PVE} (Position-Velocity Encoder + PPO),
+which uses similar robotic priors to Scalable encoder + PPO, but focuses
 more on position, velocity and acceleration. It learns positional encodings from the observations, and then calculates the velocity state based
-on finite differences. Here, it is quite clear that we use knowledge of the limitations of the embodiment, to construct more optimal controllers,
+on finite differences. Here, it is quite clear that we use knowledge of the limitations of the embodiment to construct more optimal controllers,
 again in a bow-tie shape.
 
 % reason why SVD is the right choice #23 -> moved to the experiment section in the chapter
