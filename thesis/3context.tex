@@ -164,8 +164,38 @@ under different noise channels and strengths.
 In \needcite{chap 5} we will then first introduce RL based approaches. With PPO \needcite{TODO} being one of
 the most used variants in robotics \needcite{TODO}, we choose this as our main architecture, and apply different
 variations of it. First, by doing xyz \needcite{TODO, missing text} we enforce the trained controller to be linear, which allows us to extract 
-it as a gain matrix, that we can closely compare with our LQR approaches. 
+it as a gain matrix, that we can closely compare with our LQR approaches (ppo_linear). The fully connected, standard version is named
+\emph{ppo_mlp}, and will be also evaluated. Additionally, we will introduce structures, that force the observations through a low-dimensional latent
+space. Here, we will reuse the N4SID system identifier from before, by creating an encoding matrix from the singular value elimination, that projects
+the high-dimensional observation first into the low-dimensionality, and then trains PPO with this as the input. Therefore, the name for it is \emph{ppo_encoder}.
+A similar approach is used for \emph{ppo_encoder_scalable}, which is based on \needcite{Jonschkowski2015Learning,Botteghi2021LowDimensional} and uses
+robotic priors do derive a low-dimensional latent state, via a trainable encoder. Again, the construction following this encoder is PPO. Lastly, we
+implement the proposed orthonormal bottlenecks introduced by Todorov et. al \needcite{Todorov2026Orthogonal}. It consists of sampling a fixed orthonormal matrix
+B of rank k, which is added at the end of a trainable feature extractor, and used to project the output into a k-dimensional space. Like with the other
+encoders, we follow by our PPO architecture. 
 
-% reason why SVD is the right choice #23
-% #17 bow tie structure in biological systems
+All these low-dimensional approaches, if visualized, exhibit a "bow-tie" shape, which in nature can actually
+improve robustness \needcite{Kitano2004Biological}. So this indeed interesting to investigate. However,
+first, like in \needcite{chap 4}, we start by comparing these different approaches across the different inflation
+sizes, without any noise applied, to see how they generally behave. Then, we introduce noise, and compare
+our approaches under \emph{large} inflation dimensions. 
+
+Taking our results from the experiments on the artificially inflated dimensions, we create a new setup, still using the double
+integrator as our underlying structure. Here, we will observe the mass via a simulated camera, and place a number of actuators
+evenly distributed among angles on a half-circle. This will give us an actual high-dimensional input, as well as an high-dimensional
+output, that is in reality governed by low-dimensional dynamics. 
+
+By inputing images into our existing solvers, the dimensionality increases drastically. To be able to cleanly seperate effects caused
+by the non-linearity of the image construction from architecture related effects, we will first artificially inflate our inputs to exactly the size that
+the images will be. Also, we set the output dimension to xyz \needcite{TODO}, mimicking the setting we will use for the pixelated
+environment. This evaluation will only be done on \emph{ppo_encoder_scalable}, \emph{ppo_mlp} and \emph{ppo_bottleneck}, as the other
+approaches either don't scale well or are not relevant to the comparison. 
+
+Then, using the same architectural constructions for these solvers, but applied to our new environment, we compare them with the additionally
+introduced Position-velocity Encoder\needcite{Jonschkowski2017PVE}, which uses similar robotic priors to \emph{ppo_encoder_scalable}, but focusses
+more on position, velocity and acceleration. It learns positional encodings from the observations, and then calculates the velocity state based
+on finite differences. Here, it is quite clear that we use knowledge of the limitations of the embodiment, to construct more optimal controllers,
+again in a bow-tie shape.
+
+% reason why SVD is the right choice #23 -> moved to the experiment section in the chapter
 % #56 dreamer used to reason mb approach

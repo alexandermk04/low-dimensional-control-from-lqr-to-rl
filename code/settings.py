@@ -247,7 +247,6 @@ CH5_SOLVERS = (
 # The comparison at CH5_REFERENCE_INFLATION.
 CH5_COMPARISON_SOLVERS = (
     "baseline",
-    "ppo_linear",
     "ppo_bottleneck",
     "ppo_encoder_scalable",
     "ppo_mlp",
