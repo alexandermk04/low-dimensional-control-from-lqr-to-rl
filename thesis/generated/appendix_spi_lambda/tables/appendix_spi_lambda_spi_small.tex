@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+$\lambda$ & 1 & 5 & 20 & 50 & 200 & 1000 \\
+\midrule
+True cost $J$ & $6741 \pm 0.11$ & $5848 \pm 9.554 \times 10^{-5}$ & $1.241 \times 10^{4} \pm 5.145 \times 10^{-12}$ & $5851 \pm 0.005166$ & $5878 \pm 0.003305$ & $6146 \pm 0.0007221$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.153 \pm 1.88 \times 10^{-5}$ & $4.48 \times 10^{-6} \pm 1.63 \times 10^{-8}$ & $1.12 \pm 8.41 \times 10^{-16}$ & $0.000427 \pm 8.83 \times 10^{-7}$ & $0.00506 \pm 5.65 \times 10^{-7}$ & $0.0509 \pm 1.23 \times 10^{-7}$ \\
+Gain rank & $2.0 \pm 0.0$ & $1.0 \pm 0.0$ & $5.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ \\
+Test cost$^{\dagger}$ & $6881 \pm 6057$ & $5968 \pm 5272$ & $1.275 \times 10^{4} \pm 1.145 \times 10^{4}$ & $5971 \pm 5275$ & $5998 \pm 5299$ & $6274 \pm 5539$ \\
+Iterations & $60 \pm 0$ & $125 \pm 0$ & $20000 \pm 0$ & $76 \pm 2$ & $69 \pm 3$ & $74 \pm 2$ \\
+Spectral radius & $0.9960 \pm 0.0000$ & $0.9914 \pm 0.0000$ & $0.9975 \pm 0.0000$ & $0.9919 \pm 0.0000$ & $0.9929 \pm 0.0000$ & $0.9952 \pm 0.0000$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{spi at the small inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
+\label{tab:appendix-spi-lambda-spi-small}
+\end{table}

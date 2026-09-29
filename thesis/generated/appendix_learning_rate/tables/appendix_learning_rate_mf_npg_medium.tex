@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Learning rate & 0.0003 & 0.001 & 0.003 & 0.01 \\
+\midrule
+True cost $J$ & $6852 \pm 205.7$ & $6220 \pm 92.51$ & $5959 \pm 43.25$ & $6527 \pm 2069$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.172 \pm 0.0352$ & $0.0636 \pm 0.0158$ & $0.0189 \pm 0.0074$ & $0.116 \pm 0.354$ \\
+Test cost$^{\dagger}$ & $7012 \pm 6225$ & $6356 \pm 5622$ & $6085 \pm 5380$ & $6595 \pm 6375$ \\
+Iterations & $614 \pm 112$ & $442 \pm 63$ & $318 \pm 52$ & $199 \pm 41$ \\
+Iterations to 1\,\% & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & $336 \pm 13$ & $103 \pm 6$ \\
+Env.\ steps to 1\,\% & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & $5.39 \times 10^{7} \pm 2 \times 10^{6}$ & $1.66 \times 10^{7} \pm 9.48 \times 10^{5}$ \\
+Env.\ steps to convergence & $9.83 \times 10^{7} \pm 1.8 \times 10^{7}$ & $7.06 \times 10^{7} \pm 1.01 \times 10^{7}$ & $5.09 \times 10^{7} \pm 8.37 \times 10^{6}$ & $3.04 \times 10^{7} \pm 1.05 \times 10^{7}$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{mf\_npg at the medium inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
+\label{tab:appendix-learning-rate-mf_npg-medium}
+\end{table}

@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Learning rate & 1e-06 & 3e-06 & 1e-05 & 3e-05 & 0.0001 & 0.0012 \\
+\midrule
+True cost $J$ & $5868 \pm 0.01006$ & $5856 \pm 0.006381$ & $5851 \pm 0.003925$ & $5849 \pm 0.002544$ & $5848 \pm 0.002507$ & $5848 \pm 6.712 \times 10^{-5}$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.00345 \pm 1.72 \times 10^{-6}$ & $0.00131 \pm 1.09 \times 10^{-6}$ & $0.000419 \pm 6.71 \times 10^{-7}$ & $0.000136 \pm 4.35 \times 10^{-7}$ & $3.16 \times 10^{-5} \pm 4.29 \times 10^{-7}$ & $9.9 \times 10^{-9} \pm 1.15 \times 10^{-8}$ \\
+Test cost$^{\dagger}$ & $5989 \pm 5290$ & $5976 \pm 5279$ & $5971 \pm 5275$ & $5969 \pm 5273$ & $5968 \pm 5273$ & $5968 \pm 5272$ \\
+Iterations & $10414 \pm 0$ & $5151 \pm 0$ & $2209 \pm 0$ & $969 \pm 0$ & $346 \pm 1$ & $258 \pm 0$ \\
+Iterations to 1\,\% & $5848 \pm 1$ & $1948 \pm 0$ & $582 \pm 0$ & $190 \pm 0$ & $48 \pm 0$ & $166 \pm 0$ \\
+Env.\ steps to 1\,\% & $2 \times 10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ \\
+Env.\ steps to convergence & $2 \times 10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{mb\_est at the large inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
+\label{tab:appendix-learning-rate-mb_est-large}
+\end{table}

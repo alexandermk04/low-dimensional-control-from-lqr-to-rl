@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+$\lambda$ & 1 & 5 & 20 & 50 & 200 & 1000 \\
+\midrule
+True cost $J$ & $1.544 \times 10^{4} \pm 5323$ & $8050 \pm 1146$ & $6538 \pm 243.5$ & $6547 \pm 317.4$ & $7141 \pm 786$ & $9080 \pm 1816$ \\
+Training suboptimality $(J-J^*)/J^*$ & $1.64 \pm 0.91$ & $0.376 \pm 0.196$ & $0.118 \pm 0.0416$ & $0.12 \pm 0.0543$ & $0.221 \pm 0.134$ & $0.553 \pm 0.31$ \\
+Gain rank & $1.2 \pm 0.4$ & $1.3 \pm 0.5$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ \\
+Test cost$^{\dagger}$ & $1.567 \times 10^{4} \pm 1.559 \times 10^{4}$ & $8188 \pm 7412$ & $6660 \pm 5881$ & $6673 \pm 5881$ & $7282 \pm 6434$ & $9228 \pm 8236$ \\
+Iterations & $351 \pm 73$ & $157 \pm 28$ & $73 \pm 3$ & $56 \pm 5$ & $36 \pm 4$ & $31 \pm 2$ \\
+Spectral radius & $0.9907 \pm 0.0023$ & $0.9935 \pm 0.0015$ & $0.9942 \pm 0.0013$ & $0.9952 \pm 0.0011$ & $0.9968 \pm 0.0008$ & $0.9982 \pm 0.0005$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{spi\_est at the large inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
+\label{tab:appendix-spi-lambda-spi_est-large}
+\end{table}
