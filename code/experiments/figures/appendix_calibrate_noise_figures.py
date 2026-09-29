@@ -55,7 +55,7 @@ def noise_table(calibration: dict) -> str:
 
     caption = (
         r"Standard deviation per noise channel and intensity, calibrated to the "
-        r"cost ratio $\rho_{\ell}$ of \eqref{eq:noise_calibration}. Every value "
+        r"cost ratio $\rho_{\ell}$ of \eqref{eq:noise-calibration}. Every value "
         rf"reaches its ratio within ${100 * worst:.1f}\,\%$."
     )
 
