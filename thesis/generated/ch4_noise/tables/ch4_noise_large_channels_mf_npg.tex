@@ -1,0 +1,14 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Channel & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Suboptimality $S$$^{\dagger}$ & $+0.00345 \pm 0.00228$ & $-0.059 \pm 0.0598$ & $+0.102 \pm 0.0848$ & $+0.00318 \pm 0.0488$ & $-0.00157 \pm 0.0183$ & $+0.188 \pm 0.323$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{mf\_npg under each noise channel at intensity 'standard'. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled.}
+\label{tab:ch4-noise-large-channels-mf-npg}
+\end{table}

@@ -1,0 +1,14 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Channel & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Suboptimality $S$$^{\dagger}$ & $+1.07 \times 10^{-8} \pm 1.18 \times 10^{-8}$ & $+0.00049 \pm 0.000702$ & $+4.21 \times 10^{-5} \pm 0.000148$ & $+1.12 \times 10^{-6} \pm 6.76 \times 10^{-5}$ & $-4.04 \times 10^{-5} \pm 4.69 \times 10^{-5}$ & $+0.00105 \pm 0.00793$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{mb\_est under each noise channel at intensity 'standard'. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled.}
+\label{tab:ch4-noise-large-channels-mb-est}
+\end{table}
