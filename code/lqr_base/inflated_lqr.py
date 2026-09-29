@@ -192,3 +192,19 @@ class LQRInflated(LQRDiscrete):
             ``U_2 @ v``, of shape ``(m,)``.
         """
         return self.U_2 @ v
+
+    def lift_action(self, u: np.ndarray) -> np.ndarray:
+        """Map a true input back into the controller's space.
+
+        Parameters
+        ----------
+        u : np.ndarray
+            Input of shape ``(m,)``.
+
+        Returns
+        -------
+        np.ndarray
+            ``U_2' @ u``, of shape ``(q,)``. A right inverse of
+            :meth:`project_action`, as ``U_2`` has orthonormal rows.
+        """
+        return self.U_2.T @ u

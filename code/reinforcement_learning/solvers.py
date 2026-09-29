@@ -16,6 +16,8 @@ from dataclasses import dataclass, field
 import numpy as np
 from stable_baselines3 import PPO
 from stable_baselines3.common.base_class import BaseAlgorithm
+from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
 from evaluation.metrics import Policy
 
@@ -52,7 +54,10 @@ class RLSolverSettings:
     gamma : float
         Discount. ``0.99`` at ``dt = 0.01`` is a one-second effective horizon.
     learning_rate : float
-        Optimizer step size.
+        Initial optimizer step size.
+    anneal_timesteps : int or None
+        Environment steps over which the learning rate decays. ``None`` uses
+        ``total_timesteps``.
     n_envs : int
         Parallel environments.
     eval_freq : int
@@ -88,6 +93,9 @@ class RLSolverSettings:
         Overrides :func:`is_linear_solver`.
     n_steps, batch_size, n_epochs, ent_coef, clip_range, max_grad_norm : ...
         PPO hyperparameters. Defaults to Stable-Baselines3 settings.
+    target_kl : float or None
+        Ends an update's epochs early once the approximate KL divergence to the
+        old policy exceeds ``1.5 * target_kl``.
     device : str
         Torch device. ``"auto"`` follows Stable-Baselines3.
     """
@@ -98,6 +106,7 @@ class RLSolverSettings:
     total_timesteps: int = 300_000
     gamma: float = 0.999
     learning_rate: float = 3e-4
+    anneal_timesteps: int | None = None
     n_envs: int = 1
     eval_freq: int = 10_000
     log_std_init: float = -2.0
@@ -119,6 +128,7 @@ class RLSolverSettings:
     ent_coef: float = 0.0
     clip_range: float = 0.2
     max_grad_norm: float = 0.5
+    target_kl: float | None = 0.02
     device: str = "auto"
 
 
@@ -331,11 +341,23 @@ def is_linear_solver(settings: RLSolverSettings) -> bool:
 def build_model(env, settings: RLSolverSettings, seed: int) -> BaseAlgorithm:
     """Construct the SB3 model for one solver.
 
+    Follows the standard PPO practice of [3]_ and [4]_.
+
+    References
+    ----------
+    .. [3] M. Andrychowicz et al., "What Matters In On-Policy Reinforcement
+           Learning? A Large-Scale Empirical Study", ICLR 2021.
+           https://arxiv.org/abs/2006.05990
+    .. [4] S. Huang, R. F. J. Dossa, A. Raffin, A. Kanervisto, W. Wang, "The 37
+           Implementation Details of Proximal Policy Optimization", ICLR Blog
+           Track 2022.
+           https://iclr-blog-track.github.io/2022/03/25/ppo-implementation-details/
+
     Parameters
     ----------
-    env : gymnasium.Env or stable_baselines3.common.vec_env.VecEnv
-        The training environment, an :class:`~reinforcement_learning.lqr_env.LQREnv`
-        or a vectorized stack of them.
+    env : gymnasium.Env
+        The training environment, e.g. an
+        :class:`~reinforcement_learning.lqr_env.LQREnv`.
     settings : RLSolverSettings
         The solver.
     seed : int
@@ -366,6 +388,20 @@ def build_model(env, settings: RLSolverSettings, seed: int) -> BaseAlgorithm:
         policy_kwargs["features_extractor_kwargs"] = dict(settings.features_extractor_kwargs)
         policy_kwargs["normalize_images"] = settings.normalize_images
 
+        if not settings.freeze_extractor:
+            policy_kwargs.setdefault("share_features_extractor", False)
+
+    vec_env = VecNormalize(
+        DummyVecEnv([lambda: Monitor(env)]),
+        norm_obs=False, norm_reward=True, gamma=settings.gamma,
+    )
+
+    total = settings.total_timesteps
+    horizon = settings.anneal_timesteps or total
+
+    def learning_rate(progress_remaining: float) -> float:
+        return settings.learning_rate * max(1.0 - (1.0 - progress_remaining) * total / horizon, 0.0)
+
     algorithm_kwargs = {
         "n_steps": settings.n_steps,
         "batch_size": settings.batch_size,
@@ -373,14 +409,15 @@ def build_model(env, settings: RLSolverSettings, seed: int) -> BaseAlgorithm:
         "ent_coef": settings.ent_coef,
         "clip_range": settings.clip_range,
         "max_grad_norm": settings.max_grad_norm,
+        "target_kl": settings.target_kl,
     }
 
     model = PPO(
         settings.policy,
-        env,
+        vec_env,
         seed=seed,
         gamma=settings.gamma,
-        learning_rate=settings.learning_rate,
+        learning_rate=learning_rate,
         policy_kwargs=policy_kwargs,
         device=settings.device,
         verbose=0,

@@ -26,7 +26,7 @@ class LQREnv(gym.Env):
         Multiplies the stage cost. Passing ``dt`` makes the return a Riemann sum
         of the continuous-time cost integral.
     action_limit : float
-        Half-width of the action box.
+        Bound on each true input ``|u_i|``.
     obs_limit : float, optional
         Half-width of the observation box. Defaults to ``1e4``.
     render_mode : str or None, optional
@@ -47,6 +47,8 @@ class LQREnv(gym.Env):
         encoder's output dimension when one is given.
     steps : int
         Steps taken in the current episode.
+    n_action_clips : int
+        Steps in which the input bound was active.
     """
 
     metadata = {"render_modes": ["human"], "render_fps": 30}
@@ -87,12 +89,15 @@ class LQREnv(gym.Env):
             low=-obs_limit, high=obs_limit,
             shape=(self.observation_dim,), dtype=np.float32,
         )
+
+        # Set extra high so no clipping happens here
         self.action_space = spaces.Box(
-            low=-action_limit, high=action_limit,
+            low=-1e6, high=1e6,
             shape=(lqr.action_dim,), dtype=np.float32,
         )
 
         self.steps = 0
+        self.n_action_clips = 0
 
         self.screen = None
         self.clock = None
@@ -145,7 +150,12 @@ class LQREnv(gym.Env):
         """
         v = np.asarray(action, dtype=np.float64).reshape(self.lqr.action_dim)
 
-        v = np.clip(v, -self.action_limit, self.action_limit)
+        # Clip the true input
+        u = self.lqr.project_action(v)
+        excess = u - np.clip(u, -self.action_limit, self.action_limit)
+        if np.any(excess):
+            v = v - self.lqr.lift_action(excess)
+            self.n_action_clips += 1
 
         result = self.lqr.apply_control(v)
         self.steps += 1

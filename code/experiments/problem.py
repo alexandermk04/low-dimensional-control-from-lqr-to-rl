@@ -231,7 +231,8 @@ def make_problem(seed: int, inflation: tuple[int, int] | None = None) -> Problem
     problem.K_star = K_star
     problem.j_star = expected_true_cost(reference, K_star)
 
-    to_action = K_0 @ U_1 if U_1 is not None else K_star
+    # Bounds the true input
+    to_action = U_2 @ K_0 @ U_1 if U_1 is not None else K_star
     peak = float(np.max(np.abs(to_action) @ np.abs(max_initial_state)))
     problem.action_limit = float(10.0 * max(peak, 1.0))
 

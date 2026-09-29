@@ -291,6 +291,21 @@ class LQRBase:
         """
         return v
 
+    def lift_action(self, u: np.ndarray) -> np.ndarray:
+        """Map a true input back into the controller's space.
+
+        Parameters
+        ----------
+        u : np.ndarray
+            Input of shape ``(m,)``.
+
+        Returns
+        -------
+        np.ndarray
+            ``u`` unchanged here.
+        """
+        return u
+
     @property
     def observation_dim(self) -> int:
         """Dimension of the space the controller observes."""
