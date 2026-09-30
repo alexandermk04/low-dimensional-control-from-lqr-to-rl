@@ -718,6 +718,7 @@ def _run_rl(
         preset,
         total_timesteps=spec.hyperparams().get("total_timesteps", settings.RL_MAX_TIMESTEPS),
         anneal_timesteps=settings.RL_MAX_TIMESTEPS,
+        learning_rate=spec.hyperparams().get("learning_rate", preset.learning_rate),
         eval_freq=settings.RL_EVAL_FREQ,
         initial_gain=problem.K_0 / obs_scale if linear else None,
         pretrained_extractor=weights,

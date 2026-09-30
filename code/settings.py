@@ -197,6 +197,16 @@ PG_LEARNING_RATES = {
     "mf_npg": (3e-4, 1e-3, 3e-3, 1e-2),
 }
 
+# LRs for sweep scaled based on the input dimensions
+RL_LEARNING_RATE_FACTORS = (0.1, 1 / 3, 1.0, 3.0)
+RL_LEARNING_RATES = {
+    size: tuple(
+        float(f"{factor * 3e-4 * (INFLATION_SIZES['small'][0] / INFLATION_SIZES[size][0]) ** 0.5:.2g}")
+        for factor in RL_LEARNING_RATE_FACTORS
+    )
+    for size in ("small", "medium", "large")
+}
+
 # Stopping-rule settings for RL runs.
 RL_CONVERGENCE_GRID = dict(
     rel_tol=(1e-3, 3e-3, 1e-2, 3e-2),
@@ -356,7 +366,8 @@ SOLVER_HYPERPARAMS = {
 # Per inflation size overrides of SOLVER_HYPERPARAMS
 # Filled from
 # `python -m experiments.figures.appendix_spi_lambda_figures` and
-# `python -m experiments.figures.appendix_learning_rate_figures`.
+# `python -m experiments.figures.appendix_learning_rate_figures` and
+# `python -m experiments.figures.appendix_rl_learning_rate_figures`.
 SIZE_HYPERPARAMS = {
     "mb_pg": {
         "base": {"gradient_lr": 1e-05},

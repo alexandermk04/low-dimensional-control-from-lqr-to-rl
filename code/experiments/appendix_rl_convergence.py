@@ -1,9 +1,5 @@
 """Appendix: calibration of the RL stopping rule.
 
-Every chapter-5 solver is trained without stopping, so the stopping rule can be
-replayed offline on the stored training signal for any setting, see
-:mod:`experiments.figures.appendix_rl_convergence_figures`.
-
 Run with::
 
     python -m experiments.appendix_rl_convergence
@@ -23,8 +19,7 @@ SIZES = settings.CH5_INFLATION_SIZES
 
 SEEDS = settings.SEEDS[:3]
 
-# Fixed budget every run is trained for
-CALIBRATION_TIMESTEPS = 3_000_000
+CALIBRATION_TIMESTEPS = settings.RL_MAX_TIMESTEPS
 
 # A patience no run reaches, so the stopper only tracks the best iterate
 NEVER_STOP = {"patience": 10**9}
@@ -73,6 +68,7 @@ def main():
             "eval_freq": settings.RL_EVAL_FREQ,
             "train_horizon": settings.TRAIN_HORIZON,
             "chosen_identification": settings.CHOSEN_IDENTIFICATION,
+            "size_hyperparams": {s: settings.SIZE_HYPERPARAMS.get(s, {}) for s in SOLVERS},
         },
     )
 

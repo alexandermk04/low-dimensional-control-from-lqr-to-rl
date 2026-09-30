@@ -12,9 +12,10 @@ import numpy as np
 
 import settings
 from evaluation.analysis import Plateau
-from experiments.appendix_rl_convergence import EXPERIMENT
+from experiments.appendix_rl_convergence import EXPERIMENT, SOLVERS
 from experiments.figures.aggregate import latest_per_experiment
-from experiments.figures.style import figure_dir, new_figure, save, table_dir
+from experiments.figures.panels import learning_bands
+from experiments.figures.style import figure_dir, save, table_dir
 from experiments.figures.tables import write_table
 from experiments.store import MissingExperimentError, load_experiment
 
@@ -72,23 +73,6 @@ def _table(results: list[tuple]) -> str:
     return "\n".join(lines)
 
 
-def _signal_figure(record):
-    """Training signal against probe cost of one run, both relative to their minimum."""
-    fig, ax = new_figure()
-    steps = record.arrays["env_steps"]
-
-    for name, label in (("cost_estimate", "training signal"), ("cost", "probe cost")):
-        values = record.arrays[name]
-        ax.plot(steps, values / np.nanmin(values) - 1.0, label=label, linewidth=1.2)
-
-    ax.set_yscale("symlog", linthresh=1e-2)
-    ax.set_xlabel("Environment steps")
-    ax.set_ylabel("Relative to its minimum")
-    ax.set_title(f"{record.solver}, {record.condition.get('size')} inflation, seed {record.seed}")
-    ax.legend(frameon=False)
-    return fig
-
-
 def render():
     records = [
         r for r in latest_per_experiment(load_experiment(EXPERIMENT))
@@ -112,8 +96,12 @@ def render():
 
     write_table(_table(shown), EXPERIMENT, EXPERIMENT)
 
-    example = next((r for r in records if r.solver == "ppo_linear"), records[0])
-    save(_signal_figure(example), f"{EXPERIMENT}_signal", EXPERIMENT)
+    order = tuple(s for s in SOLVERS if any(r.solver == s for r in records))
+    for size in settings.CH5_INFLATION_SIZES:
+        subset = [r for r in records if r.condition.get("size") == size]
+        if subset:
+            ax = learning_bands(subset, "solver", x="env_steps", order=order, logx=False)
+            save(ax.figure, f"{EXPERIMENT}_{size}_curves_steps", EXPERIMENT)
     plt.close("all")
 
     for setting, stops, regrets in shown:
@@ -124,7 +112,15 @@ def render():
         rel_tol, patience, window = admissible[0][0]
         print(f'\nCONVERGENCE["rl"] = dict(rel_tol={rel_tol:g}, patience={patience}, window={window})')
     else:
-        print("\nNo setting meets the regret bounds; widen RL_CONVERGENCE_GRID.")
+        print("\nNo setting meets the regret bounds.")
+        floor = np.array([replay(r, 0.0, 10**9, 1)[1] for r in records])
+        print(f"Never stopping gives median regret {np.median(floor):.3g}, "
+              f"max {np.max(floor):.3g}: the bounds fail on the iterate selection.")
+        for solver in order:
+            probes = [r.arrays["cost"] for r in records if r.solver == solver]
+            diverged = sum(not np.isfinite(c).all() for c in probes)
+            if diverged:
+                print(f"  {solver}: {diverged}/{len(probes)} runs with a non-finite probe cost")
 
 
 def main():
