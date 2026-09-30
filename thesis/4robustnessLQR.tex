@@ -1,7 +1,5 @@
 \chapter{Robustness of LQR solvers in different dimensions}\label{chap:lqr}
 
-\section{Solvers}
-
 \section{A Known Model}
 
 \subsection{Setting}
@@ -10,7 +8,45 @@
 
 \section{Unknown Model Accross Dimensions}
 
+Here we will take a look at the realistic case, where we don't know the underlying model and compare different approaches.
+Before we can get into the results, we first take a deeper look at the solvers that we will use and how the experiments are
+set up.
+
 \subsection{Setting}
+
+First, we will introduce our basis for the indirect model-free approach, which is based on system identification. N4SID,
+introduced by \needcite{vanoverschee}, uses "the projection of the future outputs [of the system] onto the past and future inputs
+and the past ouputs"\needcite{sec 3 van overschee}. These projections are then called "a function of the system matrices and the input-output block
+Hankel matrices" \needcite{sec 3, vanoverschee}, which allows us to reconstruct exactly that from the results. Important
+are further the assumptions that the systems are observable \needcite{chap2} and controllable \needcite{chap2} For simplicity, we will rely on the
+implementation of N4SID from Sippy Unipy \needcite{TODO}, which we integrate into our own setup. This implementation allows us to recover
+the system matrices A, B and C, whereas the recovering of the cost matrices Q and R is implemented by us from scratch based on \needcite{vanoverschee}.
+
+The collection of observation and action data is based on the following loop:
+
+% simplify into latex code, core meaning should be randomly sampling the excitation added on top of gain
+for _ in range(settings.trajectory_length):
+        y = plant.observe()
+        v = -K_0 @ y + settings.excitation * rng.standard_normal(plant.action_dim)
+
+        step = plant.apply_control(v)
+
+As mentioned in the paper, "as i grows larger, the approximation error grows smaller.", with i being dependent on the length our
+trajectory described above used for identification. The other variable "j", defines the dimensions of the Hankel matrices, and thus
+how far the projections reach into the future and the past. As we want to be computationally efficient, while still achieving the
+best performance, we evaluated different values for both, to find the most optimal setting to use in our experiment.
+The full results of the selection can be found in the appendix \needcite{section for tables/plots in appendix}. Specifically,
+we will use
+
+% Table structure, trajectory length (i), hankel horizon (j)
+CHOSEN_IDENTIFICATION = {
+    "base": (500, 5),
+    "small": (500, 5),
+    "medium": (500, 5),
+    "large": (2000, 5),
+}.
+
+
 
 \subsection{Results}
 
