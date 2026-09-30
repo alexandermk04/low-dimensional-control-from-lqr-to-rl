@@ -1,0 +1,134 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{sectsty}
+\subsectionfont{\small}
+
+\usepackage{titlesec} 
+\titleformat{\subsection}[runin]
+{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}[runin]
+{\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{}
+\titlespacing*{\subsubsection}{0pt}{0.3\baselineskip}{\baselineskip}
+
+\usepackage[margin=0.6in,footskip=0.25in,left=1.4in]{geometry}
+\usepackage{graphicx}
+\usepackage{tikz}  
+
+\thispagestyle{empty}
+\definecolor{darkBlue}{rgb}{0, 0.255, 0.471} 
+\newcommand{\HRule}{\textcolor{darkBlue}{\rule{\textwidth}{0.4mm}}}
+
+
+\begin{document}
+\begin{minipage}{0.45\textwidth}
+\begin{flushleft} 
+	\includegraphics[height=2cm]{TUHH_logo-wortmarke_en_rgb.png} 
+\end{flushleft}
+\end{minipage}
+\hfill
+\begin{minipage}{0.40\textwidth}
+\begin{flushright} 
+	\includegraphics[height=3cm]{logo2022-1024.png} 
+\end{flushright}
+\end{minipage}
+ %%################ Data section ###################
+ \HRule\\[0.4cm]
+\begin{minipage}[b]{0.38\textwidth}
+	\begin{flushleft} 
+		\textbf{Project Work}
+	\end{flushleft}
+\end{minipage}
+\hfill
+\begin{minipage}{0.3\textwidth}
+	\begin{center}
+		\textbf{B-3-2026}
+	\end{center}
+\end{minipage}
+\hfill
+\begin{minipage}{0.3\textwidth}
+	\begin{flushright}
+	\end{flushright}
+\end{minipage}\\
+\begin{minipage}[b]{0.38\textwidth}
+	\begin{flushleft} 
+		for Mr. Alexander Kranz % Name of the student
+	\end{flushleft}
+\end{minipage}
+\hfill
+\begin{minipage}{0.3\textwidth}
+	\begin{center}
+		Student ID: 590156 % matriculation number
+	\end{center}
+\end{minipage}
+\hfill
+\begin{minipage}{0.3\textwidth}
+	\begin{flushright}
+		Study Course: Data Science % Study course
+	\end{flushright}
+\end{minipage}
+\HRule
+%%
+ %%################ Task section ###################
+% \subsection*{Title:} Low-Rank Control under Embodiment Constraints: From LQR to Reinforcement Learning
+
+% \subsection*{Project description:}\\
+% We focus on scenarios inspired by embodied intelligence, where embodiment constraints restrict the system’s relevant dynamics to a low-dimensional structure, even though many sensor measurements and actuator inputs may be available. In such settings, it is natural to ask whether feedback controllers should also be low-dimensional or low-rank, rather than fully parameterized. This project studies full-rank and low-rank feedback representations and compares their performance, robustness, and parameter efficiency in control and learning tasks. The study is motivated by recent work on structured policy optimization for LQR, data-enabled policy optimization, and the geometry of policy search in control \cite{park2020structured,zhao2023deePO,talebi2024policy}, as well as by earlier ideas from embodied control and cheap control architectures \cite{ay2015geometric,montufar2015cheap,montufar2015geometry}.
+
+% The project is organized in two stages. First, the analysis is restricted to the linear-quadratic regulator (LQR) setting for linear state-space models, where fixed, learned, and model-informed low-rank parameterizations can be compared in a controlled environment. Second, the study is extended to reinforcement learning using stable-baselines-style implementations, including experiments with artificially increased input/output dimensions to assess whether low-dimensional policies remain effective for more general dynamics and policy classes. The empirical focus is on robustness with respect to parametric uncertainty, multiplicative control noise, measurement noise, and external disturbances. Optional theoretical analysis may complement the experiments, but the main goal is a systematic numerical comparison of full-rank and low-rank policies.
+
+% \subsection*{Tasks:}
+% \begin{enumerate}
+%     \setlength\itemsep{-0.4em}
+%     \item Familiarization with the linear quadratic regulator (LQR) problem, reinforcement learning, policy gradients, and the literature on structured and low-rank feedback control \cite{fazel2018global,park2020structured,takakura2022structured,anderson2019system}
+% \item Implementation of full-rank and low-rank feedback parameterizations for the LQR problem, followed by an experimental comparison of fixed, learned, and model-informed low-rank bases
+%     \item Extension of the experiments to reinforcement learning using stable-baselines-style implementations and artificially increased input/output dimensions
+%     \item Robustness evaluation with respect to parametric uncertainty, multiplicative control noise, measurement noise, and external disturbances
+%     \item Discussion of the resulting policies with respect to performance, robustness, and the trade-off between expressiveness and parameter efficiency
+% \end{enumerate}
+
+\subsection*{Title:} Low-dimensional Control under Embodiment Constraints: From LQR to Reinforcement Learning
+
+\subsection*{Project description:}
+We consider settings inspired by embodied intelligence, in which embodiment constraints limit the system’s relevant dynamics to a low-dimensional structure, even though many sensor measurements and actuator inputs may be available. In such cases, it is natural to ask whether feedback controllers should also be low-dimensional or low-rank rather than fully parameterized. This project studies full-rank and low-rank feedback representations and compares their performance, robustness, and parameter efficiency in control and learning tasks. The study is motivated by recent work on structured policy optimization for LQR, data-enabled policy optimization, and the geometry of policy search in control \cite{park2020structured,zhao2023deePO,talebi2024policy}, as well as by earlier ideas from embodied control and cheap control architectures \cite{ay2015geometric,montufar2015cheap,montufar2015geometry}.
+
+The project is organized in two stages. First, the analysis is restricted to the linear-quadratic regulator (LQR) setting for linear state-space models, where fixed, learned, and model-informed low-rank parameterizations can be compared in a controlled environment. Second, the study is extended to reinforcement learning using stable-baselines-style implementations, including experiments with artificially increased input and output dimensions to assess whether low-rank policies remain effective for more general dynamics and policy classes. The empirical focus is on robustness with respect to parametric uncertainty, multiplicative control noise, measurement noise, and external disturbances. Optional theoretical analysis may complement the experiments, but the main goal is a systematic numerical comparison of full-rank and low-rank policies.
+
+\subsection*{Tasks:}
+\begin{enumerate}
+    \setlength\itemsep{-0.4em}
+    \item Familiarization with the linear quadratic regulator (LQR) problem, reinforcement learning, policy gradients, and the literature on structured and low-rank feedback control \cite{anderson2019system,park2020structured,takakura2022structured}
+    \item Implementation of full-rank and low-rank feedback parameterizations for the LQR problem, followed by an experimental comparison of fixed, learned, and model-informed low-rank bases
+    \item Extension of the experiments to reinforcement learning using stable-baselines-style implementations and artificially increased input/output dimensions
+    \item Robustness evaluation with respect to parametric uncertainty, multiplicative control noise, measurement noise, and external disturbances
+    \item Discussion of the resulting policies with respect to performance, robustness, and the trade-off between expressiveness and parameter efficiency
+\end{enumerate}
+%\newpage
+\small{\bibliographystyle{IEEEtran}}
+\bibliography{ics}
+
+\hspace{0.1cm}\\
+\begin{minipage}{0.12\textwidth}
+	\large{\textbf{Supervisor:}}
+\end{minipage}
+\begin{minipage}{0.88\textwidth}
+	\hspace{1cm}\
+	Dr. Adwait Datar
+\end{minipage}
+
+% \hspace{0.1cm}\\
+% \begin{minipage}{0.12\textwidth}
+% 	\large{\textbf{Examiner:}}
+% \end{minipage}
+% \begin{minipage}{0.88\textwidth}
+% 	\hspace{1cm}\
+% 	\begin{enumerate}
+% 		\setlength\itemsep{-0.5em}
+% 		\item Prof. Dr. Nihat Ay 
+% 		\item Second examiner
+% 	\end{enumerate} 
+% \end{minipage}
+
+\hspace{1cm}\
+\subsubsection*{Start Date:}  5.06.2026
+\subsubsection*{Due Date:} \hspace{0.07cm}  15.10.2026
+\end{document}
