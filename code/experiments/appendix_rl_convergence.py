@@ -19,8 +19,6 @@ SIZES = settings.CH5_INFLATION_SIZES
 
 SEEDS = settings.SEEDS[:3]
 
-CALIBRATION_TIMESTEPS = settings.RL_MAX_TIMESTEPS
-
 # A patience no run reaches, so the stopper only tracks the best iterate
 NEVER_STOP = {"patience": 10**9}
 
@@ -45,10 +43,7 @@ def build_specs() -> list[RunSpec]:
                     n_trajectories=n_trajectories,
                     iterations=settings.SOLVER_MAX_ITERATIONS,
                     condition=condition(solver, size),
-                    hyperparam_overrides={
-                        "convergence": NEVER_STOP,
-                        "total_timesteps": CALIBRATION_TIMESTEPS,
-                    },
+                    hyperparam_overrides={"convergence": NEVER_STOP},
                 )
                 for seed in SEEDS
             ]
@@ -64,7 +59,7 @@ def main():
             "solvers": SOLVERS,
             "sizes": SIZES,
             "seeds": SEEDS,
-            "timesteps": CALIBRATION_TIMESTEPS,
+            "timesteps": settings.RL_MAX_TIMESTEPS,
             "eval_freq": settings.RL_EVAL_FREQ,
             "train_horizon": settings.TRAIN_HORIZON,
             "chosen_identification": settings.CHOSEN_IDENTIFICATION,

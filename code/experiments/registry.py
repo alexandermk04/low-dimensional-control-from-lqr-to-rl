@@ -714,10 +714,11 @@ def _run_rl(
         )
         env_steps_offset += settings.PRETRAIN_STEPS
 
+    max_timesteps = settings.RL_MAX_TIMESTEPS[spec.condition["size"]]
     solver_settings = dc.replace(
         preset,
-        total_timesteps=spec.hyperparams().get("total_timesteps", settings.RL_MAX_TIMESTEPS),
-        anneal_timesteps=settings.RL_MAX_TIMESTEPS,
+        total_timesteps=spec.hyperparams().get("total_timesteps", max_timesteps),
+        anneal_timesteps=max_timesteps,
         learning_rate=spec.hyperparams().get("learning_rate", preset.learning_rate),
         eval_freq=settings.RL_EVAL_FREQ,
         initial_gain=problem.K_0 / obs_scale if linear else None,
@@ -1074,7 +1075,7 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
 
     solver_settings = dc.replace(
         preset,
-        total_timesteps=settings.RL_MAX_TIMESTEPS,
+        total_timesteps=settings.PIXEL_RL_MAX_AGENT_STEPS,
         eval_freq=settings.RL_EVAL_FREQ,
         pretrained_extractor=weights,
     )

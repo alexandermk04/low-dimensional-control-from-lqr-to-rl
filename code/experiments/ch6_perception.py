@@ -55,7 +55,7 @@ def main():
             "view_scale": cfg.DEFAULT_VIEW_SCALE,
             "n_thrusters": cfg.DEFAULT_N_THRUSTERS,
             "thrust_scale": cfg.DEFAULT_THRUST_SCALE,
-            "rl_timesteps": settings.RL_MAX_TIMESTEPS,
+            "rl_timesteps": settings.PIXEL_RL_MAX_AGENT_STEPS,
             "convergence": settings.CONVERGENCE,
             "rl_eval_freq": settings.RL_EVAL_FREQ,
             "probe_episodes": settings.PIXEL_PROBE_EPISODES,

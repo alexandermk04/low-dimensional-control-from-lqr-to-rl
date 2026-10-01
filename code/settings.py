@@ -81,7 +81,15 @@ SUBOPTIMAL_IDENTIFICATION = {
 TRAIN_HORIZON = 800
 
 # Safety cap on environment steps for the RL solvers
-RL_MAX_TIMESTEPS = 10_000_000
+RL_MAX_TIMESTEPS = {
+    "small": 10_000_000,
+    "medium": 15_000_000,
+    "large": 30_000_000,
+    "pixel": 30_000_000,
+}
+
+# Chapter 6 cap in agent steps 
+PIXEL_RL_MAX_AGENT_STEPS = 10_000_000
 
 # Environment steps between learning-curve samples
 RL_EVAL_FREQ = 25_000
@@ -198,7 +206,7 @@ PG_LEARNING_RATES = {
 }
 
 # LRs for sweep scaled based on the input dimensions
-RL_LEARNING_RATE_FACTORS = (0.1, 1 / 3, 1.0, 3.0)
+RL_LEARNING_RATE_FACTORS = (0.01, 1 / 30, 0.1, 1 / 3, 1.0)
 RL_LEARNING_RATES = {
     size: tuple(
         float(f"{factor * 3e-4 * (INFLATION_SIZES['small'][0] / INFLATION_SIZES[size][0]) ** 0.5:.2g}")
@@ -398,6 +406,21 @@ SIZE_HYPERPARAMS = {
         "small": {"lambda_": 20},
         "medium": {"lambda_": 20},
         "large": {"lambda_": 20},
+    },
+    "ppo_linear": {
+        "small": {"learning_rate": 0.0001},
+        "medium": {"learning_rate": 1.3e-05},
+        "large": {"learning_rate": 6.7e-06},
+    },
+    "ppo_encoder": {
+        "small": {"learning_rate": 0.0001},
+        "medium": {"learning_rate": 4.5e-05},
+        "large": {"learning_rate": 2.2e-05},
+    },
+    "ppo_mlp": {
+        "small": {"learning_rate": 0.0003},
+        "medium": {"learning_rate": 1.3e-05},
+        "large": {"learning_rate": 2.2e-05},
     },
 }
 
