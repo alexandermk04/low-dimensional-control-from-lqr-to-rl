@@ -196,7 +196,11 @@ decode matrices, that map between our dimensionally reduced model, and the actua
 output. For the exact implementation, please refer to the repository \needcite{our repository}.
 
 Additionally, we will also use direct model-free approaches, which are the variations of the model-based approaches
-from \needcite{cref known model}. 
+from \needcite{cref known model}. Differently to before, they don't calculate the gradient directly, but estimate
+it based on the returns of m slightly perturbed versions of the current policy, simulated for l steps. As one might
+assume, more "data", could conversely to better estimation, and thus better policy updates. So, to
+settle this, we evaluated different combinations of them in the appendix \needcite{appendix}. The best
+tradeoff between computational efficiency and quality gave m = 100 and l = 800.
 
 % mf npg
 We use the described Model-free Natural Policy Gradient estimation from Fazel et al. \needcite{Fazel2018Global} which at the
