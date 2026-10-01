@@ -130,8 +130,6 @@ solution \eqref{eq:dare} from \cref{subsec:lqr-optimal}.
 
 % experiment setup
 
-% explain early stopping mechanism
-
 \section{Unknown Model across Dimensions}
 \label{sec:unknown-model}
 
@@ -227,7 +225,18 @@ and lambda, we define our learning loop:
 
 % alg spi mf, from structured_policy_iteration
 
-Now to the selection of the parameters. Fazel et al. already notes the difficulty of 
+Now to the selection of the parameters. Fazel et al. already notes the difficulty of finding a fixed stepsize
+which doesn't produce divergence of the method \needcite{Park2020Structured}. Also, the shown example only
+used the model-based approach and the regularizer to induce sparse structure, not the model-free variant combined
+with low-dimensionality. So during our first tests, we often ran into either unstable controller, or some which
+didn't induce any structure at all, hinting at a too low lambda. If we remember the proximal step, we can see
+that it depends both on the stepsize and lambda:
+
+% insert formula here
+
+Even after some improvement by using the two-point estimator \needcite{cref to above}, it remained quite a difficult
+topic. So rather extensive experiments on the variation of lambda and the stepsize can be found in the appendix \needcite{cref to appendix}.
+Based on those, lambda = 4000 and a stepsize of 3.5e-6 was selected.
 
 \subsection{Results}
 \label{subsec:unknown-model-results}
@@ -240,21 +249,6 @@ Now to the selection of the parameters. Fazel et al. already notes the difficult
 
 \subsection{Results}
 \label{subsec:noise-results}
-
-\Cref{fig:ch4-identified-medium-trajectories} shows the figure.
-
-\Cref{tab:ch4-identified-medium} shows the table
-
-% Test figure
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{ch4_identified_model}{ch4_identified_medium_trajectories}
-  \caption{TODO}
-  \label{fig:ch4-identified-medium-trajectories}
-\end{figure}
-
-% Test table
-\input{generated/ch4_identified_model/tables/ch4_identified_medium.tex}
 
 \section{Discussion}
 \label{sec:ch4-discussion}
