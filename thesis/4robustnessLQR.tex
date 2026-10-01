@@ -187,11 +187,47 @@ The resulting identified system then serves as a surrogate for the true model
 for the model-based approaches from \cref{subsec:known-model-setting}. This thus produces results without
 ever having access to the real model.
 
-An attentive reader might now ask why we would even want to use
+An attentive reader might now ask why we would even want to use these iterative approaches, if we could just
+solve the DARE \needcite{cref} directly on this estimation. And indeed we include it in our following comparison.
+However, to make this work with our construction of inflated state models, we need some modification to N4SID.
+This stems from the fact, that we need to calculate K = (R + BᵀPB)⁻¹ BᵀPA, hence R + BᵀPB needs to be invertible.
+But for our inflated space, the estimated B and R have the same nullspace, making the matrix singular on that subspace.
+So to be able to apply this solver, we eliminate the additional singular values of B, that exceed the estimated order
+of the model, thus reducing the model in dimension. This way we don't access the model, however, create encode and
+decode matrices, that map between our dimensionally reduced model, and the actual state observation, as well as actuation
+output. For the exact implementation, please refer to the repository \needcite{our repository}.
+
+Additionally, we will also use direct model-free approaches, which are the variations of the model-based approaches
+from \needcite{cref known model}. 
 
 % mf npg
+We use the described Model-free Natural Policy Gradient estimation from Fazel et al. \needcite{Fazel2018Global} which at the
+core consists of the following loop. Instead of using the proposed single-point estimator, we have replaced it with a 
+two-point estimator \needcite{Duchi 2015}, as this reduced variance of the estimates, and thus instability of the controller
+drastically.
+
+% Alg: Policy Gradient estimation
+% code from mf_policy_gradient estimate_gradient function
+
+Our full learning algorithm then becomes:
+% alg
+- require stabilizing K_0
+- then loop from mf_natural_policy_gradient
+
+After some evaluations, we have decided on a smoothing parameter of r=0.5, and a learning rate of 0.1, based
+on the results in \needcite{section in appendix}.
 
 % spi mf
+Next, we implement a model-free version of the Structured Policy Iteration that relies on the same gradient
+estimation\needcite{alg from above} as the Natural Policy Gradient Iteration. Another crucial difference,
+apart from the estimation of the gradient compared to the calculation, is the "usage of a fixed stepsize
+eta rather than an adaptive stepsize from a backtracking linesearch", as that would require access to the
+function value f (K) = Tr(Σ0P ) \needcite{Park2020Structured}. Before we look at how we select this stepsize
+and lambda, we define our learning loop:
+
+% alg spi mf, from structured_policy_iteration
+
+Now to the selection of the parameters. Fazel et al. already notes the difficulty of 
 
 \subsection{Results}
 \label{subsec:unknown-model-results}
