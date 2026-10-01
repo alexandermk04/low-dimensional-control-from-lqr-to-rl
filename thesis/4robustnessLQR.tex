@@ -2,13 +2,122 @@
 
 \section{A Known Model}
 
+We will start by comparing two approaches that have knowledge of the underlying model,
+and can thus not need to estimate gradients, but can calculate them exactly. This allows
+us to clearly seperate the benefits of a low-dimensional controller from estimation
+errors.
+
 \subsection{Setting}
+
+% mb pg
+Fazel et al. introduced global convergence guarantees for policy gradient methods based on the true model
+in 2019 \needcite{Fazel2018Global}. It describes a method for calculating the gradient of a policy from
+the system and cost matrices, and update it accordingly. As the paper uses the same u_t = -Kx_t
+convention, we can implement the loop directly the following way:
+
+% Def mb_pg
+Starting from an initial, stable policy K_0 and the initial state distribution Sigma_0
+
+% Change K to K_t to indicate temporarity
+
+Step 1: Solving the discrete lyapunov equation \needcite{scipy}
+PK = Q+ K⊤RK+ (A−BK)⊤PK(A−BK)
+
+Step 2: Calculate state correlation matrix
+    lya_a = lqr.A - lqr.B @ K_eff
+    sigma_k = solve_discrete_lyapunov(lya_a, sigma_0)
+
+bounds = np.asarray(lqr.max_initial_state, dtype=float)
+return np.diag(bounds ** 2 / 3.0)
+
+Step 3: The policy gradient
+∇C(K) = 2 (R+ B⊤PKB)K−B⊤PKA ΣK
+
+Step 4: Update the gain matrix K
+K ←K−η∇C(K)
+
+Step 5: Repeat from 1
+
+The fixed learning rate η is a hyperparameter, which we set to 1e-05 for all inflation sizes, based on
+experiments, whose results can be found in the appendix \needcite{cref to subsection in appendix}. This
+policy gradient approach serves us as the basic, fully-parameterized implementation for this experiment.
+
+% mb spi
+
+Now we also want to implement a solver, that produces a low-dimensional controller. As in our
+case the controller is characterized by the gain matrix, and for matrices dimensionality is "often
+[...] expressed by the means of the rank" \needcite{Recht2010Guaranteed}, we aim at learning a low-rank
+gain matrix. However, to make this comparable later to RL approaches, that rely on the number of parameters,
+we define complexity for matrices the following way:
+
+% Def
+For a matrix K in R^mxn, rank k and SVD K=USigmaV', we have
+U in R^mxr
+Sigma in R^rxr 
+V' in R^rxn
+
+Due to Sigma being a diagonal matrix, we can store a low rank matrix with following amount of parameters
+
+Size(K) = m * r + r + n * r = r * (n + m + 1)
+
+Generally, this gives us the complexity as
+
+Complexity(K) = min(rank * (q + p + 1), q * p)
+
+so we choose the more efficient way of parameterization.
+
+Recht et al \needcite{Recht2010Guaranteed} has already shown that nuclear norm minimization introduces
+low-rank solutions for convex matrix problems. However, as we are dealing with a non-convex optimization
+problem\needcite{Fazel2018Global}, we can't transfer the results over directly. Here, Park et. al 
+offers us an approach to impose different structures on our policy during learning via regularizers
+based on norms, one of them being the nuclear norm \needcite{Park2020Structured}. We implement the here introduced model-based
+approach the following way with small adaptations:
+
+% Def mb_spi
+We reuse the loop from \needcite{def mb_pg} for calculating the gradient of the policy.
+
+For inducing the structure, we use an adaptive learning rate combined with a linesearch criterion.
+
+1. Set initial step size
+ stepsize = 0.5 / lambda % cross check with code
+
+2. Regularize the proximal policy
+% code
+  - take gradient step with the stepsize from above
+  - regularize with nuclear norm
+
+3. Check linesearch criterion
+% code
+- sufficient descrease condition?
+- stability?
+
+4. Return or repeat
+if 3 is satisfied, return K+
+otherwise stepsize = beta * stepsize and go back to 2
+
+The learning loop can be stopped earlier if the criterion ∥Ki+1−Ki∥≤epsilon is satisfied. 
+
+As one can see, there are a lot of parameters that can be modified here. We set epsilon to be
+1e-8, and use the same beta = 0.5 as in the experiments section of \needcite{Park2020Structured}.
+For lambda, as it defines the learning rate as well, we have run an experiment with various values,
+which can be found in the appendix. A lambda = 5 has shown the most promising results across the sizes.
+
+One thing that we implemented additionally is a cap on the amount of linesearch iterations, which we set to 20.
+Some of our previous experiments had shown, that if we leave it uncapped, for unstable updates, which are impossible
+to stabilize, the loop will run until the update produces no effect at all.
+
+Now that we have defined our controllers, and how they learn, we will test them in comparison to the DARE calculated
+solution \needcite{chap 2}.
 
 \subsection{Results}
 
+% experiment setup
+
+% explain early stopping mechanism
+
 \section{Unknown Model Accross Dimensions}
 
-Here we will take a look at the realistic case, where we don't know the underlying model and compare different approaches.
+Here we will take a look at the more realistic case, where we don't know the underlying model and compare different approaches.
 Before we can get into the results, we first take a deeper look at the solvers that we will use and how the experiments are
 set up.
 
@@ -46,7 +155,15 @@ CHOSEN_IDENTIFICATION = {
     "large": (2000, 5),
 }.
 
+The resulting identified system will then serve as a surrogate for the true model
+for the model-based approaches from \needcite{settings sections from known model}. This thus produces results without
+ever having access to the real model.
 
+An attentive reader might now ask why we would even want to use 
+
+% mf npg
+
+% spi mf
 
 \subsection{Results}
 
