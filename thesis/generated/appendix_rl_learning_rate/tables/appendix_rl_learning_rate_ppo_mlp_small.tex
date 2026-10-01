@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Learning rate & 0.0009 & 0.0003 & 0.0001 & 3e-05 \\
+\midrule
+True cost $J$ & $6828 \pm 1396$ & $6092 \pm 677.4$ & $6165 \pm 891.5$ & $6114 \pm 896.5$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.195 \pm 0.117$ & $0.0738 \pm 0.0401$ & $0.0836 \pm 0.041$ & $0.0745 \pm 0.037$ \\
+Test cost$^{\dagger}$ & $7681 \pm 6382$ & $6544 \pm 5770$ & $6502 \pm 5898$ & $6677 \pm 5683$ \\
+Env.\ steps to best policy & $8.78 \times 10^{6} \pm 2 \times 10^{6}$ & $8.18 \times 10^{6} \pm 6.8 \times 10^{5}$ & $8.41 \times 10^{6} \pm 1.79 \times 10^{6}$ & $8.41 \times 10^{6} \pm 1.79 \times 10^{6}$ \\
+Env.\ steps to convergence & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{ppo\_mlp at the small inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 300 test episodes (100 per seed, 3 seeds) pooled; every other row over the 3 runs.}
+\label{tab:appendix-rl-learning-rate-ppo_mlp-small}
+\end{table}

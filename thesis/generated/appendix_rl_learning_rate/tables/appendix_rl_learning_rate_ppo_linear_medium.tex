@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Learning rate & 0.0004 & 0.00013 & 4.5e-05 & 1.3e-05 \\
+\midrule
+True cost $J$ & $1.666 \times 10^{4} \pm 1.534 \times 10^{4}$ & $7647 \pm 2581$ & $6084 \pm 90.65$ & $6061 \pm 40.73$ \\
+Training suboptimality $(J-J^*)/J^*$ & $1.85 \pm 2.62$ & $0.308 \pm 0.441$ & $0.0403 \pm 0.0155$ & $0.0365 \pm 0.00696$ \\
+Test cost$^{\dagger}$ & $1.619 \times 10^{4} \pm 2.046 \times 10^{4}$ & $7814 \pm 7309$ & $6172 \pm 5434$ & $6147 \pm 5417$ \\
+Env.\ steps to best policy & $2.72 \times 10^{6} \pm 3.51 \times 10^{6}$ & $5.52 \times 10^{6} \pm 4.52 \times 10^{6}$ & $8.18 \times 10^{6} \pm 1.43 \times 10^{6}$ & $8.18 \times 10^{6} \pm 1.43 \times 10^{6}$ \\
+Env.\ steps to convergence & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{ppo\_linear at the medium inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 300 test episodes (100 per seed, 3 seeds) pooled; every other row over the 3 runs.}
+\label{tab:appendix-rl-learning-rate-ppo_linear-medium}
+\end{table}

@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Learning rate & 6.7e-05 & 0.0002 & 2.2e-05 & 6.7e-06 \\
+\midrule
+Stable & $3/3$ & $2/3$ & $3/3$ & $3/3$ \\
+\midrule
+True cost $J$ & $1.163 \times 10^{4} \pm 5357$ & $7561 \pm 1538$ & $9426 \pm 1449$ & $1.053 \times 10^{4} \pm 971.8$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.988 \pm 0.916$ & $0.293 \pm 0.263$ & $0.612 \pm 0.248$ & $0.801 \pm 0.166$ \\
+Test cost$^{\dagger}$ & $1.179 \times 10^{4} \pm 1.22 \times 10^{4}$ & $7655 \pm 6829$ & $9616 \pm 8516$ & $1.072 \times 10^{4} \pm 9497$ \\
+Env.\ steps to best policy & $4.61 \times 10^{6} \pm 4.29 \times 10^{6}$ & $6.22 \times 10^{6} \pm 3.25 \times 10^{6}$ & $3.98 \times 10^{6} \pm 4.57 \times 10^{6}$ & $3.02 \times 10^{6} \pm 1.28 \times 10^{6}$ \\
+Env.\ steps to convergence & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{ppo\_linear at the large inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 300 test episodes (100 per seed, 3 seeds) pooled; every other row over the 3 runs. Stable counts the seeds whose controller left the plant stable.}
+\label{tab:appendix-rl-learning-rate-ppo_linear-large}
+\end{table}
