@@ -49,7 +49,7 @@ is then used for a gradient step on the gain matrix. \Cref{alg:mb-pg} summarizes
 \end{algorithm}
 
 The fixed learning rate $\eta$ is a hyperparameter, which we set to $\eta = 10^{-5}$ for all inflation sizes, based on
-experiments whose results can be found in the appendix~\needcite{cref to subsection in appendix}. This
+experiments whose results can be found in \cref{sec:app-learning-rate-mb-pg}. This
 policy gradient approach serves us as the basic, fully-parameterized implementation for this experiment.
 
 % mb spi
@@ -116,7 +116,7 @@ stopped earlier if the criterion $\lVert K_{i+1} - K_i \rVert_F \leq \varepsilon
 As one can see, there are a lot of parameters that can be modified here. We set $\varepsilon = 10^{-8}$,
 and use the same $\beta = 0.5$ as in the experiments section of Park et al.~\cite{Park2020Structured}.
 For $\lambda$, as it defines the learning rate as well, we have run an experiment with various values,
-which can be found in the appendix. A value of $\lambda = 5$ has shown the most promising results across the sizes.
+which can be found in \cref{sec:app-spi-lambda}. A value of $\lambda = 5$ has shown the most promising results across the sizes.
 
 One thing that we implemented differently than the paper is the cap on the number of line search iterations in line four, which we set to 20.
 Some of our previous experiments had shown that if we leave it uncapped, for unstable updates which are impossible
@@ -163,7 +163,7 @@ with $i$ being dependent on the length of our trajectory described above used fo
 defines the dimensions of the Hankel matrices, and thus how far the projections reach into the future and the past.
 As we want to be computationally efficient while still achieving the best performance, we evaluated different values
 for both, to find the optimal setting to use in our experiment. The full results of the selection can be found in the
-appendix~\needcite{section for tables/plots in appendix}. Specifically, we use the settings in
+\cref{sec:app-identification}. Specifically, we use the settings in
 \cref{tab:identification-settings}.
 \begin{table}[htbp]
     \centering
@@ -199,7 +199,7 @@ Additionally, we will also use direct model-free approaches, which are the varia
 from \needcite{cref known model}. Differently to before, they don't calculate the gradient directly, but estimate
 it based on the returns of m slightly perturbed versions of the current policy, simulated for l steps. As one might
 assume, more "data", could conversely to better estimation, and thus better policy updates. So, to
-settle this, we evaluated different combinations of them in the appendix \needcite{appendix}. The best
+settle this, we evaluated different combinations of them in \cref{sec:app-sample-size}. The best
 tradeoff between computational efficiency and quality gave m = 100 and l = 800.
 
 % mf npg
@@ -217,7 +217,7 @@ Our full learning algorithm then becomes:
 - then loop from mf_natural_policy_gradient
 
 After some evaluations, we have decided on a smoothing parameter of r=0.5, and a learning rate of 0.1, based
-on the results in \needcite{section in appendix}.
+on the results in \cref{sec:app-learning-rate-mf-npg}.
 
 % spi mf
 Next, we implement a model-free version of the Structured Policy Iteration that relies on the same gradient
@@ -239,7 +239,7 @@ that it depends both on the stepsize and lambda:
 % insert formula here
 
 Even after some improvement by using the two-point estimator \needcite{cref to above}, it remained quite a difficult
-topic. So rather extensive experiments on the variation of lambda and the stepsize can be found in the appendix \needcite{cref to appendix}.
+topic. So rather extensive experiments on the variation of lambda and the stepsize can be found in \cref{sec:app-spi-mf}.
 Based on those, lambda = 4000 and a stepsize of 3.5e-6 was selected.
 
 \subsection{Results}
