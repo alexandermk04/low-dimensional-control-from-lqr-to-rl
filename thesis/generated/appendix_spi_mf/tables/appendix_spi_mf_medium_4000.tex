@@ -1,20 +1,20 @@
 \begin{table}[htbp]
 \centering
+\caption{S-PI (model-free) with $\lambda = 4000$ under \emph{medium} inflation, over the seeds. Mean $\pm$ standard deviation over 10 runs.}
+\label{tab:appendix-spi-mf-medium-4000}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
 Step size & 3.5e-09 & 3.5e-08 & 3.5e-07 & 3.5e-06 & 3.5e-05 \\
 \midrule
-Stable & $10/10$ & $10/10$ & $10/10$ & $10/10$ & $8/10$ \\
-\midrule
-True cost $J$ & $1.155 \times 10^{4} \pm 29.18$ & $9088 \pm 44.71$ & $7834 \pm 45.63$ & $7234 \pm 77.19$ & $8219 \pm 2138$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.974 \pm 0.00499$ & $0.554 \pm 0.00765$ & $0.34 \pm 0.0078$ & $0.237 \pm 0.0132$ & $0.405 \pm 0.366$ \\
-Gain rank & $25.0 \pm 0.0$ & $25.0 \pm 0.0$ & $22.9 \pm 1.1$ & $10.6 \pm 2.3$ & $17.0 \pm 8.5$ \\
-Spectral radius & $0.9975 \pm 0.0000$ & $0.9976 \pm 0.0000$ & $0.9977 \pm 0.0000$ & $0.9973 \pm 0.0001$ & $0.9970 \pm 0.0009$ \\
-Test cost$^{\dagger}$ & $9531 \pm 8603$ & $8253 \pm 7421$ & $6956 \pm 6206$ & $6561 \pm 5847$ & $7490 \pm 6270$ \\
+True cost $J$ & $1.196 \times 10^{4} \pm 417.9$ & $9108 \pm 45.74$ & $7839 \pm 45.92$ & $7238 \pm 85.8$ & $1.241 \times 10^{4} \pm 2.908 \times 10^{-12}$ \\
+Training suboptimality $(J-J^*)/J^*$ & $1.04 \pm 0.0715$ & $0.557 \pm 0.00782$ & $0.34 \pm 0.00785$ & $0.238 \pm 0.0147$ & $1.12 \pm 4.68 \times 10^{-16}$ \\
+Gain rank & $25.0 \pm 0.0$ & $25.0 \pm 0.0$ & $22.5 \pm 1.4$ & $9.7 \pm 2.9$ & $25.0 \pm 0.0$ \\
+Spectral radius & $0.9975 \pm 0.0000$ & $0.9976 \pm 0.0000$ & $0.9977 \pm 0.0000$ & $0.9973 \pm 0.0001$ & $0.9975 \pm 0.0000$ \\
+Iterations & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ \\
+Env.\ steps to convergence & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $6.47 \times 10^{6} \pm 3.23 \times 10^{6}$ \\
+Env.\ steps to best policy & $4.26 \times 10^{6} \pm 3.76 \times 10^{6}$ & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $1.6 \times 10^{5} \pm 0$ \\
 \bottomrule
 \end{tabular}
 }
-\caption{Model-free S-PI at lambda=4000, medium inflation, over 10 seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 200 test episodes (20 per seed, 10 seeds) pooled; every other row over the 10 runs. Stable counts the seeds whose controller left the plant stable.}
-\label{tab:appendix-spimf-medium-4000}
 \end{table}

@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+\centering
+\caption{S-PI (model-free) with $\lambda = 400$ under \emph{base} inflation, over the seeds. Mean $\pm$ standard deviation over 10 runs.}
+\label{tab:appendix-spi-mf-base-400}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Step size & 3.5e-09 & 3.5e-08 & 3.5e-07 & 3.5e-06 & 3.5e-05 \\
+\midrule
+True cost $J$ & $8111 \pm 16.85$ & $7128 \pm 24.04$ & $6583 \pm 60.9$ & $1.609 \times 10^{4} \pm 2046$ & $1.422 \times 10^{5} \pm 2.475 \times 10^{4}$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.387 \pm 0.00288$ & $0.219 \pm 0.00411$ & $0.126 \pm 0.0104$ & $1.75 \pm 0.35$ & $23.3 \pm 4.23$ \\
+Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ \\
+Spectral radius & $0.9974 \pm 0.0000$ & $0.9972 \pm 0.0000$ & $0.9961 \pm 0.0001$ & $0.9827 \pm 0.0014$ & $0.9843 \pm 0.0009$ \\
+Iterations & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ \\
+Env.\ steps to convergence & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ \\
+Env.\ steps to best policy & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

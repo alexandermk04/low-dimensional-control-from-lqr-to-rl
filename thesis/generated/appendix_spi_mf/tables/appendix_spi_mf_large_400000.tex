@@ -1,0 +1,22 @@
+\begin{table}[htbp]
+\centering
+\caption{S-PI (model-free) with $\lambda = 400000$ under \emph{large} inflation, over the seeds. Mean $\pm$ standard deviation over 10 runs. Stable counts the seeds whose controller left the plant stable.}
+\label{tab:appendix-spi-mf-large-400000}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Step size & 3.5e-09 & 3.5e-08 & 3.5e-07 & 3.5e-06 & 3.5e-05 \\
+\midrule
+Stable & $10/10$ & $10/10$ & $10/10$ & $0/10$ & $0/10$ \\
+\midrule
+True cost $J$ & $1.208 \times 10^{4} \pm 27.22$ & $1.255 \times 10^{5} \pm 8.548 \times 10^{4}$ & $1.142 \times 10^{5} \pm 1.056 \times 10^{5}$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Training suboptimality $(J-J^*)/J^*$ & $1.07 \pm 0.00465$ & $20.5 \pm 14.6$ & $18.5 \pm 18.1$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Gain rank & $16.1 \pm 0.7$ & $54.6 \pm 9.5$ & $19.8 \pm 14.6$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Spectral radius & $0.9978 \pm 0.0000$ & $0.9999 \pm 0.0000$ & $0.9998 \pm 0.0001$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Iterations & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Env.\ steps to convergence & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Env.\ steps to best policy & $8 \times 10^{6} \pm 0$ & $6.27 \times 10^{6} \pm 2.59 \times 10^{5}$ & $8.16 \times 10^{5} \pm 5.06 \times 10^{4}$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

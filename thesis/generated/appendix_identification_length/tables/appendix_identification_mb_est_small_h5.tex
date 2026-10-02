@@ -1,16 +1,18 @@
 \begin{table}[htbp]
 \centering
+\caption{N4SID + Model-based PG on a system with \emph{small} inflation with a Hankel horizon of 5. Mean $\pm$ standard deviation over 10 runs.}
+\label{tab:appendix-identification-mb-est-small-h5}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
 Trajectory length $T$ & 500 & 1000 & 2000 & 4000 & 8000 \\
 \midrule
-Training suboptimality $(J-J^*)/J^*$ & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ \\
-Test cost$^{\dagger}$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ \\
+Training suboptimality $(J-J^*)/J^*$ & $1.38 \times 10^{-7} \pm 3.8 \times 10^{-7}$ & $2.32 \times 10^{-6} \pm 7.2 \times 10^{-6}$ & $3.82 \times 10^{-7} \pm 9.52 \times 10^{-7}$ & $1.04 \times 10^{-6} \pm 2.79 \times 10^{-6}$ & $1.04 \times 10^{-6} \pm 2.05 \times 10^{-6}$ \\
+Iterations & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Env.\ steps to convergence & $500 \pm 0$ & $10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ & $4 \times 10^{3} \pm 0$ & $8 \times 10^{3} \pm 0$ \\
+Env.\ steps to best policy & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
 Wall time (s) & $0.1 \pm 0.0$ & $0.1 \pm 0.0$ & $0.1 \pm 0.0$ & $0.1 \pm 0.0$ & $0.1 \pm 0.0$ \\
 \bottomrule
 \end{tabular}
 }
-\caption{mb\_est on a system with small inflation with a Hankel horizon of 5. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
-\label{tab:appendix-identification-mb-est-small-h5}
 \end{table}

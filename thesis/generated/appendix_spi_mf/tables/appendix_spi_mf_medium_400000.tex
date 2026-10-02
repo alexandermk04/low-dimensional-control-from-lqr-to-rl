@@ -1,20 +1,22 @@
 \begin{table}[htbp]
 \centering
+\caption{S-PI (model-free) with $\lambda = 400000$ under \emph{medium} inflation, over the seeds. Mean $\pm$ standard deviation over 10 runs. Stable counts the seeds whose controller left the plant stable.}
+\label{tab:appendix-spi-mf-medium-400000}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
 Step size & 3.5e-09 & 3.5e-08 & 3.5e-07 & 3.5e-06 & 3.5e-05 \\
 \midrule
-Stable & $10/10$ & $10/10$ & $9/10$ & $9/10$ & $0/10$ \\
+Stable & $10/10$ & $9/10$ & $4/10$ & $0/10$ & $0/10$ \\
 \midrule
-True cost $J$ & $1.205 \times 10^{4} \pm 61.54$ & $1.331 \times 10^{6} \pm 7.803 \times 10^{5}$ & $3.626 \times 10^{6} \pm 5.273 \times 10^{6}$ & $3.247 \times 10^{4} \pm 2.887 \times 10^{4}$ & \multicolumn{1}{c}{--} \\
-Training suboptimality $(J-J^*)/J^*$ & $1.06 \pm 0.0105$ & $227 \pm 133$ & $619 \pm 902$ & $4.55 \pm 4.94$ & \multicolumn{1}{c}{--} \\
-Gain rank & $17.6 \pm 0.7$ & $8.4 \pm 4.2$ & $4.8 \pm 6.0$ & $14.2 \pm 9.0$ & \multicolumn{1}{c}{--} \\
-Spectral radius & $0.9978 \pm 0.0000$ & $1.0000 \pm 0.0000$ & $1.0000 \pm 0.0000$ & $0.9989 \pm 0.0006$ & \multicolumn{1}{c}{--} \\
-Test cost$^{\dagger}$ & $9784 \pm 8839$ & $1.255 \times 10^{4} \pm 1.144 \times 10^{4}$ & $1.233 \times 10^{4} \pm 1.135 \times 10^{4}$ & $1.523 \times 10^{4} \pm 1.939 \times 10^{4}$ & \multicolumn{1}{c}{--} \\
+True cost $J$ & $1.205 \times 10^{4} \pm 60.32$ & $1.139 \times 10^{6} \pm 5.329 \times 10^{5}$ & $2.785 \times 10^{9} \pm 5.205 \times 10^{9}$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Training suboptimality $(J-J^*)/J^*$ & $1.06 \pm 0.0103$ & $194 \pm 91.1$ & $4.76 \times 10^{5} \pm 8.9 \times 10^{5}$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Gain rank & $17.9 \pm 0.6$ & $8.0 \pm 3.1$ & $1.0 \pm 0.0$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Spectral radius & $0.9978 \pm 0.0000$ & $1.0000 \pm 0.0000$ & $1.0000 \pm 0.0000$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Iterations & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Env.\ steps to convergence & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Env.\ steps to best policy & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $2.2 \times 10^{6} \pm 1.85 \times 10^{6}$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
 \bottomrule
 \end{tabular}
 }
-\caption{Model-free S-PI at lambda=400000, medium inflation, over 10 seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 200 test episodes (20 per seed, 10 seeds) pooled; every other row over the 10 runs. Stable counts the seeds whose controller left the plant stable.}
-\label{tab:appendix-spimf-medium-400000}
 \end{table}

@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+\centering
+\caption{S-PI (model-free) with $\lambda = 40000$ under \emph{large} inflation, over the seeds. Mean $\pm$ standard deviation over 10 runs.}
+\label{tab:appendix-spi-mf-large-40000}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Step size & 3.5e-09 & 3.5e-08 & 3.5e-07 & 3.5e-06 & 3.5e-05 \\
+\midrule
+True cost $J$ & $1.162 \times 10^{4} \pm 21.42$ & $9507 \pm 32.06$ & $1.842 \times 10^{4} \pm 1398$ & $1.241 \times 10^{4} \pm 3.688 \times 10^{-12}$ & $1.241 \times 10^{4} \pm 3.688 \times 10^{-12}$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.986 \pm 0.00366$ & $0.626 \pm 0.00548$ & $2.15 \pm 0.239$ & $1.12 \pm 5.87 \times 10^{-16}$ & $1.12 \pm 5.87 \times 10^{-16}$ \\
+Gain rank & $100.0 \pm 0.0$ & $76.2 \pm 5.3$ & $76.8 \pm 5.3$ & $100.0 \pm 0.0$ & $100.0 \pm 0.0$ \\
+Spectral radius & $0.9975 \pm 0.0000$ & $0.9979 \pm 0.0000$ & $0.9994 \pm 0.0001$ & $0.9975 \pm 0.0000$ & $0.9975 \pm 0.0000$ \\
+Iterations & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ \\
+Env.\ steps to convergence & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $7.06 \times 10^{6} \pm 2 \times 10^{6}$ \\
+Env.\ steps to best policy & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $5.92 \times 10^{6} \pm 2.5 \times 10^{5}$ & $1.6 \times 10^{5} \pm 0$ & $1.6 \times 10^{5} \pm 0$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

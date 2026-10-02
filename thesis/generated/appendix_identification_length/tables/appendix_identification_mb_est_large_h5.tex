@@ -1,5 +1,7 @@
 \begin{table}[htbp]
 \centering
+\caption{N4SID + Model-based PG on a system with \emph{large} inflation with a Hankel horizon of 5. Mean $\pm$ standard deviation over 10 runs. Identified counts the seeds a model was obtained from and stable those whose controller left the plant stable.}
+\label{tab:appendix-identification-mb-est-large-h5}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
@@ -8,12 +10,12 @@ Trajectory length $T$ & 500 & 1000 & 2000 & 4000 & 8000 \\
 Identified & $0/10$ & $10/10$ & $10/10$ & $10/10$ & $10/10$ \\
 Stable & $0/10$ & $10/10$ & $10/10$ & $10/10$ & $10/10$ \\
 \midrule
-Training suboptimality $(J-J^*)/J^*$ & \multicolumn{1}{c}{--} & $0.069 \pm 0.097$ & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ \\
-Test cost$^{\dagger}$ & \multicolumn{1}{c}{--} & $6355 \pm 5627$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ \\
+Training suboptimality $(J-J^*)/J^*$ & \multicolumn{1}{c}{--} & $0.069 \pm 0.0966$ & $1.46 \times 10^{-9} \pm 2.62 \times 10^{-9}$ & $3.79 \times 10^{-9} \pm 4.82 \times 10^{-9}$ & $8.22 \times 10^{-9} \pm 1.35 \times 10^{-8}$ \\
+Iterations & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Env.\ steps to convergence & \multicolumn{1}{c}{--} & $10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ & $4 \times 10^{3} \pm 0$ & $8 \times 10^{3} \pm 0$ \\
+Env.\ steps to best policy & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
 Wall time (s) & \multicolumn{1}{c}{--} & $0.3 \pm 0.0$ & $0.7 \pm 0.0$ & $1.2 \pm 0.0$ & $2.3 \pm 0.1$ \\
 \bottomrule
 \end{tabular}
 }
-\caption{mb\_est on a system with large inflation with a Hankel horizon of 5. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs. Identified counts the seeds a model was obtained from and stable those whose controller left the plant stable.}
-\label{tab:appendix-identification-mb-est-large-h5}
 \end{table}
