@@ -1,19 +1,64 @@
 \chapter{Complete Simulation Results}\label{app:completeResults}
 
+Here the results from some hyperparameter tuning is shown.
+For simplicity, mostly the ones under \emph{large} inflation
+are shown, unless named otherwise, as this is the most challenging setting from what
+we've observed. The remaining plots and tables can be found in
+the repository\needcite{TODO repo link}.
+
+\section{MB PG learning rate}
+
+% table appendix learning rate mb_pg_large
+% plot appendix learning rate mb_pg_large
+
+\section{SPI lambda}
+
+% table spi lambda lambda spi large
+% plot with training suboptimality
+
+\section{N4SID identification length}
+
+% plots with large and medium inflation
+
+% tables medium and large with h5 horizon
+
+\section{Sample Size}
+
+% plot mf npg large curves
+
+% plot mf npg large subopt
+
+% table mf npg with training rows as training suboptimality base, small, medium large
+
+\section{MF NPG LR}
+
+% plot mf npg lr large
+
+% table mf npg large
+
+\section{SPI MF}
+
+Here, we only used \emph{medium} inflation, as this is the first
+setting where the algorithm can reduce the rank of the gain drastically,
+while still being computationally feasible for this many experiments.
+
+Excluded are the tables for lambda = 400, as no rank reduction could
+be observed (lambda too low), as well as lambda = 4e6, as here all produced
+controllers where unstable (lambda too high).
+
+From the remainders, we picked a value that exhibits rank reduction, while
+at the same time having a low suboptimality.
+
+% tables with lambda = 4000, 40000, 400000
+
+
+% Test figure
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch4_identified_model}{ch4_identified_medium_trajectories}
+  \caption{TODO}
+  \label{fig:ch4-identified-medium-trajectories}
+\end{figure}
+
+% Test table
 \input{generated/appendix_spi_mf/tables/appendix_spi_mf_medium_400.tex}
-
-\input{generated/appendix_spi_mf/tables/appendix_spi_mf_medium_4000.tex}
-
-\input{generated/appendix_spi_mf/tables/appendix_spi_mf_medium_40000.tex}
-
-\input{generated/appendix_spi_mf/tables/appendix_spi_mf_medium_400000.tex}
-
-\input{generated/appendix_spi_mf/tables/appendix_spi_mf_medium_4e06.tex}
-
-\input{generated/appendix_spi_lambda/tables/appendix_spi_lambda_spi_base.tex}
-
-\input{generated/appendix_spi_lambda/tables/appendix_spi_lambda_spi_small.tex}
-
-\input{generated/appendix_spi_lambda/tables/appendix_spi_lambda_spi_medium.tex}
-
-\input{generated/appendix_spi_lambda/tables/appendix_spi_lambda_spi_large.tex}
