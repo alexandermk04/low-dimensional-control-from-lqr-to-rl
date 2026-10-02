@@ -69,12 +69,7 @@ CHOSEN_IDENTIFICATION = {
     "base": (500, 5),
     "small": (500, 5),
     "medium": (500, 5),
-    "large": (2000, 5),
-}
-
-SUBOPTIMAL_IDENTIFICATION = {
-    "medium": (500, 10),
-    "large": (1000, 5),
+    "large": (8000, 5),
 }
 
 # Rollout length for training
