@@ -186,61 +186,113 @@ for the model-based approaches from \cref{subsec:known-model-setting}. This thus
 ever having access to the real model.
 
 An attentive reader might now ask why we would even want to use these iterative approaches, if we could just
-solve the DARE \needcite{cref} directly on this estimation. And indeed we include it in our following comparison.
+solve the DARE \eqref{eq:dare} directly on this estimation. And indeed we include it in our following comparison.
 However, to make this work with our construction of inflated state models, we need some modification to N4SID.
-This stems from the fact, that we need to calculate K = (R + BᵀPB)⁻¹ BᵀPA, hence R + BᵀPB needs to be invertible.
-But for our inflated space, the estimated B and R have the same nullspace, making the matrix singular on that subspace.
-So to be able to apply this solver, we eliminate the additional singular values of B, that exceed the estimated order
-of the model, thus reducing the model in dimension. This way we don't access the model, however, create encode and
-decode matrices, that map between our dimensionally reduced model, and the actual state observation, as well as actuation
-output. For the exact implementation, please refer to the repository \needcite{our repository}.
+This stems from the fact that we need to calculate $K = \left( R + B\T P B \right)^{-1} B\T P A$ from
+\eqref{eq:optimal-gain}, hence $R + B\T P B$ needs to be invertible.
+But for our inflated space, the estimated $B$ and $R$ have the same null space, making the matrix singular on that subspace.
+So to be able to apply this solver, we eliminate the additional singular values of $B$ that exceed the estimated order
+of the model, thus reducing the model in dimension. This way we do not access the model, but create encoding and
+decoding matrices that map between our dimensionally reduced model and the actual state observation, as well as the
+actuation output. For the exact implementation, please refer to the repository~\needcite{our repository}.
 
-Additionally, we will also use direct model-free approaches, which are the variations of the model-based approaches
-from \needcite{cref known model}. Differently to before, they don't calculate the gradient directly, but estimate
-it based on the returns of m slightly perturbed versions of the current policy, simulated for l steps. As one might
-assume, more "data", could conversely to better estimation, and thus better policy updates. So, to
+Additionally, we also use direct model-free approaches, which are variations of the model-based approaches
+from \cref{sec:known-model}. Unlike before, they do not calculate the gradient directly, but estimate
+it based on the returns of $m$ slightly perturbed versions of the current policy, simulated for $l$ steps. As one might
+assume, more ``data'', could conversely to better estimation, and thus better policy updates. So, to
 settle this, we evaluated different combinations of them in \cref{sec:app-sample-size}. The best
-tradeoff between computational efficiency and quality gave m = 100 and l = 800.
+trade-off between computational efficiency and quality gave $m = 100$ and $l = 800$.
 
 % mf npg
-We use the described Model-free Natural Policy Gradient estimation from Fazel et al. \needcite{Fazel2018Global} which at the
-core consists of the following loop. Instead of using the proposed single-point estimator, we have replaced it with a 
-two-point estimator \needcite{Duchi 2015}, as this reduced variance of the estimates, and thus instability of the controller
-drastically.
+We use the model-free natural policy gradient (NPG) estimation described by Fazel et al.~\cite{Fazel2018Global},
+which at its core consists of the loop in \cref{alg:mf-gradient}. Instead of the proposed single-point estimator,
+we use a two-point estimator inspired by Duchi et al. and Mania et al.~\cite{Duchi2015Optimal,Mania2018Simple},
+as this drastically reduced the variance of the estimates, and thus the instability of the controller.
 
-% Alg: Policy Gradient estimation
-% code from mf_policy_gradient estimate_gradient function
+\begin{algorithm}[htbp]
+    \caption{Two-point gradient estimation}
+    \label{alg:mf-gradient}
+    \begin{algorithmic}[1]
+        \REQUIRE gain $K \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$, number of perturbation pairs $m$,
+        rollout length $l$, smoothing radius $r$
+        \FOR{$j = 1, \dots, m$}
+            \STATE sample $U_j$ uniformly from the matrices with $\lVert U_j \rVert_F = r$
+            \STATE sample an initial state $x_0 \sim \mathcal{D}$
+            \STATE simulate $K + U_j$ and $K - U_j$ for $l$ steps from $x_0$, with stage costs $c_k^{\pm}$ and
+            observations $y_k^{\pm}$
+            \STATE $\hat{C}_j^{\pm} = \sum_{k=0}^{l-1} c_k^{\pm}$, \quad
+            $\hat{\Sigma}_j^{\pm} = \sum_{k=0}^{l-1} y_k^{\pm} \left( y_k^{\pm} \right)\T$, \quad
+            $\delta_j = \hat{C}_j^{+} - \hat{C}_j^{-}$
+        \ENDFOR
+        \STATE $\bar{\delta} = \frac{1}{m} \sum_{j=1}^{m} \delta_j$
+        \STATE $\widehat{\nabla f}(K) = \frac{1}{m} \sum_{j=1}^{m}
+        \frac{d_{\mathrm{out}} d_{\mathrm{in}}}{2 r^2} \left( \delta_j - \bar{\delta} \right) U_j$
+        \STATE $\hat{\Sigma}_K = \frac{1}{m} \sum_{j=1}^{m} \left( \hat{\Sigma}_j^{+} + \hat{\Sigma}_j^{-} \right)$
+        \STATE $\hat{f}(K) = \frac{1}{m} \sum_{j=1}^{m} \frac{1}{2} \left( \hat{C}_j^{+} + \hat{C}_j^{-} \right)$
+        \RETURN $\widehat{\nabla f}(K)$, $\hat{\Sigma}_K$, $\hat{f}(K)$
+    \end{algorithmic}
+\end{algorithm}
 
-Our full learning algorithm then becomes:
-% alg
-- require stabilizing K_0
-- then loop from mf_natural_policy_gradient
+We further aim to clarify a couple of things about the given loop.
+Subtracting the mean difference $\bar{\delta}$ does not change the expected value of the estimate, since
+$\E[U_j] = 0$, but lowers its variance. A rollout whose observation exceeds $\lVert y_k \rVert = 10^{5}$,
+we count as diverged. It is therefore ended early and charged a penalty cost of $10^{10}$. 
+Additionally, for inflated dimensions, $\hat{\Sigma}_K$ is singular, so we precondition with its
+truncated pseudoinverse $\hat{\Sigma}_K^{\dagger}$ instead, which discards singular values below $10^{-6}$ times the largest one.
 
-After some evaluations, we have decided on a smoothing parameter of r=0.5, and a learning rate of 0.1, based
+Our full learning algorithm is then given in \cref{alg:mf-npg}.
+\begin{algorithm}[htbp]
+    \caption{Model-free NPG}
+    \label{alg:mf-npg}
+    \begin{algorithmic}[1]
+        \REQUIRE stabilizing gain $K_0 \in \mathcal{K}$, $m$, $l$, $r$, step size $\eta$
+        \FOR{$i = 0, 1, 2, \dots$}
+            \STATE compute $\widehat{\nabla f}(K_i)$ and $\hat{\Sigma}_{K_i}$ by \cref{alg:mf-gradient}
+            \STATE update the gain by $K_{i+1} = K_i - \eta \, \widehat{\nabla f}(K_i) \, \hat{\Sigma}_{K_i}^{\dagger}$
+        \ENDFOR
+    \end{algorithmic}
+\end{algorithm}
+
+After some evaluations, we have decided on a smoothing parameter of $r = 0.5$, and a learning rate of $\eta = 0.01$, based
 on the results in \cref{sec:app-learning-rate-mf-npg}.
 
 % spi mf
-Next, we implement a model-free version of the Structured Policy Iteration that relies on the same gradient
-estimation\needcite{alg from above} as the Natural Policy Gradient Iteration. Another crucial difference,
-apart from the estimation of the gradient compared to the calculation, is the "usage of a fixed stepsize
-eta rather than an adaptive stepsize from a backtracking linesearch", as that would require access to the
-function value f (K) = Tr(Σ0P ) \needcite{Park2020Structured}. Before we look at how we select this stepsize
-and lambda, we define our learning loop:
+Next, we implement a model-free version of S-PI that relies on the same gradient
+estimation (\cref{alg:mf-gradient}) as Model-free NPG. Another crucial difference,
+apart from the estimation of the gradient compared to the calculation, is the ``usage of a fixed stepsize
+$\eta$, rather than an adaptive stepsize from a backtracking linesearch''~\cite[Sec.~3.1]{Park2020Structured}, as that
+would require access to the function value $f(K) = \tr(\Sigma_0 P_K)$. Before we look at how we select this step size
+and $\lambda$, we define our learning loop in \cref{alg:mf-spi}.
+\begin{algorithm}[htbp]
+    \caption{S-PI (model-free)}
+    \label{alg:mf-spi}
+    \begin{algorithmic}[1]
+        \REQUIRE stabilizing gain $K_0 \in \mathcal{K}$, $m$, $l$, $r$, fixed step size $\eta$, weight $\lambda$,
+        tolerance $\varepsilon$
+        \FOR{$i = 0, 1, 2, \dots$}
+            \STATE compute $\widehat{\nabla f}(K_i)$ by \cref{alg:mf-gradient}
+            \STATE compute $K_{i+1}$ by \eqref{eq:spi-prox}, with $\widehat{\nabla f}(K_i)$ in place of $\nabla f(K_i)$
+            \IF{$\lVert K_{i+1} - K_i \rVert_F \leq \varepsilon$}
+                \STATE \textbf{stop}
+            \ENDIF
+        \ENDFOR
+    \end{algorithmic}
+\end{algorithm}
 
-% alg spi mf, from structured_policy_iteration
-
-Now to the selection of the parameters. Fazel et al. already notes the difficulty of finding a fixed stepsize
-which doesn't produce divergence of the method \needcite{Park2020Structured}. Also, the shown example only
-used the model-based approach and the regularizer to induce sparse structure, not the model-free variant combined
-with low-dimensionality. So during our first tests, we often ran into either unstable controller, or some which
-didn't induce any structure at all, hinting at a too low lambda. If we remember the proximal step, we can see
-that it depends both on the stepsize and lambda:
-
-% insert formula here
-
-Even after some improvement by using the two-point estimator \needcite{cref to above}, it remained quite a difficult
-topic. So rather extensive experiments on the variation of lambda and the stepsize can be found in \cref{sec:app-spi-mf}.
-Based on those, lambda = 4000 and a stepsize of 3.5e-6 was selected.
+Now to the selection of the parameters. Park et al.\ already note the difficulty of finding a fixed step size
+that does not produce divergence of the method~\cite{Park2020Structured}. Also, the example shown only
+uses the model-based approach and the regularizer to induce sparse structure, not the model-free variant combined
+with low dimensionality. So during our first tests, we often ran into either unstable controllers, or ones that
+did not induce any structure at all, hinting at a too low $\lambda$. If we remember the proximal step
+\eqref{eq:spi-prox}, we can see that it depends on both the step size and $\lambda$, as every singular value is
+mapped to
+\begin{equation}
+    \label{eq:spi-threshold}
+    \sigma_l \mapsto \max\{ \sigma_l - \eta \lambda, 0 \} .
+\end{equation}
+Even after some improvement by using the two-point estimator (\cref{alg:mf-gradient}), it remained quite a difficult
+topic. So rather extensive experiments on the variation of $\lambda$ and the step size can be found in \cref{sec:app-spi-mf}.
+Based on those, $\lambda = 4000$ and a step size of $\eta = 3.5 \times 10^{-6}$ were selected.
 
 \subsection{Results}
 \label{subsec:unknown-model-results}
