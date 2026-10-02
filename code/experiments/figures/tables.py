@@ -361,9 +361,8 @@ def metric_table(
     if caption is None and label is None:
         return tabular
 
-    # Escaped first, then the provenance is appended.
     full_caption = (
-        _escape(caption)
+        caption
         + _provenance(stats, episode_metrics, show_spread)
         + ((CENSUS_NOTE if with_identification else CENSUS_NOTE_STABLE_ONLY)
            if show_census else "")
@@ -372,9 +371,9 @@ def metric_table(
     return "\n".join([
         r"\begin{table}[htbp]",
         r"\centering",
-        tabular,
         rf"\caption{{{full_caption}}}" if caption else "",
         rf"\label{{{label}}}" if label else "",
+        tabular,
         r"\end{table}",
     ])
 

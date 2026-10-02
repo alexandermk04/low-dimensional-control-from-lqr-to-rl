@@ -7,6 +7,7 @@ Run with::
 
 import settings
 from experiments.figures.aggregate import (
+    label_for,
     latest_per_experiment,
     tidy,
     with_suboptimality,
@@ -127,7 +128,7 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
                 metrics=("subopt",),
                 column_order=level_order,
                 column_header="Intensity",
-                caption=f"{solver} under {channel} noise of increasing intensity.",
+                caption=f"{label_for(solver)} under {channel} noise of increasing intensity.",
                 label=f"tab:{slug}-levels-{short}",
             ),
             f"{prefix}_levels_{solver}",
@@ -143,7 +144,7 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
                 column_order=channel_order,
                 column_header="Channel",
                 caption=(
-                    f"{solver} under each noise channel at intensity '{level}'."
+                    f"{label_for(solver)} under each noise channel at intensity \\emph{{{level}}}."
                 ),
                 label=f"tab:{slug}-channels-{short}",
             ),

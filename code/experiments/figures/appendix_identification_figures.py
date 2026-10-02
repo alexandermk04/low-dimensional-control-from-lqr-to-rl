@@ -11,7 +11,7 @@ import matplotlib
 import numpy as np
 
 import settings
-from experiments.figures.aggregate import latest_per_experiment, tidy
+from experiments.figures.aggregate import label_for, latest_per_experiment, tidy
 from experiments.figures.style import figure_dir, new_figure, save, table_dir
 from experiments.figures.tables import metric_table, write_table
 from experiments.store import load_experiment
@@ -184,8 +184,8 @@ def render_length_sweep():
                         column_order=settings.IDENTIFICATION_LENGTHS,
                         column_header=r"Trajectory length $T$",
                         caption=(
-                            f"{solver} on a system with {size} inflation with a Hankel "
-                            f"horizon of {horizon}."
+                            f"{label_for(solver)} on a system with \\emph{{{size}}} inflation "
+                            f"with a Hankel horizon of {horizon}."
                         ),
                         label=(
                             "tab:appendix-identification-"

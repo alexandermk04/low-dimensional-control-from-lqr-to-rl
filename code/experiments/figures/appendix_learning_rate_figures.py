@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 import settings
 from experiments.appendix_learning_rate import EXPERIMENT, SIZES, SOLVERS
-from experiments.figures.aggregate import latest_per_experiment, tidy
+from experiments.figures.aggregate import label_for, latest_per_experiment, tidy
 from experiments.figures.panels import learning_bands
 from experiments.figures.style import figure_dir, save, table_dir
 from experiments.figures.sweeps import median, choose, print_choice, sweep_tables
@@ -49,7 +49,7 @@ def render():
                 x="env_steps" if solver == "mf_npg" else "iteration",
                 order=[(lr,) for lr in settings.PG_LEARNING_RATES[solver]],
             )
-            ax.set_title(f"{solver}, {size} inflation")
+            ax.set_title(f"{label_for(solver)}, {size} inflation")
             save(ax.figure, f"{EXPERIMENT}_{solver}_{size}", EXPERIMENT)
             plt.close(ax.figure)
 

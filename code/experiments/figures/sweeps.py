@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from experiments.figures.aggregate import group
+from experiments.figures.aggregate import group, label_for
 from experiments.figures.tables import metric_table, write_table
 
 __all__ = ["sweep_tables", "median", "choose", "print_choice"]
@@ -23,8 +23,8 @@ def sweep_tables(rows, experiment, solvers, sizes, column, order, metrics, heade
                     metrics=metrics,
                     column_order=order(solver) if callable(order) else order,
                     column_header=header,
-                    caption=f"{solver} at the {size} inflation, over the seeds.",
-                    label=f"tab:{experiment.replace('_', '-')}-{solver}-{size}",
+                    caption=f"{label_for(solver)} under \\emph{{{size}}} inflation, over the seeds.",
+                    label=f"tab:{experiment.replace('_', '-')}-{solver.replace('_', '-')}-{size}",
                 ),
                 f"{experiment}_{solver}_{size}",
                 experiment,

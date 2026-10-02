@@ -75,7 +75,7 @@ def render_size(
                      "iterations", "total_env_steps", "best_env_steps", "policy_complexity", "rank_final"),
             column_order=order,
             column_header="Solver",
-            caption=f"{track_caption} at the {size} inflation, without noise.",
+            caption=f"{track_caption} under \\emph{{{size}}} inflation, without noise.",
             label=f"tab:{stem.replace('_', '-')}",
         ),
         stem,

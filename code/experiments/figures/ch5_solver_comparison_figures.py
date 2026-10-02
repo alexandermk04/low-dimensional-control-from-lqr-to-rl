@@ -56,7 +56,7 @@ def main():
             column_order=ORDER,
             column_header="Solver",
             caption=(
-                f"Chapter 5 solvers at {settings.CH5_PIXEL_INFLATION} inflation, "
+                f"Chapter 5 solvers under \\emph{{{settings.CH5_PIXEL_INFLATION}}} inflation, "
                 "without noise."
             ),
             label="tab:ch5-solvers",

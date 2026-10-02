@@ -7,9 +7,9 @@ Run with::
 
 import settings
 from experiments.appendix_spi_mf import EXPERIMENT, SIZES
-from experiments.figures.aggregate import latest_per_experiment, tidy
+from experiments.figures.aggregate import label_for, latest_per_experiment, tidy
 from experiments.figures.style import table_dir
-from experiments.figures.tables import metric_table, write_table
+from experiments.figures.tables import _math, metric_table, write_table
 from experiments.store import MissingExperimentError, load_experiment
 
 METRICS = ("J_final", "training_subopt_final", "rank_final",
@@ -42,10 +42,10 @@ def render():
                     column_order=settings.SPI_MF_STEPSIZES,
                     column_header="Step size",
                     caption=(
-                        f"Model-free S-PI at lambda={lambda_:g}, {size} inflation, over "
-                        f"{len(settings.SEEDS)} seeds."
+                        f"{label_for('spi_mf')} with $\\lambda = {_math(lambda_, '{:g}')}$ under "
+                        f"\\emph{{{size}}} inflation, over the seeds."
                     ),
-                    label=f"tab:appendix-spimf-{size}-{_slug(lambda_)}",
+                    label=f"tab:appendix-spi-mf-{size}-{_slug(lambda_)}",
                 ),
                 f"appendix_spi_mf_{size}_{_slug(lambda_)}",
                 EXPERIMENT,

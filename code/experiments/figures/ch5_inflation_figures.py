@@ -6,7 +6,7 @@ Run with::
 """
 
 import settings
-from experiments.figures.aggregate import latest_per_experiment, tidy, with_suboptimality
+from experiments.figures.aggregate import label_for, latest_per_experiment, tidy, with_suboptimality
 from experiments.figures.panels import (
     complexity_bars,
     learning_bands,
@@ -71,7 +71,7 @@ def render(experiment: str):
                          "iterations", "total_env_steps", "best_env_steps"),
                 column_order=SIZE_ORDER,
                 column_header="Inflation",
-                caption=f"{solver} across inflation sizes.",
+                caption=f"{label_for(solver)} across inflation sizes.",
                 label=f"tab:ch5-inflation-{short}",
             ),
             f"ch5_inflation_{solver}",
