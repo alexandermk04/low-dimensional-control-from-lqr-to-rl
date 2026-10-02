@@ -414,7 +414,9 @@ def _run_mb_est(spec: RunSpec, problem: Problem) -> SolverResult:
     """
     from lqr_solvers.system_identification import to_inflated_plant
 
-    context = _identify_for(spec, problem, lambda model, K: K)
+    context = _identify_for(
+        spec, problem, lambda model, K: K, reduce_input=False
+    )
     if context.model is None:
         return context.failed_result(problem)
 
