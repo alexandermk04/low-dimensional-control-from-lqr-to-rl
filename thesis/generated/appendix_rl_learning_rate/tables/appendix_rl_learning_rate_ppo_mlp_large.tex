@@ -1,18 +1,18 @@
 \begin{table}[htbp]
 \centering
+\caption{Fully-connected PPO under \emph{large} inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 300 test episodes (100 per seed, 3 seeds) pooled; every other row over the 3 runs.}
+\label{tab:appendix-rl-learning-rate-ppo-mlp-large}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrr}
+\begin{tabular}{lrrrrr}
 \toprule
-Learning rate & 0.0002 & 6.7e-05 & 2.2e-05 \\
+Learning rate & 6.7e-05 & 2.2e-05 & 6.7e-06 & 6.7e-07 & 2.2e-06 \\
 \midrule
-True cost $J$ & $7622 \pm 676.5$ & $1.094 \times 10^{4} \pm 4448$ & $6986 \pm 1059$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.347 \pm 0.106$ & $0.953 \pm 0.898$ & $0.227 \pm 0.0131$ \\
-Test cost$^{\dagger}$ & $8103 \pm 7919$ & $1.943 \times 10^{4} \pm 2.828 \times 10^{4}$ & $7334 \pm 6980$ \\
-Env.\ steps to best policy & $9.58 \times 10^{6} \pm 7.22 \times 10^{5}$ & $6.35 \times 10^{6} \pm 4.91 \times 10^{6}$ & $9.45 \times 10^{6} \pm 6.38 \times 10^{5}$ \\
-Env.\ steps to convergence & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ \\
+True cost $J$ & $7016 \pm 1460$ & $6489 \pm 965.5$ & $6459 \pm 908.2$ & $7064 \pm 1012$ & $6401 \pm 980.2$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.226 \pm 0.0747$ & $0.14 \pm 0.00356$ & $0.136 \pm 0.0475$ & $0.242 \pm 0.0356$ & $0.124 \pm 0.0176$ \\
+Test cost$^{\dagger}$ & $8383 \pm 6395$ & $7163 \pm 6111$ & $7141 \pm 6032$ & $7421 \pm 7077$ & $6701 \pm 6246$ \\
+Env.\ steps to best policy & $2.65 \times 10^{7} \pm 2.45 \times 10^{6}$ & $2.46 \times 10^{7} \pm 3.88 \times 10^{6}$ & $2.46 \times 10^{7} \pm 3.88 \times 10^{6}$ & $2.46 \times 10^{7} \pm 3.88 \times 10^{6}$ & $1.96 \times 10^{7} \pm 5.23 \times 10^{6}$ \\
+Env.\ steps to convergence & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ \\
 \bottomrule
 \end{tabular}
 }
-\caption{ppo\_mlp at the large inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 300 test episodes (100 per seed, 3 seeds) pooled; every other row over the 3 runs.}
-\label{tab:appendix-rl-learning-rate-ppo_mlp-large}
 \end{table}

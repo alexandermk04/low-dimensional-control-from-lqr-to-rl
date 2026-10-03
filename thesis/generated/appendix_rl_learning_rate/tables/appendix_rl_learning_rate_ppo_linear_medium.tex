@@ -1,18 +1,18 @@
 \begin{table}[htbp]
 \centering
+\caption{Linear PPO under \emph{medium} inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 300 test episodes (100 per seed, 3 seeds) pooled; every other row over the 3 runs.}
+\label{tab:appendix-rl-learning-rate-ppo-linear-medium}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrrrrr}
 \toprule
-Learning rate & 0.0004 & 0.00013 & 4.5e-05 & 1.3e-05 \\
+Learning rate & 0.00013 & 4.5e-05 & 1.3e-05 & 1.3e-06 & 4.5e-06 \\
 \midrule
-True cost $J$ & $1.666 \times 10^{4} \pm 1.534 \times 10^{4}$ & $7647 \pm 2581$ & $6084 \pm 90.65$ & $6061 \pm 40.73$ \\
-Training suboptimality $(J-J^*)/J^*$ & $1.85 \pm 2.62$ & $0.308 \pm 0.441$ & $0.0403 \pm 0.0155$ & $0.0365 \pm 0.00696$ \\
-Test cost$^{\dagger}$ & $1.619 \times 10^{4} \pm 2.046 \times 10^{4}$ & $7814 \pm 7309$ & $6172 \pm 5434$ & $6147 \pm 5417$ \\
-Env.\ steps to best policy & $2.72 \times 10^{6} \pm 3.51 \times 10^{6}$ & $5.52 \times 10^{6} \pm 4.52 \times 10^{6}$ & $8.18 \times 10^{6} \pm 1.43 \times 10^{6}$ & $8.18 \times 10^{6} \pm 1.43 \times 10^{6}$ \\
-Env.\ steps to convergence & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ \\
+True cost $J$ & $7266 \pm 2441$ & $6070 \pm 317.4$ & $6035 \pm 152$ & $6524 \pm 182.7$ & $5995 \pm 38.1$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.242 \pm 0.417$ & $0.0379 \pm 0.0543$ & $0.032 \pm 0.026$ & $0.116 \pm 0.0312$ & $0.0251 \pm 0.00652$ \\
+Test cost$^{\dagger}$ & $7423 \pm 6942$ & $6159 \pm 5431$ & $6122 \pm 5396$ & $6624 \pm 5821$ & $6081 \pm 5355$ \\
+Env.\ steps to best policy & $1.01 \times 10^{7} \pm 8.29 \times 10^{6}$ & $1.3 \times 10^{7} \pm 2.17 \times 10^{6}$ & $1.44 \times 10^{7} \pm 9.07 \times 10^{5}$ & $1.44 \times 10^{7} \pm 9.07 \times 10^{5}$ & $1.44 \times 10^{7} \pm 9.07 \times 10^{5}$ \\
+Env.\ steps to convergence & $1.5 \times 10^{7} \pm 0$ & $1.5 \times 10^{7} \pm 0$ & $1.5 \times 10^{7} \pm 0$ & $1.5 \times 10^{7} \pm 0$ & $1.5 \times 10^{7} \pm 0$ \\
 \bottomrule
 \end{tabular}
 }
-\caption{ppo\_linear at the medium inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 300 test episodes (100 per seed, 3 seeds) pooled; every other row over the 3 runs.}
-\label{tab:appendix-rl-learning-rate-ppo_linear-medium}
 \end{table}

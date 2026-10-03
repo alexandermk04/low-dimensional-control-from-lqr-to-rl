@@ -1,18 +1,18 @@
 \begin{table}[htbp]
 \centering
+\caption{Linear PPO under \emph{small} inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 300 test episodes (100 per seed, 3 seeds) pooled; every other row over the 3 runs.}
+\label{tab:appendix-rl-learning-rate-ppo-linear-small}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrrrrr}
 \toprule
-Learning rate & 0.0009 & 0.0003 & 0.0001 & 3e-05 \\
+Learning rate & 0.0003 & 3e-05 & 3e-06 & 1e-05 & 0.0001 \\
 \midrule
-True cost $J$ & $6479 \pm 248.2$ & $6633 \pm 741.3$ & $6117 \pm 208.9$ & $6232 \pm 360$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.108 \pm 0.0424$ & $0.134 \pm 0.127$ & $0.046 \pm 0.0357$ & $0.0657 \pm 0.0616$ \\
-Test cost$^{\dagger}$ & $6575 \pm 5798$ & $6726 \pm 5971$ & $6203 \pm 5475$ & $6320 \pm 5591$ \\
-Env.\ steps to best policy & $8.18 \times 10^{6} \pm 1.43 \times 10^{6}$ & $5.91 \times 10^{6} \pm 3.02 \times 10^{6}$ & $5.91 \times 10^{6} \pm 3.02 \times 10^{6}$ & $5.91 \times 10^{6} \pm 3.02 \times 10^{6}$ \\
-Env.\ steps to convergence & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ \\
+True cost $J$ & $6633 \pm 741.3$ & $6232 \pm 360$ & $6857 \pm 369.5$ & $6333 \pm 376.7$ & $6117 \pm 208.9$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.134 \pm 0.127$ & $0.0657 \pm 0.0616$ & $0.172 \pm 0.0632$ & $0.0829 \pm 0.0644$ & $0.046 \pm 0.0357$ \\
+Test cost$^{\dagger}$ & $6726 \pm 5971$ & $6320 \pm 5591$ & $6956 \pm 6140$ & $6422 \pm 5682$ & $6203 \pm 5475$ \\
+Env.\ steps to best policy & $5.91 \times 10^{6} \pm 3.02 \times 10^{6}$ & $5.91 \times 10^{6} \pm 3.02 \times 10^{6}$ & $8.18 \times 10^{6} \pm 1.43 \times 10^{6}$ & $5.91 \times 10^{6} \pm 3.02 \times 10^{6}$ & $5.91 \times 10^{6} \pm 3.02 \times 10^{6}$ \\
+Env.\ steps to convergence & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ \\
 \bottomrule
 \end{tabular}
 }
-\caption{ppo\_linear at the small inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 300 test episodes (100 per seed, 3 seeds) pooled; every other row over the 3 runs.}
-\label{tab:appendix-rl-learning-rate-ppo_linear-small}
 \end{table}

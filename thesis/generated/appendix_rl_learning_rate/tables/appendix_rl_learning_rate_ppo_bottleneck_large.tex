@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering
+\caption{Bottleneck PPO under \emph{large} inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 300 test episodes (100 per seed, 3 seeds) pooled; every other row over the 3 runs.}
+\label{tab:appendix-rl-learning-rate-ppo-bottleneck-large}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Learning rate & 6.7e-05 & 2.2e-05 & 6.7e-06 & 6.7e-07 & 2.2e-06 \\
+\midrule
+True cost $J$ & $6233 \pm 793.8$ & $6037 \pm 777.6$ & $5984 \pm 909.4$ & $6577 \pm 1143$ & $6047 \pm 920.1$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.097 \pm 0.0283$ & $0.0624 \pm 0.0321$ & $0.0506 \pm 0.00627$ & $0.153 \pm 0.0377$ & $0.0618 \pm 0.00683$ \\
+Test cost$^{\dagger}$ & $6566 \pm 6021$ & $6364 \pm 5785$ & $6254 \pm 5674$ & $7148 \pm 6341$ & $6326 \pm 5746$ \\
+Env.\ steps to best policy & $2.58 \times 10^{7} \pm 7.32 \times 10^{6}$ & $2.58 \times 10^{7} \pm 7.32 \times 10^{6}$ & $2.58 \times 10^{7} \pm 7.32 \times 10^{6}$ & $2.58 \times 10^{7} \pm 7.32 \times 10^{6}$ & $2.58 \times 10^{7} \pm 7.32 \times 10^{6}$ \\
+Env.\ steps to convergence & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

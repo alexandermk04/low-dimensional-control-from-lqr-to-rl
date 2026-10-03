@@ -1,20 +1,18 @@
 \begin{table}[htbp]
 \centering
+\caption{Linear PPO under \emph{large} inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 300 test episodes (100 per seed, 3 seeds) pooled; every other row over the 3 runs.}
+\label{tab:appendix-rl-learning-rate-ppo-linear-large}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrrrrr}
 \toprule
-Learning rate & 6.7e-05 & 0.0002 & 2.2e-05 & 6.7e-06 \\
+Learning rate & 6.7e-05 & 2.2e-05 & 6.7e-06 & 2.2e-06 & 6.7e-07 \\
 \midrule
-Stable & $3/3$ & $2/3$ & $3/3$ & $3/3$ \\
-\midrule
-True cost $J$ & $1.163 \times 10^{4} \pm 5357$ & $7561 \pm 1538$ & $9426 \pm 1449$ & $1.053 \times 10^{4} \pm 971.8$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.988 \pm 0.916$ & $0.293 \pm 0.263$ & $0.612 \pm 0.248$ & $0.801 \pm 0.166$ \\
-Test cost$^{\dagger}$ & $1.179 \times 10^{4} \pm 1.22 \times 10^{4}$ & $7655 \pm 6829$ & $9616 \pm 8516$ & $1.072 \times 10^{4} \pm 9497$ \\
-Env.\ steps to best policy & $4.61 \times 10^{6} \pm 4.29 \times 10^{6}$ & $6.22 \times 10^{6} \pm 3.25 \times 10^{6}$ & $3.98 \times 10^{6} \pm 4.57 \times 10^{6}$ & $3.02 \times 10^{6} \pm 1.28 \times 10^{6}$ \\
-Env.\ steps to convergence & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ \\
+True cost $J$ & $1.133 \times 10^{4} \pm 5638$ & $8522 \pm 1037$ & $9853 \pm 1282$ & $1.091 \times 10^{4} \pm 308.9$ & $1.026 \times 10^{4} \pm 824.7$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.937 \pm 0.964$ & $0.457 \pm 0.177$ & $0.685 \pm 0.219$ & $0.866 \pm 0.0528$ & $0.754 \pm 0.141$ \\
+Test cost$^{\dagger}$ & $1.148 \times 10^{4} \pm 1.212 \times 10^{4}$ & $8671 \pm 7645$ & $9953 \pm 8727$ & $1.109 \times 10^{4} \pm 9679$ & $1.044 \times 10^{4} \pm 9135$ \\
+Env.\ steps to best policy & $4.52 \times 10^{6} \pm 3.89 \times 10^{6}$ & $1.19 \times 10^{7} \pm 1.14 \times 10^{7}$ & $1.84 \times 10^{7} \pm 8.67 \times 10^{6}$ & $1.1 \times 10^{7} \pm 7.28 \times 10^{6}$ & $4.78 \times 10^{6} \pm 5.13 \times 10^{6}$ \\
+Env.\ steps to convergence & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ \\
 \bottomrule
 \end{tabular}
 }
-\caption{ppo\_linear at the large inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 300 test episodes (100 per seed, 3 seeds) pooled; every other row over the 3 runs. Stable counts the seeds whose controller left the plant stable.}
-\label{tab:appendix-rl-learning-rate-ppo_linear-large}
 \end{table}
