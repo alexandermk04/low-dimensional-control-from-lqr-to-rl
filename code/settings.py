@@ -198,7 +198,7 @@ SPI_LAMBDAS = (1, 5, 20, 50, 200, 1000)
 PG_LEARNING_RATES = {
     "mb_pg": (1e-6, 3e-6, 1e-5, 3e-5, 1e-4, 1.2e-3),
     "mb_est": (1e-6, 3e-6, 1e-5, 3e-5, 1e-4, 3e-4, 1.2e-3, 3e-3, 1e-2),
-    "mf_npg": (3e-4, 1e-3, 3e-3, 1e-2, 3e-2),
+    "mf_npg": (1e-3, 3e-3, 1e-2, 3e-2, 1e-1),
 }
 
 # LRs for sweep scaled based on the input dimensions
@@ -387,10 +387,10 @@ SIZE_HYPERPARAMS = {
         "large": {"gradient_lr": 1e-05},
     },
     "mb_est": {
-        "base": {"gradient_lr": 0.0012},
-        "small": {"gradient_lr": 0.0012},
-        "medium": {"gradient_lr": 0.0012},
-        "large": {"gradient_lr": 0.0012},
+        "base": {"gradient_lr": 0.0001},
+        "small": {"gradient_lr": 0.0001},
+        "medium": {"gradient_lr": 0.0001},
+        "large": {"gradient_lr": 0.0001},
     },
     "mf_npg": {
         "base": {"gradient_lr": 0.01},

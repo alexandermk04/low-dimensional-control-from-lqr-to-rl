@@ -3,17 +3,17 @@
 \caption{N4SID + Model-based PG under \emph{base} inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
 \label{tab:appendix-learning-rate-mb-est-base}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrrrrrrrr}
 \toprule
-Learning rate & 1e-06 & 3e-06 & 1e-05 & 3e-05 & 0.0001 & 0.0012 \\
+Learning rate & 1e-06 & 3e-06 & 1e-05 & 3e-05 & 0.0001 & 0.0003 & 0.0012 & 0.003 & 0.01 \\
 \midrule
-True cost $J$ & $5868 \pm 3.723 \times 10^{-11}$ & $5856 \pm 2.236 \times 10^{-11}$ & $5851 \pm 1.228 \times 10^{-11}$ & $5849 \pm 1.01 \times 10^{-11}$ & $5848 \pm 6.109 \times 10^{-12}$ & $5848 \pm 8.671 \times 10^{-12}$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.00345 \pm 6.37 \times 10^{-15}$ & $0.00131 \pm 3.82 \times 10^{-15}$ & $0.000419 \pm 2.1 \times 10^{-15}$ & $0.000136 \pm 1.72 \times 10^{-15}$ & $3.18 \times 10^{-5} \pm 1.04 \times 10^{-15}$ & $3.87 \times 10^{-9} \pm 1.48 \times 10^{-15}$ \\
-Test cost$^{\dagger}$ & $5989 \pm 5290$ & $5976 \pm 5279$ & $5971 \pm 5275$ & $5969 \pm 5273$ & $5968 \pm 5273$ & $5968 \pm 5272$ \\
-Iterations & $10414 \pm 0$ & $5151 \pm 0$ & $2209 \pm 0$ & $969 \pm 0$ & $346 \pm 0$ & $258 \pm 0$ \\
-Iterations to 1\,\% & $5848 \pm 0$ & $1948 \pm 0$ & $582 \pm 0$ & $190 \pm 0$ & $48 \pm 0$ & $166 \pm 0$ \\
-Env.\ steps to 1\,\% & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ \\
-Env.\ steps to convergence & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ \\
+True cost $J$ & $5868 \pm 3.723 \times 10^{-11}$ & $5856 \pm 2.236 \times 10^{-11}$ & $5851 \pm 1.228 \times 10^{-11}$ & $5849 \pm 1.01 \times 10^{-11}$ & $5848 \pm 6.109 \times 10^{-12}$ & $5848 \pm 1.329 \times 10^{-11}$ & $5848 \pm 8.671 \times 10^{-12}$ & $1.241 \times 10^{4} \pm 4.926 \times 10^{-12}$ & $1.241 \times 10^{4} \pm 4.926 \times 10^{-12}$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.00345 \pm 6.37 \times 10^{-15}$ & $0.00131 \pm 3.82 \times 10^{-15}$ & $0.000419 \pm 2.1 \times 10^{-15}$ & $0.000136 \pm 1.72 \times 10^{-15}$ & $3.18 \times 10^{-5} \pm 1.04 \times 10^{-15}$ & $4.66 \times 10^{-6} \pm 2.27 \times 10^{-15}$ & $3.87 \times 10^{-9} \pm 1.48 \times 10^{-15}$ & $1.12 \pm 8.34 \times 10^{-16}$ & $1.12 \pm 8.6 \times 10^{-16}$ \\
+Test cost$^{\dagger}$ & $5989 \pm 5290$ & $5976 \pm 5279$ & $5971 \pm 5275$ & $5969 \pm 5273$ & $5968 \pm 5273$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $1.275 \times 10^{4} \pm 1.145 \times 10^{4}$ & $1.275 \times 10^{4} \pm 1.145 \times 10^{4}$ \\
+Iterations & $10414 \pm 0$ & $5151 \pm 0$ & $2209 \pm 0$ & $969 \pm 0$ & $346 \pm 0$ & $303 \pm 0$ & $258 \pm 0$ & $51 \pm 0$ & $51 \pm 0$ \\
+Iterations to 1\,\% & $5848 \pm 0$ & $1948 \pm 0$ & $582 \pm 0$ & $190 \pm 0$ & $48 \pm 0$ & $95 \pm 0$ & $166 \pm 0$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Env.\ steps to 1\,\% & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Env.\ steps to convergence & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ \\
 \bottomrule
 \end{tabular}
 }

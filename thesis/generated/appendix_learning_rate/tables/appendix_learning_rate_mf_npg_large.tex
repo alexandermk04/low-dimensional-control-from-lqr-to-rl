@@ -5,15 +5,15 @@
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrr}
 \toprule
-Learning rate & 0.0003 & 0.001 & 0.003 & 0.01 \\
+Learning rate & 0.001 & 0.003 & 0.01 & 0.03 \\
 \midrule
-True cost $J$ & $6864 \pm 221.3$ & $6197 \pm 88.89$ & $5960 \pm 50.97$ & $5868 \pm 11.07$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.174 \pm 0.0378$ & $0.0597 \pm 0.0152$ & $0.0192 \pm 0.00872$ & $0.00341 \pm 0.00189$ \\
-Test cost$^{\dagger}$ & $7023 \pm 6237$ & $6330 \pm 5598$ & $6086 \pm 5379$ & $5989 \pm 5292$ \\
-Iterations & $618 \pm 116$ & $475 \pm 90$ & $339 \pm 57$ & $217 \pm 28$ \\
-Iterations to 1\,\% & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & $349 \pm 27$ & $116 \pm 25$ \\
-Env.\ steps to 1\,\% & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & $5.61 \times 10^{7} \pm 4.27 \times 10^{6}$ & $1.87 \times 10^{7} \pm 4.08 \times 10^{6}$ \\
-Env.\ steps to convergence & $9.88 \times 10^{7} \pm 1.86 \times 10^{7}$ & $7.6 \times 10^{7} \pm 1.44 \times 10^{7}$ & $5.43 \times 10^{7} \pm 9.13 \times 10^{6}$ & $3.47 \times 10^{7} \pm 4.52 \times 10^{6}$ \\
+True cost $J$ & $6197 \pm 88.89$ & $5960 \pm 50.97$ & $5868 \pm 11.07$ & $5849 \pm 0.5453$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.0597 \pm 0.0152$ & $0.0192 \pm 0.00872$ & $0.00341 \pm 0.00189$ & $8.85 \times 10^{-5} \pm 9.32 \times 10^{-5}$ \\
+Test cost$^{\dagger}$ & $6330 \pm 5598$ & $6086 \pm 5379$ & $5989 \pm 5292$ & $5969 \pm 5273$ \\
+Iterations & $475 \pm 90$ & $339 \pm 57$ & $217 \pm 28$ & $194 \pm 31$ \\
+Iterations to 1\,\% & \multicolumn{1}{c}{--} & $349 \pm 27$ & $116 \pm 25$ & $44 \pm 23$ \\
+Env.\ steps to 1\,\% & \multicolumn{1}{c}{--} & $5.61 \times 10^{7} \pm 4.27 \times 10^{6}$ & $1.87 \times 10^{7} \pm 4.08 \times 10^{6}$ & $7.14 \times 10^{6} \pm 3.69 \times 10^{6}$ \\
+Env.\ steps to convergence & $7.6 \times 10^{7} \pm 1.44 \times 10^{7}$ & $5.43 \times 10^{7} \pm 9.13 \times 10^{6}$ & $3.47 \times 10^{7} \pm 4.52 \times 10^{6}$ & $3.11 \times 10^{7} \pm 5 \times 10^{6}$ \\
 \bottomrule
 \end{tabular}
 }

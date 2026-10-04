@@ -5,15 +5,15 @@
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrr}
 \toprule
-Learning rate & 0.0003 & 0.001 & 0.003 & 0.01 \\
+Learning rate & 0.001 & 0.003 & 0.01 & 0.03 \\
 \midrule
-True cost $J$ & $6852 \pm 205.7$ & $6220 \pm 92.51$ & $5959 \pm 43.25$ & $6527 \pm 2069$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.172 \pm 0.0352$ & $0.0636 \pm 0.0158$ & $0.0189 \pm 0.0074$ & $0.116 \pm 0.354$ \\
-Test cost$^{\dagger}$ & $7012 \pm 6225$ & $6356 \pm 5622$ & $6085 \pm 5380$ & $6595 \pm 6375$ \\
-Iterations & $614 \pm 112$ & $442 \pm 63$ & $318 \pm 52$ & $199 \pm 41$ \\
-Iterations to 1\,\% & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & $336 \pm 13$ & $103 \pm 6$ \\
-Env.\ steps to 1\,\% & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & $5.39 \times 10^{7} \pm 2 \times 10^{6}$ & $1.66 \times 10^{7} \pm 9.48 \times 10^{5}$ \\
-Env.\ steps to convergence & $9.83 \times 10^{7} \pm 1.8 \times 10^{7}$ & $7.06 \times 10^{7} \pm 1.01 \times 10^{7}$ & $5.09 \times 10^{7} \pm 8.37 \times 10^{6}$ & $3.04 \times 10^{7} \pm 1.05 \times 10^{7}$ \\
+True cost $J$ & $6220 \pm 92.51$ & $5959 \pm 43.25$ & $6527 \pm 2069$ & $8475 \pm 3391$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.0636 \pm 0.0158$ & $0.0189 \pm 0.0074$ & $0.116 \pm 0.354$ & $0.449 \pm 0.58$ \\
+Test cost$^{\dagger}$ & $6356 \pm 5622$ & $6085 \pm 5380$ & $6595 \pm 6375$ & $8717 \pm 9029$ \\
+Iterations & $442 \pm 63$ & $318 \pm 52$ & $199 \pm 41$ & $156 \pm 51$ \\
+Iterations to 1\,\% & \multicolumn{1}{c}{--} & $336 \pm 13$ & $103 \pm 6$ & $37 \pm 5$ \\
+Env.\ steps to 1\,\% & \multicolumn{1}{c}{--} & $5.39 \times 10^{7} \pm 2 \times 10^{6}$ & $1.66 \times 10^{7} \pm 9.48 \times 10^{5}$ & $6.03 \times 10^{6} \pm 7.95 \times 10^{5}$ \\
+Env.\ steps to convergence & $7.06 \times 10^{7} \pm 1.01 \times 10^{7}$ & $5.09 \times 10^{7} \pm 8.37 \times 10^{6}$ & $3.04 \times 10^{7} \pm 1.05 \times 10^{7}$ & $2.1 \times 10^{7} \pm 1.35 \times 10^{7}$ \\
 \bottomrule
 \end{tabular}
 }

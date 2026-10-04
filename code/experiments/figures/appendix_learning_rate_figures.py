@@ -28,7 +28,10 @@ def _speed(solver: str) -> str:
 
 
 def render():
-    records = latest_per_experiment(load_experiment(EXPERIMENT))
+    records = [
+        r for r in latest_per_experiment(load_experiment(EXPERIMENT))
+        if r.condition.get("lr") in settings.PG_LEARNING_RATES[r.solver]
+    ]
     rows = tidy(records)
 
     sweep_tables(rows, EXPERIMENT, SOLVERS, SIZES, "lr",
@@ -53,16 +56,13 @@ def render():
             save(ax.figure, f"{EXPERIMENT}_{solver}_{size}", EXPERIMENT)
             plt.close(ax.figure)
 
-    # Fastest learning rate among those that are stable and reach the tolerance
+    # Fastest learning rate at which every seed reaches the tolerance.
     best = choose(
         rows, SOLVERS, SIZES, "lr",
-        admissible=lambda solver, bucket: (
-            median(bucket, "training_subopt_final") < TOLERANCE
-            and all(
-                r.get("training_subopt_final") is not None
-                and r["training_subopt_final"] < float("inf")
-                for r in bucket
-            )
+        admissible=lambda solver, bucket: all(
+            r.get("training_subopt_final") is not None
+            and r["training_subopt_final"] < TOLERANCE
+            for r in bucket
         ),
         score=lambda solver, bucket: median(bucket, _speed(solver)),
     )

@@ -5,15 +5,15 @@
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrr}
 \toprule
-Learning rate & 0.0003 & 0.001 & 0.003 & 0.01 \\
+Learning rate & 0.001 & 0.003 & 0.01 & 0.03 \\
 \midrule
-True cost $J$ & $6052 \pm 43.04$ & $5909 \pm 30.85$ & $5853 \pm 2.919$ & $5865 \pm 7.096$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.0348 \pm 0.00736$ & $0.0105 \pm 0.00528$ & $0.000788 \pm 0.000499$ & $0.00297 \pm 0.00121$ \\
-Test cost$^{\dagger}$ & $6178 \pm 5454$ & $6032 \pm 5331$ & $5973 \pm 5277$ & $5986 \pm 5287$ \\
-Iterations & $1604 \pm 135$ & $799 \pm 80$ & $533 \pm 102$ & $302 \pm 54$ \\
-Iterations to 1\,\% & \multicolumn{1}{c}{--} & $727 \pm 4$ & $242 \pm 2$ & $71 \pm 2$ \\
-Env.\ steps to 1\,\% & \multicolumn{1}{c}{--} & $1.16 \times 10^{8} \pm 7.07 \times 10^{5}$ & $3.88 \times 10^{7} \pm 2.63 \times 10^{5}$ & $1.15 \times 10^{7} \pm 2.44 \times 10^{5}$ \\
-Env.\ steps to convergence & $2.57 \times 10^{8} \pm 2.16 \times 10^{7}$ & $1.28 \times 10^{8} \pm 1.28 \times 10^{7}$ & $8.52 \times 10^{7} \pm 1.64 \times 10^{7}$ & $4.82 \times 10^{7} \pm 8.58 \times 10^{6}$ \\
+True cost $J$ & $5909 \pm 30.85$ & $5853 \pm 2.919$ & $5865 \pm 7.096$ & $6536 \pm 2065$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.0105 \pm 0.00528$ & $0.000788 \pm 0.000499$ & $0.00297 \pm 0.00121$ & $0.118 \pm 0.353$ \\
+Test cost$^{\dagger}$ & $6032 \pm 5331$ & $5973 \pm 5277$ & $5986 \pm 5287$ & $6666 \pm 6504$ \\
+Iterations & $799 \pm 80$ & $533 \pm 102$ & $302 \pm 54$ & $193 \pm 37$ \\
+Iterations to 1\,\% & $727 \pm 4$ & $242 \pm 2$ & $71 \pm 2$ & $24 \pm 1$ \\
+Env.\ steps to 1\,\% & $1.16 \times 10^{8} \pm 7.07 \times 10^{5}$ & $3.88 \times 10^{7} \pm 2.63 \times 10^{5}$ & $1.15 \times 10^{7} \pm 2.44 \times 10^{5}$ & $4.02 \times 10^{6} \pm 1.69 \times 10^{5}$ \\
+Env.\ steps to convergence & $1.28 \times 10^{8} \pm 1.28 \times 10^{7}$ & $8.52 \times 10^{7} \pm 1.64 \times 10^{7}$ & $4.82 \times 10^{7} \pm 8.58 \times 10^{6}$ & $3.03 \times 10^{7} \pm 7.63 \times 10^{6}$ \\
 \bottomrule
 \end{tabular}
 }

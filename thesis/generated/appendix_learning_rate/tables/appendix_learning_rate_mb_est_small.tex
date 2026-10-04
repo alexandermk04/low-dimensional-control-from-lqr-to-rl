@@ -3,17 +3,17 @@
 \caption{N4SID + Model-based PG under \emph{small} inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
 \label{tab:appendix-learning-rate-mb-est-small}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrrrrrrrr}
 \toprule
-Learning rate & 1e-06 & 3e-06 & 1e-05 & 3e-05 & 0.0001 & 0.0012 \\
+Learning rate & 1e-06 & 3e-06 & 1e-05 & 3e-05 & 0.0001 & 0.0003 & 0.0012 & 0.003 & 0.01 \\
 \midrule
-True cost $J$ & $5868 \pm 0.01869$ & $5856 \pm 0.01143$ & $5851 \pm 0.006387$ & $5849 \pm 0.003591$ & $5848 \pm 0.002576$ & $5848 \pm 8.946 \times 10^{-5}$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.00345 \pm 3.2 \times 10^{-6}$ & $0.00131 \pm 1.96 \times 10^{-6}$ & $0.000419 \pm 1.09 \times 10^{-6}$ & $0.000136 \pm 6.14 \times 10^{-7}$ & $3.18 \times 10^{-5} \pm 4.4 \times 10^{-7}$ & $1.25 \times 10^{-8} \pm 1.53 \times 10^{-8}$ \\
-Test cost$^{\dagger}$ & $5989 \pm 5290$ & $5976 \pm 5279$ & $5971 \pm 5275$ & $5969 \pm 5273$ & $5968 \pm 5273$ & $5968 \pm 5272$ \\
-Iterations & $10414 \pm 1$ & $5151 \pm 0$ & $2209 \pm 0$ & $969 \pm 0$ & $346 \pm 0$ & $258 \pm 0$ \\
-Iterations to 1\,\% & $5849 \pm 2$ & $1948 \pm 1$ & $583 \pm 1$ & $190 \pm 0$ & $48 \pm 0$ & $166 \pm 0$ \\
-Env.\ steps to 1\,\% & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ \\
-Env.\ steps to convergence & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ \\
+True cost $J$ & $5868 \pm 0.01869$ & $5856 \pm 0.01143$ & $5851 \pm 0.006387$ & $5849 \pm 0.003591$ & $5848 \pm 0.002576$ & $5848 \pm 0.0006679$ & $5848 \pm 8.946 \times 10^{-5}$ & $1.241 \times 10^{4} \pm 6.301 \times 10^{-12}$ & $1.241 \times 10^{4} \pm 6.586 \times 10^{-12}$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.00345 \pm 3.2 \times 10^{-6}$ & $0.00131 \pm 1.96 \times 10^{-6}$ & $0.000419 \pm 1.09 \times 10^{-6}$ & $0.000136 \pm 6.14 \times 10^{-7}$ & $3.18 \times 10^{-5} \pm 4.4 \times 10^{-7}$ & $4.61 \times 10^{-6} \pm 1.14 \times 10^{-7}$ & $1.25 \times 10^{-8} \pm 1.53 \times 10^{-8}$ & $1.12 \pm 1.05 \times 10^{-15}$ & $1.12 \pm 1.05 \times 10^{-15}$ \\
+Test cost$^{\dagger}$ & $5989 \pm 5290$ & $5976 \pm 5279$ & $5971 \pm 5275$ & $5969 \pm 5273$ & $5968 \pm 5273$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $1.275 \times 10^{4} \pm 1.145 \times 10^{4}$ & $1.275 \times 10^{4} \pm 1.145 \times 10^{4}$ \\
+Iterations & $10414 \pm 1$ & $5151 \pm 0$ & $2209 \pm 0$ & $969 \pm 0$ & $346 \pm 0$ & $303 \pm 0$ & $258 \pm 0$ & $51 \pm 0$ & $51 \pm 0$ \\
+Iterations to 1\,\% & $5849 \pm 2$ & $1948 \pm 1$ & $583 \pm 1$ & $190 \pm 0$ & $48 \pm 0$ & $95 \pm 0$ & $166 \pm 0$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Env.\ steps to 1\,\% & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+Env.\ steps to convergence & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ \\
 \bottomrule
 \end{tabular}
 }
