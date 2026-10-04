@@ -42,6 +42,7 @@ from evaluation.metrics import (
 from evaluation.latent_probe import latent_extra
 from evaluation.probe import IterationRecord, Probe
 from experiments.problem import Problem, RunSpec, build_plant
+from experiments.settings_guard import require
 from seeding import sub_seed
 from lqr_solvers.mb_policy_gradient import (
     ModelBasedPolicyGradientSettings,
@@ -721,7 +722,11 @@ def _run_rl(
         preset,
         total_timesteps=spec.hyperparams().get("total_timesteps", max_timesteps),
         anneal_timesteps=max_timesteps,
-        learning_rate=spec.hyperparams().get("learning_rate", preset.learning_rate),
+        learning_rate=require(
+            spec.hyperparams().get("learning_rate"),
+            f'SIZE_HYPERPARAMS["{spec.solver}"]["{spec.condition["size"]}"]["learning_rate"]',
+            "python -m experiments.figures.appendix_rl_learning_rate_figures",
+        ),
         eval_freq=settings.RL_EVAL_FREQ,
         initial_gain=problem.K_0 / obs_scale if linear else None,
         pretrained_extractor=weights,

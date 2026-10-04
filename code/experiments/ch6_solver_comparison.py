@@ -57,6 +57,9 @@ def main():
             "iterations": settings.SOLVER_MAX_ITERATIONS,
             "convergence": settings.CONVERGENCE,
             "rl_timesteps": settings.RL_MAX_TIMESTEPS,
+            "size_hyperparams": {
+                s: settings.SIZE_HYPERPARAMS.get(s, {}) for s in settings.CH6_COMPARISON_SOLVERS
+            },
         },
     )
 

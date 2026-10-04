@@ -137,14 +137,12 @@ LINEAR_PPO = RLSolverSettings(
     name="ppo_linear",
     algo="ppo",
     net_arch=dict(pi=[], vf=[64, 64]),
-    learning_rate=3e-4,
 )
 
 MLP_PPO = RLSolverSettings(
     name="ppo_mlp",
     algo="ppo",
     net_arch=dict(pi=[64, 64], vf=[64, 64]),
-    learning_rate=3e-4,
 )
 
 # Sees an identified, low-dimensional state, acts in the full output
@@ -152,7 +150,6 @@ ENCODER_PPO = RLSolverSettings(
     name="ppo_encoder",
     algo="ppo",
     net_arch=dict(pi=[64, 64], vf=[64, 64]),
-    learning_rate=3e-4,
 )
 
 
@@ -179,7 +176,6 @@ def _extractor_solver(name: str, extractor, **kwargs) -> RLSolverSettings:
         features_extractor_class=extractor,
         net_arch=dict(pi=[64, 64], vf=[64, 64]),
         linear=False,
-        learning_rate=3e-4,
     )
     defaults.update(kwargs)
 
