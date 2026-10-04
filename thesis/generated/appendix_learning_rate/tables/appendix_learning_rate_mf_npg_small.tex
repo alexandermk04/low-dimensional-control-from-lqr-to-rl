@@ -3,17 +3,17 @@
 \caption{Model-free NPG under \emph{small} inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
 \label{tab:appendix-learning-rate-mf-npg-small}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrrrrr}
 \toprule
-Learning rate & 0.001 & 0.003 & 0.01 & 0.03 \\
+Learning rate & 0.001 & 0.003 & 0.01 & 0.03 & 0.1 \\
 \midrule
-True cost $J$ & $6157 \pm 89.14$ & $5943 \pm 48.04$ & $5864 \pm 12.27$ & $6505 \pm 2076$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.0529 \pm 0.0152$ & $0.0163 \pm 0.00821$ & $0.00273 \pm 0.0021$ & $0.112 \pm 0.355$ \\
-Test cost$^{\dagger}$ & $6287 \pm 5557$ & $6068 \pm 5363$ & $5985 \pm 5288$ & $6628 \pm 6463$ \\
-Iterations & $477 \pm 90$ & $346 \pm 72$ & $231 \pm 58$ & $181 \pm 33$ \\
-Iterations to 1\,\% & \multicolumn{1}{c}{--} & $349 \pm 56$ & $111 \pm 34$ & $45 \pm 24$ \\
-Env.\ steps to 1\,\% & \multicolumn{1}{c}{--} & $5.6 \times 10^{7} \pm 9.02 \times 10^{6}$ & $1.79 \times 10^{7} \pm 5.49 \times 10^{6}$ & $7.31 \times 10^{6} \pm 3.86 \times 10^{6}$ \\
-Env.\ steps to convergence & $7.63 \times 10^{7} \pm 1.44 \times 10^{7}$ & $5.53 \times 10^{7} \pm 1.14 \times 10^{7}$ & $3.7 \times 10^{7} \pm 9.29 \times 10^{6}$ & $2.74 \times 10^{7} \pm 9.75 \times 10^{6}$ \\
+True cost $J$ & $6157 \pm 89.14$ & $5943 \pm 48.04$ & $5864 \pm 12.27$ & $6505 \pm 2076$ & $6505 \pm 2076$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.0529 \pm 0.0152$ & $0.0163 \pm 0.00821$ & $0.00273 \pm 0.0021$ & $0.112 \pm 0.355$ & $0.112 \pm 0.355$ \\
+Test cost$^{\dagger}$ & $6287 \pm 5557$ & $6068 \pm 5363$ & $5985 \pm 5288$ & $6628 \pm 6463$ & $6628 \pm 6463$ \\
+Iterations & $477 \pm 90$ & $346 \pm 72$ & $231 \pm 58$ & $181 \pm 33$ & $162 \pm 26$ \\
+Iterations to 1\,\% & \multicolumn{1}{c}{--} & $349 \pm 56$ & $111 \pm 34$ & $45 \pm 24$ & $16 \pm 13$ \\
+Env.\ steps to 1\,\% & \multicolumn{1}{c}{--} & $5.6 \times 10^{7} \pm 9.02 \times 10^{6}$ & $1.79 \times 10^{7} \pm 5.49 \times 10^{6}$ & $7.31 \times 10^{6} \pm 3.86 \times 10^{6}$ & $2.65 \times 10^{6} \pm 2.04 \times 10^{6}$ \\
+Env.\ steps to convergence & $7.63 \times 10^{7} \pm 1.44 \times 10^{7}$ & $5.53 \times 10^{7} \pm 1.14 \times 10^{7}$ & $3.7 \times 10^{7} \pm 9.29 \times 10^{6}$ & $2.74 \times 10^{7} \pm 9.75 \times 10^{6}$ & $2.44 \times 10^{7} \pm 8.7 \times 10^{6}$ \\
 \bottomrule
 \end{tabular}
 }
