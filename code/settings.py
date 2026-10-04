@@ -391,16 +391,16 @@ SIZE_HYPERPARAMS = {
         "large": {"gradient_lr": 0.01},
     },
     "spi": {
-        "base": {"lambda_": 5},
+        "base": {"lambda_": 1},
         "small": {"lambda_": 5},
         "medium": {"lambda_": 5},
         "large": {"lambda_": 5},
     },
     "spi_est": {
-        "base": {"lambda_": 20},
-        "small": {"lambda_": 20},
-        "medium": {"lambda_": 20},
-        "large": {"lambda_": 20},
+        "base": {"lambda_": 1},
+        "small": {"lambda_": 1},
+        "medium": {"lambda_": 1},
+        "large": {"lambda_": 1},
     },
     "ppo_linear": {
         "small": {"learning_rate": 0.0001},
