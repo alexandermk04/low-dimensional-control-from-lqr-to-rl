@@ -26,7 +26,8 @@ PREFIX = "ch4_noise"
 SET_BY = "python -m experiments.ch4_noise"
 
 
-def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=None):
+def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=None,
+           dt: float = 0.01):
     """Draw the noise figures and tables of one chapter.
 
     Parameters
@@ -41,6 +42,8 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
         For guard messages.
     size : str or None, optional
         Restrict to one inflation size.
+    dt : float, optional
+        Time between two trajectory samples, in seconds.
     """
     level = require_choice(
         settings.CHOSEN_NOISE_LEVEL, "CHOSEN_NOISE_LEVEL",
@@ -99,7 +102,7 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
     ]
     if reference_levels:
         axes = trajectory_overlay(
-            reference_levels, "level", dt=0.01, order=level_order
+            reference_levels, "level", dt=dt, order=level_order
         )
         save(axes[0].figure, f"{prefix}_traj_levels_{reference}", experiment)
 
@@ -109,7 +112,7 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
     ]
     if reference_channels:
         axes = trajectory_overlay(
-            reference_channels, "channel", dt=0.01, order=channel_order
+            reference_channels, "channel", dt=dt, order=channel_order
         )
         save(axes[0].figure, f"{prefix}_traj_channels_{reference}", experiment)
 

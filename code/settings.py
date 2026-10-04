@@ -177,7 +177,8 @@ CH5_INFLATION_SIZES = ("small", "medium", "large")
 # The size chapter 5's noise setting
 CH5_REFERENCE_INFLATION = "large"
 
-CH5_PIXEL_INFLATION = "pixel"
+# The size of chapter 6's solver comparison
+CH6_PIXEL_INFLATION = "pixel"
 
 
 # ---------------------------------------------------------------------------
@@ -257,14 +258,6 @@ CH5_SOLVERS = (
     "ppo_mlp",
 )
 
-# The comparison at CH5_REFERENCE_INFLATION.
-CH5_COMPARISON_SOLVERS = (
-    "baseline",
-    "ppo_bottleneck",
-    "ppo_encoder_scalable",
-    "ppo_mlp",
-)
-
 # Algorithms that cannot be run at a given inflation size, and why.
 UNSUPPORTED_CELLS = {
     ("ppo_encoder", "pixel"): (
@@ -294,6 +287,21 @@ CH6_SOLVERS = (
     "ppo_pixel_ortho",
     "ppo_pixel_estimator",
     "ppo_pixel_posvel",
+)
+
+
+# Filled from `python -m experiments.figures.appendix_calibrate_pixel_noise_figures`.
+CH6_NOISE_STD = {
+    channel: {"none": 0.0, "weak": None, "standard": None, "strong": None, "divergent": None}
+    for channel in NOISE_CHANNELS
+}
+
+# Chapter 6: the chapter 5 solvers compared at CH6_PIXEL_INFLATION.
+CH6_COMPARISON_SOLVERS = (
+    "baseline",
+    "ppo_bottleneck",
+    "ppo_encoder_scalable",
+    "ppo_mlp",
 )
 
 

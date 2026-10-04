@@ -38,15 +38,16 @@ def mean_cost(problems, channel=None, std=None) -> float:
     return float(np.mean(costs))
 
 
-def calibrate(problems, channel: str, target: float, clean: float) -> float:
+def calibrate(cost, target: float, clean: float) -> float:
     """Bisect the intensity in log space until the cost ratio hits ``target``.
 
-    Diverging costs count as a too large intensity.
+    ``cost(std)`` is the pooled test cost at that intensity. Diverging costs
+    count as a too large intensity.
     """
     low, high = np.log10(SEARCH_RANGE)
     for _ in range(60):
         middle = 0.5 * (low + high)
-        ratio = mean_cost(problems, channel, 10 ** middle) / clean
+        ratio = cost(10 ** middle) / clean
         if np.isfinite(ratio) and abs(ratio / target - 1) < TOLERANCE:
             break
         if np.isfinite(ratio) and ratio < target:
@@ -66,7 +67,9 @@ def main():
     for channel in settings.NOISE_CHANNELS:
         result[channel] = {"none": {"std": 0.0, "ratio": 1.0}}
         for level, target in settings.NOISE_COST_TARGETS.items():
-            std = calibrate(problems, channel, target, clean)
+            std = calibrate(
+                lambda std: mean_cost(problems, channel, std), target, clean
+            )
             ratio = mean_cost(problems, channel, std) / clean
             result[channel][level] = {"std": std, "target": target, "ratio": ratio}
             print(f"{channel:>12} {level:>10}: std={std:<10g} ratio={ratio:.3f} (target {target})")

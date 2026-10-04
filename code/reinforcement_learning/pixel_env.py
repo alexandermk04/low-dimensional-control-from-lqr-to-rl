@@ -96,6 +96,11 @@ class PixelLQREnv(gym.Env):
     def _observation(self) -> np.ndarray:
         return np.stack(self._frames, axis=0)
 
+    def _observed_position(self) -> float:
+        """Position the camera shows, with measurement noise if it is active.
+        """
+        return float(self.lqr.observe()[0])
+
     def _info_state(self) -> np.ndarray:
         return np.asarray(self.lqr.x, dtype=float).copy()
 
@@ -105,7 +110,7 @@ class PixelLQREnv(gym.Env):
         self.lqr.reset()
         self.agent_steps = 0
 
-        frame = self.renderer.frame(float(self.lqr.x[0]))
+        frame = self.renderer.frame(self._observed_position())
         self._frames.extend(frame.copy() for _ in range(self.config.frame_stack))
 
         return self._observation(), {"state": self._info_state()}
@@ -129,7 +134,7 @@ class PixelLQREnv(gym.Env):
         self.agent_steps += 1
         self._last_thrust = v
         x = float(self.lqr.x[0])
-        self._frames.append(self.renderer.frame(x))
+        self._frames.append(self.renderer.frame(self._observed_position()))
 
         u = float(np.ravel(result.u_t)[0])
         energy = float(v @ v)

@@ -47,7 +47,7 @@ def require(value, name: str, set_by: str):
     return value
 
 
-def require_noise(channels, levels=None) -> None:
+def require_noise(channels, levels=None, table: str = "NOISE_STD") -> None:
     """Check that every noise intensity the run will need has been filled in.
 
     Parameters
@@ -56,6 +56,8 @@ def require_noise(channels, levels=None) -> None:
         Channels the experiment touches.
     levels : iterable of str or None, optional
         Levels it touches. Defaults to every entry.
+    table : str, optional
+        Name of the intensity table in :mod:`settings`.
 
     Raises
     ------
@@ -68,14 +70,14 @@ def require_noise(channels, levels=None) -> None:
 
     missing = []
     for channel in channels:
-        table = settings.NOISE_STD[channel]
+        stds = getattr(settings, table)[channel]
         for level in levels:
-            if table[level] is None:
+            if stds[level] is None:
                 missing.append(f"{channel}/{level}")
 
     if missing:
         raise MissingSettingError(
-            "settings.NOISE_STD has undecided intensities: "
+            f"settings.{table} has undecided intensities: "
             + ", ".join(missing)
         )
 
