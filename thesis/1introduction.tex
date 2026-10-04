@@ -40,9 +40,9 @@ As robustness is a wide topic, in our case, we use it when referring to sensor- 
 external disturbances. When talking about performance, we mean reducing cost as much as possible in relation to an optimal controller. In the end, we want to show
 in which cases low-dimensional controllers are a viable alternative, and can thus reduce costs for hardware implementations.
 
-To answer our question, we will first explain the core concepts and collect existing approaches for the LQR setting in section~\ref{chap:preliminaries} and \ref{chap:background}.
-In section~\ref{chap:lqr}, we will compare these implementations using the double integrator problem for LQR with respect to general performance, as well as robustness.
-Building on that, we will artificially inflate our inputs and outputs via matrix multiplication in section~\ref{chap:inflation} and additionally introduce deep RL baseline models into the comparison.
-For section~\ref{chap:perception}, we will completely move away from LQR, and extend the setting to a perception-based implementation.
+To answer our question, we will first explain the core concepts and collect existing approaches for the LQR setting in \cref{chap:background}.
+In \cref{chap:lqr}, we will compare these implementations using the double integrator problem for LQR with respect to general performance, as well as robustness.
+Building on that, we will artificially inflate our inputs and outputs via matrix multiplication in \cref{chap:inflation} and additionally introduce deep RL baseline models into the comparison.
+For \cref{chap:perception}, we will completely move away from LQR, and extend the setting to a perception-based implementation.
 Here we will compare different models with varying parameter complexity in regard to robustness, applying the concepts we learned from our earlier experiments.
 Finally, we will conclude by analyzing whether we indeed achieved our goal of constructing a robust controller, and stating how our approach can be applied to more complex settings.

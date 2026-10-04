@@ -27,7 +27,7 @@ $\Sigma_{K_i}$ then follows from solving a second Lyapunov equation,
     \label{eq:state-correlation}
     \Sigma_{K_i} = (A - B K_i) \Sigma_{K_i} (A - B K_i)\T + \Sigma_0 ,
 \end{equation}
-where, for initial states drawn uniformly from $[-10, 10] \times [-1, 1]$ as described in \cref{subsec:lqr-cost-of-gain},
+where, for initial states drawn uniformly from $[-10, 10] \times [-1, 1]$ as described in \cref{subsubsec:lqr-cost-of-gain},
 $\Sigma_0 = \operatorname{diag}\left( 10^2/3, \, 1^2/3 \right)$. The policy gradient
 \begin{equation}
     \label{eq:pg-gradient}
@@ -123,7 +123,7 @@ Some of our previous experiments had shown that if we leave it uncapped, for uns
 to stabilize, the loop runs until the update produces no effect at all.
 
 Now that we have defined our controllers and how they learn, we test them in comparison to the DARE-calculated
-solution \eqref{eq:dare} from \cref{subsec:lqr-optimal}.
+solution \eqref{eq:dare} from \cref{subsubsec:lqr-optimal}.
 
 \subsection{Results}
 \label{subsec:known-model-results}
