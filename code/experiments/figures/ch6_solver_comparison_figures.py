@@ -1,8 +1,8 @@
-"""Figures and tables for chapter 5's cross-solver comparison.
+"""Figures and tables for chapter 6's cross-solver comparison at pixel size.
 
 Run with::
 
-    python -m experiments.figures.ch5_solver_comparison_figures
+    python -m experiments.figures.ch6_solver_comparison_figures
 """
 
 import settings
@@ -21,9 +21,9 @@ from experiments.figures.style import figure_dir, save, table_dir
 from experiments.figures.tables import metric_table, write_table
 from experiments.store import load_experiment
 
-EXPERIMENT = "ch5_solver_comparison"
+EXPERIMENT = "ch6_solver_comparison"
 
-ORDER = tuple(settings.CH5_COMPARISON_SOLVERS)
+ORDER = tuple(settings.CH6_COMPARISON_SOLVERS)
 
 
 def main():
@@ -33,19 +33,19 @@ def main():
     ax = box_metric(
         rows, "solver", "training_subopt_final", order=ORDER, log="symlog"
     )
-    save(ax.figure, "ch5_solvers_training_subopt", EXPERIMENT)
+    save(ax.figure, "ch6_solvers_training_subopt", EXPERIMENT)
 
     ax = learning_bands(records, "solver", x="env_steps", order=ORDER)
-    save(ax.figure, "ch5_solvers_curves_steps", EXPERIMENT)
+    save(ax.figure, "ch6_solvers_curves_steps", EXPERIMENT)
 
     axes = trajectory_overlay(records, "solver", dt=0.01, order=ORDER)
-    save(axes[0].figure, "ch5_solvers_trajectories", EXPERIMENT)
+    save(axes[0].figure, "ch6_solvers_trajectories", EXPERIMENT)
 
     ax = box_metric(rows, "solver", "subopt", order=ORDER, log="symlog")
-    save(ax.figure, "ch5_solvers_subopt", EXPERIMENT)
+    save(ax.figure, "ch6_solvers_subopt", EXPERIMENT)
 
     ax = complexity_bars(rows, "solver", order=ORDER)
-    save(ax.figure, "ch5_solvers_complexity", EXPERIMENT)
+    save(ax.figure, "ch6_solvers_complexity", EXPERIMENT)
 
     write_table(
         metric_table(
@@ -56,12 +56,12 @@ def main():
             column_order=ORDER,
             column_header="Solver",
             caption=(
-                f"Chapter 5 solvers under \\emph{{{settings.CH5_PIXEL_INFLATION}}} inflation, "
+                f"Chapter 5 solvers under \\emph{{{settings.CH6_PIXEL_INFLATION}}} inflation, "
                 "without noise."
             ),
-            label="tab:ch5-solvers",
+            label="tab:ch6-solvers",
         ),
-        "ch5_solvers",
+        "ch6_solvers",
         EXPERIMENT,
     )
 

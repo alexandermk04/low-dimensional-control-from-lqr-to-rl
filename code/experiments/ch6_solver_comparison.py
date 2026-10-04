@@ -1,8 +1,8 @@
-"""Chapter 5: Collection of solvers compared at pixel size inflation.
+"""Chapter 6: Collection of chapter 5 solvers compared at pixel size inflation.
 
 Run with::
 
-    python -m experiments.ch5_solver_comparison
+    python -m experiments.ch6_solver_comparison
 """
 
 import settings
@@ -12,18 +12,18 @@ from experiments.problem import RunSpec
 from experiments.runner import run_grid
 from experiments.settings_guard import require_choice
 
-EXPERIMENT = "ch5_solver_comparison"
+EXPERIMENT = "ch6_solver_comparison"
 
 
 def build_specs() -> list[RunSpec]:
-    """Solvers x seeds, at the pixle size inflation."""
+    """Solvers x seeds, at the pixel size inflation."""
     size = require_choice(
-        settings.CH5_PIXEL_INFLATION, "CH5_PIXEL_INFLATION",
+        settings.CH6_PIXEL_INFLATION, "CH6_PIXEL_INFLATION",
         settings.INFLATION_SIZES, "pick one of settings.INFLATION_SIZES",
     )
 
     specs = []
-    for solver in settings.CH5_COMPARISON_SOLVERS:
+    for solver in settings.CH6_COMPARISON_SOLVERS:
         if not supported(solver, size):
             continue
 
@@ -51,8 +51,8 @@ def main():
         build_specs(),
         EXPERIMENT,
         used_settings={
-            "solvers": settings.CH5_COMPARISON_SOLVERS,
-            "inflation": settings.CH5_REFERENCE_INFLATION,
+            "solvers": settings.CH6_COMPARISON_SOLVERS,
+            "inflation": settings.CH6_PIXEL_INFLATION,
             "chosen_identification": settings.CHOSEN_IDENTIFICATION,
             "iterations": settings.SOLVER_MAX_ITERATIONS,
             "convergence": settings.CONVERGENCE,
