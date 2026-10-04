@@ -423,6 +423,7 @@ SIZE_HYPERPARAMS = {
     "ppo_encoder": {
         "small": {"learning_rate": 0.0001},
         "medium": {"learning_rate": 4.5e-05},
+        "large": {"learning_rate": 2.2e-05},
     },
     "ppo_encoder_scalable": {
         "small": {"learning_rate": 3e-05},

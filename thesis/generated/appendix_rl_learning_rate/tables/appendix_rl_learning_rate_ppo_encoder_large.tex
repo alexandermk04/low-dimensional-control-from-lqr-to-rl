@@ -1,18 +1,18 @@
 \begin{table}[htbp]
 \centering
+\caption{State encoder + PPO under \emph{large} inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 300 test episodes (100 per seed, 3 seeds) pooled; every other row over the 3 runs.}
+\label{tab:appendix-rl-learning-rate-ppo-encoder-large}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrr}
+\begin{tabular}{lrrrrr}
 \toprule
-Learning rate & 0.0002 & 6.7e-05 & 2.2e-05 \\
+Learning rate & 6.7e-05 & 2.2e-05 & 6.7e-07 & 6.7e-06 & 2.2e-06 \\
 \midrule
-True cost $J$ & $7444 \pm 1707$ & $7635 \pm 1041$ & $6465 \pm 100.4$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.298 \pm 0.11$ & $0.345 \pm 0.111$ & $0.24 \pm 0.0397$ \\
-Test cost$^{\dagger}$ & $8125 \pm 7199$ & $9681 \pm 7233$ & $8829 \pm 6123$ \\
-Env.\ steps to best policy & $8.76 \times 10^{6} \pm 1.94 \times 10^{6}$ & $7.66 \times 10^{6} \pm 2.75 \times 10^{6}$ & $9.88 \times 10^{6} \pm 1.77 \times 10^{5}$ \\
-Env.\ steps to convergence & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ \\
+True cost $J$ & $5981 \pm 833$ & $5960 \pm 899.5$ & $7800 \pm 751.8$ & $6015 \pm 903.9$ & $7310 \pm 707.4$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.0513 \pm 0.00947$ & $0.0466 \pm 0.0127$ & $0.377 \pm 0.0706$ & $0.0563 \pm 0.0191$ & $0.292 \pm 0.11$ \\
+Test cost$^{\dagger}$ & $6343 \pm 5573$ & $6264 \pm 5600$ & $8299 \pm 8027$ & $6339 \pm 5652$ & $9240 \pm 6503$ \\
+Env.\ steps to best policy & $2.8 \times 10^{7} \pm 1.26 \times 10^{6}$ & $2.03 \times 10^{7} \pm 3.04 \times 10^{6}$ & $2.36 \times 10^{7} \pm 5.09 \times 10^{6}$ & $2.03 \times 10^{7} \pm 3.04 \times 10^{6}$ & $2.12 \times 10^{7} \pm 4.64 \times 10^{6}$ \\
+Env.\ steps to convergence & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ \\
 \bottomrule
 \end{tabular}
 }
-\caption{ppo\_encoder at the large inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 300 test episodes (100 per seed, 3 seeds) pooled; every other row over the 3 runs.}
-\label{tab:appendix-rl-learning-rate-ppo_encoder-large}
 \end{table}
