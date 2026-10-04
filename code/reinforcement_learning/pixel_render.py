@@ -63,12 +63,13 @@ class SceneRenderer:
         h, w = self.spec.height, self.spec.width
         frame = np.zeros((h, w), dtype=np.uint8)
 
-        if not np.isfinite(x):
+        column = self.spec.column(float(x))
+        if not np.isfinite(column):
             return frame
 
         size = self._stamp.shape[0]
         r0 = self._row0
-        c0 = int(round(self.spec.column(float(x)))) - self._reach
+        c0 = int(round(column)) - self._reach
 
         r_lo, r_hi = max(r0, 0), min(r0 + size, h)
         c_lo, c_hi = max(c0, 0), min(c0 + size, w)
