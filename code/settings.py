@@ -292,8 +292,34 @@ CH6_SOLVERS = (
 
 # Filled from `python -m experiments.figures.appendix_calibrate_pixel_noise_figures`.
 CH6_NOISE_STD = {
-    channel: {"none": 0.0, "weak": None, "standard": None, "strong": None, "divergent": None}
-    for channel in NOISE_CHANNELS
+    "measurement": {
+        "none": 0.0,
+        "weak": 0.0982,
+        "standard": 0.16,
+        "strong": 0.318,
+        "divergent": 0.672,
+    },
+    "control": {
+        "none": 0.0,
+        "weak": 13.7,
+        "standard": 21.4,
+        "strong": 40.9,
+        "divergent": 72.7,
+    },
+    "parametric": {
+        "none": 0.0,
+        "weak": 0.0211,
+        "standard": 0.0292,
+        "strong": 0.0379,
+        "divergent": 0.0388,
+    },
+    "disturbance": {
+        "none": 0.0,
+        "weak": 0.00202,
+        "standard": 0.00328,
+        "strong": 0.00646,
+        "divergent": 0.0137,
+    },
 }
 
 # Chapter 6: the chapter 5 solvers compared at CH6_PIXEL_INFLATION.
