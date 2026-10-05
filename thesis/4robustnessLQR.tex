@@ -128,7 +128,107 @@ solution \eqref{eq:dare} from \cref{subsubsec:lqr-optimal}.
 \subsection{Results}
 \label{subsec:known-model-results}
 
-% experiment setup
+We apply our solvers to the true models base and inflated versions, for now noise-free, as described in \needcite{cref inflation loop}. 
+As described in \needcite{cref to test protocol}, we train 10 controllers each per solver, before evaluating them on the test episodes.
+The results are then pooled. Let's first take a look at the training process at the uninflated system:
+
+% Base figures
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch4_true_model}{ch4_true_base_curves_iterations}
+  \caption{TODO}
+  \label{fig:ch4-true-base-curves-iterations}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch4_true_model}{ch4_true_base_complexity}
+  \caption{TODO}
+  \label{fig:ch4-true-base-complexity}
+\end{figure}
+
+% TODO: Put curves and complexity side by side
+
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch4_true_model}{ch4_true_base_subopt}
+  \caption{TODO}
+  \label{fig:ch4-true-base-subopt}
+\end{figure}
+
+\input{generated/ch4_true_model/tables/ch4_true_base.tex}
+
+% Large figures
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch4_true_model}{ch4_true_large_curves_iterations}
+  \caption{TODO}
+  \label{fig:ch4-true-large-curves-iterations}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch4_true_model}{ch4_true_large_complexity}
+  \caption{TODO}
+  \label{fig:ch4-true-large-complexity}
+\end{figure}
+
+% TODO: Put curves and complexity side by side
+
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch4_true_model}{ch4_true_large_subopt}
+  \caption{TODO}
+  \label{fig:ch4-true-large-subopt}
+\end{figure}
+
+\input{generated/ch4_true_model/tables/ch4_true_large.tex}
+
+% Comparison figures
+
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch4_true_model}{ch4_true_across_sizes_complexity}
+  \caption{TODO}
+  \label{fig:ch4-true-across-sizes-complexity}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch4_true_model}{ch4_true_across_sizes_subopt}
+  \caption{TODO}
+  \label{fig:ch4-true-across-sizes-subopt}
+\end{figure}
+
+\input{generated/ch4_true_model/tables/ch4_true_across_sizes.tex}
+
+% TODO: Analysis
+
+\subsection{Noise Experiments}
+\label{sec:true-model-noise}
+
+Now, we reuse the controllers we trained in \needcite{cref to subsec above} and evaluate them under the test protocol
+with noise\needcite{cref to noise introduction} injected. We only show a selection of the results here, and will append
+further relevant figures in the appendix \needcite{cref}. All plots, including some that were excluded in this thesis, can be
+found in the code repository \needcite{link to repo}.
+
+% Measurement none, strong inflation figure
+% Table for the above
+
+% Control weak, standard, strong in large inflation figures
+
+% side by side all standard, base vs. large inflation figures
+% Table
+
+% Counterexamples
+% parametric standard under large, note that no real change occurs accross sizes
+
+% no noise side by side with disturbance at large divergent 
+
+% TODO: Analysis
+
+\subsection{Discussion}
+\label{sec:true-model-discussion}
 
 \section{Unknown Model across Dimensions}
 \label{sec:unknown-model}
@@ -176,7 +276,7 @@ for both, to find the optimal setting to use in our experiment. The full results
         \emph{base}   & 500  & 5 \\
         \emph{small}  & 500  & 5 \\
         \emph{medium} & 500  & 5 \\
-        \emph{large}  & 2000 & 5 \\
+        \emph{large}  & 8000 & 5 \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -297,14 +397,32 @@ Based on those, $\lambda = 4000$ and a step size of $\eta = 3.5 \times 10^{-6}$ 
 \subsection{Results}
 \label{subsec:unknown-model-results}
 
-\section{Noise Experiments on Large Inflation}
-\label{sec:noise-large-inflation}
+% training curves iteration under large
 
-\subsection{Setting}
-\label{subsec:noise-setting}
+% subopt table at large
+
+% side by side subopt of base, small, medium, large
+
+% across sizes complexity
+
+\subsection{Noise Experiments on Large Inflation}
+\label{subsec:noise-large-inflation}
 
 \subsection{Results}
 \label{subsec:noise-results}
+
+% large traj levels baseline plot
+
+% clean large vs. measurement noise strong large
+
+% large weak, standard, strong, divergent control
+
+% disturbance at strong base vs. large as table comparison
+
+% reference parametric noise table for large & strong, as well as plot in appendix
+
+\subsection{Discussion}
+\label{sec:id-model-discussion}
 
 \section{Discussion}
 \label{sec:ch4-discussion}
