@@ -19,6 +19,7 @@ __all__ = [
     "color_for",
     "new_figure",
     "save",
+    "save_variants",
     "figure_dir",
     "table_dir",
 ]
@@ -123,7 +124,10 @@ def table_dir(experiment: str) -> Path:
     return path
 
 
-def save(figure, name: str, experiment: str, also_pdf: bool = True) -> Path:
+def save(
+    figure, name: str, experiment: str, also_pdf: bool = True,
+    subdir: str | None = None, exact_size: bool = False,
+) -> Path:
     """Write a figure as ``.pgf``, and optionally a ``.pdf`` for previews.
 
     Parameters
@@ -135,6 +139,10 @@ def save(figure, name: str, experiment: str, also_pdf: bool = True) -> Path:
         Name for the output directory.
     also_pdf : bool, optional
         Whether to create the PDF version.
+    subdir : str or None, optional
+        Subdirectory of the figure directory to write into.
+    exact_size : bool, optional
+        Keep the figure size.
 
     Returns
     -------
@@ -142,14 +150,45 @@ def save(figure, name: str, experiment: str, also_pdf: bool = True) -> Path:
         The ``.pgf`` file.
     """
     directory = figure_dir(experiment)
+    if subdir is not None:
+        directory = directory / subdir
+        directory.mkdir(exist_ok=True)
     path = directory / f"{name}.pgf"
 
-    figure.savefig(path, bbox_inches="tight")
+    bbox = None if exact_size else "tight"
+
+    figure.savefig(path, bbox_inches=bbox)
     path.write_text(PGF_PREAMBLE_GUARD + path.read_text())
 
     if also_pdf:
-        figure.savefig(directory / f"{name}.pdf", bbox_inches="tight")
+        figure.savefig(directory / f"{name}.pdf", bbox_inches=bbox)
 
     plt.close(figure)
 
     return path
+
+
+# For side by side comparison
+HALF_SIZE = {"width": 0.48, "aspect": 0.95}
+
+HALF_DIR = "half"
+
+
+def save_variants(draw, name: str, experiment: str):
+    """Save a figure at full width, and a half-width copy in ``half/``.
+
+    Parameters
+    ----------
+    draw : callable
+        Takes ``width`` and ``aspect`` keywords, or none for the default size,
+        and returns the axes it drew on.
+    name : str
+        File stem, the same for both copies.
+    experiment : str
+        Name for the output directory.
+    """
+    save(draw().figure, name, experiment)
+    save(
+        draw(**HALF_SIZE).figure, name, experiment, subdir=HALF_DIR,
+        exact_size=True,
+    )

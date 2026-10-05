@@ -77,9 +77,21 @@ def _tick_label(key: tuple, wrap: int | None = None) -> str:
     return "\n".join(parts)
 
 
-def _wrap_width(n_labels: int) -> int:
-    """How wide a tick label may be before it is broken over several lines."""
-    return max(8, int(70 / max(n_labels, 1)))
+def _wrap_width(n_labels: int, width: float = 1.0) -> int | None:
+    """How wide a tick label may be before it is broken over several lines.
+    """
+    wrap = int(70 * width / max(n_labels, 1))
+    if width < 1.0 and wrap < 8:
+        return None
+    return max(8, wrap)
+
+
+def _angle(ax):
+    """Angle the x tick labels."""
+    for tick in ax.get_xticklabels():
+        tick.set_rotation(35)
+        tick.set_horizontalalignment("right")
+        tick.set_rotation_mode("anchor")
 
 
 def _linthresh_for(cells: list[np.ndarray]) -> float:
@@ -162,7 +174,7 @@ def box_metric(
     per_episode = any(stats[key]["episodes"] for key in keys)
 
     symlog = log == "symlog"
-    wrap = _wrap_width(len(keys))
+    wrap = _wrap_width(len(keys), width)
 
     for position, key in enumerate(keys, start=1):
         cell = stats[key]
@@ -228,13 +240,19 @@ def box_metric(
         )
 
     if symlog:
-        ax.set_yscale("symlog", linthresh=_linthresh_for(data), linscale=0.35)
+        if width < 1.0:
+            ax.set_yscale("symlog", linthresh=_linthresh_for(data), linscale=1.0)
+            ax.yaxis.get_major_locator().set_params(numticks=8)
+        else:
+            ax.set_yscale("symlog", linthresh=_linthresh_for(data), linscale=0.35)
     elif log:
         ax.set_yscale("log")
 
     if color_by is None:
         ax.set_xticks(range(1, len(keys) + 1))
         ax.set_xticklabels(labels)
+        if wrap is None:
+            _angle(ax)
     else:
         _label_runs(ax, keys, color_by, box_colors)
     ax.set_ylabel(METRIC_LABELS.get(metric, metric))
@@ -270,7 +288,7 @@ def _label_runs(ax, keys: list, color_by: int, box_colors: list):
         )
     ax.legend(
         handles=list(handles.values()), frameon=False, loc="lower center",
-        bbox_to_anchor=(0.5, 1.0), ncol=len(handles),
+        bbox_to_anchor=(0.5, 1.0), ncol=min(len(handles), 3),
     )
 
 
@@ -532,8 +550,11 @@ def complexity_bars(
         ax.set_yscale("log")
 
     if color_by is None:
+        wrap = _wrap_width(len(keys), width)
         ax.set_xticks(range(1, len(keys) + 1))
-        ax.set_xticklabels([_tick_label(k, _wrap_width(len(keys))) for k in keys])
+        ax.set_xticklabels([_tick_label(k, wrap) for k in keys])
+        if wrap is None:
+            _angle(ax)
     else:
         _label_runs(ax, keys, color_by, bar_colors)
 

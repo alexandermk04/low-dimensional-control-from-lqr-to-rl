@@ -9,6 +9,7 @@ from experiments.figures.style import table_dir
 
 __all__ = [
     "metric_table",
+    "setting_table",
     "write_table",
 ]
 
@@ -378,7 +379,114 @@ def metric_table(
     ])
 
 
-def write_table(text: str, name: str, experiment: str):
+def setting_table(
+    rows: list[dict],
+    row_by: str,
+    metric: str = "subopt",
+    row_order=None,
+    column_order=None,
+    caption: str | None = None,
+    label: str | None = None,
+    show_spread: bool = True,
+    row_header: str | None = None,
+    fit: bool = True,
+) -> str:
+    """Render one metric as a table of settings by solvers.
+
+    Parameters
+    ----------
+    rows : list[dict]
+        From :func:`~experiments.figures.aggregate.tidy`.
+    row_by : str
+        Column defining one table row, e.g. ``"level"`` or ``"size"``.
+    metric : str, optional
+        Key of :data:`METRIC_ROWS`, the value of every cell.
+    row_order, column_order : sequence or None, optional
+        Order of the settings and of the solvers.
+    caption, label : str or None, optional
+        Wrap the tabular in a ``table`` float with this caption and
+        ``\\label``.
+    show_spread : bool, optional
+        Append ``\\pm`` the standard deviation across the sample.
+    row_header : str or None, optional
+        Text over the settings column, e.g. ``"Intensity"``.
+    fit : bool, optional
+        Whether to wrap the tabular in the shrink-to-fit box of :func:`_fit`.
+
+    Returns
+    -------
+    str
+        Ready to ``\\input``.
+    """
+    kept = [row for row in rows if usable(row)]
+    stats = aggregate(kept, (row_by, "solver"), metric)
+
+    def ordered(values, order):
+        values = list(dict.fromkeys(values))
+        if order is None:
+            return values
+        return [v for v in order if v in values] + [v for v in values if v not in order]
+
+    settings = ordered((key[0] for key in stats), row_order)
+    solvers = ordered((key[1] for key in stats), column_order)
+
+    _, fmt = METRIC_ROWS.get(metric, (_escape(metric), "{:.4g}"))
+    episodes = any(cell["episodes"] for cell in stats.values())
+    marker = EPISODE_MARKER if episodes else ""
+
+    lines = [
+        r"\begin{tabular}{l" + "r" * len(solvers) + "}",
+        r"\toprule",
+        " & ".join(
+            [(row_header or "") + marker]
+            + [_escape(str(label_for(solver))) for solver in solvers]
+        ) + r" \\",
+        r"\midrule",
+    ]
+
+    for setting in settings:
+        cells = [stats.get((setting, solver)) for solver in solvers]
+        lines.append(" & ".join(
+            [_escape(str(label_for(setting)))]
+            + [_cell(cell, fmt, show_spread) for cell in cells]
+        ) + r" \\")
+
+        # Divergence rate of the solvers in this setting
+        if any(cell and cell.get("n_diverged", 0) for cell in cells):
+            lines.append(" & ".join(
+                [DIVERGED_ROW] + [_diverged(cell) for cell in cells]
+            ) + r" \\")
+
+        if any(cell and cell.get("n_reference_diverged", 0) for cell in cells):
+            lines.append(" & ".join(
+                [UNPAIRED_ROW] + [_unpaired(cell) for cell in cells]
+            ) + r" \\")
+
+    lines += [r"\bottomrule", r"\end{tabular}"]
+
+    tabular = "\n".join(lines)
+
+    if fit:
+        tabular = _fit(tabular)
+
+    if caption is None and label is None:
+        return tabular
+
+    full_caption = caption + _provenance(
+        {metric: stats}, [metric] if episodes else [], show_spread
+    )
+
+    return "\n".join([
+        r"\begin{table}[htbp]",
+        r"\centering",
+        rf"\caption{{{full_caption}}}" if caption else "",
+        rf"\label{{{label}}}" if label else "",
+        tabular,
+        r"\end{table}",
+    ])
+
+
+def write_table(text: str, name: str, experiment: str, subdir: str | None = None):
     """Write a table fragment to the experiment's table directory.
 
     Parameters
@@ -390,12 +498,18 @@ def write_table(text: str, name: str, experiment: str):
         in latex.
     experiment : str
         Name for the output directory
+    subdir : str or None, optional
+        Subdirectory of the table directory to write into.
 
     Returns
     -------
     Path
         The file written.
     """
-    path = table_dir(experiment) / f"{name}.tex"
+    directory = table_dir(experiment)
+    if subdir is not None:
+        directory = directory / subdir
+        directory.mkdir(exist_ok=True)
+    path = directory / f"{name}.tex"
     path.write_text(text + "\n")
     return path
