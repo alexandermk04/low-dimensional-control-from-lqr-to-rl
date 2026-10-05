@@ -22,7 +22,8 @@ def main():
         across_caption=(
             "Solvers learning without the model, across every inflation size."
         ),
-        curves=False,
+        curve_x="iteration",
+        trajectories=False,
     )
 
 

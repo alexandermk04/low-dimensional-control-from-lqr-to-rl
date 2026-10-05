@@ -27,6 +27,7 @@ CURVE_SUFFIX = {"env_steps": "steps", "iteration": "iterations", "total_time": "
 def render_size(
     records, size: str, order, stem_prefix: str, track_caption: str,
     experiment: str, curve_x: str = "env_steps", curves: bool = True,
+    trajectories: bool = True,
 ):
     """The per-size figures and table, grouped by the solver.
     """
@@ -57,8 +58,9 @@ def render_size(
         )
 
     # Trajectories
-    axes = trajectory_overlay(subset, "solver", dt=DEFAULT_DT, order=order)
-    save(axes[0].figure, f"{stem}_trajectories", experiment)
+    if trajectories:
+        axes = trajectory_overlay(subset, "solver", dt=DEFAULT_DT, order=order)
+        save(axes[0].figure, f"{stem}_trajectories", experiment)
 
     # Paired test suboptimality
     ax = box_metric(rows, "solver", "subopt", order=order, log="symlog")
@@ -125,7 +127,7 @@ def render_across_sizes(
 def render_track(
     experiment: str, solvers, stem_prefix: str,
     track_caption: str, across_caption: str, curve_x: str = "env_steps",
-    curves: bool = True,
+    curves: bool = True, trajectories: bool = True,
 ):
     """Draw one chapter-4 setting.
 
@@ -145,6 +147,8 @@ def render_track(
         x-axis of the learning curves.
     curves : bool, optional
         Whether to draw the learning curves.
+    trajectories : bool, optional
+        Whether to create the trajectory curves.
     """
     records = latest_per_experiment(load_experiment(experiment))
     order = tuple(solvers)
@@ -152,7 +156,7 @@ def render_track(
     for size in settings.CH4_INFLATION_SIZES:
         render_size(
             records, size, order, stem_prefix, track_caption, experiment,
-            curve_x, curves=curves,
+            curve_x, curves=curves, trajectories=trajectories,
         )
 
     render_across_sizes(
