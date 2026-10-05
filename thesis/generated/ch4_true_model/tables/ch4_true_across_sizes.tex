@@ -1,17 +1,17 @@
 \begin{table}[htbp]
 \centering
+\caption{Policy architectures on the true model, across every inflation size. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
+\label{tab:ch4-true-across-sizes}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrrrrrrrrr}
 \toprule
 (size, solver) & base, Baseline & base, Model-based PG & base, S-PI & small, Baseline & small, Model-based PG & small, S-PI & medium, Baseline & medium, Model-based PG & medium, S-PI & large, Baseline & large, Model-based PG & large, S-PI \\
 \midrule
-Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $0.000163 \pm 4.3 \times 10^{-16}$ & $4.81 \times 10^{-6} \pm 1.86 \times 10^{-11}$ & $0 \pm 0$ & $0.000163 \pm 5.59 \times 10^{-16}$ & $4.73 \times 10^{-6} \pm 1.05 \times 10^{-7}$ & $0 \pm 0$ & $0.000163 \pm 1.83 \times 10^{-16}$ & $4.81 \times 10^{-6} \pm 4.49 \times 10^{-8}$ & $0 \pm 0$ & $0.000163 \pm 4.18 \times 10^{-16}$ & $4.81 \times 10^{-6} \pm 8.18 \times 10^{-10}$ \\
-Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+0.000199 \pm 0.000124$ & $+5.88 \times 10^{-6} \pm 3.68 \times 10^{-6}$ & $+0 \pm 0$ & $+0.000199 \pm 0.000124$ & $+5.76 \times 10^{-6} \pm 3.59 \times 10^{-6}$ & $+0 \pm 0$ & $+0.000199 \pm 0.000124$ & $+5.89 \times 10^{-6} \pm 3.69 \times 10^{-6}$ & $+0 \pm 0$ & $+0.000199 \pm 0.000124$ & $+5.87 \times 10^{-6} \pm 3.68 \times 10^{-6}$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $0.000163 \pm 4.3 \times 10^{-16}$ & $1.95 \times 10^{-7} \pm 1.23 \times 10^{-16}$ & $0 \pm 0$ & $0.000163 \pm 5.59 \times 10^{-16}$ & $4.73 \times 10^{-6} \pm 1.05 \times 10^{-7}$ & $0 \pm 0$ & $0.000163 \pm 1.83 \times 10^{-16}$ & $4.81 \times 10^{-6} \pm 4.49 \times 10^{-8}$ & $0 \pm 0$ & $0.000163 \pm 4.18 \times 10^{-16}$ & $4.81 \times 10^{-6} \pm 8.18 \times 10^{-10}$ \\
+Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+0.000199 \pm 0.000124$ & $+2.38 \times 10^{-7} \pm 1.49 \times 10^{-7}$ & $+0 \pm 0$ & $+0.000199 \pm 0.000124$ & $+5.76 \times 10^{-6} \pm 3.59 \times 10^{-6}$ & $+0 \pm 0$ & $+0.000199 \pm 0.000124$ & $+5.89 \times 10^{-6} \pm 3.69 \times 10^{-6}$ & $+0 \pm 0$ & $+0.000199 \pm 0.000124$ & $+5.87 \times 10^{-6} \pm 3.68 \times 10^{-6}$ \\
 Policy parameters & $2 \pm 0$ & $2 \pm 0$ & $2 \pm 0$ & $16 \pm 0$ & $50 \pm 0$ & $16 \pm 0$ & $76 \pm 0$ & $1250 \pm 0$ & $76 \pm 0$ & $301 \pm 0$ & $20000 \pm 0$ & $301 \pm 0$ \\
 Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $5.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $25.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $100.0 \pm 0.0$ & $1.0 \pm 0.0$ \\
 \bottomrule
 \end{tabular}
 }
-\caption{Policy architectures on the true model, across every inflation size. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
-\label{tab:ch4-true-across-sizes}
 \end{table}

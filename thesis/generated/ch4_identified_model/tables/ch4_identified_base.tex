@@ -1,14 +1,16 @@
 \begin{table}[htbp]
 \centering
+\caption{Solvers learning without the model under \emph{base} inflation, without noise. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
+\label{tab:ch4-identified-base}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrrr}
 \toprule
-Solver & Baseline & N4SID + DARE & Model-based PG + N4SID & S-PI + N4SID & Model-free NPG & S-PI (model-free) \\
+Solver & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model-free NPG & S-PI (model-free) \\
 \midrule
-True cost $J$ & $5848 \pm 6.374 \times 10^{-12}$ & $5848 \pm 8.258 \times 10^{-12}$ & $5848 \pm 8.671 \times 10^{-12}$ & $5861 \pm 1.063 \times 10^{-5}$ & $5865 \pm 7.096$ & $6248 \pm 52.56$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $1.71 \times 10^{-15} \pm 1.41 \times 10^{-15}$ & $3.87 \times 10^{-9} \pm 1.48 \times 10^{-15}$ & $0.00213 \pm 1.82 \times 10^{-9}$ & $0.00297 \pm 0.00121$ & $0.0685 \pm 0.00899$ \\
-Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+3.37 \times 10^{-17} \pm 1.55 \times 10^{-15}$ & $+4.73 \times 10^{-9} \pm 2.96 \times 10^{-9}$ & $+0.00259 \pm 0.00162$ & $+0.00331 \pm 0.00238$ & $+0.0852 \pm 0.053$ \\
-Iterations & $1 \pm 0$ & $1 \pm 0$ & $258 \pm 0$ & $28 \pm 1$ & $302 \pm 54$ & $431 \pm 38$ \\
+True cost $J$ & $5848 \pm 6.374 \times 10^{-12}$ & $5848 \pm 8.258 \times 10^{-12}$ & $5848 \pm 6.109 \times 10^{-12}$ & $5848 \pm 8.945 \times 10^{-7}$ & $5865 \pm 7.096$ & $6248 \pm 52.56$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $1.71 \times 10^{-15} \pm 1.41 \times 10^{-15}$ & $3.18 \times 10^{-5} \pm 1.04 \times 10^{-15}$ & $7.05 \times 10^{-6} \pm 1.53 \times 10^{-10}$ & $0.00297 \pm 0.00121$ & $0.0685 \pm 0.00899$ \\
+Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+3.37 \times 10^{-17} \pm 1.55 \times 10^{-15}$ & $+3.89 \times 10^{-5} \pm 2.43 \times 10^{-5}$ & $+8.52 \times 10^{-6} \pm 5.31 \times 10^{-6}$ & $+0.00331 \pm 0.00238$ & $+0.0852 \pm 0.053$ \\
+Iterations & $1 \pm 0$ & $1 \pm 0$ & $346 \pm 0$ & $35 \pm 2$ & $302 \pm 54$ & $431 \pm 38$ \\
 Env.\ steps to convergence & $0 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $4.82 \times 10^{7} \pm 8.58 \times 10^{6}$ & $6.9 \times 10^{7} \pm 6.05 \times 10^{6}$ \\
 Env.\ steps to best policy & $0 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $3.99 \times 10^{7} \pm 6.91 \times 10^{6}$ & $5.89 \times 10^{7} \pm 7.69 \times 10^{6}$ \\
 Policy parameters & $2 \pm 0$ & $2 \pm 0$ & $2 \pm 0$ & $2 \pm 0$ & $2 \pm 0$ & $2 \pm 0$ \\
@@ -16,6 +18,4 @@ Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0
 \bottomrule
 \end{tabular}
 }
-\caption{Solvers learning without the model at the base inflation, without noise. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
-\label{tab:ch4-identified-base}
 \end{table}

@@ -1,14 +1,16 @@
 \begin{table}[htbp]
 \centering
+\caption{Solvers learning without the model under \emph{medium} inflation, without noise. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
+\label{tab:ch4-identified-medium}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrrr}
 \toprule
-Solver & Baseline & N4SID + DARE & Model-based PG + N4SID & S-PI + N4SID & Model-free NPG & S-PI (model-free) \\
+Solver & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model-free NPG & S-PI (model-free) \\
 \midrule
-True cost $J$ & $5848 \pm 0$ & $5848 \pm 5.175 \times 10^{-5}$ & $5848 \pm 3.085 \times 10^{-5}$ & $5861 \pm 0.03506$ & $6527 \pm 2069$ & $7284 \pm 46.48$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $5.05 \times 10^{-9} \pm 8.85 \times 10^{-9}$ & $6.96 \times 10^{-9} \pm 5.27 \times 10^{-9}$ & $0.00214 \pm 6 \times 10^{-6}$ & $0.116 \pm 0.354$ & $0.246 \pm 0.00795$ \\
-Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+5.08 \times 10^{-9} \pm 8.61 \times 10^{-9}$ & $+8.48 \times 10^{-9} \pm 8.25 \times 10^{-9}$ & $+0.00259 \pm 0.00162$ & $+0.141 \pm 0.522$ & $+0.322 \pm 0.25$ \\
-Iterations & $1 \pm 0$ & $1 \pm 0$ & $258 \pm 0$ & $63 \pm 0$ & $199 \pm 41$ & $192 \pm 24$ \\
+True cost $J$ & $5848 \pm 0$ & $5848 \pm 5.175 \times 10^{-5}$ & $5848 \pm 0.001912$ & $5848 \pm 0.002925$ & $6527 \pm 2069$ & $7284 \pm 46.48$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $5.05 \times 10^{-9} \pm 8.85 \times 10^{-9}$ & $3.16 \times 10^{-5} \pm 3.27 \times 10^{-7}$ & $7.18 \times 10^{-6} \pm 5 \times 10^{-7}$ & $0.116 \pm 0.354$ & $0.246 \pm 0.00795$ \\
+Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+5.08 \times 10^{-9} \pm 8.61 \times 10^{-9}$ & $+3.86 \times 10^{-5} \pm 2.42 \times 10^{-5}$ & $+8.66 \times 10^{-6} \pm 5.37 \times 10^{-6}$ & $+0.141 \pm 0.522$ & $+0.322 \pm 0.25$ \\
+Iterations & $1 \pm 0$ & $1 \pm 0$ & $346 \pm 0$ & $76 \pm 0$ & $199 \pm 41$ & $192 \pm 24$ \\
 Env.\ steps to convergence & $0 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $3.04 \times 10^{7} \pm 1.05 \times 10^{7}$ & $3.08 \times 10^{7} \pm 3.85 \times 10^{6}$ \\
 Env.\ steps to best policy & $0 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $2.14 \times 10^{7} \pm 8.78 \times 10^{6}$ & $2.22 \times 10^{7} \pm 7.12 \times 10^{6}$ \\
 Policy parameters & $76 \pm 0$ & $76 \pm 0$ & $1250 \pm 0$ & $76 \pm 0$ & $1250 \pm 0$ & $828 \pm 231$ \\
@@ -16,6 +18,4 @@ Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $25.0 \pm 0.0$ & $1.0 \pm 0.0$ & $25
 \bottomrule
 \end{tabular}
 }
-\caption{Solvers learning without the model at the medium inflation, without noise. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
-\label{tab:ch4-identified-medium}
 \end{table}

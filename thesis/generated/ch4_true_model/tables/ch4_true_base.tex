@@ -1,14 +1,16 @@
 \begin{table}[htbp]
 \centering
+\caption{Policy architectures optimized by the exact gradients on the true model under \emph{base} inflation, without noise. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
+\label{tab:ch4-true-base}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrr}
 \toprule
 Solver & Baseline & Model-based PG & S-PI \\
 \midrule
-True cost $J$ & $5848 \pm 9.587 \times 10^{-13}$ & $5849 \pm 2.66 \times 10^{-12}$ & $5848 \pm 1.089 \times 10^{-7}$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $0.000163 \pm 4.3 \times 10^{-16}$ & $4.81 \times 10^{-6} \pm 1.86 \times 10^{-11}$ \\
-Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+0.000199 \pm 0.000124$ & $+5.88 \times 10^{-6} \pm 3.68 \times 10^{-6}$ \\
-Iterations & $1 \pm 0$ & $454 \pm 0$ & $50 \pm 0$ \\
+True cost $J$ & $5848 \pm 9.587 \times 10^{-13}$ & $5849 \pm 2.66 \times 10^{-12}$ & $5848 \pm 1.05 \times 10^{-12}$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $0.000163 \pm 4.3 \times 10^{-16}$ & $1.95 \times 10^{-7} \pm 1.23 \times 10^{-16}$ \\
+Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+0.000199 \pm 0.000124$ & $+2.38 \times 10^{-7} \pm 1.49 \times 10^{-7}$ \\
+Iterations & $1 \pm 0$ & $454 \pm 0$ & $78 \pm 0$ \\
 Env.\ steps to convergence & $0 \pm 0$ & $0 \pm 0$ & $0 \pm 0$ \\
 Env.\ steps to best policy & $0 \pm 0$ & $0 \pm 0$ & $0 \pm 0$ \\
 Policy parameters & $2 \pm 0$ & $2 \pm 0$ & $2 \pm 0$ \\
@@ -16,6 +18,4 @@ Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ \\
 \bottomrule
 \end{tabular}
 }
-\caption{Policy architectures optimized by the exact gradients on the true model at the base inflation, without noise. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
-\label{tab:ch4-true-base}
 \end{table}
