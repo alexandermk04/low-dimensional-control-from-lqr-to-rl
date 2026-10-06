@@ -1,17 +1,110 @@
 \chapter{Robustness Of Reinforcement Learning Approaches}\label{chap:inflation}
 
+Having seen how low-dimensionality affects robustness with a simple, LQR-based controller, we
+now want to take a look at a setting which allows us to judge architectures used in more
+complex tasks as well. Still, we will stay with our introduced double integrator system,
+but change the controllers for now.
+
 \section{PPO and its Variants}
+
+Before getting into our implementation details, we want to explain the basic construction
+of PPO. Introduced by Schulman et al. in 2017 \needcite{65 schulman}, it is an actor-critic algorithm,
+which means it consists of an actor, guided by a policy, that is simulated in an environment,
+and a critic, which tries to estimate the underlying value function based on the current policy
+and the actors returns\needcite{62 Konda}. In the case of PPO, as we're trying to optimize a policy
+via policy gradient optimization, we "[construct] an objective function whose gradient is the policy
+gradient estimator" \needcite{65}. What makes PPO special is the construction of this surrogate
+function, based on ideas from Trust Region Policy Optimization \needcite{63}. 
+In the paper, two approaches are proposed: Clipped Surrogate Objective or Adaptive KL % TODO: explain KL and prob ratio
+Penalty coefficient. The former clips the probability ratio past a limit set by a hyperparameter,
+imposing constraints on the policy update size\needcite{65}, while the latter, rather than setting
+a fixed KL for an update, sets a target KL divergence\needcite{65}. In case further interest
+arises, we refer to the original paper here\needcite{65}.
+
+However, as has been noted before \needcite{66, 68}, the actual implementation of PPO matters,
+and can influence the effectiveness of it in practice. For our construction, we use
+the architecture provided by StableBaselines3\needcite{https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html}.
+As the standard architecture, for our MLP PPO, we use the standard 2-layer with 64 neurons approach for both
+actor and the critic \needcite{https://stable-baselines3.readthedocs.io/en/master/guide/custom_policy.html}.
+Additionally, unless named otherwise, we will use the standard parameters from the SB3 library.
+For the above named parts, we leave the clip range at the standard of 0.2 and set the target kl to 0.02. 
+Experimenting with different runtime lengths, we settled on the following values, which differ by inflation size:
+
+% insert table here
+
+Across all, the evaluation frequency, so when the policy of the actor is updated, is set to 25 000.
+
+After initial runs with this basic setup, we could observe some divergence behavior, which
+lead us to consider additional implementation improvements, as suggested by \needcite{https://iclr-blog-track.github.io/2022/03/25/ppo-implementation-details/}.
+Specifically, we started using a vectorized environment, similar to the paper \needcite{65}. Additonally,
+we modified the discount factor to gamma = 0.999 instead of 0.99. However, the two most effective changes
+where:
+
+1. Using learning rate annealing instead of a fixed rate \needcite{37 implementation details, point 4}. Now the learning
+rate is decreased with every update, such that at the end of the number steps \needcite{cref to table above} it is equal
+to 0. So this is: %insert formula
+
+2. Seperating the feature extractors for actor and critic \needcite{37 implementation details, point 13}. As described by
+\needcite{https://stable-baselines3.readthedocs.io/en/master/guide/custom_policy.html}, to reduce computation, in the standard implementation,
+they share the extract, which is "a simple MLP network consisting of two layers of 64 neurons and Hyperbolic Tangent as the activation function" \needcite{https://iclr-blog-track.github.io/2022/03/25/ppo-implementation-details/}.
+Later, when introducing pretrained extractors, they will be shared again, but for still learning ones, we will seperate them.
+
+Now, after having introduced the base construction, it makes it easier for us to describe variations of the same. We start with
+LinearPPO, which allows us to compare the performance of PPO to the previous chapter. Here, our actor becomes a singular layer,
+with the bias removed, such that we can rewrite this network as
+
+% formula
+
+which allows us to extract a gain matrix K that is comparable to the previous chapter. A second, already known, component is
+used for PPO Encoder. Here, we reuse an identified system from N4SID \needcite{cref to chap 3} to encode an observation into
+a latent state:
+
+% Formula using identified C and observation y to map to latent state x
+
+The input dimension for both the actor and the critic thus becomes n_hat, which is the order of the identified model.
+
+However, as we will later scale our inputs to larger dimensions \needcite{cref chapter 5}, N4SID will become unfeasible for such dimensions.
+Still, we want to stay in line with the idea of encoding our observations into a latent state, as this exactly introduces the bow-tie structure
+we want. So, we introduce another encoder, which offers this scalability and call the combination PPO Encoder Scalable. This feature extractor
+is based on the results from \needcite{Jonschkowski2015Learning,Botteghi2021LowDimensional} which use robotic priors. Robotic priors, simply described,
+are prior knowledge, like physical laws, from which we define loss functions. By adding them to the training process, and optimizing for them, we can
+ensure that learned representation is in line with these laws. As mentioned in \needcite{cref to appraoch}, this allows us to make use of the embodiment
+to improve our controller architecture. Here, we will use the following priors\needcite{Botteghi2021LowDimensional}:
+
+- simplicity: State is lower in dimensionality than the observation
+- temporal coherence: States changes are rather slow
+- proportionality: Same actions should show similar output strength
+- repeatability: Same actions should show similar output changes
+- causality: ?
+
+With the exact loss calculations taken from the paper \needcite{Botteghi2021LowDimensional},
+we get the total loss function of:
+
+% insert formula from paper: L= ω1Ltemp+ω2Lprop+ω3Lrep+ω4Lcaus+ω5Lreg
+
+As this encoder must be trained first, we pretrain it for a total of 20 000 steps
+and 20 epochs (so 1000 steps per epoch), before freezing its parameters and prepending
+it to the actor and the critic. An important parameter is also the dimension of the latent
+state, which we set to the actual "2" here. Although for later application, one might not know
+the real, underlying dimension of the dynamics, we want to make it comparable across the solvers by
+using the same low-dimension. And as N4SID moslty correctly identifies the true dimension, we use it
+here as well. 
+
+The second trainable extractor we used is based on Todorov et al.'s paper\needcite{Todorov2026Orthogonal}
+using orthogonal bottlenecks. It consists of a fully connected MLP, with 512 neurons in the first,
+and 256 neurons in the second layer. Following it is an orthogonal matrix, which projects the output
+into a state of bottleneck dimension, which we here set to 2. The matrix is the Q component of a QR decomposition
+of a random matrix sampled from a standard normal distribution:
+
+% formula for matrix B
+
+Again, like the other encoder, we pretrain for the same number of steps and epochs.
 
 \section{Comparison Across Dimensions}
 
-\subsection{Setting}
-
-\subsection{Results}
+Now that we have all our methods setup, we can train and compare them across the different inflation sizes.
 
 \section{Noise On Large Inflation}
 
-\subsection{Setting}
-
-\subsection{Results}
 
 \section{Discussion}
