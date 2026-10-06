@@ -135,19 +135,22 @@ The results are then pooled. Let's first take a look at the training process at 
 % Base figures
 \begin{figure}[htbp]
   \centering
-  \generatedfigure{ch4_true_model}{ch4_true_base_curves_iterations}
-  \caption{TODO}
-  \label{fig:ch4-true-base-curves-iterations}
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_true_model}{ch4_true_base_curves_iterations}
+    \caption{Training suboptimality over the solver iterations.}
+    \label{fig:ch4-true-base-curves-iterations}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_true_model}{ch4_true_base_complexity}
+    \caption{Policy size of the learned gain.}
+    \label{fig:ch4-true-base-complexity}
+  \end{subfigure}
+  \caption{Training process and policy size of the solvers on the true model under
+    \emph{base} inflation.}
+  \label{fig:ch4-true-base-training}
 \end{figure}
-
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{ch4_true_model}{ch4_true_base_complexity}
-  \caption{TODO}
-  \label{fig:ch4-true-base-complexity}
-\end{figure}
-
-% TODO: Put curves and complexity side by side
 
 \begin{figure}[htbp]
   \centering
@@ -161,19 +164,22 @@ The results are then pooled. Let's first take a look at the training process at 
 % Large figures
 \begin{figure}[htbp]
   \centering
-  \generatedfigure{ch4_true_model}{ch4_true_large_curves_iterations}
-  \caption{TODO}
-  \label{fig:ch4-true-large-curves-iterations}
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_true_model}{ch4_true_large_curves_iterations}
+    \caption{Training suboptimality over the solver iterations.}
+    \label{fig:ch4-true-large-curves-iterations}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_true_model}{ch4_true_large_complexity}
+    \caption{Policy size of the learned gain.}
+    \label{fig:ch4-true-large-complexity}
+  \end{subfigure}
+  \caption{Training process and policy size of the solvers on the true model under
+    \emph{large} inflation.}
+  \label{fig:ch4-true-large-training}
 \end{figure}
-
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{ch4_true_model}{ch4_true_large_complexity}
-  \caption{TODO}
-  \label{fig:ch4-true-large-complexity}
-\end{figure}
-
-% TODO: Put curves and complexity side by side
 
 \begin{figure}[htbp]
   \centering
@@ -213,17 +219,108 @@ further relevant figures in the appendix \needcite{cref}. All plots, including s
 found in the code repository \needcite{link to repo}.
 
 % Measurement none, strong inflation figure
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_clean}
+    \caption{No noise}
+    \label{fig:ch4-true-noise-large-clean}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_measurement-strong}
+    \caption{Measurement noise at intensity \emph{strong}}
+    \label{fig:ch4-true-noise-large-measurement-strong}
+  \end{subfigure}
+  \caption{Suboptimality $S$ of the solvers on the true model under \emph{large} inflation,
+    without noise and under measurement noise.}
+  \label{fig:ch4-true-noise-large-measurement}
+\end{figure}
+
 % Table for the above
+\input{generated/ch4_true_model_noise/tables/ch4_true_model_noise_large_levels.tex}
 
 % Control weak, standard, strong in large inflation figures
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_control-weak}
+    \caption{Intensity \emph{weak}.}
+    \label{fig:ch4-true-noise-large-control-weak}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_control-standard}
+    \caption{Intensity \emph{standard}.}
+    \label{fig:ch4-true-noise-large-control-standard}
+  \end{subfigure}
+
+  \medskip
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_control-strong}
+    \caption{Intensity \emph{strong}.}
+    \label{fig:ch4-true-noise-large-control-strong}
+  \end{subfigure}
+  \caption{Suboptimality $S$ of the solvers on the true model under \emph{large} inflation
+    and control noise of increasing intensity.}
+  \label{fig:ch4-true-noise-large-control}
+\end{figure}
 
 % side by side all standard, base vs. large inflation figures
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_base_subopt_all-standard}
+    \caption{\emph{base} inflation.}
+    \label{fig:ch4-true-noise-base-all-standard}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_all-standard}
+    \caption{\emph{large} inflation.}
+    \label{fig:ch4-true-noise-large-all-standard}
+  \end{subfigure}
+  \caption{Suboptimality $S$ of the solvers on the true model with all noise channels at
+    intensity \emph{standard}.}
+  \label{fig:ch4-true-noise-all-standard}
+\end{figure}
+
 % Table
+\input{generated/ch4_true_model_noise/tables/sizes/ch4_true_model_noise_sizes_all-standard.tex}
 
 % Counterexamples
 % parametric standard under large, note that no real change occurs accross sizes
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_parametric-standard}
+  \caption{Suboptimality $S$ of the solvers on the true model under \emph{large} inflation
+    and parametric uncertainty at intensity \emph{standard}.}
+  \label{fig:ch4-true-noise-large-parametric-standard}
+\end{figure}
 
-% no noise side by side with disturbance at large divergent 
+% no noise side by side with disturbance at large divergent
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_clean}
+    \caption{No noise.}
+    \label{fig:ch4-true-noise-large-clean-disturbance}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_disturbance-divergent}
+    \caption{External disturbance at intensity \emph{divergent}.}
+    \label{fig:ch4-true-noise-large-disturbance-divergent}
+  \end{subfigure}
+  \caption{Suboptimality $S$ of the solvers on the true model under \emph{large} inflation,
+    without noise and under external disturbance at intensity \emph{divergent}.}
+  \label{fig:ch4-true-noise-large-disturbance}
+\end{figure}
 
 % TODO: Analysis
 
@@ -398,12 +495,60 @@ Based on those, $\lambda = 4000$ and a step size of $\eta = 3.5 \times 10^{-6}$ 
 \label{subsec:unknown-model-results}
 
 % training curves iteration under large
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch4_identified_model}{ch4_identified_large_curves_iterations}
+  \caption{Training suboptimality of the model-free solvers over the training iterations
+    under \emph{large} inflation.}
+  \label{fig:ch4-identified-large-curves-iterations}
+\end{figure}
+
+% TODO: Insert table with iteration counts / environments steps
 
 % subopt table at large
+\input{generated/ch4_identified_model/tables/ch4_identified_large.tex}
 
 % side by side subopt of base, small, medium, large
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_identified_model}{ch4_identified_base_subopt}
+    \caption{\emph{base} inflation.}
+    \label{fig:ch4-identified-base-subopt}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_identified_model}{ch4_identified_small_subopt}
+    \caption{\emph{small} inflation.}
+    \label{fig:ch4-identified-small-subopt}
+  \end{subfigure}
+
+  \medskip
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_identified_model}{ch4_identified_medium_subopt}
+    \caption{\emph{medium} inflation.}
+    \label{fig:ch4-identified-medium-subopt}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_identified_model}{ch4_identified_large_subopt}
+    \caption{\emph{large} inflation.}
+    \label{fig:ch4-identified-large-subopt}
+  \end{subfigure}
+  \caption{Suboptimality $S$ of the solvers without the model for each inflation size,
+    without noise.}
+  \label{fig:ch4-identified-subopt}
+\end{figure}
 
 % across sizes complexity
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch4_identified_model}{ch4_identified_across_sizes_complexity}
+  \caption{Policy size of the gains learned without the model, across every inflation size.}
+  \label{fig:ch4-identified-across-sizes-complexity}
+\end{figure}
 
 \subsection{Noise Experiments on Large Inflation}
 \label{subsec:noise-large-inflation}
@@ -412,14 +557,74 @@ Based on those, $\lambda = 4000$ and a step size of $\eta = 3.5 \times 10^{-6}$ 
 \label{subsec:noise-results}
 
 % large traj levels baseline plot
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch4_noise}{ch4_noise_large_traj_levels_baseline}
+  \caption{Trajectories of the optimal controller under \emph{large} inflation and measurement noise of
+    increasing intensity.}
+  \label{fig:ch4-noise-large-traj-levels-baseline}
+\end{figure}
 
 % clean large vs. measurement noise strong large
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_noise}{ch4_noise_large_subopt_clean}
+    \caption{No noise.}
+    \label{fig:ch4-noise-large-clean}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_noise}{ch4_noise_large_subopt_measurement-strong}
+    \caption{Measurement noise at intensity \emph{strong}.}
+    \label{fig:ch4-noise-large-measurement-strong}
+  \end{subfigure}
+  \caption{Suboptimality $S$ of the solvers without the model under \emph{large} inflation,
+    without noise and under measurement noise.}
+  \label{fig:ch4-noise-large-measurement}
+\end{figure}
 
 % large weak, standard, strong, divergent control
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_noise}{ch4_noise_large_subopt_control-weak}
+    \caption{Intensity \emph{weak}.}
+    \label{fig:ch4-noise-large-control-weak}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_noise}{ch4_noise_large_subopt_control-standard}
+    \caption{Intensity \emph{standard}.}
+    \label{fig:ch4-noise-large-control-standard}
+  \end{subfigure}
+
+  \medskip
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_noise}{ch4_noise_large_subopt_control-strong}
+    \caption{Intensity \emph{strong}.}
+    \label{fig:ch4-noise-large-control-strong}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_noise}{ch4_noise_large_subopt_control-divergent}
+    \caption{Intensity \emph{divergent}.}
+    \label{fig:ch4-noise-large-control-divergent}
+  \end{subfigure}
+  \caption{Suboptimality $S$ of the solvers without the model under \emph{large} inflation
+    and control noise of increasing intensity.}
+  \label{fig:ch4-noise-large-control}
+\end{figure}
 
 % disturbance at strong base vs. large as table comparison
+\input{generated/ch4_noise/tables/sizes/ch4_noise_sizes_disturbance-strong.tex}
 
-% reference parametric noise table for large & strong, as well as plot in appendix
+% TODO: Reference \cref{tab:ch4-noise-large-channels,fig:app-noise-large-parametric-strong} in the analysis.
+
+% TODO: Analysis
 
 \subsection{Discussion}
 \label{sec:id-model-discussion}
