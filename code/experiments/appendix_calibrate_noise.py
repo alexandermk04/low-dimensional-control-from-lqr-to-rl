@@ -14,7 +14,6 @@ from evaluation.metrics import LinearPolicy
 from experiments.evaluate import evaluate_policy
 from experiments.noise_builder import build_noise
 from experiments.problem import make_problem
-from experiments.registry import optimal_controller_gain
 from experiments.store import experiment_root
 
 EXPERIMENT = "appendix_calibrate_noise"
@@ -31,7 +30,7 @@ def mean_cost(problems, channel=None, std=None) -> float:
     noise = None if channel is None else build_noise(channel, "calibration", {channel: std})
     with np.errstate(all="ignore"):
         costs = [
-            evaluate_policy(problem, LinearPolicy(optimal_controller_gain(problem)),
+            evaluate_policy(problem, LinearPolicy(problem.K_star),
                             noise_settings=noise).returns
             for problem in problems
         ]

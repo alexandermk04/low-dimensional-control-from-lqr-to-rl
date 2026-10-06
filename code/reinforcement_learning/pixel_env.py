@@ -9,7 +9,8 @@ import gymnasium as gym
 from gymnasium import spaces
 
 import config as cfg
-from lqr_base.inflated_lqr import LQRInflated, LQRInflatedSettings
+import settings
+from lqr_base.simple_lqr import LQRDiscrete, LQRDiscreteSettings
 
 from reinforcement_learning.pixel_render import SceneSpec, SceneRenderer
 
@@ -49,7 +50,7 @@ class PixelLQREnv(gym.Env):
 
     Parameters
     ----------
-    lqr : LQRInflated
+    lqr : LQRDiscrete
         The system, with ``U_1 = I`` and a thruster-ring ``U_2``.
     config : PixelEnvConfig
         Timing and framing.
@@ -60,7 +61,7 @@ class PixelLQREnv(gym.Env):
 
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 10}
 
-    def __init__(self, lqr: LQRInflated, config: PixelEnvConfig, render_mode: str | None = None):
+    def __init__(self, lqr: LQRDiscrete, config: PixelEnvConfig, render_mode: str | None = None):
         super().__init__()
 
         if config.action_repeat < 1 or config.frame_stack < 1:
@@ -222,12 +223,15 @@ class PixelLQREnv(gym.Env):
             self.clock = None
 
 
-def build_pixel_lqr(seed_seq: np.random.SeedSequence) -> LQRInflated:
+def build_pixel_lqr(seed_seq: np.random.SeedSequence) -> LQRDiscrete:
     """Create the LQR system for the pixel environment."""
     U_1, U_2 = cfg.thruster_lifts()
-    Q, R = cfg.default_costs()
+    Q, R = cfg.default_costs(
+        U_1.shape[0], U_2.shape[1],
+        settings.STATE_COST_WEIGHT, settings.INPUT_COST_WEIGHT,
+    )
 
-    return LQRInflated(LQRInflatedSettings(
+    return LQRDiscrete(LQRDiscreteSettings(
         model=cfg.double_integrator_model(),
         Q=Q,
         R=R,

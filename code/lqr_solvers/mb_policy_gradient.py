@@ -21,7 +21,7 @@ from scipy.linalg import solve_discrete_lyapunov
 
 from basetypes import StateSpaceModel
 
-from lqr_base.simple_lqr import LQRDiscrete, true_cost, initial_state_covariance
+from lqr_base.simple_lqr import ControllerModel, LQRDiscrete
 from evaluation.analysis import Plateau
 from evaluation.probe import Probe, record_iteration, should_stop
 
@@ -32,7 +32,8 @@ class ModelBasedPolicyGradientSettings:
     Attributes
     ----------
     K_0 : np.ndarray
-        Initial gain of shape ``(m, n)``. Must be stabilizing.
+        Initial gain in the controller's space, of shape ``(q, p)``. Must be
+        stabilizing.
     gradient_steps : int
         Number of descent steps.
     gradient_lr : float
@@ -53,27 +54,24 @@ class ModelBasedPolicyGradientSettings:
 
 # Global Convergence... Paper, page 5
 def calculate_gradient_model_based_discrete(
-    lqr: LQRDiscrete,
+    model: ControllerModel,
     K_t: np.ndarray,
-    sigma_0: np.ndarray | None = None,
-) -> tuple[np.ndarray, float]:
+):
     """Exact policy gradient of the LQR cost at ``K_t``.
 
     Parameters
     ----------
-    lqr : LQRDiscrete
-        System to optimize over.
+    model : ControllerModel
+        The problem in the controller's space, from
+        :meth:`~lqr_base.simple_lqr.LQRBase.controller_model`.
     K_t : np.ndarray
-        Current gain in the controller's space, applied as ``v = -K y``. For a
-        plain system that is ``(m, n)``; under inflation it is ``(q, p)``.
-    sigma_0 : np.ndarray or None, optional
-        Initial-state covariance of shape ``(n, n)``.
+        Current gain in the controller's space, applied as ``v = -K y``, of
+        shape ``(q, p)``.
 
     Returns
     -------
     grad : np.ndarray
-        ``2 E_k Sigma_k`` transformed into the controller's space, so it has
-        the same shape as ``K_t``.
+        ``2 E_k Sigma_k``, shaped like ``K_t``.
     expected_cost : float
         ``trace(sigma_0 P_k)``, the expected cost of the current policy over
         the initial-state distribution; ``inf`` if the closed loop is unstable.
@@ -82,26 +80,18 @@ def calculate_gradient_model_based_discrete(
     -----
     .. code-block:: text
 
-        K_eff = U_2 K_t U_1
-        E_k   = (R + B' P_k B) K_eff - B' P_k A
-        grad  = project(2 E_k Sigma_k)
+        E_k   = (R + B' P_k B) K_t - B' P_k A
+        grad  = 2 E_k Sigma_k
 
-    The sign of ``E_k`` follows this repository's ``u = -K x`` convention and
-    is flipped relative to the paper.
+    on the controller-space model. The sign of
+    ``E_k`` follows this thesis' ``u = -K x`` convention and is flipped
+    relative to the paper.
     """
+    A, B, Q, R, sigma_0 = model
 
-    # Everything below happens in the true state space
-    K_eff = lqr.effective_gain(K_t)
+    lya_a = A - B @ K_t
 
-    lya_a = lqr.A - lqr.B @ K_eff
-
-    lya_q = lqr.Q + K_eff.T @ lqr.R @ K_eff
-
-    P_k = solve_discrete_lyapunov(lya_a.T, lya_q)
-
-    # Initial state covariance
-    if sigma_0 is None:
-        sigma_0 = initial_state_covariance(lqr)
+    P_k = solve_discrete_lyapunov(lya_a.T, Q + K_t.T @ R @ K_t)
 
     # Expected cost using current policy K_t
     expected_cost = np.trace(sigma_0 @ P_k)
@@ -111,11 +101,9 @@ def calculate_gradient_model_based_discrete(
     # Compute the state covariance under the current policy K_t
     sigma_k = solve_discrete_lyapunov(lya_a, sigma_0)
 
-    E_k = (lqr.R + lqr.B.T @ P_k @ lqr.B) @ K_eff - lqr.B.T @ P_k @ lqr.A
+    E_k = (R + B.T @ P_k @ B) @ K_t - B.T @ P_k @ A
 
-    grad = lqr.project_gradient(2 * E_k @ sigma_k)
-
-    return grad, expected_cost
+    return 2 * E_k @ sigma_k, expected_cost
 
 # Runs gradient descent for a defined number of steps, returns K after
 def gradient_descent_discrete(lqr: LQRDiscrete, settings: ModelBasedPolicyGradientSettings) -> tuple[list[np.ndarray], list[float]]:
@@ -138,6 +126,7 @@ def gradient_descent_discrete(lqr: LQRDiscrete, settings: ModelBasedPolicyGradie
         uncomputed.
     """
     lqr.reset()
+    model = lqr.controller_model()
 
     K = settings.K_0
 
@@ -147,7 +136,7 @@ def gradient_descent_discrete(lqr: LQRDiscrete, settings: ModelBasedPolicyGradie
     progress_bar = tqdm(range(settings.gradient_steps), desc="Model-Based Policy Gradient", unit="step")
 
     for i in progress_bar:
-        grad, expected_cost = calculate_gradient_model_based_discrete(lqr, K)
+        grad, expected_cost = calculate_gradient_model_based_discrete(model, K)
         costs.append(expected_cost)
 
         K = K - settings.gradient_lr * grad
