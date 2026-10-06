@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\caption{Suboptimality $S$ per inflation size under all noise at intensity \emph{divergent}. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled.}
+\label{tab:ch4-noise-sizes-all-divergent}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Inflation$^{\dagger}$ & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model-free NPG & S-PI (model-free) \\
+\midrule
+base & $+0 \pm 0$ & $-1.29 \times 10^{-11} \pm 2.58 \times 10^{-10}$ & $+49.6 \pm 1.19 \times 10^{3}$ & $+9.83 \pm 178$ & $+1.81 \times 10^{25} \pm 4.22 \times 10^{26}$ & $-0.922 \pm 2.36$ \\
+large & $+0 \pm 0$ & $-1.1 \times 10^{-5} \pm 8.3 \times 10^{-5}$ & $+0.000226 \pm 0.225$ & $-0.0186 \pm 0.0491$ & $+4.79 \times 10^{192} \pm inf$ & $+3.16 \pm 35.4$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

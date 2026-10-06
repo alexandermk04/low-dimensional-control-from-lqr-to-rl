@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\caption{Suboptimality $S$ per inflation size without noise. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled.}
+\label{tab:ch4-noise-sizes-clean}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Inflation$^{\dagger}$ & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model-free NPG & S-PI (model-free) \\
+\midrule
+base & $+0 \pm 0$ & $+3.15 \times 10^{-17} \pm 1.54 \times 10^{-15}$ & $+3.89 \times 10^{-5} \pm 2.43 \times 10^{-5}$ & $+8.52 \times 10^{-6} \pm 5.31 \times 10^{-6}$ & $+0.00331 \pm 0.00238$ & $+0.0852 \pm 0.053$ \\
+large & $+0 \pm 0$ & $+4.54 \times 10^{-10} \pm 3.82 \times 10^{-10}$ & $+3.89 \times 10^{-5} \pm 2.43 \times 10^{-5}$ & $+8.53 \times 10^{-6} \pm 5.31 \times 10^{-6}$ & $+9.37 \times 10^{-5} \pm 0.000104$ & $+0.323 \pm 0.252$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

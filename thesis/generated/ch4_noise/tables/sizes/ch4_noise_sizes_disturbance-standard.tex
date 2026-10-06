@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\caption{Suboptimality $S$ per inflation size under disturbance noise at intensity \emph{standard}. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled.}
+\label{tab:ch4-noise-sizes-disturbance-standard}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Inflation$^{\dagger}$ & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model-free NPG & S-PI (model-free) \\
+\midrule
+base & $+0 \pm 0$ & $-4.6 \times 10^{-15} \pm 6.48 \times 10^{-14}$ & $+0.00306 \pm 0.00191$ & $+0.00133 \pm 0.000862$ & $-0.0147 \pm 0.0154$ & $+0.216 \pm 0.103$ \\
+large & $+0 \pm 0$ & $+6.05 \times 10^{-7} \pm 1.34 \times 10^{-5}$ & $+0.00306 \pm 0.00191$ & $+0.00134 \pm 0.000863$ & $-0.000773 \pm 0.0043$ & $+0.198 \pm 0.149$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
