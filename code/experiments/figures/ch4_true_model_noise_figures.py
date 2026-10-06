@@ -7,7 +7,7 @@ Run with::
 
 import settings
 from experiments.ch4_true_model_noise import SIZES
-from experiments.figures.ch4_noise_figures import render
+from experiments.figures.ch4_noise_figures import render, render_sizes
 
 EXPERIMENT = "ch4_true_model_noise"
 
@@ -21,6 +21,7 @@ def main():
             set_by="python -m experiments.ch4_true_model_noise",
             size=size,
         )
+    render_sizes(EXPERIMENT, PREFIX, settings.CH4_TRUE_SOLVERS, SIZES)
 
 
 if __name__ == "__main__":

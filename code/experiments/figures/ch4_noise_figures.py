@@ -7,14 +7,15 @@ Run with::
 
 import settings
 from experiments.figures.aggregate import (
+    group,
     label_for,
     latest_per_experiment,
     tidy,
     with_suboptimality,
 )
 from experiments.figures.panels import trajectory_overlay, box_metric
-from experiments.figures.style import figure_dir, save, table_dir
-from experiments.figures.tables import metric_table, write_table
+from experiments.figures.style import figure_dir, save, save_variants, table_dir
+from experiments.figures.tables import metric_table, setting_table, write_table
 from experiments.settings_guard import require_choice
 from experiments.ch4_noise import SIZES
 from experiments.store import load_experiment
@@ -83,15 +84,22 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
             continue
 
         if cell_channel == "clean":
-            title, stem = "No noise", "clean"
+            title = short_title = "No noise"
+            stem = "clean"
         else:
             title = f"Channel: {cell_channel}, intensity: {cell_level}"
+            short_title = f"{cell_channel}, {cell_level}"
             stem = f"{cell_channel}-{cell_level}"
 
         # Suboptimality can be negative
-        ax = box_metric(subset, "solver", "subopt", order=solvers, log="symlog")
-        ax.set_title(title)
-        save(ax.figure, f"{prefix}_subopt_{stem}", experiment)
+        def draw(subset=subset, title=title, short_title=short_title, **size):
+            ax = box_metric(
+                subset, "solver", "subopt", order=solvers, log="symlog", **size
+            )
+            ax.set_title(short_title if size else title)
+            return ax
+
+        save_variants(draw, f"{prefix}_subopt_{stem}", experiment)
 
     reference = "baseline" if "baseline" in solvers else solvers[0]
     reference_records = [r for r in records if r.solver == reference]
@@ -115,6 +123,38 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
             reference_channels, "channel", dt=dt, order=channel_order
         )
         save(axes[0].figure, f"{prefix}_traj_channels_{reference}", experiment)
+
+    inflation = f" under \\emph{{{size}}} inflation and" if size else " under"
+
+    write_table(
+        setting_table(
+            [r for r in rows if r.get("channel") in (channel, "clean")],
+            "level",
+            row_order=level_order,
+            column_order=solvers,
+            row_header="Intensity",
+            caption=f"Suboptimality $S${inflation} {channel} noise of increasing intensity.",
+            label=f"tab:{slug}-levels",
+        ),
+        f"{prefix}_levels",
+        experiment,
+    )
+
+    write_table(
+        setting_table(
+            [r for r in rows if r.get("level") in (level, "none")],
+            "channel",
+            row_order=channel_order,
+            column_order=solvers,
+            row_header="Channel",
+            caption=(
+                f"Suboptimality $S${inflation} each noise channel at intensity \\emph{{{level}}}."
+            ),
+            label=f"tab:{slug}-channels",
+        ),
+        f"{prefix}_channels",
+        experiment,
+    )
 
     for solver in solvers:
         solver_rows = [r for r in rows if r["solver"] == solver]
@@ -159,9 +199,52 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
     print("wrote tables  to", table_dir(experiment))
 
 
+def render_sizes(experiment: str, prefix: str, solvers, sizes):
+    """Tables comparing the inflation sizes.
+
+    Parameters
+    ----------
+    experiment : str
+        Which noise experiment to read.
+    prefix : str
+        File stem prefix for the generated files.
+    solvers : sequence of str
+        Solver order along the columns.
+    sizes : sequence of str
+        Inflation sizes along the rows.
+    """
+    slug = prefix.replace("_", "-")
+
+    records = latest_per_experiment(load_experiment(experiment))
+    rows = with_suboptimality(tidy(records))
+
+    for (cell_channel, cell_level), subset in group(rows, ("channel", "level")).items():
+        stem = "clean" if cell_channel == "clean" else f"{cell_channel}-{cell_level}"
+        noise = (
+            "without noise" if cell_channel == "clean"
+            else f"under {cell_channel} noise at intensity \\emph{{{cell_level}}}"
+        )
+
+        write_table(
+            setting_table(
+                subset,
+                "size",
+                row_order=sizes,
+                column_order=solvers,
+                row_header="Inflation",
+                caption=f"Suboptimality $S$ per inflation size {noise}.",
+                label=f"tab:{slug}-sizes-{stem}",
+            ),
+            f"{prefix}_sizes_{stem}",
+            experiment,
+            subdir="sizes",
+        )
+
+
 def main():
     for size in SIZES:
         render(EXPERIMENT, f"{PREFIX}_{size}", settings.CH4_IDENTIFIED_SOLVERS, size=size)
+    render_sizes(EXPERIMENT, PREFIX, settings.CH4_IDENTIFIED_SOLVERS, SIZES)
 
 
 if __name__ == "__main__":

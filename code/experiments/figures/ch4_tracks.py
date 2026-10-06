@@ -13,7 +13,7 @@ from experiments.figures.panels import (
     trajectory_overlay,
     box_metric,
 )
-from experiments.figures.style import figure_dir, save, table_dir
+from experiments.figures.style import figure_dir, save, save_variants, table_dir
 from experiments.figures.tables import metric_table, write_table
 from config import DEFAULT_DT
 from experiments.store import load_experiment
@@ -48,11 +48,11 @@ def render_size(
 
     # Training process
     if curves:
-        ax = learning_bands(
-            subset, "solver", x=curve_x, order=order, logx=curve_x != "iteration"
-        )
-        save(
-            ax.figure,
+        save_variants(
+            lambda **size: learning_bands(
+                subset, "solver", x=curve_x, order=order,
+                logx=curve_x != "iteration", **size,
+            ),
             f"{stem}_curves_{CURVE_SUFFIX.get(curve_x, curve_x)}",
             experiment,
         )
@@ -63,11 +63,19 @@ def render_size(
         save(axes[0].figure, f"{stem}_trajectories", experiment)
 
     # Paired test suboptimality
-    ax = box_metric(rows, "solver", "subopt", order=order, log="symlog")
-    save(ax.figure, f"{stem}_subopt", experiment)
+    save_variants(
+        lambda **size: box_metric(
+            rows, "solver", "subopt", order=order, log="symlog", **size
+        ),
+        f"{stem}_subopt",
+        experiment,
+    )
 
-    ax = complexity_bars(rows, "solver", order=order)
-    save(ax.figure, f"{stem}_complexity", experiment)
+    save_variants(
+        lambda **size: complexity_bars(rows, "solver", order=order, **size),
+        f"{stem}_complexity",
+        experiment,
+    )
 
     # Table 2
     write_table(
