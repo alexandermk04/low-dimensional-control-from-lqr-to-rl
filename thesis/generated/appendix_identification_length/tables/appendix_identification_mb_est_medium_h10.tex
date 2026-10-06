@@ -1,20 +1,17 @@
 \begin{table}[htbp]
 \centering
-\caption{N4SID + Model-based PG on a system with \emph{medium} inflation with a Hankel horizon of 10. Mean $\pm$ standard deviation over 10 runs. Identified counts the seeds a model was obtained from and stable those whose controller left the plant stable.}
+\caption{N4SID + Model-based PG on a system with \emph{medium} inflation with a Hankel horizon of 10. Mean $\pm$ standard deviation over 10 runs.}
 \label{tab:appendix-identification-mb-est-medium-h10}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
 Trajectory length $T$ & 500 & 1000 & 2000 & 4000 & 8000 \\
 \midrule
-Identified & $10/10$ & $10/10$ & $10/10$ & $10/10$ & $10/10$ \\
-Stable & $6/10$ & $10/10$ & $10/10$ & $10/10$ & $10/10$ \\
-\midrule
-Training suboptimality $(J-J^*)/J^*$ & $3.76 \pm 1.66$ & $5.67 \times 10^{-9} \pm 3.21 \times 10^{-9}$ & $4.78 \times 10^{-9} \pm 2.31 \times 10^{-9}$ & $4.18 \times 10^{-9} \pm 6.8 \times 10^{-10}$ & $4.45 \times 10^{-9} \pm 9.33 \times 10^{-10}$ \\
-Iterations & $20000 \pm 0$ & $258 \pm 0$ & $258 \pm 0$ & $258 \pm 0$ & $258 \pm 0$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.0103 \pm 0.00853$ & $3.16 \times 10^{-5} \pm 1.95 \times 10^{-7}$ & $3.16 \times 10^{-5} \pm 1.81 \times 10^{-7}$ & $3.17 \times 10^{-5} \pm 2.21 \times 10^{-7}$ & $3.17 \times 10^{-5} \pm 2.22 \times 10^{-7}$ \\
+Iterations & $344 \pm 12$ & $346 \pm 1$ & $346 \pm 1$ & $346 \pm 1$ & $346 \pm 1$ \\
 Env.\ steps to convergence & $500 \pm 0$ & $10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ & $4 \times 10^{3} \pm 0$ & $8 \times 10^{3} \pm 0$ \\
 Env.\ steps to best policy & $500 \pm 0$ & $10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ & $4 \times 10^{3} \pm 0$ & $8 \times 10^{3} \pm 0$ \\
-Wall time (s) & $13.7 \pm 0.1$ & $0.9 \pm 0.1$ & $1.5 \pm 0.0$ & $2.7 \pm 0.0$ & $4.4 \pm 0.4$ \\
+Wall time (s) & $1.2 \pm 0.1$ & $1.6 \pm 0.0$ & $2.2 \pm 0.0$ & $3.3 \pm 0.1$ & $5.5 \pm 0.4$ \\
 \bottomrule
 \end{tabular}
 }

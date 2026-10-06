@@ -69,10 +69,10 @@ IDENTIFICATION_HORIZONS = (5, 10, 20)
 # Filled from `python -m experiments.appendix_identification_length`;
 # values are (trajectory_length, hankel_horizon).
 CHOSEN_IDENTIFICATION = {
-    "base": None,
-    "small": None,
-    "medium": None,
-    "large": None,
+    "base": (500, 5),
+    "small": (500, 5),
+    "medium": (500, 5),
+    "large": (2000, 5),
 }
 
 # Rollout length for training
@@ -117,31 +117,31 @@ NOISE_COST_TARGETS = {"weak": 1.2, "standard": 1.5, "strong": 3.0, "divergent": 
 NOISE_STD = {
     "measurement": {
         "none": 0.0,
-        "weak": None,
-        "standard": None,
-        "strong": None,
-        "divergent": None,
+        "weak": 0.389,
+        "standard": 0.607,
+        "strong": 1.22,
+        "divergent": 2.58,
     },
     "control": {
         "none": 0.0,
-        "weak": None,
-        "standard": None,
-        "strong": None,
-        "divergent": None,
+        "weak": 1.07,
+        "standard": 1.67,
+        "strong": 3.19,
+        "divergent": 5.68,
     },
     "parametric": {
         "none": 0.0,
-        "weak": None,
-        "standard": None,
-        "strong": None,
-        "divergent": None,
+        "weak": 0.0211,
+        "standard": 0.0304,
+        "strong": 0.0451,
+        "divergent": 0.0582,
     },
     "disturbance": {
         "none": 0.0,
-        "weak": None,
-        "standard": None,
-        "strong": None,
-        "divergent": None,
+        "weak": 0.00767,
+        "standard": 0.0122,
+        "strong": 0.0246,
+        "divergent": 0.0519,
     },
 }
 
