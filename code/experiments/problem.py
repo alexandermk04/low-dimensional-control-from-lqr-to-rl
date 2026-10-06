@@ -95,8 +95,7 @@ class Problem:
     inflation : tuple[int, int] or None
     model : StateSpaceModel
     Q, R : np.ndarray
-        Cost weights on the state ``(n,)`` and the controller output ``(q,)``,
-        as diagonals.
+        Cost weights in the controller's space, as diagonals.
     dt : float
     max_initial_state : np.ndarray
     U_1, U_2 : np.ndarray or None
@@ -183,9 +182,11 @@ def make_problem(seed: int, inflation: tuple[int, int] | None = None) -> Problem
     Problem
     """
     model = double_integrator_model()
-    action_dim = inflation[1] if inflation is not None else model.B.shape[1]
+    observation_dim, action_dim = (
+        inflation if inflation is not None else (model.A.shape[0], model.B.shape[1])
+    )
     Q, R = default_costs(
-        model.A.shape[0], action_dim,
+        observation_dim, action_dim,
         settings.STATE_COST_WEIGHT, settings.INPUT_COST_WEIGHT,
     )
     max_initial_state = DEFAULT_MAX_INITIAL_STATE.copy()

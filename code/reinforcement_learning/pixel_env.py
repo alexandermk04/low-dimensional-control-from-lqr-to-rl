@@ -227,7 +227,7 @@ def build_pixel_lqr(seed_seq: np.random.SeedSequence) -> LQRDiscrete:
     """Create the LQR system for the pixel environment."""
     U_1, U_2 = cfg.thruster_lifts()
     Q, R = cfg.default_costs(
-        U_1.shape[1], U_2.shape[1],
+        U_1.shape[0], U_2.shape[1],
         settings.STATE_COST_WEIGHT, settings.INPUT_COST_WEIGHT,
     )
 

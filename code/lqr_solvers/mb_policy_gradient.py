@@ -71,7 +71,7 @@ def calculate_gradient_model_based_discrete(
     Returns
     -------
     grad : np.ndarray
-        ``2 E_k Sigma_k C'``, shaped like ``K_t``.
+        ``2 E_k Sigma_k``, shaped like ``K_t``.
     expected_cost : float
         ``trace(sigma_0 P_k)``, the expected cost of the current policy over
         the initial-state distribution; ``inf`` if the closed loop is unstable.
@@ -80,20 +80,18 @@ def calculate_gradient_model_based_discrete(
     -----
     .. code-block:: text
 
-        E_k   = (R + B' P_k B) K_t C - B' P_k A
-        grad  = 2 E_k Sigma_k C'
+        E_k   = (R + B' P_k B) K_t - B' P_k A
+        grad  = 2 E_k Sigma_k
 
-    the output-feedback form of the paper's gradient, with ``A - B K_t C``
-    as the closed loop. The sign of
+    on the controller-space model. The sign of
     ``E_k`` follows this thesis' ``u = -K x`` convention and is flipped
     relative to the paper.
     """
-    A, B, C, Q, R, sigma_0 = model
+    A, B, Q, R, sigma_0 = model
 
-    K_x = K_t @ C
-    lya_a = A - B @ K_x
+    lya_a = A - B @ K_t
 
-    P_k = solve_discrete_lyapunov(lya_a.T, Q + K_x.T @ R @ K_x)
+    P_k = solve_discrete_lyapunov(lya_a.T, Q + K_t.T @ R @ K_t)
 
     # Expected cost using current policy K_t
     expected_cost = np.trace(sigma_0 @ P_k)
@@ -103,9 +101,9 @@ def calculate_gradient_model_based_discrete(
     # Compute the state covariance under the current policy K_t
     sigma_k = solve_discrete_lyapunov(lya_a, sigma_0)
 
-    E_k = (R + B.T @ P_k @ B) @ K_x - B.T @ P_k @ A
+    E_k = (R + B.T @ P_k @ B) @ K_t - B.T @ P_k @ A
 
-    return 2 * E_k @ sigma_k @ C.T, expected_cost
+    return 2 * E_k @ sigma_k, expected_cost
 
 # Runs gradient descent for a defined number of steps, returns K after
 def gradient_descent_discrete(lqr: LQRDiscrete, settings: ModelBasedPolicyGradientSettings) -> tuple[list[np.ndarray], list[float]]:

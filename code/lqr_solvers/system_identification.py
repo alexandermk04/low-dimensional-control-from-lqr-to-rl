@@ -286,11 +286,8 @@ def to_surrogate(
     ----------
     model : IdentifiedModel
         The identified system.
-    Q : np.ndarray
-        The known state cost on the true state, a multiple of the identity,
-        as a diagonal ``(n,)``.
-    R : np.ndarray
-        The known cost on the controller output, ``(q,)`` or ``(q, q)``.
+    Q, R : np.ndarray
+        The known cost weights in the controller's space.
     seed_seq : np.random.SeedSequence
         Seeds the surrogate's initial state.
 
@@ -299,17 +296,12 @@ def to_surrogate(
     LQRDiscrete
         A surrogate on ``(A, B)`` with ``U_1 = C`` and ``U_2 = I_q``.
     """
-    if not np.allclose(Q, Q.flat[0] * np.eye(len(Q)) if Q.ndim == 2 else Q.flat[0]):
-        raise ValueError("The surrogate needs a state cost that is a multiple of the identity.")
-    C = model.decode.T
-    Q_z = Q.flat[0] * C.T @ C
-
     # Initial state covariance equal to the identity
     box = np.sqrt(3.0) * np.ones(model.n_hat)
 
     return _IdentifiedLQR(settings=LQRDiscreteSettings(
         model=StateSpaceModel(A=model.A, B=model.B),
-        Q=Q_z,
+        Q=Q,
         R=R,
         max_initial_state=box,
         resample_initial_state=True,

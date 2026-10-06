@@ -924,7 +924,7 @@ def _pixel_setup(spec: RunSpec):
 
     U_1, U_2 = cfg.thruster_lifts()
     Q, R = cfg.default_costs(
-        U_1.shape[1], U_2.shape[1],
+        U_1.shape[0], U_2.shape[1],
         settings.STATE_COST_WEIGHT, settings.INPUT_COST_WEIGHT,
     )
     c = U_2[0]
@@ -932,7 +932,7 @@ def _pixel_setup(spec: RunSpec):
     R_acceleration = np.array([[1.0 / float(np.sum(c ** 2 / R))]])
 
     K, P, rho = optimal_coarse_gain(
-        cfg.double_integrator_model(), np.diag(Q), R_acceleration,
+        cfg.double_integrator_model(), U_1.T @ np.diag(Q) @ U_1, R_acceleration,
         cfg.DEFAULT_DT, cfg.DEFAULT_ACTION_REPEAT,
     )
     check_thrust_calibration(c, K, cfg.DEFAULT_MAX_INITIAL_STATE)
