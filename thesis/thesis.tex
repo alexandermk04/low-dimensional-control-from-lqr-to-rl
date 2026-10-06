@@ -116,6 +116,7 @@
 \usepackage{import}
 \usepackage{xcolor}
 \usepackage[capitalise,nameinlink]{cleveref}
+\usepackage{placeins}                   % \FloatBarrier: keep floats within their section
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Configurationen:
@@ -299,19 +300,19 @@ Hier die deutsche Zusammenfassung einf\"ugen (notwendig).
 \input{1introduction.tex}
 \cleardoublepage
 
-\input{3context.tex}
+\input{2context.tex}
 \cleardoublepage
 
-\input{4robustnessLQR.tex}
+\input{3robustnessLQR.tex}
 \cleardoublepage
 
-\input{5artificialInflation.tex}
+\input{4artificialInflation.tex}
 \cleardoublepage
 
-\input{6perception.tex}
+\input{5perception.tex}
 \cleardoublepage
 
-\input{7conclusions.tex}
+\input{6conclusions.tex}
 \cleardoublepage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -319,6 +320,9 @@ Hier die deutsche Zusammenfassung einf\"ugen (notwendig).
 % these are optional! For most Bachelor-theses and some Master-thesis none of them is needed. 
 % Just comment them if not needed.
 \appendix
+% Make plots stick to their headings in the appendix
+\let\appendixsection\section
+\renewcommand{\section}{\FloatBarrier\appendixsection}
 \fancyhead[LO,RE]{}                      % Define the header style for the appendixpages
 
 \fancyhead[LE,RO]{\it Anhang A. Nomenclature}                %Adapt letter!
