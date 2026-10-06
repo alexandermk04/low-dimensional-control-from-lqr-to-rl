@@ -154,7 +154,7 @@ def _stopper(kind: str, overrides: dict | None = None) -> Plateau:
         )
     else:
         base = settings.CONVERGENCE[kind] or {}
-    return Plateau(**{**base, **overrides})
+    return Plateau(**{**base, **(overrides or {})})
 
 
 def _tuned(spec: RunSpec, key: str, figures: str):
