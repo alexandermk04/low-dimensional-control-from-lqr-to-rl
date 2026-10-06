@@ -75,7 +75,7 @@ def closed_loop_value_matrix(
 ) -> np.ndarray | None:
     """Value matrix ``P`` of the closed loop, or ``None`` if it is unstable.
 
-    ``P`` solves ``P = Q_x + (K U_1)' R (K U_1) + A_cl' P A_cl``, so that the
+    ``P`` solves ``P = Q + (K U_1)' R (K U_1) + A_cl' P A_cl``, so that the
     infinite-horizon cost from ``x_0`` is ``x_0' P x_0``.
 
     Parameters

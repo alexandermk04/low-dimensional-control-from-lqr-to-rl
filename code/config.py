@@ -45,7 +45,7 @@ def double_integrator_model() -> StateSpaceModel:
 
 
 def default_costs(
-    observation_dim: int,
+    state_dim: int,
     action_dim: int,
     state_weight: float = 1.0,
     input_weight: float = 1.0,
@@ -54,8 +54,8 @@ def default_costs(
 
     Parameters
     ----------
-    observation_dim : int
-        ``p``, the observation dimension (``n`` for the plain plant).
+    state_dim : int
+        ``n``, the state dimension.
     action_dim : int
         ``q``, the action dimension (``m`` for the plain plant).
     state_weight, input_weight : float, optional
@@ -64,10 +64,10 @@ def default_costs(
     Returns
     -------
     tuple[np.ndarray, np.ndarray]
-        ``(Q, R)`` as diagonals of shapes ``(p,)`` and ``(q,)``.
+        ``(Q, R)`` as diagonals of shapes ``(n,)`` and ``(q,)``.
     """
     return (
-        np.full(observation_dim, float(state_weight)),
+        np.full(state_dim, float(state_weight)),
         np.full(action_dim, float(input_weight)),
     )
 

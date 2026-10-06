@@ -15,7 +15,9 @@ Inflation
 The inflation models an embodiment mismatch. A real agent rarely gets the real
 state dimensions: it gets many noisy, redundant sensor readings, and it drives
 many actuators that together produce a much lower-dimensional effect. The plant
-stays small; the controller's inputs and outputs get big. Two fixed lift
+stays small; the controller's inputs and outputs get big. Only the input and
+output maps change, the state keeps its dimension ``n``: the inflated system is
+``(A, B U_2, C = U_1)``, with ``U_1`` the observation matrix. Two fixed
 matrices in the settings implement that:
 
 .. code-block:: text
@@ -37,8 +39,9 @@ decomposition. Plain random matrices made the solvers diverge.
 Conventions
 -----------
 - Feedback is ``v = -K y``, with ``y = U_1 x`` and ``u = U_2 v``.
-- The cost is charged in the controller's space, ``y' Q y + v' R v`` on the
-  clean ``y = U_1 x``, so ``Q`` and ``R`` have the controller's dimensions.
+- The cost is ``x' Q x + v' R v``: ``Q`` acts on the true state, ``(n, n)``,
+  and ``R`` on the controller's output ``v``, ``(q, q)``, so every actuator is
+  charged.
 - ``reset()`` must be called before stepping. It samples (or restores) ``x_0``
 """
 
@@ -113,22 +116,25 @@ def as_weight_matrix(W: np.ndarray) -> np.ndarray:
     return np.diag(W) if W.ndim == 1 else W
 
 class ControllerModel(NamedTuple):
-    """The LQR problem in the controller's dimension.
+    """The LQR problem as the controller sees it: output feedback ``v = -K C x``.
 
     Attributes
     ----------
     A : np.ndarray
-        ``U_1 A U_1^+``, of shape ``(p, p)``.
+        State matrix, ``(n, n)``.
     B : np.ndarray
-        ``U_1 B U_2``, of shape ``(p, q)``.
+        ``B U_2``, of shape ``(n, q)``.
+    C : np.ndarray
+        Observation matrix ``U_1``, of shape ``(p, n)``.
     Q, R : np.ndarray
-        Dense cost weights, ``(p, p)`` and ``(q, q)``.
+        Dense cost weights, ``(n, n)`` and ``(q, q)``.
     sigma_0 : np.ndarray
-        Initial observation covariance ``U_1 Sigma_x U_1'``, ``(p, p)``.
+        Initial state covariance, ``(n, n)``.
     """
 
     A: np.ndarray
     B: np.ndarray
+    C: np.ndarray
     Q: np.ndarray
     R: np.ndarray
     sigma_0: np.ndarray
@@ -143,8 +149,8 @@ class LQRBaseSettings:
     model : StateSpaceModel
         Continuous-time ``(A, B)``.
     Q : np.ndarray
-        Cost on the observation ``y``, of shape ``(p, p)`` or its diagonal
-        ``(p,)``, positive semi-definite. ``p = n`` for the plain system.
+        Cost on the true state ``x``, of shape ``(n, n)`` or its diagonal
+        ``(n,)``, positive semi-definite.
     R : np.ndarray
         Cost on the controller output ``v``, of shape ``(q, q)`` or its
         diagonal ``(q,)``, positive definite. ``q = m`` for the plain system.
@@ -159,8 +165,8 @@ class LQRBaseSettings:
     noise_settings : LQRNoiseSettings or None
         Noise channels to expose the system to, or ``None`` for a clean system.
     U_1 : np.ndarray or None, optional
-        Observation lift of shape ``(p, n)``, mapping the true state to what
-        the controller sees. ``None`` (the default) is the identity.
+        Observation matrix ``C`` of shape ``(p, n)``, mapping the true state to
+        what the controller sees. ``None`` (the default) is the identity.
     U_2 : np.ndarray or None, optional
         Actuation projection of shape ``(m, q)``, mapping the controller's
         output down to the plant input. ``None`` (the default) is the identity.
@@ -202,12 +208,10 @@ class LQRBase:
     A, B : np.ndarray
         Plant matrices, of shapes ``(n, n)`` and ``(n, m)``.
     U_1, U_2 : np.ndarray
-        Observation lift ``(p, n)`` and actuation projection ``(m, q)``.
+        Observation matrix ``(p, n)`` and actuation projection ``(m, q)``.
     Q, R : np.ndarray
-        Cost weights in the controller's space, ``(p, p)`` and ``(q, q)``, or
-        their diagonals.
-    Q_x : np.ndarray
-        ``U_1' Q U_1``, the state cost in the true state.
+        Cost weights on the state and the controller output, ``(n, n)`` and
+        ``(q, q)``, or their diagonals.
     x : np.ndarray
         Current state. Only valid after :meth:`reset`.
     x_0 : np.ndarray or None
@@ -228,7 +232,6 @@ class LQRBase:
     U_2: np.ndarray
     Q: np.ndarray
     R: np.ndarray
-    Q_x: np.ndarray
 
     x: np.ndarray
     x_0: np.ndarray | None = None
@@ -265,7 +268,6 @@ class LQRBase:
         self.Q = settings.Q
         self.R = settings.R
         self.validate_dimensions()
-        self.Q_x = self.U_1.T @ apply_weight(self.Q, self.U_1)
 
         self.max_initial_state = settings.max_initial_state
         self.resample_initial_state = settings.resample_initial_state
@@ -300,7 +302,7 @@ class LQRBase:
         """
         assert self.U_1.shape[1] == self.A.shape[0], "U_1 must have as many columns as A has rows"
         assert self.U_2.shape[0] == self.B.shape[1], "U_2 must have as many rows as B has columns"
-        assert self.Q.shape[0] == self.U_1.shape[0] and self.Q.ndim in (1, 2), "Q must match the observation dimension"
+        assert self.Q.shape[0] == self.A.shape[0] and self.Q.ndim in (1, 2), "Q must match the state dimension"
         assert self.R.shape[0] == self.U_2.shape[1] and self.R.ndim in (1, 2), "R must match the action dimension"
 
     def controller_model(self) -> ControllerModel:
@@ -309,17 +311,16 @@ class LQRBase:
         Returns
         -------
         ControllerModel
-            ``(A, B, Q, R, sigma_0)`` with ``A = U_1 A U_1^+`` of shape
-            ``(p, p)``, ``B = U_1 B U_2`` of shape ``(p, q)``, the dense cost
-            weights and ``Sigma_0 = U_1 Sigma_x U_1'``.
+            ``(A, B U_2, U_1, Q, R, Sigma_0)``. The state keeps its
+            dimension ``n``; only the input and output maps are inflated.
         """
-        U_1_pinv = np.linalg.pinv(self.U_1)
         return ControllerModel(
-            self.U_1 @ self.A @ U_1_pinv,
-            self.U_1 @ self.B @ self.U_2,
+            self.A,
+            self.B @ self.U_2,
+            self.U_1,
             as_weight_matrix(self.Q),
             as_weight_matrix(self.R),
-            self.U_1 @ initial_state_covariance(self) @ self.U_1.T,
+            initial_state_covariance(self),
         )
 
     def sample_initial_state(self):
@@ -487,8 +488,8 @@ class LQRBase:
         -------
         StepResult
             ``y_t`` as observed, ``v_t`` after control noise, the true
-            ``x_t`` / ``u_t``, and the cost ``x' Q_x x + v' R v`` charged on
-            the clean lifted state and the applied controller output.
+            ``x_t`` / ``u_t``, and the cost ``x' Q x + v' R v`` charged on
+            the true state and the applied controller output.
 
         Raises
         ------
@@ -522,7 +523,7 @@ class LQRBase:
         self._y_cache = None
         self.env_steps += 1
 
-        cost = float(x_t @ self.Q_x @ x_t + v @ apply_weight(self.R, v))
+        cost = float(x_t @ apply_weight(self.Q, x_t) + v @ apply_weight(self.R, v))
 
         return StepResult(y_t, v, x_t, u_t, cost)
 
@@ -598,8 +599,8 @@ def closed_loop_matrix(lqr: LQRBase, K: np.ndarray) -> np.ndarray:
 def stage_cost_matrix(lqr: LQRBase, K: np.ndarray) -> np.ndarray:
     """Stage cost of the closed loop as a weight on the true state.
 
-    With ``y = U_1 x`` and ``v = -K y`` the stage cost ``y' Q y + v' R v``
-    equals ``x' M x`` for the returned ``M``.
+    With ``v = -K U_1 x`` the stage cost ``x' Q x + v' R v`` equals ``x' M x``
+    for the returned ``M``.
 
     Parameters
     ----------
@@ -611,10 +612,10 @@ def stage_cost_matrix(lqr: LQRBase, K: np.ndarray) -> np.ndarray:
     Returns
     -------
     np.ndarray
-        ``Q_x + (K U_1)' R (K U_1)``, of shape ``(n, n)``.
+        ``Q + (K U_1)' R (K U_1)``, of shape ``(n, n)``.
     """
     K_x = K @ lqr.U_1
-    return lqr.Q_x + K_x.T @ apply_weight(lqr.R, K_x)
+    return as_weight_matrix(lqr.Q) + K_x.T @ apply_weight(lqr.R, K_x)
 
 
 def get_optimal_K_and_cost_discrete(lqr: LQRBase):
@@ -638,7 +639,7 @@ def get_optimal_K_and_cost_discrete(lqr: LQRBase):
     B_v = lqr.B @ lqr.U_2
     R = as_weight_matrix(lqr.R)
 
-    P = solve_discrete_are(lqr.A, B_v, lqr.Q_x, R)
+    P = solve_discrete_are(lqr.A, B_v, as_weight_matrix(lqr.Q), R)
 
     # SHOW: Minus was here for both papers, but our convention is u(t) = - K @ x(t), so we don't need the minus here
     K_v = np.linalg.solve(R + B_v.T @ P @ B_v, B_v.T @ P @ lqr.A)

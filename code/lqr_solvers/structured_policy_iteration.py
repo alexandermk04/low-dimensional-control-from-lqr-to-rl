@@ -113,9 +113,10 @@ def solve_lyapunov(model: ControllerModel, K_t: np.ndarray) -> np.ndarray:
         Closed-loop state covariance, which weights the gradient.
     """
 
-    lya_a = model.A - model.B @ K_t
+    K_x = K_t @ model.C
+    lya_a = model.A - model.B @ K_x
 
-    lya_q = model.Q + K_t.T @ model.R @ K_t
+    lya_q = model.Q + K_x.T @ model.R @ K_x
 
     P_k = solve_discrete_lyapunov(lya_a.T, lya_q)
 
@@ -140,7 +141,7 @@ def compute_gradient(model: ControllerModel, K_t: np.ndarray, P_k: np.ndarray, s
     Returns
     -------
     np.ndarray
-        ``2 ((R + B' P_k B) K_t - B' P_k A) sigma_k``, shaped like ``K_t``.
+        ``2 ((R + B' P_k B) K_t C - B' P_k A) sigma_k C'``, shaped like ``K_t``.
 
     Notes
     -----
@@ -148,9 +149,9 @@ def compute_gradient(model: ControllerModel, K_t: np.ndarray, P_k: np.ndarray, s
     """
 
     # Minus, as we use u(t) = - K @ x(t)
-    E_k = (model.R + model.B.T @ P_k @ model.B) @ K_t - model.B.T @ P_k @ model.A
+    E_k = (model.R + model.B.T @ P_k @ model.B) @ K_t @ model.C - model.B.T @ P_k @ model.A
 
-    return 2 * E_k @ sigma_k
+    return 2 * E_k @ sigma_k @ model.C.T
 
 def soft_thresholding(K: np.ndarray, threshold: float) -> np.ndarray:
     """Shrink each entry towards zero by ``threshold``, clamping at zero.
@@ -247,7 +248,7 @@ def linesearch_criterion_satisfied(
     """
 
     # Check stability (with minus, due to our convention for u(t) = - K @ x(t))
-    spectral_radius = np.max(np.abs(np.linalg.eigvals(model.A - model.B @ K_plus)))
+    spectral_radius = np.max(np.abs(np.linalg.eigvals(model.A - model.B @ K_plus @ model.C)))
 
     if spectral_radius >= 1:
         return False
@@ -350,7 +351,7 @@ def structured_policy_iteration(lqr: LQRDiscrete, settings: StructuredPolicySett
 
         # Stop on the objective
         objective = f_K + settings.lambda_ * np.linalg.norm(K_t, ord='nuc')
-        if np.max(np.abs(np.linalg.eigvals(model.A - model.B @ K_t))) >= 1:
+        if np.max(np.abs(np.linalg.eigvals(model.A - model.B @ K_t @ model.C))) >= 1:
             objective = np.inf
         if should_stop(settings, lqr, i, objective, K_t):
             break
