@@ -91,7 +91,7 @@ def render():
     ]
     admissible.sort(key=lambda r: np.median(r[1]))
 
-    current = tuple(settings.CONVERGENCE["rl"][k] for k in ("rel_tol", "patience", "window"))
+    current = tuple((settings.CONVERGENCE["rl"] or {}).get(k) for k in ("rel_tol", "patience", "window"))
     shown = admissible[:TABLE_ROWS] + [r for r in results if r[0] == current]
 
     write_table(_table(shown), EXPERIMENT, EXPERIMENT)

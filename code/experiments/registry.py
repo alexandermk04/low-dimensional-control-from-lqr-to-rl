@@ -147,7 +147,23 @@ def _probe(lqr, scorer) -> Probe:
 
 def _stopper(kind: str, overrides: dict | None = None) -> Plateau:
     """The convergence criterion of ``settings.CONVERGENCE[kind]``, with ``overrides`` on top."""
-    return Plateau(**{**settings.CONVERGENCE[kind], **(overrides or {})})
+    if overrides is None:
+        base = require(
+            settings.CONVERGENCE[kind], f'CONVERGENCE["{kind}"]',
+            "python -m experiments.figures.appendix_rl_convergence_figures",
+        )
+    else:
+        base = settings.CONVERGENCE[kind] or {}
+    return Plateau(**{**base, **overrides})
+
+
+def _tuned(spec: RunSpec, key: str, figures: str):
+    """A per-size hyperparameter"""
+    return require(
+        spec.hyperparams().get(key),
+        f'SIZE_HYPERPARAMS["{spec.solver}"]["{spec.condition.get("size")}"]["{key}"]',
+        f"python -m experiments.figures.{figures}",
+    )
 
 
 def _require_samples(spec: RunSpec) -> tuple[int, int]:
@@ -216,7 +232,7 @@ def _run_mb_pg(spec: RunSpec, problem: Problem) -> SolverResult:
     solver_settings = ModelBasedPolicyGradientSettings(
         K_0=problem.K_0,
         gradient_steps=spec.iterations,
-        gradient_lr=spec.hyperparams()["gradient_lr"],
+        gradient_lr=_tuned(spec, "gradient_lr", "appendix_learning_rate_figures"),
         probe=probe,
         stopper=_stopper("model_based"),
     )
@@ -393,7 +409,7 @@ def _run_mb_est(spec: RunSpec, problem: Problem) -> SolverResult:
     solver_settings = ModelBasedPolicyGradientSettings(
         K_0=problem.K_0,
         gradient_steps=spec.iterations,
-        gradient_lr=spec.hyperparams()["gradient_lr"],
+        gradient_lr=_tuned(spec, "gradient_lr", "appendix_learning_rate_figures"),
         probe=context.probe,
         stopper=_stopper("model_based"),
     )
@@ -458,7 +474,7 @@ def _run_spi_est(spec: RunSpec, problem: Problem) -> SolverResult:
     solver_settings = StructuredPolicySettings(
         K_0=problem.K_0,
         beta=hyper["beta"],
-        lambda_=hyper["lambda_"],
+        lambda_=_tuned(spec, "lambda_", "appendix_spi_lambda_figures"),
         epsilon=hyper["epsilon"],
         limit=spec.iterations,
         max_linesearch_iter=hyper["max_linesearch_iter"],
@@ -491,7 +507,7 @@ def _run_mf_npg(spec: RunSpec, problem: Problem) -> SolverResult:
         l=rollout_length,
         r=hyper["smoothing"],
         gradient_steps=spec.iterations,
-        gradient_lr=hyper["gradient_lr"],
+        gradient_lr=_tuned(spec, "gradient_lr", "appendix_learning_rate_figures"),
         seed_seq=sub_seed(spec.seed, "solve", spec.solver),
         probe=probe,
         stopper=_stopper("model_free"),
@@ -514,7 +530,7 @@ def _run_spi(spec: RunSpec, problem: Problem) -> SolverResult:
     solver_settings = StructuredPolicySettings(
         K_0=problem.K_0,
         beta=hyper["beta"],
-        lambda_=hyper["lambda_"],
+        lambda_=_tuned(spec, "lambda_", "appendix_spi_lambda_figures"),
         epsilon=hyper["epsilon"],
         limit=spec.iterations,
         max_linesearch_iter=hyper["max_linesearch_iter"],
@@ -541,14 +557,14 @@ def _run_spi_mf(spec: RunSpec, problem: Problem) -> SolverResult:
     solver_settings = MFStructuredPolicySettings(
         K_0=problem.K_0,
         beta=hyper["beta"],
-        lambda_=hyper["lambda_"],
+        lambda_=_tuned(spec, "lambda_", "appendix_spi_mf_figures"),
         epsilon=hyper["epsilon"],
         limit=spec.iterations,
         max_linesearch_iter=hyper["max_linesearch_iter"],
         m=n_trajectories,
         l=rollout_length,
         r=hyper["smoothing"],
-        stepsize=hyper["stepsize"],
+        stepsize=_tuned(spec, "stepsize", "appendix_spi_mf_figures"),
         seed_seq=sub_seed(spec.seed, "solve", spec.solver),
         probe=probe,
         stopper=_stopper("model_free"),
@@ -685,11 +701,7 @@ def _run_rl(
         preset,
         total_timesteps=spec.hyperparams().get("total_timesteps", max_timesteps),
         anneal_timesteps=max_timesteps,
-        learning_rate=require(
-            spec.hyperparams().get("learning_rate"),
-            f'SIZE_HYPERPARAMS["{spec.solver}"]["{spec.condition["size"]}"]["learning_rate"]',
-            "python -m experiments.figures.appendix_rl_learning_rate_figures",
-        ),
+        learning_rate=_tuned(spec, "learning_rate", "appendix_rl_learning_rate_figures"),
         eval_freq=settings.RL_EVAL_FREQ,
         initial_gain=problem.K_0 / obs_scale if linear else None,
         pretrained_extractor=weights,

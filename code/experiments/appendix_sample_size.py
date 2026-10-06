@@ -26,6 +26,9 @@ def _sizes():
             for name in settings.CH4_INFLATION_SIZES]
 
 
+# Base fixed LR
+GRADIENT_LR = 1e-2
+
 EXPERIMENT = "appendix_sample_size"
 
 
@@ -40,6 +43,7 @@ def build_specs() -> list[RunSpec]:
             rollout_length=rollout_length,
             n_trajectories=n_trajectories,
             iterations=settings.SOLVER_MAX_ITERATIONS,
+            hyperparam_overrides={"gradient_lr": GRADIENT_LR},
             condition={"size": name, "l": rollout_length, "m": n_trajectories},
         )
         for solver in settings.CH4_SAMPLE_SOLVERS
@@ -61,6 +65,7 @@ def main():
             "inflation_sizes": dict(_sizes()),
             "iterations": settings.SOLVER_MAX_ITERATIONS,
             "convergence": settings.CONVERGENCE,
+            "gradient_lr": GRADIENT_LR,
             "hyperparams": {
                 s: settings.SOLVER_HYPERPARAMS.get(s, {})
                 for s in settings.CH4_SAMPLE_SOLVERS

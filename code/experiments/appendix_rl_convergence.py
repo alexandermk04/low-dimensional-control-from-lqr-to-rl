@@ -19,8 +19,8 @@ SIZES = settings.CH5_INFLATION_SIZES
 
 SEEDS = settings.SEEDS[:3]
 
-# A patience no run reaches, so the stopper only tracks the best iterate
-NEVER_STOP = {"patience": 10**9}
+# A patience no run reaches, so the stopper only tracks the best iterate.
+NEVER_STOP = {"rel_tol": 1e-2, "patience": 10**9, "window": 3}
 
 
 def build_specs() -> list[RunSpec]:

@@ -54,10 +54,10 @@ SAMPLE_GRID = tuple((l, m) for l in ROLLOUT_LENGTHS for m in TRAJECTORY_COUNTS)
 
 # Filled from `python -m experiments.appendix_sample_size`; values are (l, m).
 CHOSEN_SAMPLE_CELL = {
-    "base": (800, 100),
-    "small": (800, 100),
-    "medium": (800, 100),
-    "large": (800, 100),
+    "base": None,
+    "small": None,
+    "medium": None,
+    "large": None,
 }
 
 # Length of excitation rollouts
@@ -69,10 +69,10 @@ IDENTIFICATION_HORIZONS = (5, 10, 20)
 # Filled from `python -m experiments.appendix_identification_length`;
 # values are (trajectory_length, hankel_horizon).
 CHOSEN_IDENTIFICATION = {
-    "base": (500, 5),
-    "small": (500, 5),
-    "medium": (500, 5),
-    "large": (8000, 5),
+    "base": None,
+    "small": None,
+    "medium": None,
+    "large": None,
 }
 
 # Rollout length for training
@@ -97,7 +97,8 @@ RL_EVAL_FREQ = 25_000
 CONVERGENCE = {
     "model_based": dict(rel_tol=1e-4, patience=50, window=1),
     "model_free": dict(rel_tol=1e-3, patience=100, window=50),
-    "rl": dict(rel_tol=1e-2, patience=10, window=3),
+    # Filled from `python -m experiments.figures.appendix_rl_convergence_figures`.
+    "rl": None,
 }
 
 
@@ -116,31 +117,31 @@ NOISE_COST_TARGETS = {"weak": 1.2, "standard": 1.5, "strong": 3.0, "divergent": 
 NOISE_STD = {
     "measurement": {
         "none": 0.0,
-        "weak": 0.389,
-        "standard": 0.607,
-        "strong": 1.22,
-        "divergent": 2.58,
+        "weak": None,
+        "standard": None,
+        "strong": None,
+        "divergent": None,
     },
     "control": {
         "none": 0.0,
-        "weak": 1.07,
-        "standard": 1.67,
-        "strong": 3.19,
-        "divergent": 5.68,
+        "weak": None,
+        "standard": None,
+        "strong": None,
+        "divergent": None,
     },
     "parametric": {
         "none": 0.0,
-        "weak": 0.0211,
-        "standard": 0.0304,
-        "strong": 0.0451,
-        "divergent": 0.0582,
+        "weak": None,
+        "standard": None,
+        "strong": None,
+        "divergent": None,
     },
     "disturbance": {
         "none": 0.0,
-        "weak": 0.00767,
-        "standard": 0.0122,
-        "strong": 0.0246,
-        "divergent": 0.0519,
+        "weak": None,
+        "standard": None,
+        "strong": None,
+        "divergent": None,
     },
 }
 
@@ -150,11 +151,11 @@ DISTURBANCE_TYPE = "sinusoidal"  # "gaussian" | "sinusoidal" | "constant"
 
 # The single level the per-channel comparison (table 4, plot 5) is drawn at.
 # TODO: set after inspecting the results of `python -m experiments.ch4_noise`
-CHOSEN_NOISE_LEVEL = "strong"
+CHOSEN_NOISE_LEVEL = None
 
 # The single channel the per-level comparison (table 3, plot 4) is drawn for.
 # TODO: set after inspecting the results of `python -m experiments.ch4_noise`
-CHOSEN_NOISE_CHANNEL = "measurement"
+CHOSEN_NOISE_CHANNEL = None
 
 
 # ---------------------------------------------------------------------------
@@ -308,31 +309,31 @@ CH6_SOLVERS = (
 CH6_NOISE_STD = {
     "measurement": {
         "none": 0.0,
-        "weak": 0.0982,
-        "standard": 0.16,
-        "strong": 0.318,
-        "divergent": 0.672,
+        "weak": None,
+        "standard": None,
+        "strong": None,
+        "divergent": None,
     },
     "control": {
         "none": 0.0,
-        "weak": 13.7,
-        "standard": 21.4,
-        "strong": 40.9,
-        "divergent": 72.7,
+        "weak": None,
+        "standard": None,
+        "strong": None,
+        "divergent": None,
     },
     "parametric": {
         "none": 0.0,
-        "weak": 0.0211,
-        "standard": 0.0292,
-        "strong": 0.0379,
-        "divergent": 0.0388,
+        "weak": None,
+        "standard": None,
+        "strong": None,
+        "divergent": None,
     },
     "disturbance": {
         "none": 0.0,
-        "weak": 0.00202,
-        "standard": 0.00328,
-        "strong": 0.00646,
-        "divergent": 0.0137,
+        "weak": None,
+        "standard": None,
+        "strong": None,
+        "divergent": None,
     },
 }
 
@@ -349,25 +350,18 @@ CH6_COMPARISON_SOLVERS = (
 # Solver hyperparameters
 # ---------------------------------------------------------------------------
 SOLVER_HYPERPARAMS = {
-    "mb_pg": {
-        "gradient_lr": 1.2e-3,
-    },
     "mf_npg": {
-        "gradient_lr": 1e-3,
         "smoothing": 0.5,
     },
     "spi": {
-        "lambda_": 50.0,
         "beta": 0.5,
         "epsilon": 1e-8,
         "max_linesearch_iter": 20,
     },
     "spi_mf": {
-        "lambda_": 4000,
         "beta": 0.5,
         "epsilon": 1e-8,
         "max_linesearch_iter": None,
-        "stepsize": 3.5e-6,
         "smoothing": 0.5,
     },
     # Certainty equivalence. Identification settings only
@@ -383,13 +377,11 @@ SOLVER_HYPERPARAMS = {
         "order_threshold": 1e-3,
         "max_order": 10,
         "horizon": 10,
-        "lambda_": 50.0,
         "beta": 0.5,
         "epsilon": 1e-8,
         "max_linesearch_iter": 20,
     },
     "mb_est": {
-        "gradient_lr": 1.2e-3,
         "excitation": 1.0, # std of variation added to input
         "order_threshold": 1e-3,
         "max_order": 10, # maximum order to consider for model identification
@@ -417,72 +409,7 @@ SOLVER_HYPERPARAMS = {
 # `python -m experiments.figures.appendix_spi_mf_figures`,
 # `python -m experiments.figures.appendix_learning_rate_figures` and
 # `python -m experiments.figures.appendix_rl_learning_rate_figures`.
-SIZE_HYPERPARAMS = {
-    "mb_pg": {
-        "base": {"gradient_lr": 1e-05},
-        "small": {"gradient_lr": 1e-05},
-        "medium": {"gradient_lr": 1e-05},
-        "large": {"gradient_lr": 1e-05},
-    },
-    "mb_est": {
-        "base": {"gradient_lr": 0.0001},
-        "small": {"gradient_lr": 0.0001},
-        "medium": {"gradient_lr": 0.0001},
-        "large": {"gradient_lr": 0.0001},
-    },
-    "mf_npg": {
-        "base": {"gradient_lr": 0.01},
-        "small": {"gradient_lr": 0.01},
-        "medium": {"gradient_lr": 0.01},
-        "large": {"gradient_lr": 0.03},
-    },
-    "spi": {
-        "base": {"lambda_": 1},
-        "small": {"lambda_": 5},
-        "medium": {"lambda_": 5},
-        "large": {"lambda_": 5},
-    },
-    "spi_mf": {
-        "base": {"lambda_": 400, "stepsize": 3.5e-07},
-        "small": {"lambda_": 4000, "stepsize": 3.5e-06},
-        "medium": {"lambda_": 4000, "stepsize": 3.5e-06},
-        "large": {"lambda_": 40000, "stepsize": 3.5e-08},
-    },
-    "spi_est": {
-        "base": {"lambda_": 1},
-        "small": {"lambda_": 1},
-        "medium": {"lambda_": 1},
-        "large": {"lambda_": 1},
-    },
-    "ppo_linear": {
-        "small": {"learning_rate": 0.0001},
-        "medium": {"learning_rate": 0.00013},
-        "large": {"learning_rate": 2.2e-05},
-    },
-    "ppo_bottleneck": {
-        "small": {"learning_rate": 3e-05},
-        "medium": {"learning_rate": 4.5e-06},
-        "large": {"learning_rate": 2.2e-06},
-        "pixel": {"learning_rate": 2.3e-07},
-    },
-    "ppo_encoder": {
-        "small": {"learning_rate": 0.0001},
-        "medium": {"learning_rate": 4.5e-05},
-        "large": {"learning_rate": 2.2e-05},
-    },
-    "ppo_encoder_scalable": {
-        "small": {"learning_rate": 3e-05},
-        "medium": {"learning_rate": 4.5e-05},
-        "large": {"learning_rate": 2.2e-05},
-        "pixel": {"learning_rate": 2.3e-06},
-    },
-    "ppo_mlp": {
-        "small": {"learning_rate": 3e-05},
-        "medium": {"learning_rate": 4.5e-05},
-        "large": {"learning_rate": 6.7e-06},
-        "pixel": {"learning_rate": 7e-07},
-    },
-}
+SIZE_HYPERPARAMS = {}
 
 
 # ---------------------------------------------------------------------------

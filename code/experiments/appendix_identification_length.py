@@ -28,6 +28,9 @@ def _sizes():
             for name in settings.CH4_INFLATION_SIZES]
 
 
+# Base LR
+GRADIENT_LR = 1e-4
+
 EXPERIMENT = "appendix_identification_length"
 
 
@@ -46,6 +49,7 @@ def build_specs() -> list[RunSpec]:
             inflation=inflation,
             rollout_length=trajectory_length,
             iterations=settings.SOLVER_MAX_ITERATIONS,
+            hyperparam_overrides={"gradient_lr": GRADIENT_LR},
             condition={"size": name, "T": trajectory_length, "hankel": horizon},
         )
         for solver in settings.CH4_IDENTIFICATION_SOLVERS
@@ -67,6 +71,7 @@ def main():
             "inflation_sizes": dict(_sizes()),
             "iterations": settings.SOLVER_MAX_ITERATIONS,
             "convergence": settings.CONVERGENCE,
+            "gradient_lr": GRADIENT_LR,
             "hyperparams": {
                 s: settings.SOLVER_HYPERPARAMS.get(s, {})
                 for s in settings.CH4_IDENTIFICATION_SOLVERS
