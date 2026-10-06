@@ -20,7 +20,6 @@ from config import (
 )
 from evaluation.metrics import expected_true_cost
 from seeding import sub_rng, sub_seed
-from lqr_base.inflated_lqr import LQRInflated, LQRInflatedSettings
 from lqr_base.noise import LQRNoiseSettings
 from lqr_base.simple_lqr import (
     LQRBase,
@@ -96,6 +95,7 @@ class Problem:
     inflation : tuple[int, int] or None
     model : StateSpaceModel
     Q, R : np.ndarray
+        Cost weights in the controller's space, as diagonals.
     dt : float
     max_initial_state : np.ndarray
     U_1, U_2 : np.ndarray or None
@@ -103,7 +103,7 @@ class Problem:
     K_0 : np.ndarray
         Stabilizing initial gain in the controller's space.
     K_star : np.ndarray
-        Optimal gain on the true plant.
+        Optimal gain in the controller's space, of shape ``(q, p)``.
     j_star : float
         Optimal expected infinite-horizon cost.
     action_limit : float
@@ -147,10 +147,10 @@ def build_plant(
     Returns
     -------
     LQRBase
-        :class:`~lqr_base.inflated_lqr.LQRInflated` when the problem is
-        inflated, otherwise :class:`~lqr_base.simple_lqr.LQRDiscrete`.
+        A :class:`~lqr_base.simple_lqr.LQRDiscrete`, observed through the
+        problem's lifts when it is inflated.
     """
-    common = dict(
+    return LQRDiscrete(settings=LQRDiscreteSettings(
         model=problem.model,
         Q=problem.Q,
         R=problem.R,
@@ -159,14 +159,9 @@ def build_plant(
         noise_settings=noise_settings,
         seed_seq=sub_seed(problem.seed, "plant", purpose),
         dt=problem.dt,
-    )
-
-    if problem.inflation is None:
-        return LQRDiscrete(settings=LQRDiscreteSettings(**common))
-
-    return LQRInflated(
-        settings=LQRInflatedSettings(**common, U_1=problem.U_1, U_2=problem.U_2)
-    )
+        U_1=problem.U_1,
+        U_2=problem.U_2,
+    ))
 
 
 @lru_cache(maxsize=None)
@@ -187,7 +182,13 @@ def make_problem(seed: int, inflation: tuple[int, int] | None = None) -> Problem
     Problem
     """
     model = double_integrator_model()
-    Q, R = default_costs()
+    observation_dim, action_dim = (
+        inflation if inflation is not None else (model.A.shape[0], model.B.shape[1])
+    )
+    Q, R = default_costs(
+        observation_dim, action_dim,
+        settings.STATE_COST_WEIGHT, settings.INPUT_COST_WEIGHT,
+    )
     max_initial_state = DEFAULT_MAX_INITIAL_STATE.copy()
 
     U_1 = U_2 = None
@@ -214,18 +215,8 @@ def make_problem(seed: int, inflation: tuple[int, int] | None = None) -> Problem
         action_limit=0.0,
     )
 
-    # Creating an uninflated plant to calculate the optima
-    plain = LQRDiscrete(settings=LQRDiscreteSettings(
-        model=model, Q=Q, R=R,
-        max_initial_state=max_initial_state,
-        resample_initial_state=True,
-        noise_settings=None,
-        seed_seq=sub_seed(seed, "plant", "baseline"),
-        dt=DEFAULT_DT,
-    ))
-    K_star, _ = get_optimal_K_and_cost_discrete(plain)
-
     reference = build_plant(problem, "reference")
+    K_star, _ = get_optimal_K_and_cost_discrete(reference)
     reference.reset()
 
     problem.K_star = K_star

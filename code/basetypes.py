@@ -42,7 +42,7 @@ class StepResult:
     y_t : np.ndarray
         Observation handed to the policy. Equals ``x_t`` for a noise-free
         :class:`~lqr_base.simple_lqr.LQRDiscrete`, and ``U_1 @ x_t``
-        for :class:`~lqr_base.inflated_lqr.LQRInflated`.
+        for an inflated :class:`~lqr_base.simple_lqr.LQRDiscrete`.
     v_t : np.ndarray
         Output of the policy, ``-K @ y_t``, after control noise. For the
         inflated system this lives in the inflated action space.

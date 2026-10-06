@@ -59,7 +59,7 @@ class Probe:
         The system the solver is running against.
     evaluate : Callable[[np.ndarray], float]
         Maps the current raw gain to the cost to record. Typically
-        ``lambda K: expected_true_cost(lqr, lqr.effective_gain(K))``.
+        ``lambda K: expected_true_cost(lqr, K)``.
     every : int, optional
         Record only every ``n``-th iteration. Defaults to ``1``.
     track_rank : bool, optional
@@ -218,7 +218,7 @@ def record_iteration(
             if record.rank is not None:
                 postfix["Rank"] = record.rank
     else:
-        postfix["True Cost"] = f"{true_cost(lqr, lqr.effective_gain(K)):.3e}"
+        postfix["True Cost"] = f"{true_cost(lqr, K):.3e}"
         if show_rank:
             postfix["Matrix Rank"] = int(np.linalg.matrix_rank(K))
 

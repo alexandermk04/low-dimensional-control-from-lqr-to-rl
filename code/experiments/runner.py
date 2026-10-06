@@ -61,10 +61,6 @@ def _summarize(
 
     one_pct = time_to_threshold(records, j_star, 0.01)
 
-    K_eff = (
-        result.scorer.effective_gain(result.K_final)
-        if result.K_final is not None else None
-    )
 
     summary = {
         "J_star": float(j_star),
@@ -79,7 +75,8 @@ def _summarize(
         "best_iteration": int(records[-1].iteration) if records else None,
         "best_env_steps": int(records[-1].env_steps) if records else None,
         "spectral_radius_final": (
-            spectral_radius(result.scorer, K_eff) if K_eff is not None else None
+            spectral_radius(result.scorer, result.K_final)
+            if result.K_final is not None else None
         ),
         "rank_final": result.complexity.get("rank"),
         "policy_complexity": result.complexity.get("n_params"),
@@ -94,7 +91,10 @@ def _config_dict(spec: RunSpec, problem: Problem, result: SolverResult) -> dict:
     """The data stored in every record for reproducibility."""
     return {
         "plant": to_jsonable(problem.model),
-        "cost": {"Q": to_jsonable(problem.Q), "R": to_jsonable(problem.R)},
+        "cost": {
+            "state_weight": settings.STATE_COST_WEIGHT,
+            "input_weight": settings.INPUT_COST_WEIGHT,
+        },
         "dt": problem.dt,
         "max_initial_state": to_jsonable(problem.max_initial_state),
         "inflation": list(spec.inflation) if spec.inflation else None,
@@ -153,7 +153,8 @@ def train(spec: RunSpec, test_kwargs: dict | None = None) -> RunRecord:
 
     if result.K_final is not None:
         arrays["K_final"] = result.K_final
-        arrays["K_eff_final"] = result.scorer.effective_gain(result.K_final)
+        scorer = result.scorer
+        arrays["K_eff_final"] = scorer.U_2 @ result.K_final @ scorer.U_1
 
     return RunRecord(
         experiment=spec.experiment,

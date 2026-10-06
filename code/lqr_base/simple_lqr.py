@@ -10,16 +10,39 @@ sampling interval ``dt`` goes in; :func:`continuous_to_discrete` converts it on
 construction. The discrete setting was chosen because it is the one an actual
 embodied controller runs in.
 
+Inflation
+---------
+The inflation models an embodiment mismatch. A real agent rarely gets the real
+state dimensions: it gets many noisy, redundant sensor readings, and it drives
+many actuators that together produce a much lower-dimensional effect. The plant
+stays small; the controller's inputs and outputs get big. Two fixed lift
+matrices in the settings implement that:
+
+.. code-block:: text
+
+    x_t  --[ U_1 ]-->  y_t  --[ policy -K ]-->  v_t  --[ U_2 ]-->  u_t
+    (n)               (p)                      (q)                (m)
+
+so the learned gain ``K`` has shape ``(q, p)`` and can be far larger than the
+``(m, n)`` gain of the underlying problem, while the gain that actually acts on
+the plant is ``U_2 @ K @ U_1``. Since ``U_1`` and ``U_2`` have rank at most
+``n`` and ``m``, the optimal ``K`` is low rank -- which is what makes this the
+right setting for the nuclear-norm solver in
+:mod:`lqr_solvers.structured_policy_iteration`. Without lifts in the settings
+both are the identity and the system is the plain one.
+
+The experiment scripts build ``U_1`` and ``U_2`` as orthonormal lifts via a QR
+decomposition. Plain random matrices made the solvers diverge.
+
 Conventions
 -----------
-- Feedback is ``v = -K y``, with ``y = U_1 x`` and ``u = U_2 v``. For the
-  plain system both lifts are the identity.
+- Feedback is ``v = -K y``, with ``y = U_1 x`` and ``u = U_2 v``.
 - The cost is charged in the controller's space, ``y' Q y + v' R v`` on the
   clean ``y = U_1 x``, so ``Q`` and ``R`` have the controller's dimensions.
 - ``reset()`` must be called before stepping. It samples (or restores) ``x_0``
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import NamedTuple
 import numpy as np
 from scipy.linalg import solve_discrete_are, solve_discrete_lyapunov
@@ -135,6 +158,12 @@ class LQRBaseSettings:
         a fresh one.
     noise_settings : LQRNoiseSettings or None
         Noise channels to expose the system to, or ``None`` for a clean system.
+    U_1 : np.ndarray or None, optional
+        Observation lift of shape ``(p, n)``, mapping the true state to what
+        the controller sees. ``None`` (the default) is the identity.
+    U_2 : np.ndarray or None, optional
+        Actuation projection of shape ``(m, q)``, mapping the controller's
+        output down to the plant input. ``None`` (the default) is the identity.
     """
 
     model: StateSpaceModel
@@ -144,6 +173,8 @@ class LQRBaseSettings:
     resample_initial_state: bool
     noise_settings: LQRNoiseSettings | None
     seed_seq: np.random.SeedSequence
+    U_1: np.ndarray | None = field(default=None, kw_only=True)
+    U_2: np.ndarray | None = field(default=None, kw_only=True)
 
 @dataclass
 class LQRDiscreteSettings(LQRBaseSettings):
@@ -228,8 +259,8 @@ class LQRBase:
         self.A = settings.model.A
         self.B = settings.model.B
 
-        self.U_1 = getattr(settings, "U_1", np.eye(self.A.shape[0]))
-        self.U_2 = getattr(settings, "U_2", np.eye(self.B.shape[1]))
+        self.U_1 = np.eye(self.A.shape[0]) if settings.U_1 is None else settings.U_1
+        self.U_2 = np.eye(self.B.shape[1]) if settings.U_2 is None else settings.U_2
 
         self.Q = settings.Q
         self.R = settings.R

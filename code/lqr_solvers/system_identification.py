@@ -20,8 +20,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from basetypes import StateSpaceModel
-from lqr_base.inflated_lqr import LQRInflated, LQRInflatedSettings
-from lqr_base.simple_lqr import LQRBase
+from lqr_base.simple_lqr import LQRBase, LQRDiscrete, LQRDiscreteSettings
 
 __all__ = [
     "IdentificationError",
@@ -264,13 +263,13 @@ def identify(
     )
 
 
-class _IdentifiedLQR(LQRInflated):
+class _IdentifiedLQR(LQRDiscrete):
     """An identified model in the controller's space.
 
     Ensures identified matrices are not discretized again.
     """
 
-    def __init__(self, settings: LQRInflatedSettings):
+    def __init__(self, settings: LQRDiscreteSettings):
         LQRBase.__init__(self, settings)
         self.dt = settings.dt
 
@@ -280,7 +279,7 @@ def to_surrogate(
     Q: np.ndarray,
     R: np.ndarray,
     seed_seq: np.random.SeedSequence,
-) -> LQRInflated:
+) -> LQRDiscrete:
     """Wrap an identified model as a plant.
 
     Parameters
@@ -294,13 +293,13 @@ def to_surrogate(
 
     Returns
     -------
-    LQRInflated
+    LQRDiscrete
         A surrogate on ``(A, B)`` with ``U_1 = C`` and ``U_2 = I_q``.
     """
     # Initial state covariance equal to the identity
     box = np.sqrt(3.0) * np.ones(model.n_hat)
 
-    return _IdentifiedLQR(settings=LQRInflatedSettings(
+    return _IdentifiedLQR(settings=LQRDiscreteSettings(
         model=StateSpaceModel(A=model.A, B=model.B),
         Q=Q,
         R=R,
