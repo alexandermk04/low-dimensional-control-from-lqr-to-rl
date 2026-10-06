@@ -29,17 +29,9 @@
 - check ppo_linear, mlp and N4SID encoder
 - check pixel_fc, pixel_posvel
 - rework noise plots
-- remove test costs from everywhere, recheck "convergence" stopper
 - ch4 identified model needs base curves iterations plots instead of training suboptimality
 
 - create visualization of the setup for pixel
-- is the identification for Q and R the same as in 5.4 of N4SID?
-
-- Do we need to calibrate Control Noise for each size?
-
-## Questions
-- Should I introduce noise also to the pixelated / pixel size approach?
-
 
 ## Agenda 2.10
 Structural questions:
