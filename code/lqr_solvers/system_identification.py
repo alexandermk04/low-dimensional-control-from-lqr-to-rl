@@ -1,9 +1,9 @@
 """Subspace identification of an unknown plant, for the model-based solvers.
 
 The model-based solvers in :mod:`lqr_solvers.mb_policy_gradient` and
-:mod:`lqr_solvers.structured_policy_iteration` read ``A``, ``B``, ``Q`` and ``R``
-from the plant. This module produces those four matrices from *data*
-instead, so the same solvers can run as a model-free surrogate.
+:mod:`lqr_solvers.structured_policy_iteration` read the model from the plant.
+This module identifies ``A``, ``B`` and the observation map ``C`` from *data*
+instead, so the same solvers can run on a surrogate.
 
 References
 ----------
@@ -21,7 +21,7 @@ import numpy as np
 
 from basetypes import StateSpaceModel
 from lqr_base.inflated_lqr import LQRInflated, LQRInflatedSettings
-from lqr_base.simple_lqr import LQRBase, LQRDiscrete, LQRDiscreteSettings
+from lqr_base.simple_lqr import LQRBase
 
 __all__ = [
     "IdentificationError",
@@ -30,8 +30,7 @@ __all__ = [
     "effective_max_order",
     "collect_identification_data",
     "identify",
-    "to_plant",
-    "to_inflated_plant",
+    "to_surrogate",
 ]
 
 
@@ -62,12 +61,6 @@ class IdentificationSettings:
         Relative singular-value cutoff for the order search.
     fixed_order : int or None, optional
         Skip the order search and identify at this order.
-    input_rank_tol : float, optional
-        Relative singular-value cutoff deciding ``m_hat = rank(B)``.
-    reduce_input : bool, optional
-        Whether to collapse the ``q`` controller inputs onto ``m_hat``
-        inputs. Defaults to ``True``. Is needed `True`` for the
-        Riccatti equation, to be able to estimate R correctly.
     """
 
     trajectory_length: int
@@ -77,36 +70,26 @@ class IdentificationSettings:
     horizon: int = 10
     order_threshold: float = 1e-3
     fixed_order: int | None = None
-    input_rank_tol: float = 1e-3
-    reduce_input: bool = True
 
 
 @dataclass
 class IdentifiedModel:
     """A plant reconstructed from data, in its own coordinates.
 
-    The identified system is ``z' = A z + B w`` with stage cost
-    ``z' Q z + w' R w``, where ``z`` is the identified state and ``w`` the
-    reduced action.
+    The identified system is ``z' = A z + B v`` with observation ``y = C z``,
+    where ``z`` is the identified state and ``v`` the full controller output.
 
     Attributes
     ----------
     A : np.ndarray
         Identified state matrix of shape ``(n_hat, n_hat)``
     B : np.ndarray
-        Identified input matrix of shape ``(n_hat, m_hat)``
-    Q : np.ndarray
-        State cost of shape ``(n_hat, n_hat)``, regressed from observed costs.
-    R : np.ndarray
-        Control cost of shape ``(m_hat, m_hat)``, regressed alongside ``Q``.
+        Identified input matrix of shape ``(n_hat, q)``
     decode : np.ndarray
-        ``(n_hat, p)``, mapping an observation to the identified state.
-    encode : np.ndarray
-        ``(q, m_hat)``, mapping a reduced action back to the controller's space.
-    n_hat, m_hat : int
-        Estimated state and input dimension.
-    cost_residual : float
-        Relative residual of the cost regression.
+        ``(n_hat, p)``, mapping an observation to the identified state. Equal
+        to ``C'``, as ``C`` has orthonormal columns.
+    n_hat : int
+        Estimated state dimension.
     effective_max_order : int
         The order bound that was enforced, see :func:`effective_max_order`.
     dt : float
@@ -115,45 +98,10 @@ class IdentifiedModel:
 
     A: np.ndarray
     B: np.ndarray
-    Q: np.ndarray
-    R: np.ndarray
     decode: np.ndarray
-    encode: np.ndarray
     n_hat: int
-    m_hat: int
-    cost_residual: float
     effective_max_order: int
     dt: float
-
-    def to_controller_gain(self, K: np.ndarray) -> np.ndarray:
-        """Map a gain on the identified model back to the controller's space.
-
-        Parameters
-        ----------
-        K : np.ndarray
-            Gain of shape ``(m_hat, n_hat)``, applied as ``w = -K z``.
-
-        Returns
-        -------
-        np.ndarray
-            Gain of shape ``(q, p)``, applied as ``v = -K y``.
-        """
-        return self.encode @ K @ self.decode
-
-    def to_identified_gain(self, K: np.ndarray) -> np.ndarray:
-        """Map a gain in the controller's space onto the identified model.
-
-        Parameters
-        ----------
-        K : np.ndarray
-            Gain of shape ``(q, p)``, applied as ``v = -K y``.
-
-        Returns
-        -------
-        np.ndarray
-            Gain of shape ``(m_hat, n_hat)``.
-        """
-        return self.encode.T @ K @ np.linalg.pinv(self.decode)
 
 
 def collect_identification_data(
@@ -175,9 +123,9 @@ def collect_identification_data(
 
     Returns
     -------
-    tuple[np.ndarray, np.ndarray, np.ndarray]
-        ``(Y, V, costs)`` with ``Y`` of shape ``(p, T)``, ``V`` of shape
-        ``(q, T)`` and ``costs`` of shape ``(T,)``.
+    tuple[np.ndarray, np.ndarray]
+        ``(Y, V)`` with ``Y`` of shape ``(p, T)`` and ``V`` of shape
+        ``(q, T)``.
     """
     rng = np.random.default_rng(settings.seed_seq)
 
@@ -185,7 +133,6 @@ def collect_identification_data(
 
     observations = []
     actions = []
-    costs = []
 
     for _ in range(settings.trajectory_length):
         y = plant.observe()
@@ -195,13 +142,8 @@ def collect_identification_data(
 
         observations.append(step.y_t)
         actions.append(step.v_t)
-        costs.append(step.cost)
 
-    return (
-        np.asarray(observations).T,
-        np.asarray(actions).T,
-        np.asarray(costs, dtype=float),
-    )
+    return np.asarray(observations).T, np.asarray(actions).T
 
 
 def _run_n4sid(Y: np.ndarray, V: np.ndarray, dt: float, settings: IdentificationSettings):
@@ -252,22 +194,6 @@ def _normalize_realization(A, B, C):
     return R_c @ A @ np.linalg.inv(R_c), R_c @ B, Q_c
 
 
-def _reduce_input_space(B: np.ndarray, tol: float) -> tuple[np.ndarray, np.ndarray, int]:
-    """Restrict the action space of the identified system to only values that affect the plant.
-
-    Returns
-    -------
-    tuple[np.ndarray, np.ndarray, int]
-        ``(B_reduced, encode, m_hat)``.
-    """
-    _, singular_values, Vt = np.linalg.svd(B, full_matrices=False)
-
-    m_hat = max(1, int(np.sum(singular_values > tol * singular_values[0])))
-    encode = Vt[:m_hat].T
-
-    return B @ encode, encode, m_hat
-
-
 def effective_max_order(settings: IdentificationSettings) -> int:
     """The order bound actually in force, might have been lowered due to the Hankel horizon.
     """
@@ -275,75 +201,6 @@ def effective_max_order(settings: IdentificationSettings) -> int:
         return int(settings.fixed_order)
 
     return min(int(settings.max_order), int(settings.horizon))
-
-
-def _upper_indices(dim: int) -> tuple[np.ndarray, np.ndarray]:
-    """Row and column indices of the upper triangle, including the diagonal.
-    """
-    return np.triu_indices(dim)
-
-
-def _quadratic_design(M: np.ndarray) -> np.ndarray:
-    """Columns of the design matrix contributed by one signal.
-
-    Parameters
-    ----------
-    M : np.ndarray
-        Signal of shape ``(dim, T)``.
-
-    Returns
-    -------
-    np.ndarray
-        Of shape ``(T, dim * (dim + 1) / 2)``.
-    """
-    rows, cols = _upper_indices(M.shape[0])
-
-    products = M[rows] * M[cols]
-    products[rows != cols] *= 2.0
-
-    return products.T
-
-
-def _symmetric_from_coefficients(theta: np.ndarray, dim: int) -> np.ndarray:
-    """Rebuild a symmetric matrix from its upper-triangle coefficients."""
-    rows, cols = _upper_indices(dim)
-
-    M = np.zeros((dim, dim))
-    M[rows, cols] = theta
-    M[cols, rows] = theta
-
-    return M
-
-
-def _project_psd(M: np.ndarray) -> np.ndarray:
-    """Nearest positive semi-definite matrix, by clipping the eigenvalues."""
-    eigenvalues, eigenvectors = np.linalg.eigh((M + M.T) / 2.0)
-    return eigenvectors @ np.diag(np.clip(eigenvalues, 0.0, None)) @ eigenvectors.T
-
-
-def _fit_cost_weights(Z, W, costs):
-    """Recover the cost weights from the stage costs we observed
-
-    Returns
-    -------
-    tuple[np.ndarray, np.ndarray, float]
-        ``(Q, R, relative_residual)``, both weights projected onto the PSD cone.
-    """
-    state_design = _quadratic_design(Z)
-    action_design = _quadratic_design(W)
-
-    design = np.hstack([state_design, action_design])
-
-    theta, *_ = np.linalg.lstsq(design, costs, rcond=None)
-
-    scale = np.linalg.norm(costs)
-    residual = float(np.linalg.norm(design @ theta - costs) / scale) if scale > 0 else 0.0
-
-    split = state_design.shape[1]
-    Q = _symmetric_from_coefficients(theta[:split], Z.shape[0])
-    R = _symmetric_from_coefficients(theta[split:], W.shape[0])
-
-    return _project_psd(Q), _project_psd(R), residual
 
 
 def identify(
@@ -372,7 +229,7 @@ def identify(
         If the order search saturated at ``max_order``, meaning the
         trajectory was too short to determine the model.
     """
-    Y, V, costs = collect_identification_data(plant, K_0, settings)
+    Y, V = collect_identification_data(plant, K_0, settings)
 
     identified = _run_n4sid(Y, V, plant.dt, settings)
 
@@ -395,79 +252,20 @@ def identify(
             "IdentificationSettings.trajectory_length."
         )
 
-    if settings.reduce_input:
-        B, encode, m_hat = _reduce_input_space(B, settings.input_rank_tol)
-    else:
-        encode = np.eye(B.shape[1])
-        m_hat = B.shape[1]
-
     # C is orthonormal after normalization, so its transpose is its
     # pseudo-inverse
-    decode = C.T
-
-    Q, R, residual = _fit_cost_weights(decode @ Y, encode.T @ V, costs)
-
     return IdentifiedModel(
         A=A,
         B=B,
-        Q=Q,
-        R=R,
-        decode=decode,
-        encode=encode,
+        decode=C.T,
         n_hat=n_hat,
-        m_hat=m_hat,
-        cost_residual=residual,
         effective_max_order=bound,
         dt=plant.dt,
     )
 
 
-class _IdentifiedLQR(LQRDiscrete):
-    """A plant whose matrices are already discrete, identified by N4SID.
-    """
-
-    def __init__(self, settings: LQRDiscreteSettings):
-        LQRBase.__init__(self, settings)
-        self.dt = settings.dt
-
-
-def to_plant(model: IdentifiedModel, seed_seq: np.random.SeedSequence) -> LQRDiscrete:
-    """Wrap an identified model as a plant the model-based solvers can consume.
-
-    The result is a surrogate: the solvers optimize against it exactly as they
-    would against the real system, and the gain that comes out is in the
-    identified coordinates. Map it back with
-    :meth:`IdentifiedModel.to_controller_gain` before scoring it.
-
-    Parameters
-    ----------
-    model : IdentifiedModel
-        The identified system.
-    seed_seq : np.random.SeedSequence
-        Seeds the surrogate's initial state.
-
-    Returns
-    -------
-    LQRDiscrete
-        A plain, uninflated system on ``(A, B, Q, R)`` of the identified mode
-    """
-    # Initial state covariance equal to the identity
-    box = np.sqrt(3.0) * np.ones(model.n_hat)
-
-    return _IdentifiedLQR(settings=LQRDiscreteSettings(
-        model=StateSpaceModel(A=model.A, B=model.B),
-        Q=model.Q,
-        R=model.R,
-        max_initial_state=box,
-        resample_initial_state=True,
-        noise_settings=None,
-        seed_seq=seed_seq,
-        dt=model.dt,
-    ))
-
-
-class _IdentifiedInflatedLQR(LQRInflated):
-    """An identified model in the controller's inflated space.
+class _IdentifiedLQR(LQRInflated):
+    """An identified model in the controller's space.
 
     Ensures identified matrices are not discretized again.
     """
@@ -476,41 +274,41 @@ class _IdentifiedInflatedLQR(LQRInflated):
         LQRBase.__init__(self, settings)
         self.dt = settings.dt
 
-        self.U_1 = settings.U_1
-        self.U_2 = settings.U_2
-        self.validate_dimensions()
 
-
-def to_inflated_plant(
-    model: IdentifiedModel, seed_seq: np.random.SeedSequence
+def to_surrogate(
+    model: IdentifiedModel,
+    Q: np.ndarray,
+    R: np.ndarray,
+    seed_seq: np.random.SeedSequence,
 ) -> LQRInflated:
-    """Create an inflated plant from an identified model.
+    """Wrap an identified model as a plant.
 
     Parameters
     ----------
     model : IdentifiedModel
         The identified system.
+    Q, R : np.ndarray
+        The known cost weights in the controller's space.
     seed_seq : np.random.SeedSequence
         Seeds the surrogate's initial state.
 
     Returns
     -------
     LQRInflated
-        A surrogate on ``(A, B, Q, R)`` of the identified model, whose gains
-        live in the controller's ``(q, p)`` space.
+        A surrogate on ``(A, B)`` with ``U_1 = C`` and ``U_2 = I_q``.
     """
-    # Initial state covariance equal to the identity, as in ``to_plant``.
+    # Initial state covariance equal to the identity
     box = np.sqrt(3.0) * np.ones(model.n_hat)
 
-    return _IdentifiedInflatedLQR(settings=LQRInflatedSettings(
+    return _IdentifiedLQR(settings=LQRInflatedSettings(
         model=StateSpaceModel(A=model.A, B=model.B),
-        Q=model.Q,
-        R=model.R,
+        Q=Q,
+        R=R,
         max_initial_state=box,
         resample_initial_state=True,
         noise_settings=None,
         seed_seq=seed_seq,
         dt=model.dt,
         U_1=model.decode.T,
-        U_2=model.encode.T,
+        U_2=np.eye(model.B.shape[1]),
     ))

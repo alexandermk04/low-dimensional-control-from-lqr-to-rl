@@ -12,11 +12,15 @@ embodied controller runs in.
 
 Conventions
 -----------
-- Feedback is ``u = -K x``.
+- Feedback is ``v = -K y``, with ``y = U_1 x`` and ``u = U_2 v``. For the
+  plain system both lifts are the identity.
+- The cost is charged in the controller's space, ``y' Q y + v' R v`` on the
+  clean ``y = U_1 x``, so ``Q`` and ``R`` have the controller's dimensions.
 - ``reset()`` must be called before stepping. It samples (or restores) ``x_0``
 """
 
 from dataclasses import dataclass
+from typing import NamedTuple
 import numpy as np
 from scipy.linalg import solve_discrete_are, solve_discrete_lyapunov
 
@@ -60,6 +64,53 @@ def continuous_to_discrete(A, B, dt):
 
     return A_d, B_d
 
+
+def apply_weight(W: np.ndarray, M: np.ndarray) -> np.ndarray:
+    """Multiply by a cost weight given either as a matrix or as its diagonal.
+
+    Parameters
+    ----------
+    W : np.ndarray
+        Weight of shape ``(d, d)``, or its diagonal of shape ``(d,)``.
+    M : np.ndarray
+        Vector or matrix with ``d`` rows.
+
+    Returns
+    -------
+    np.ndarray
+        ``W @ M``, shaped like ``M``.
+    """
+    if W.ndim == 1:
+        return W[:, None] * M if M.ndim == 2 else W * M
+    return W @ M
+
+
+def as_weight_matrix(W: np.ndarray) -> np.ndarray:
+    """The weight as a dense matrix."""
+    return np.diag(W) if W.ndim == 1 else W
+
+class ControllerModel(NamedTuple):
+    """The LQR problem in the controller's dimension.
+
+    Attributes
+    ----------
+    A : np.ndarray
+        ``U_1 A U_1^+``, of shape ``(p, p)``.
+    B : np.ndarray
+        ``U_1 B U_2``, of shape ``(p, q)``.
+    Q, R : np.ndarray
+        Dense cost weights, ``(p, p)`` and ``(q, q)``.
+    sigma_0 : np.ndarray
+        Initial observation covariance ``U_1 Sigma_x U_1'``, ``(p, p)``.
+    """
+
+    A: np.ndarray
+    B: np.ndarray
+    Q: np.ndarray
+    R: np.ndarray
+    sigma_0: np.ndarray
+
+
 @dataclass
 class LQRBaseSettings:
     """Base settings for every LQR variant.
@@ -69,9 +120,11 @@ class LQRBaseSettings:
     model : StateSpaceModel
         Continuous-time ``(A, B)``.
     Q : np.ndarray
-        State cost of shape ``(n, n)``, positive semi-definite.
+        Cost on the observation ``y``, of shape ``(p, p)`` or its diagonal
+        ``(p,)``, positive semi-definite. ``p = n`` for the plain system.
     R : np.ndarray
-        Control cost of shape ``(m, m)``, positive definite.
+        Cost on the controller output ``v``, of shape ``(q, q)`` or its
+        diagonal ``(q,)``, positive definite. ``q = m`` for the plain system.
     max_initial_state : np.ndarray
         Elementwise bound of shape ``(n,)``. Initial states are drawn uniformly
         from ``[-max_initial_state, max_initial_state]``.
@@ -117,8 +170,13 @@ class LQRBase:
     ----------
     A, B : np.ndarray
         Plant matrices, of shapes ``(n, n)`` and ``(n, m)``.
+    U_1, U_2 : np.ndarray
+        Observation lift ``(p, n)`` and actuation projection ``(m, q)``.
     Q, R : np.ndarray
-        Cost weights, of shapes ``(n, n)`` and ``(m, m)``.
+        Cost weights in the controller's space, ``(p, p)`` and ``(q, q)``, or
+        their diagonals.
+    Q_x : np.ndarray
+        ``U_1' Q U_1``, the state cost in the true state.
     x : np.ndarray
         Current state. Only valid after :meth:`reset`.
     x_0 : np.ndarray or None
@@ -135,8 +193,11 @@ class LQRBase:
 
     A: np.ndarray
     B: np.ndarray
+    U_1: np.ndarray
+    U_2: np.ndarray
     Q: np.ndarray
     R: np.ndarray
+    Q_x: np.ndarray
 
     x: np.ndarray
     x_0: np.ndarray | None = None
@@ -167,8 +228,13 @@ class LQRBase:
         self.A = settings.model.A
         self.B = settings.model.B
 
+        self.U_1 = getattr(settings, "U_1", np.eye(self.A.shape[0]))
+        self.U_2 = getattr(settings, "U_2", np.eye(self.B.shape[1]))
+
         self.Q = settings.Q
         self.R = settings.R
+        self.validate_dimensions()
+        self.Q_x = self.U_1.T @ apply_weight(self.Q, self.U_1)
 
         self.max_initial_state = settings.max_initial_state
         self.resample_initial_state = settings.resample_initial_state
@@ -192,6 +258,38 @@ class LQRBase:
 
         self.noise = False
         self.setup_noise(settings.noise_settings)
+
+    def validate_dimensions(self):
+        """Check that the lifts and cost weights fit dimensionally.
+
+        Raises
+        ------
+        AssertionError
+            If a lift or a cost weight has the wrong shape.
+        """
+        assert self.U_1.shape[1] == self.A.shape[0], "U_1 must have as many columns as A has rows"
+        assert self.U_2.shape[0] == self.B.shape[1], "U_2 must have as many rows as B has columns"
+        assert self.Q.shape[0] == self.U_1.shape[0] and self.Q.ndim in (1, 2), "Q must match the observation dimension"
+        assert self.R.shape[0] == self.U_2.shape[1] and self.R.ndim in (1, 2), "R must match the action dimension"
+
+    def controller_model(self) -> ControllerModel:
+        """The LQR problem for the controller.
+
+        Returns
+        -------
+        ControllerModel
+            ``(A, B, Q, R, sigma_0)`` with ``A = U_1 A U_1^+`` of shape
+            ``(p, p)``, ``B = U_1 B U_2`` of shape ``(p, q)``, the dense cost
+            weights and ``Sigma_0 = U_1 Sigma_x U_1'``.
+        """
+        U_1_pinv = np.linalg.pinv(self.U_1)
+        return ControllerModel(
+            self.U_1 @ self.A @ U_1_pinv,
+            self.U_1 @ self.B @ self.U_2,
+            as_weight_matrix(self.Q),
+            as_weight_matrix(self.R),
+            self.U_1 @ initial_state_covariance(self) @ self.U_1.T,
+        )
 
     def sample_initial_state(self):
         """Draw an initial state uniformly from the configured box.
@@ -272,9 +370,9 @@ class LQRBase:
         Returns
         -------
         np.ndarray
-            ``x`` unchanged here.
+            ``U_1 @ x``, of shape ``(p,)``.
         """
-        return x
+        return self.U_1 @ x
 
     def project_action(self, v: np.ndarray) -> np.ndarray:
         """Map the controller's output into the true input space.
@@ -287,9 +385,9 @@ class LQRBase:
         Returns
         -------
         np.ndarray
-            ``v`` unchanged here.
+            ``U_2 @ v``, of shape ``(m,)``.
         """
-        return v
+        return self.U_2 @ v
 
     def lift_action(self, u: np.ndarray) -> np.ndarray:
         """Map a true input back into the controller's space.
@@ -302,19 +400,20 @@ class LQRBase:
         Returns
         -------
         np.ndarray
-            ``u`` unchanged here.
+            ``U_2' @ u``, of shape ``(q,)``. A right inverse of
+            :meth:`project_action` when ``U_2`` has orthonormal rows.
         """
-        return u
+        return self.U_2.T @ u
 
     @property
     def observation_dim(self) -> int:
-        """Dimension of the space the controller observes."""
-        return self.A.shape[0]
+        """Dimension of the space the controller observes, ``p``."""
+        return self.U_1.shape[0]
 
     @property
     def action_dim(self) -> int:
-        """Dimension of the space the controller acts in."""
-        return self.B.shape[1]
+        """Dimension of the space the controller acts in, ``q``."""
+        return self.U_2.shape[1]
 
     def observe(self) -> np.ndarray:
         """Observation of the current state, can be called multiple times within a step.
@@ -356,8 +455,9 @@ class LQRBase:
         Returns
         -------
         StepResult
-            ``y_t`` as observed, ``v_t`` after control noise, and the true
-            ``x_t`` / ``u_t`` the cost is charged on.
+            ``y_t`` as observed, ``v_t`` after control noise, the true
+            ``x_t`` / ``u_t``, and the cost ``x' Q_x x + v' R v`` charged on
+            the clean lifted state and the applied controller output.
 
         Raises
         ------
@@ -391,7 +491,7 @@ class LQRBase:
         self._y_cache = None
         self.env_steps += 1
 
-        cost = float(x_t.T @ self.Q @ x_t + u_t.T @ self.R @ u_t)
+        cost = float(x_t @ self.Q_x @ x_t + v @ apply_weight(self.R, v))
 
         return StepResult(y_t, v, x_t, u_t, cost)
 
@@ -414,9 +514,9 @@ class LQRBase:
 class LQRDiscrete(LQRBase):
     """Discrete-time LQR with full state feedback.
 
-    The controller observes the true state directly (``y = x``) and its output
-    is applied directly (``u = v``), so the gain the solvers learn *is* the
-    gain acting on the plant.
+    Without lifts in the settings the controller observes the true state
+    directly (``y = x``) and its output is applied directly (``u = v``), so the
+    gain the solvers learn is the gain acting on the plant.
 
     Attributes
     ----------
@@ -446,75 +546,73 @@ class LQRDiscrete(LQRBase):
         self.A = A_d
         self.B = B_d
 
-    def effective_gain(self, K: np.ndarray) -> np.ndarray:
-        """Map a gain from the controller's space to the true state space.
+def closed_loop_matrix(lqr: LQRBase, K: np.ndarray) -> np.ndarray:
+    """Closed-loop matrix ``A - B U_2 K U_1`` of the true state.
 
-        For full state feedback the two spaces coincide, so this is the
-        identity.
+    Parameters
+    ----------
+    lqr : LQRBase
+        System the gain acts on.
+    K : np.ndarray
+        Gain in the controller's space, of shape ``(q, p)``.
 
-        Parameters
-        ----------
-        K : np.ndarray
-            Gain of shape ``(m, n)``.
+    Returns
+    -------
+    np.ndarray
+        Of shape ``(n, n)``.
+    """
+    return lqr.A - lqr.B @ lqr.U_2 @ K @ lqr.U_1
 
-        Returns
-        -------
-        np.ndarray
-            ``K`` unchanged.
-        """
-        return K
 
-    def project_gradient(self, grad_K: np.ndarray) -> np.ndarray:
-        """Map a gradient from the true state space back to the controller's.
+def stage_cost_matrix(lqr: LQRBase, K: np.ndarray) -> np.ndarray:
+    """Stage cost of the closed loop as a weight on the true state.
 
-        The counterpart of :meth:`effective_gain`, and again the identity here.
+    With ``y = U_1 x`` and ``v = -K y`` the stage cost ``y' Q y + v' R v``
+    equals ``x' M x`` for the returned ``M``.
 
-        Parameters
-        ----------
-        grad_K : np.ndarray
-            Gradient with respect to the effective gain.
+    Parameters
+    ----------
+    lqr : LQRBase
+        System the gain acts on.
+    K : np.ndarray
+        Gain in the controller's space, of shape ``(q, p)``.
 
-        Returns
-        -------
-        np.ndarray
-            ``grad_K`` unchanged.
-        """
-        return grad_K
+    Returns
+    -------
+    np.ndarray
+        ``Q_x + (K U_1)' R (K U_1)``, of shape ``(n, n)``.
+    """
+    K_x = K @ lqr.U_1
+    return lqr.Q_x + K_x.T @ apply_weight(lqr.R, K_x)
 
-def get_optimal_K_and_cost_discrete(lqr: LQRDiscrete):
+
+def get_optimal_K_and_cost_discrete(lqr: LQRBase):
     """Solve the LQR exactly, giving the baseline every solver is compared to.
 
     Parameters
     ----------
-    lqr : LQRDiscrete
+    lqr : LQRBase
         System to solve.
 
     Returns
     -------
     tuple[np.ndarray, float]
-        ``(K, cost)``: the optimal gain of shape ``(m, n)`` under the
-        ``u = -K x`` convention, and the resulting infinite-horizon cost
-        ``x_0' P x_0``.
-
-    Notes
-    -----
-    ``P`` solves the discrete algebraic Riccati equation, and
-
-    .. code-block:: text
-
-        K = (B' P B + R)^-1 B' P A
+        ``(K, cost)``: the optimal gain in the controller's space, of shape
+        ``(q, p)``, under the ``v = -K y`` convention, and the resulting
+        infinite-horizon cost ``x_0' P x_0``.
     """
 
     lqr.reset()
 
-    P = solve_discrete_are(lqr.A, lqr.B, lqr.Q, lqr.R)
+    B_v = lqr.B @ lqr.U_2
+    R = as_weight_matrix(lqr.R)
 
-    # SHOW: K = np.linalg.inv(lqr.R) @ lqr.B.T @ P
-
-    part_1 = np.linalg.inv(lqr.B.T @ P @ lqr.B + lqr.R)
+    P = solve_discrete_are(lqr.A, B_v, lqr.Q_x, R)
 
     # SHOW: Minus was here for both papers, but our convention is u(t) = - K @ x(t), so we don't need the minus here
-    K = part_1 @ lqr.B.T @ P @ lqr.A
+    K_v = np.linalg.solve(R + B_v.T @ P @ B_v, B_v.T @ P @ lqr.A)
+
+    K = K_v @ np.linalg.pinv(lqr.U_1)
 
     cost = lqr.x_0.T @ P @ lqr.x_0
 
@@ -565,15 +663,14 @@ def true_cost(lqr: LQRDiscrete, K: np.ndarray) -> float:
     lqr : LQRDiscrete
         System that has already been reset, so that ``lqr.x_0`` exists.
     K : np.ndarray
-        Gain acting on the true state, of shape ``(m, n)``, applied as
-        ``u = -K x``. For an inflated system pass the effective gain, i.e.
-        ``lqr.effective_gain(K)``, not the raw inflated one.
+        Gain in the controller's space, of shape ``(q, p)``, applied as
+        ``v = -K y``.
 
     Returns
     -------
     float
-        ``x_0' P x_0``, or ``np.inf`` if the closed loop ``A - B K`` is
-        unstable.
+        ``x_0' P x_0``, or ``np.inf`` if the closed loop ``A - B U_2 K U_1``
+        is unstable.
 
     Raises
     ------
@@ -586,12 +683,12 @@ def true_cost(lqr: LQRDiscrete, K: np.ndarray) -> float:
 
     x_0 = lqr.x_0
 
-    A_cl = lqr.A - lqr.B @ K
+    A_cl = closed_loop_matrix(lqr, K)
 
     if np.max(np.abs(np.linalg.eigvals(A_cl))) >= 1:
         return np.inf
 
-    P = solve_discrete_lyapunov(A_cl.T, lqr.Q + K.T @ lqr.R @ K)
+    P = solve_discrete_lyapunov(A_cl.T, stage_cost_matrix(lqr, K))
     cost = (x_0.T @ P @ x_0).flatten()[0]
     return float(cost)
 
@@ -605,8 +702,7 @@ def simulate(lqr: LQRDiscrete, K: np.ndarray, n_steps: int):
         System to roll out. Reset here, so any previously running episode is
         discarded.
     K : np.ndarray
-        Gain in the controller's own space - the raw learned gain, which for
-        an inflated system means the inflated one, *not* the effective gain.
+        Gain in the controller's own space, of shape ``(q, p)``.
     n_steps : int
         Number of steps to simulate.
 

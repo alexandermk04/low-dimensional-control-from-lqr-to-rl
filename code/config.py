@@ -44,15 +44,32 @@ def double_integrator_model() -> StateSpaceModel:
     )
 
 
-def default_costs() -> tuple[np.ndarray, np.ndarray]:
+def default_costs(
+    observation_dim: int,
+    action_dim: int,
+    state_weight: float = 1.0,
+    input_weight: float = 1.0,
+) -> tuple[np.ndarray, np.ndarray]:
     """The cost weights every experiment is scored against.
+
+    Parameters
+    ----------
+    observation_dim : int
+        ``p``, the observation dimension (``n`` for the plain plant).
+    action_dim : int
+        ``q``, the action dimension (``m`` for the plain plant).
+    state_weight, input_weight : float, optional
+        Scalar multiples of the identity. Default to ``1.0``.
 
     Returns
     -------
     tuple[np.ndarray, np.ndarray]
-        ``(Q, R)`` of shapes ``(n, n)`` and ``(m, m)``.
+        ``(Q, R)`` as diagonals of shapes ``(p,)`` and ``(q,)``.
     """
-    return np.eye(2), np.array([[1.0]])
+    return (
+        np.full(observation_dim, float(state_weight)),
+        np.full(action_dim, float(input_weight)),
+    )
 
 
 def make_lifts(
@@ -154,7 +171,7 @@ DEFAULT_VIEW_SCALE = 1.2
 DEFAULT_N_THRUSTERS = 256
 DEFAULT_THRUSTER_PHASE = 0.0
 
-DEFAULT_THRUST_SCALE = 0.140625
+DEFAULT_THRUST_SCALE = 26 / 128
 
 
 def thruster_lifts(

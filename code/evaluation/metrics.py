@@ -2,10 +2,12 @@
 
 Conventions
 -----------
-Every function here takes the gain acting on the true plant, i.e.
-``lqr.effective_gain(K)`` for an inflated system, except where a docstring says
-otherwise. The exception is :func:`process_noise_covariance`, which needs the
-raw gain because measurement noise enters through the controller's own space.
+Every function here takes the raw gain ``K`` in the controller's space, of
+shape ``(q, p)``. The cost is charged in that space too, but all exact
+quantities are computed on the true ``n``-dimensional state, using
+:func:`~lqr_base.simple_lqr.closed_loop_matrix` and
+:func:`~lqr_base.simple_lqr.stage_cost_matrix`, so they are
+calculatable at larger scales.
 """
 
 from typing import Callable, Protocol
@@ -13,7 +15,13 @@ from typing import Callable, Protocol
 import numpy as np
 from scipy.linalg import solve_discrete_lyapunov
 
-from lqr_base.simple_lqr import LQRDiscrete, initial_state_covariance
+from lqr_base.simple_lqr import (
+    LQRDiscrete,
+    apply_weight,
+    closed_loop_matrix,
+    initial_state_covariance,
+    stage_cost_matrix,
+)
 
 __all__ = [
     "initial_state_covariance",
@@ -32,50 +40,50 @@ __all__ = [
 ]
 
 
-def _closed_loop(lqr: LQRDiscrete, K_eff: np.ndarray, gamma: float = 1.0) -> np.ndarray:
+def _closed_loop(lqr: LQRDiscrete, K: np.ndarray, gamma: float = 1.0) -> np.ndarray:
     """Closed-loop state matrix, optionally discounted.
 
     A ``gamma``-discounted LQR problem on ``(A, B, Q, R)`` is exactly the
     undiscounted problem on ``(sqrt(gamma) A, sqrt(gamma) B, Q, R)``, so a
     discount is applied here by scaling and nowhere else.
     """
-    return np.sqrt(gamma) * (lqr.A - lqr.B @ K_eff)
+    return np.sqrt(gamma) * closed_loop_matrix(lqr, K)
 
 
-def spectral_radius(lqr: LQRDiscrete, K_eff: np.ndarray, gamma: float = 1.0) -> float:
+def spectral_radius(lqr: LQRDiscrete, K: np.ndarray, gamma: float = 1.0) -> float:
     """Largest closed-loop eigenvalue magnitude; ``< 1`` means stable.
 
     Parameters
     ----------
     lqr : LQRDiscrete
         System the gain acts on.
-    K_eff : np.ndarray
-        Gain acting on the true plant, of shape ``(m, n)``.
+    K : np.ndarray
+        Gain in the controller's space, of shape ``(q, p)``.
     gamma : float, optional
         Discount factor. Defaults to ``1.0``, i.e. undiscounted.
 
     Returns
     -------
     float
-        ``max |eig(A - B K_eff)|``, scaled by ``sqrt(gamma)``.
+        ``max |eig(A - B U_2 K U_1)|``, scaled by ``sqrt(gamma)``.
     """
-    return float(np.max(np.abs(np.linalg.eigvals(_closed_loop(lqr, K_eff, gamma)))))
+    return float(np.max(np.abs(np.linalg.eigvals(_closed_loop(lqr, K, gamma)))))
 
 
 def closed_loop_value_matrix(
-    lqr: LQRDiscrete, K_eff: np.ndarray, gamma: float = 1.0
+    lqr: LQRDiscrete, K: np.ndarray, gamma: float = 1.0
 ) -> np.ndarray | None:
     """Value matrix ``P`` of the closed loop, or ``None`` if it is unstable.
 
-    ``P`` solves ``P = Q + K' R K + A_cl' P A_cl``, so that the
+    ``P`` solves ``P = Q_x + (K U_1)' R (K U_1) + A_cl' P A_cl``, so that the
     infinite-horizon cost from ``x_0`` is ``x_0' P x_0``.
 
     Parameters
     ----------
     lqr : LQRDiscrete
         System the gain acts on.
-    K_eff : np.ndarray
-        Gain acting on the true plant, of shape ``(m, n)``.
+    K : np.ndarray
+        Gain in the controller's space, of shape ``(q, p)``.
     gamma : float, optional
         Discount factor. Defaults to ``1.0``.
 
@@ -85,23 +93,23 @@ def closed_loop_value_matrix(
         ``P`` of shape ``(n, n)``, or ``None`` when the closed loop is not
         stable.
     """
-    A_cl = _closed_loop(lqr, K_eff, gamma)
+    A_cl = _closed_loop(lqr, K, gamma)
 
     if np.max(np.abs(np.linalg.eigvals(A_cl))) >= 1:
         return None
 
-    return solve_discrete_lyapunov(A_cl.T, lqr.Q + K_eff.T @ lqr.R @ K_eff)
+    return solve_discrete_lyapunov(A_cl.T, stage_cost_matrix(lqr, K))
 
 
-def expected_true_cost(lqr: LQRDiscrete, K_eff: np.ndarray, gamma: float = 1.0) -> float:
+def expected_true_cost(lqr: LQRDiscrete, K: np.ndarray, gamma: float = 1.0) -> float:
     """Expected infinite-horizon cost over the initial state distribution.
 
     Parameters
     ----------
     lqr : LQRDiscrete
         System the gain acts on.
-    K_eff : np.ndarray
-        Gain acting on the true plant, of shape ``(m, n)``.
+    K : np.ndarray
+        Gain in the controller's space, of shape ``(q, p)``.
     gamma : float, optional
         Discount factor. Defaults to ``1.0``.
 
@@ -117,7 +125,7 @@ def expected_true_cost(lqr: LQRDiscrete, K_eff: np.ndarray, gamma: float = 1.0) 
     :func:`finite_horizon_expected_cost` or
     :func:`average_cost` for the steady state.
     """
-    P = closed_loop_value_matrix(lqr, K_eff, gamma)
+    P = closed_loop_value_matrix(lqr, K, gamma)
 
     if P is None:
         return np.inf
@@ -135,7 +143,7 @@ def process_noise_covariance(
     lqr : LQRDiscrete
         The plant whose noise is processed.
     K : np.ndarray or None, optional
-        The **raw** gain.
+        The gain.
 
     Returns
     -------
@@ -189,10 +197,10 @@ def measurement_cost_offset(lqr: LQRDiscrete, K: np.ndarray | None = None) -> fl
 
     Measurement noise does two things: it perturbs the state trajectory, which
     :func:`process_noise_covariance` describes. But it also inflates the
-    control cost charged at every step: the applied control is
-    ``u = -K_eff x - M x_i``, so ``u' R u`` picks up a term
-    ``x_i' M' R M x_i`` whose expectation is a constant, independent of the state
-    and therefore never visible in the covariance recursion.
+    control cost charged at every step: the controller output is
+    ``v = -K U_1 x - K xi``, so ``v' R v`` picks up a term ``xi' K' R K xi``
+    whose expectation is a constant, independent of the state and therefore
+    never visible in the covariance recursion.
 
     Parameters
     ----------
@@ -205,8 +213,8 @@ def measurement_cost_offset(lqr: LQRDiscrete, K: np.ndarray | None = None) -> fl
     Returns
     -------
     float
-        ``sigma**2 * trace(M' R M)`` with ``M = project_action(K)``, or ``0.0``
-        when there is no measurement noise.
+        ``sigma**2 * trace(K' R K)``, or ``0.0`` when there is no measurement
+        noise.
 
     Raises
     ------
@@ -221,16 +229,13 @@ def measurement_cost_offset(lqr: LQRDiscrete, K: np.ndarray | None = None) -> fl
             "Measurement noise requires the raw gain K."
         )
 
-    M = lqr.project_action(K)
-
-    return float(lqr.measurement_noise.measurement_noise_std ** 2 * np.trace(M.T @ lqr.R @ M))
+    return float(lqr.measurement_noise.measurement_noise_std ** 2 * np.sum(K * apply_weight(lqr.R, K)))
 
 
 def finite_horizon_expected_cost(
     lqr: LQRDiscrete,
-    K_eff: np.ndarray,
+    K: np.ndarray,
     horizon: int,
-    K: np.ndarray | None = None,
     gamma: float = 1.0,
 ) -> float:
     """Expected cost accumulated over ``horizon`` steps.
@@ -242,19 +247,18 @@ def finite_horizon_expected_cost(
     ----------
     lqr : LQRDiscrete
         System the gain acts on.
-    K_eff : np.ndarray
-        Effective gain of shape ``(m, n)``.
+    K : np.ndarray
+        Gain in the controller's space, of shape ``(q, p)``.
     horizon : int
         Number of steps to accumulate.
-    K : np.ndarray or None, optional
-        Raw gain, needed only under measurement noise.
     gamma : float, optional
         Discount factor. Defaults to ``1.0``, i.e. undiscounted.
 
     Returns
     -------
     float
-        ``sum_t trace((Q + K' R K) Sigma_t)`` with
+        ``sum_t trace(M Sigma_t)`` with the stage weight ``M`` of
+        :func:`~lqr_base.simple_lqr.stage_cost_matrix` and
         ``Sigma_{t+1} = A_cl Sigma_t A_cl' + W``.
 
     Raises
@@ -270,8 +274,8 @@ def finite_horizon_expected_cost(
             "form. Estimate this with monte_carlo_cost() instead."
         )
 
-    A_cl = _closed_loop(lqr, K_eff, gamma)
-    stage = lqr.Q + K_eff.T @ lqr.R @ K_eff
+    A_cl = _closed_loop(lqr, K, gamma)
+    stage = stage_cost_matrix(lqr, K)
 
     # Measurement noise also inflates the control cost by a state-independent
     # constant, which the covariance recursion below cannot see.
@@ -289,7 +293,7 @@ def finite_horizon_expected_cost(
     return total
 
 
-def average_cost(lqr: LQRDiscrete, K_eff: np.ndarray, K: np.ndarray | None = None) -> float:
+def average_cost(lqr: LQRDiscrete, K: np.ndarray) -> float:
     """Steady-state cost per step under noise.
 
     The infinite-horizon *sum* diverges once the loop is driven by process
@@ -299,10 +303,8 @@ def average_cost(lqr: LQRDiscrete, K_eff: np.ndarray, K: np.ndarray | None = Non
     ----------
     lqr : LQRDiscrete
         System the gain acts on.
-    K_eff : np.ndarray
-        Effective gain  of shape ``(m, n)``.
-    K : np.ndarray or None, optional
-        Raw gain, needed under measurement noise.
+    K : np.ndarray
+        Gain in the controller's space, of shape ``(q, p)``.
 
     Returns
     -------
@@ -314,7 +316,7 @@ def average_cost(lqr: LQRDiscrete, K_eff: np.ndarray, K: np.ndarray | None = Non
     ValueError
         If the active noise channels admit no closed form.
     """
-    P = closed_loop_value_matrix(lqr, K_eff)
+    P = closed_loop_value_matrix(lqr, K)
     if P is None:
         return np.inf
 
@@ -327,15 +329,15 @@ def average_cost(lqr: LQRDiscrete, K_eff: np.ndarray, K: np.ndarray | None = Non
     return float(np.trace(P @ W)) + measurement_cost_offset(lqr, K)
 
 
-def choose_horizon(lqr: LQRDiscrete, K_eff: np.ndarray, tol: float = 1e-3) -> int:
+def choose_horizon(lqr: LQRDiscrete, K: np.ndarray, tol: float = 1e-3) -> int:
     """Horizon at which the closed loop has decayed to ``tol``.
 
     Parameters
     ----------
     lqr : LQRDiscrete
         System the gain acts on.
-    K_eff : np.ndarray
-        Effective gain  of shape ``(m, n)``.
+    K : np.ndarray
+        Gain in the controller's space, of shape ``(q, p)``.
     tol : float, optional
         Residual fraction of the initial transient. Defaults to ``1e-3``.
 
@@ -350,7 +352,7 @@ def choose_horizon(lqr: LQRDiscrete, K_eff: np.ndarray, tol: float = 1e-3) -> in
     ValueError
         If the closed loop is unstable.
     """
-    rho = spectral_radius(lqr, K_eff)
+    rho = spectral_radius(lqr, K)
 
     if rho >= 1:
         raise ValueError(

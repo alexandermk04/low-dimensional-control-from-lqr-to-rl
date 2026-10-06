@@ -39,6 +39,9 @@ SOLVER_MAX_ITERATIONS = 20_000
 # Size of the full-rank component of the initial gain on an inflated system.
 K0_ALPHA = 0.5
 
+STATE_COST_WEIGHT = 1.0
+INPUT_COST_WEIGHT = 1.0
+
 # ---------------------------------------------------------------------------
 # Sample sizes (appendix)
 # ---------------------------------------------------------------------------
@@ -362,7 +365,6 @@ SOLVER_HYPERPARAMS = {
         "order_threshold": 1e-3,
         "max_order": 10,
         "horizon": 10,
-        "input_rank_tol": 1e-3,
     },
     # S-PI on the identified model
     "spi_est": {
@@ -381,7 +383,6 @@ SOLVER_HYPERPARAMS = {
         "order_threshold": 1e-3,
         "max_order": 10, # maximum order to consider for model identification
         "horizon": 10, # Block Hankel past/future horizon
-        "input_rank_tol": 1e-3,
     },
     # Robotic priors for state estimator
     "ppo_encoder_scalable": {
@@ -395,7 +396,6 @@ SOLVER_HYPERPARAMS = {
         "order_threshold": 1e-3,
         "max_order": 10, # maximum order to consider for model identification
         "horizon": 10, # Block Hankel past/future horizon
-        "input_rank_tol": 1e-3,
     },
 }
 
