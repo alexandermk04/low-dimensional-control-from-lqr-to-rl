@@ -187,8 +187,19 @@ CH6_PIXEL_INFLATION = "pixel"
 # ---------------------------------------------------------------------------
 # Appendix: model-free S-PI hyperparameters
 # ---------------------------------------------------------------------------
-SPI_MF_LAMBDAS = (4e2, 4e3, 4e4, 4e5, 4e6)
-SPI_MF_STEPSIZES = (3.5e-9, 3.5e-8, 3.5e-7, 3.5e-6, 3.5e-5)
+# Per inflation size sweep
+SPI_MF_LAMBDAS = {
+    "base": (4e0, 4e1, 4e2, 4e3, 4e4),
+    "small": (4e1, 4e2, 4e3, 4e4, 4e5),
+    "medium": (4e1, 4e2, 4e3, 4e4, 4e5),
+    "large": (4e2, 4e3, 4e4, 4e5, 4e6),
+}
+SPI_MF_STEPSIZES = {
+    "base": (3.5e-9, 3.5e-8, 3.5e-7, 3.5e-6, 3.5e-5),
+    "small": (3.5e-8, 3.5e-7, 3.5e-6, 3.5e-5, 3.5e-4),
+    "medium": (3.5e-8, 3.5e-7, 3.5e-6, 3.5e-5, 3.5e-4),
+    "large": (3.5e-10, 3.5e-9, 3.5e-8, 3.5e-7, 3.5e-6),
+}
 
 
 # ---------------------------------------------------------------------------
@@ -402,7 +413,8 @@ SOLVER_HYPERPARAMS = {
 
 # Per inflation size overrides of SOLVER_HYPERPARAMS
 # Filled from
-# `python -m experiments.figures.appendix_spi_lambda_figures` and
+# `python -m experiments.figures.appendix_spi_lambda_figures`,
+# `python -m experiments.figures.appendix_spi_mf_figures`,
 # `python -m experiments.figures.appendix_learning_rate_figures` and
 # `python -m experiments.figures.appendix_rl_learning_rate_figures`.
 SIZE_HYPERPARAMS = {
@@ -429,6 +441,12 @@ SIZE_HYPERPARAMS = {
         "small": {"lambda_": 5},
         "medium": {"lambda_": 5},
         "large": {"lambda_": 5},
+    },
+    "spi_mf": {
+        "base": {"lambda_": 400, "stepsize": 3.5e-07},
+        "small": {"lambda_": 4000, "stepsize": 3.5e-06},
+        "medium": {"lambda_": 4000, "stepsize": 3.5e-06},
+        "large": {"lambda_": 40000, "stepsize": 3.5e-08},
     },
     "spi_est": {
         "base": {"lambda_": 1},
