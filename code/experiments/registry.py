@@ -141,7 +141,7 @@ def _probe(lqr, scorer) -> Probe:
     """The per-iteration instrumentation shared by every LQR solver."""
     return Probe(
         lqr,
-        evaluate=lambda K: expected_true_cost(scorer, scorer.effective_gain(K)),
+        evaluate=lambda K: expected_true_cost(scorer, K),
     )
 
 
@@ -183,7 +183,7 @@ def _run_baseline(spec: RunSpec, problem: Problem) -> SolverResult:
     scorer = build_plant(problem, "score")
     scorer.reset()
 
-    K = optimal_controller_gain(problem)
+    K = problem.K_star.copy()
 
     records = [IterationRecord(
         iteration=0, env_steps=0, total_time=0.0, cost=problem.j_star,
@@ -264,8 +264,7 @@ class _Identification:
 
 
 def _identify_for(
-    spec: RunSpec, problem: Problem, to_controller=None, purpose: str = "train",
-    reduce_input: bool = True,
+    spec: RunSpec, problem: Problem, with_probe: bool = True, purpose: str = "train",
 ) -> _Identification:
     """Run the excitation trajectory and identify the plant of one run.
 
@@ -275,15 +274,10 @@ def _identify_for(
         The run settings.
     problem : Problem
         Its problem.
-    to_controller : callable or None, optional
-        ``(IdentifiedModel, K) -> np.ndarray`` mapping a gain as the inner
-        solver produces it onto the controller's ``(q, p)`` space. ``None`` builds no
-        probe.
+    with_probe : bool, optional
+        Whether to build a probe scoring the inner solver's gains.
     purpose : str, optional
         Seed-stream label.
-    reduce_input : bool, optional
-        Passed through to
-        :class:`~lqr_solvers.system_identification.IdentificationSettings`.
 
     Returns
     -------
@@ -305,21 +299,14 @@ def _identify_for(
         max_order=hyper["max_order"],
         horizon=spec.condition.get("hankel", hyper["horizon"]),
         order_threshold=hyper["order_threshold"],
-        input_rank_tol=hyper.get("input_rank_tol", 1e-3), # only for reducing input
-        reduce_input=reduce_input,
     )
 
     context = _Identification(
         lqr=lqr, scorer=scorer, settings=id_settings, probe=None
     )
 
-    if to_controller is not None:
-        context.probe = Probe(
-            lqr,
-            evaluate=lambda K: expected_true_cost(
-                scorer, scorer.effective_gain(to_controller(context.model, K))
-            ),
-        )
+    if with_probe:
+        context.probe = _probe(lqr, scorer)
         context.probe.start()
 
     try:
@@ -334,9 +321,7 @@ def _identification_extra(identified) -> dict:
     """The additional summary entries from the identification."""
     return {
         "n_hat": identified.n_hat,
-        "m_hat": identified.m_hat,
         "effective_max_order": identified.effective_max_order,
-        "cost_residual": identified.cost_residual,
     }
 
 
@@ -344,7 +329,7 @@ def _identification_failed(problem, scorer, id_settings, failure) -> SolverResul
     """Report an under-determined identification as a result.
     """
     K = problem.K_0
-    cost = expected_true_cost(scorer, scorer.effective_gain(K))
+    cost = expected_true_cost(scorer, K)
 
     records = [IterationRecord(
         iteration=0,
@@ -365,26 +350,6 @@ def _identification_failed(problem, scorer, id_settings, failure) -> SolverResul
     )
 
 
-def optimal_controller_gain(problem: Problem) -> np.ndarray:
-    """The optimal gain expressed in the controller's own space.
-
-    Parameters
-    ----------
-    problem : Problem
-        The run's problem.
-
-    Returns
-    -------
-    np.ndarray
-        ``K_star`` itself for the plain plant, its lift ``pinv(U_2) K_star
-        pinv(U_1)`` of shape ``(q, p)`` for an inflated one.
-    """
-    if problem.inflation is None:
-        return problem.K_star.copy()
-
-    return np.linalg.pinv(problem.U_2) @ problem.K_star @ np.linalg.pinv(problem.U_1)
-
-
 def probe_reference_cost(scorer, problem: Problem) -> float:
     """The optimal policy's cost measured during training.
 
@@ -401,7 +366,7 @@ def probe_reference_cost(scorer, problem: Problem) -> float:
         Reference cost for :attr:`SolverResult.j_star`.
     """
     mean, _ = monte_carlo_cost(
-        scorer, LinearPolicy(optimal_controller_gain(problem)),
+        scorer, LinearPolicy(problem.K_star),
         n_episodes=settings.PROBE_EPISODES,
         horizon=settings.PROBE_HORIZON,
     )
@@ -413,17 +378,16 @@ def _run_mb_est(spec: RunSpec, problem: Problem) -> SolverResult:
 
     Fazel et al. [1]_ run on a plant identified by N4SID [3]_.
     """
-    from lqr_solvers.system_identification import to_inflated_plant
+    from lqr_solvers.system_identification import to_surrogate
 
-    context = _identify_for(
-        spec, problem, lambda model, K: K, reduce_input=False
-    )
+    context = _identify_for(spec, problem)
     if context.model is None:
         return context.failed_result(problem)
 
     identified = context.model
-    surrogate = to_inflated_plant(
-        identified, sub_seed(spec.seed, "surrogate", spec.solver)
+    surrogate = to_surrogate(
+        identified, problem.Q, problem.R,
+        sub_seed(spec.seed, "surrogate", spec.solver),
     )
 
     solver_settings = ModelBasedPolicyGradientSettings(
@@ -447,21 +411,21 @@ def _run_ce_dare(spec: RunSpec, problem: Problem) -> SolverResult:
     Identification by N4SID [3]_.
     """
     from lqr_base.simple_lqr import get_optimal_K_and_cost_discrete
-    from lqr_solvers.system_identification import to_plant
+    from lqr_solvers.system_identification import to_surrogate
 
-    context = _identify_for(
-        spec, problem, lambda model, K: model.to_controller_gain(K)
-    )
+    context = _identify_for(spec, problem)
     if context.model is None:
         return context.failed_result(problem)
 
     identified = context.model
-    surrogate = to_plant(identified, sub_seed(spec.seed, "surrogate", spec.solver))
+    surrogate = to_surrogate(
+        identified, problem.Q, problem.R,
+        sub_seed(spec.seed, "surrogate", spec.solver),
+    )
 
-    K_identified, _ = get_optimal_K_and_cost_discrete(surrogate)
-    K_final = identified.to_controller_gain(K_identified)
+    K_final, _ = get_optimal_K_and_cost_discrete(surrogate)
 
-    context.probe.record(0, K_identified)
+    context.probe.record(0, K_final)
 
     result = _linear_result(
         K_final, context.probe,
@@ -478,17 +442,16 @@ def _run_spi_est(spec: RunSpec, problem: Problem) -> SolverResult:
 
     Park et al. [2]_ run on a plant identified by N4SID [3]_.
     """
-    from lqr_solvers.system_identification import to_inflated_plant
+    from lqr_solvers.system_identification import to_surrogate
 
-    context = _identify_for(
-        spec, problem, lambda model, K: K, reduce_input=False
-    )
+    context = _identify_for(spec, problem)
     if context.model is None:
         return context.failed_result(problem)
 
     identified = context.model
-    surrogate = to_inflated_plant(
-        identified, sub_seed(spec.seed, "surrogate", spec.solver)
+    surrogate = to_surrogate(
+        identified, problem.Q, problem.R,
+        sub_seed(spec.seed, "surrogate", spec.solver),
     )
 
     hyper = spec.hyperparams()
@@ -604,7 +567,7 @@ def _linear_result(K_final, probe, solver_settings, scorer) -> SolverResult:
     if stopper is not None and stopper.best_payload is not None:
         K_final = stopper.best_payload
         extra = stopper.extra()
-        j_final = float(expected_true_cost(scorer, scorer.effective_gain(K_final)))
+        j_final = float(expected_true_cost(scorer, K_final))
 
     return SolverResult(
         K_final=K_final,
@@ -739,7 +702,7 @@ def _run_rl(
         if linear:
             K = obs_scale * extract_linear_gain(model)[0]
             return (
-                expected_true_cost(scorer, scorer.effective_gain(K)),
+                expected_true_cost(scorer, K),
                 int(np.linalg.matrix_rank(K)),
             )
         mean, _ = monte_carlo_cost(
@@ -896,7 +859,7 @@ def _training_diverged(
 
     return SolverResult(
         K_final=None,
-        policy=LinearPolicy(optimal_controller_gain(problem)),
+        policy=LinearPolicy(problem.K_star),
         records=records,
         complexity={"rank": -1, "n_params": -1},
         solver_settings=solver_settings,
@@ -911,7 +874,7 @@ def _training_diverged(
 def _run_ppo_encoder(spec: RunSpec, problem: Problem) -> SolverResult:
     """PPO [4]_ behind a plant identified by N4SID [3]_.
     """
-    context = _identify_for(spec, problem, purpose="identify")
+    context = _identify_for(spec, problem, with_probe=False, purpose="identify")
 
     if context.model is None:
         return context.failed_result(problem)
@@ -947,11 +910,20 @@ def _pixel_setup(spec: RunSpec):
     from evaluation.pixel_metrics import agent_horizon
     from lqr_base.thruster_ring import check_thrust_calibration, optimal_coarse_gain
 
+    U_1, U_2 = cfg.thruster_lifts()
+    Q, R = cfg.default_costs(
+        U_1.shape[0], U_2.shape[1],
+        settings.STATE_COST_WEIGHT, settings.INPUT_COST_WEIGHT,
+    )
+    c = U_2[0]
+
+    R_acceleration = np.array([[1.0 / float(np.sum(c ** 2 / R))]])
+
     K, P, rho = optimal_coarse_gain(
-        cfg.double_integrator_model(), *cfg.default_costs(),
+        cfg.double_integrator_model(), U_1.T @ np.diag(Q) @ U_1, R_acceleration,
         cfg.DEFAULT_DT, cfg.DEFAULT_ACTION_REPEAT,
     )
-    check_thrust_calibration(cfg.thruster_lifts()[1][0], K, cfg.DEFAULT_MAX_INITIAL_STATE)
+    check_thrust_calibration(c, K, cfg.DEFAULT_MAX_INITIAL_STATE)
 
     horizon = (
         settings.TRAIN_HORIZON if settings.TRAIN_HORIZON is not None

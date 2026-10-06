@@ -33,9 +33,9 @@ from lqr_base.simple_lqr import (
     StateSpaceModel,
     LQRDiscrete,
     LQRDiscreteSettings,
+    ControllerModel,
     simulate,
     true_cost,
-    initial_state_covariance,
     get_optimal_K_and_cost_discrete as baseline_solution,
 )
 
@@ -95,17 +95,15 @@ class StructuredPolicySettings:
     probe: Probe | None = None  # Optional per-iteration instrumentation
     stopper: Plateau | None = None  # Optional convergence criterion
 
-def solve_lyapunov(lqr: LQRDiscrete, K_t: np.ndarray, sigma_0: np.ndarray) -> np.ndarray:
+def solve_lyapunov(model: ControllerModel, K_t: np.ndarray) -> np.ndarray:
     """Value matrix and state covariance of the closed loop under ``K_t``.
 
     Parameters
     ----------
-    lqr : LQRDiscrete
-        System to be solved.
+    model : ControllerModel
+        The problem in the controller's space.
     K_t : np.ndarray
         Gain in the controller's space.
-    sigma_0 : np.ndarray
-        Initial-state covariance of shape ``(n, n)``.
 
     Returns
     -------
@@ -115,25 +113,23 @@ def solve_lyapunov(lqr: LQRDiscrete, K_t: np.ndarray, sigma_0: np.ndarray) -> np
         Closed-loop state covariance, which weights the gradient.
     """
 
-    K_eff = lqr.effective_gain(K_t)
+    lya_a = model.A - model.B @ K_t
 
-    lya_a = lqr.A - lqr.B @ K_eff
-
-    lya_q = lqr.Q + K_eff.T @ lqr.R @ K_eff
+    lya_q = model.Q + K_t.T @ model.R @ K_t
 
     P_k = solve_discrete_lyapunov(lya_a.T, lya_q)
 
-    sigma_k = solve_discrete_lyapunov(lya_a, sigma_0)
+    sigma_k = solve_discrete_lyapunov(lya_a, model.sigma_0)
 
     return P_k, sigma_k
 
-def compute_gradient(lqr: LQRDiscrete, K_t: np.ndarray, P_k: np.ndarray, sigma_k: np.ndarray) -> np.ndarray:
+def compute_gradient(model: ControllerModel, K_t: np.ndarray, P_k: np.ndarray, sigma_k: np.ndarray) -> np.ndarray:
     """Exact gradient of the LQR cost at ``K_t``.
 
     Parameters
     ----------
-    lqr : LQRDiscrete
-        System to be optimized over.
+    model : ControllerModel
+        The problem in the controller's space.
     K_t : np.ndarray
         Current gain.
     P_k : np.ndarray
@@ -144,23 +140,17 @@ def compute_gradient(lqr: LQRDiscrete, K_t: np.ndarray, P_k: np.ndarray, sigma_k
     Returns
     -------
     np.ndarray
-        ``project(2 ((R + B' P_k B) K_eff - B' P_k A) sigma_k)``, shaped like
-        ``K_t``.
+        ``2 ((R + B' P_k B) K_t - B' P_k A) sigma_k``, shaped like ``K_t``.
 
     Notes
     -----
     The sign follows this repository's ``u = -K x`` convention.
     """
 
-    # The gradient is taken in the true state space
-    K_eff = lqr.effective_gain(K_t)
-
     # Minus, as we use u(t) = - K @ x(t)
-    E_k = (lqr.R + lqr.B.T @ P_k @ lqr.B) @ K_eff - lqr.B.T @ P_k @ lqr.A
+    E_k = (model.R + model.B.T @ P_k @ model.B) @ K_t - model.B.T @ P_k @ model.A
 
-    grad = lqr.project_gradient(2 * E_k @ sigma_k)
-
-    return grad
+    return 2 * E_k @ sigma_k
 
 def soft_thresholding(K: np.ndarray, threshold: float) -> np.ndarray:
     """Shrink each entry towards zero by ``threshold``, clamping at zero.
@@ -220,7 +210,7 @@ def prox_grad_nuclear_norm(K: np.ndarray, grad: np.ndarray, stepsize: float, lam
     return K_plus
 
 def linesearch_criterion_satisfied(
-        lqr: LQRDiscrete,
+        model: ControllerModel,
         K: np.ndarray,
         K_plus: np.ndarray,
         f_K: float,
@@ -235,8 +225,8 @@ def linesearch_criterion_satisfied(
 
     Parameters
     ----------
-    lqr : LQRDiscrete
-        System, used for the closed-loop stability check.
+    model : ControllerModel
+        The problem, used for the closed-loop stability check.
     K : np.ndarray
         Current gain.
     K_plus : np.ndarray
@@ -257,7 +247,7 @@ def linesearch_criterion_satisfied(
     """
 
     # Check stability (with minus, due to our convention for u(t) = - K @ x(t))
-    spectral_radius = np.max(np.abs(np.linalg.eigvals(lqr.A - lqr.B @ lqr.effective_gain(K_plus))))
+    spectral_radius = np.max(np.abs(np.linalg.eigvals(model.A - model.B @ K_plus)))
 
     if spectral_radius >= 1:
         return False
@@ -272,21 +262,18 @@ def linesearch_criterion_satisfied(
     return f_K_plus <= part_1 + part_2
 
 def calculate_next_K(
-        lqr: LQRDiscrete,
+        model: ControllerModel,
         K_t: np.ndarray,
-        sigma_0: np.ndarray,
         settings: StructuredPolicySettings
     ) -> np.ndarray:
     """One model-based S-PI iteration.
 
     Parameters
     ----------
-    lqr : LQRDiscrete
-        System to optimize over.
+    model : ControllerModel
+        The problem in the controller's space.
     K_t : np.ndarray
         Current gain.
-    sigma_0 : np.ndarray
-        Initial-state covariance.
     settings : StructuredPolicySettings
         Hyperparameters.
 
@@ -298,23 +285,23 @@ def calculate_next_K(
         Model cost of ``K_t``.
     """
 
-    P_k, sigma_k = solve_lyapunov(lqr, K_t, sigma_0=sigma_0)
+    P_k, sigma_k = solve_lyapunov(model, K_t)
 
-    grad_K = compute_gradient(lqr, K_t, P_k, sigma_k)
+    grad_K = compute_gradient(model, K_t, P_k, sigma_k)
 
     # Paper suggests O(1/lambda) for initial stepsize
     stepsize = 1 / settings.lambda_ * 0.5 # TODO: better here
 
-    f_K = np.linalg.trace(sigma_0 @ P_k)
+    f_K = np.linalg.trace(model.sigma_0 @ P_k)
 
     linsearch_iter = 0
     while linsearch_iter < settings.max_linesearch_iter:
         K_plus = prox_grad_nuclear_norm(K_t, grad_K, stepsize, lambda_=settings.lambda_)
 
-        P_plus, _ = solve_lyapunov(lqr, K_plus, sigma_0=sigma_0)
-        f_K_plus = np.linalg.trace(sigma_0 @ P_plus)
+        P_plus, _ = solve_lyapunov(model, K_plus)
+        f_K_plus = np.linalg.trace(model.sigma_0 @ P_plus)
 
-        if linesearch_criterion_satisfied(lqr, K_t, K_plus, f_K, f_K_plus, grad_K, stepsize):
+        if linesearch_criterion_satisfied(model, K_t, K_plus, f_K, f_K_plus, grad_K, stepsize):
             break
 
         # TODO: Check if is correct to descrease AFTER first iteration, or if should be before
@@ -348,14 +335,13 @@ def structured_policy_iteration(lqr: LQRDiscrete, settings: StructuredPolicySett
     # TODO: Costs
     costs = []
 
-    # Initial state covariance
-    sigma_0 = initial_state_covariance(lqr)
+    model = lqr.controller_model()
 
     progress_bar = tqdm(range(settings.limit), desc="Structured Policy Iteration", unit="step")
 
     for i in progress_bar:
 
-        K_plus, f_K = calculate_next_K(lqr, K_t, sigma_0, settings)
+        K_plus, f_K = calculate_next_K(model, K_t, settings)
 
         ks.append(K_plus)
 
@@ -364,7 +350,7 @@ def structured_policy_iteration(lqr: LQRDiscrete, settings: StructuredPolicySett
 
         # Stop on the objective
         objective = f_K + settings.lambda_ * np.linalg.norm(K_t, ord='nuc')
-        if np.max(np.abs(np.linalg.eigvals(lqr.A - lqr.B @ lqr.effective_gain(K_t)))) >= 1:
+        if np.max(np.abs(np.linalg.eigvals(model.A - model.B @ K_t))) >= 1:
             objective = np.inf
         if should_stop(settings, lqr, i, objective, K_t):
             break
