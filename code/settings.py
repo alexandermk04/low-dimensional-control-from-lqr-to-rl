@@ -54,10 +54,10 @@ SAMPLE_GRID = tuple((l, m) for l in ROLLOUT_LENGTHS for m in TRAJECTORY_COUNTS)
 
 # Filled from `python -m experiments.appendix_sample_size`; values are (l, m).
 CHOSEN_SAMPLE_CELL = {
-    "base": None,
-    "small": None,
-    "medium": None,
-    "large": None,
+    "base": (500, 200),
+    "small": (500, 200),
+    "medium": (500, 200),
+    "large": (500, 200),
 }
 
 # Length of excitation rollouts
