@@ -9,7 +9,7 @@ later parts of this thesis build on. \Cref{subsec:state-space} introduces linear
 state-space models and their discretization, \cref{subsec:double-integrator}
 shows them on the double integrator that serves as our running example
 throughout, and \cref{subsec:characteristics,subsec:lqr} recall the stability notions and
-the linear quadratic regulator. \Cref{subsec:uncertainty,subsec:robustness} define the
+the linear quadratic regulator. \Cref{subsubsec:noise-injection,subsec:robustness} define the
 perturbation models and the robustness metrics used to evaluate every
 controller we construct.
 
@@ -71,7 +71,7 @@ Generally, we assume that the state is fully
 measurable and therefore set $C = I_n$, which reduces
 \eqref{eq:ss-cont-output} to $y(t) = x(t)$. However, when we introduce disturbances
 through noise, this is no longer the case. More details on this are
-given in \cref{subsec:uncertainty}. The distinction between $u = -Kx$ and $u = -Ky$ is
+given in \cref{subsubsec:noise-injection}. The distinction between $u = -Kx$ and $u = -Ky$ is
 therefore critical, since the former admits an optimal solution while the
 latter might not; we return to this point in \cref{subsec:lqr}.
  
@@ -192,7 +192,7 @@ The first of these is stability, which guarantees that deviations in the system
 do not become too drastic, and thus cause some kind of failure. Mathematically,
 stability is a statement about a \emph{solution} of the recursion
 $x_{k+1} = f(x_k, k)$, and is defined the following
-way~\needcite{Astrom \& Wittenmark, "Computer-Controlled Systems", p.77}:
+way~\needcite{Astrom \& Wittenmark, ``Computer-Controlled Systems'', p.77}:
 
 \begin{definition}[Stability]
 \label{def:stability}
@@ -217,7 +217,7 @@ For linear systems this simplifies considerably. If $x(\cdot)$ and $x^{0}(\cdot)
 both solve $x_{k+1} = A x_k$, then their difference solves the same recursion,
 so the behavior of \emph{one} solution decides the behavior of all of them.
 Stability is thus a property of the system, explicitly the matrix $A$. 
-This is stated as a theorem by~\needcite{Astrom \& Wittenmark, "Computer-Controlled Systems", p.77}:
+This is stated as a theorem by~\needcite{Astrom \& Wittenmark, ``Computer-Controlled Systems'', p.77}:
 
 \begin{theorem}[Asymptotic stability of discrete-time LTI systems]
 \label{thm:asymptotic-stability}
@@ -417,7 +417,7 @@ the sensor sees to which directions of the state space are penalized by the
 cost.
 
 The topic of observability becomes important again in
-\cref{subsec:uncertainty}, where we deliberately introduce noise so that
+\cref{subsubsec:noise-injection}, where we deliberately introduce noise so that
 $y_k \neq x_k$. This does not change our matrix $C = I_2$, 
 so the rank condition of \cref{thm:observability} still
 holds and the system remains observable by definition. However,
@@ -672,48 +672,97 @@ agents under increasingly more complex and noisier environments.
 
 % ------------------------------------------
 
-\section{Approach}
-\label{sec:approach}
+\section{Experimental Setup}
+\label{sec:setup}
 
-\subsection{The modified loop}
+\subsection{The Modified Loop}
 \label{subsec:modified-loop}
 
 \subsubsection{An Inflated Model}
-\label{subsubsec:uncertainty}
+\label{subsubsec:inflated-model}
 
 To allow us to investigate a controller that has many redundant inputs and outputs, acting on a
 system with low-dimensional dynamics, we first need to create such a setup for our previously introduced
 double integrator. We do this by keeping the dynamics, so the state progression, like the loop above,
-but project the observation into a higher dimension, as well as projecting actuation down from such a higher dimension.
+but projecting the observation into a higher dimension, as well as projecting actuation down from such a higher dimension.
 
-More specifically, we show the modification to our loop with two random orthonormal matrices U_1 and U_2:
-
-% sampling of U_1 and U_2
-
-% modified loop formula, where C becomes U_1 and B_new = B U_2
+More specifically, we show the modification to our loop with two random orthonormal matrices $U_1$
+and $U_2$. For an inflated input dimension $d_{\mathrm{in}}$ and output dimension $d_{\mathrm{out}}$,
+the two lifts are constructed the following way:
+\begin{equation}
+    \label{eq:lifts}
+    U_1 \in \R^{d_{\mathrm{in}} \times n}, \quad U_1\T U_1 = I_n,
+    \qquad
+    U_2 \in \R^{m \times d_{\mathrm{out}}}, \quad U_2 U_2\T = I_m,
+\end{equation}
+where $U_1$ is the orthonormal factor of the QR decomposition of a random matrix, whose
+entries are sampled from the standard normal distribution. $U_2$ is the transpose of such a factor
+sampled from a separately drawn matrix. A single step of the loop then becomes
+\begin{subequations}
+\label{eq:inflated-loop}
+\begin{align}
+    y_k     &= U_1 x_k , \label{eq:inflated-obs}\\
+    v_k     &= -K y_k , \qquad K \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}} , \label{eq:inflated-ctrl}\\
+    u_k     &= U_2 v_k , \label{eq:inflated-act}\\
+    x_{k+1} &= A x_k + B u_k = A x_k + B U_2\, v_k . \label{eq:inflated-dyn}
+\end{align}
+\end{subequations}
+Compared with \eqref{eq:ss-cont}, the output matrix thus becomes $C = U_1$, so that $q = d_{\mathrm{in}}$,
+and the controller acts through the input matrix $B U_2 \in \R^{n \times d_{\mathrm{out}}}$.
 
 This way, the controller only sees the inflated observation and acts in a higher dimension. As any actuation
-effort is penalized, R acts on the inflated actuation and therefore has the dimension d_out x d_out. To
-simplify things, we also have Q in this lifted dimension, acting on the observation. However, as U_1 is orthogonal,
-and we use Q = I throughout, this simplifies to
-
-% show that x'Qx in the lifted is the same as projecting down first, and then calculating
-
+effort is penalized, $R$ acts on the inflated actuation and therefore has the dimension
+$d_{\mathrm{out}} \times d_{\mathrm{out}}$. To
+simplify things, we also have $Q$ in this lifted dimension, acting on the observation. However, as $U_1$ has
+orthonormal columns, and we use $Q = I_{d_{\mathrm{in}}}$ throughout, this simplifies to
+% FROM DRAFT: here in the middle the identity; one more line with the identity replaced by a smaller Q
+% TODO: Verify — new symbol Q_n for the state cost of the uninflated problem (Q_n = I_n, the Q of \cref{subsec:lqr}); code name Q_x = U_1' Q U_1
+\begin{equation}
+    \label{eq:lifted-state-cost}
+    \begin{aligned}
+    \left( U_1 x_k \right)\T Q \left( U_1 x_k \right)
+    &= x_k\T U_1\T U_1\, x_k \\
+    &= x_k\T I_n\, x_k \\
+    &= x_k\T Q_n\, x_k , \qquad Q_n \coloneqq I_n \in \R^{n \times n} ,
+    \end{aligned}
+\end{equation}
 so it indeed still penalizes how far our mass is from zero. The cost in the modified loop then
-becomes:
+becomes
+% FROM DRAFT: formula
+% TODO: Verify — written as the infinite-horizon cost \eqref{eq:lqr-cost-infinite} of the noise-free loop \eqref{eq:inflated-loop}, as in code lqr_base/simple_lqr.py → stage_cost_matrix, closed_loop_matrix
+\begin{equation}
+    \label{eq:inflated-cost}
+    \begin{aligned}
+    J(x_0, K)
+    &= \sum_{k=0}^{\infty} \left( y_k\T Q\, y_k + v_k\T R\, v_k \right) \\
+    &= \sum_{k=0}^{\infty} \left( x_k\T U_1\T Q\, U_1 x_k + x_k\T U_1\T K\T R K U_1 x_k \right) ,
+    \end{aligned}
+\end{equation}
+with the closed loop $x_{k+1} = (A - B U_2 K U_1)\, x_k$.
 
-% formula
-
-Throughout the thesis, we will use the following synonyms for different d_in and d_out dimensionalities, applied
-to the loop, which can be found in the table below.
-
-% table from section below
+Throughout the thesis, we will use the following synonyms for different $d_{\mathrm{in}}$ and
+$d_{\mathrm{out}}$ dimensionalities, applied to the loop, which can be found in \cref{tab:inflation-sizes}.
+\begin{table}[htbp]
+    \centering
+    \caption{Preset inflation sizes.}
+    \label{tab:inflation-sizes}
+    \begin{tabular}{@{}lrr@{}}
+        \toprule
+        Name & $d_{\mathrm{in}}$ & $d_{\mathrm{out}}$ \\
+        \midrule
+        \emph{base}   & 2   & 1   \\
+        \emph{small}  & 10  & 5   \\
+        \emph{medium} & 50  & 25  \\
+        \emph{large}  & 200 & 100 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
 \subsubsection{Noise Injection}
-\label{subsubsec:uncertainty}
+\label{subsubsec:noise-injection}
 
 Now, the second thing we want to take a look at is robustness to
-small changes or variations in the environment. 
+small changes or variations in the environment.
 We thus introduce four different types of disturbances to be included in our model,
 commonly known as noise. They are distinguished by the point at which they
 affect the loop: what the controller \emph{observes} (measurement noise),
@@ -729,16 +778,14 @@ of the respective noise.
 
 Here we influence the sensors used to measure
 the model state, such that capturing the same state twice does
-not lead to the same observation $y_k$. 
+not lead to the same observation $y_k$.
 
 Let $n^{\mathrm{m}}_k$ denote the measurement noise at step $k$. Then
-
-% updat equation with inflated loop
 \begin{equation}
     \label{eq:measurement-noise}
-    n^{\mathrm{m}}_k \sim \mathcal{N}\!\left(0, \sigma_{\mathrm{m}}^{2} I_n\right),
+    n^{\mathrm{m}}_k \sim \mathcal{N}\!\left(0, \sigma_{\mathrm{m}}^{2} I_{d_{\mathrm{in}}}\right),
     \qquad
-    y_k = x_k + n^{\mathrm{m}}_k ,
+    y_k = U_1 x_k + n^{\mathrm{m}}_k ,
     \qquad \sigma_{\mathrm{m}} \in \R_{+} ,
 \end{equation}
 drawn independently at every step.
@@ -750,19 +797,18 @@ Control noise, as the name says, acts on the applied control input. With it,
 we try to model the difference between the intended movement of an actuator
 and its actual action due to different factors. Here we deal with
 \emph{multiplicative} noise, which scales with the input. In
-detail this means that the applied control input $\tilde{u}_k$ is obtained as
-% updat equation with inflated loop
+detail this means that the applied controller output $\tilde{v}_k$ is obtained as
 \begin{equation}
     \label{eq:control-noise}
-    n^{\mathrm{c}}_k \sim \mathcal{N}\!\left(0, \sigma_{\mathrm{c}}^{2} I_m\right),
+    n^{\mathrm{c}}_k \sim \mathcal{N}\!\left(0, \sigma_{\mathrm{c}}^{2} I_{d_{\mathrm{out}}}\right),
     \qquad
-    \tilde{u}_k = \left( 1 + n^{\mathrm{c}}_k \right) \odot u_k ,
+    \tilde{v}_k = \left( \mathbf{1}_{d_{\mathrm{out}}} + n^{\mathrm{c}}_k \right) \odot v_k ,
 \end{equation}
 where $\odot$ denotes the elementwise product, so that $\sigma_{\mathrm{c}}$ is
 the \emph{relative} error. Applying this to the input, the next step becomes
 \begin{equation}
     \label{eq:control-noise-step}
-    x_{k+1} = A\, x_k + B\, \tilde{u}_k .
+    x_{k+1} = A\, x_k + B U_2\, \tilde{v}_k .
 \end{equation}
 
 \subsubsection{Parametric Uncertainty}
@@ -771,16 +817,15 @@ the \emph{relative} error. Applying this to the input, the next step becomes
 This noise acts directly on the matrices of the model. Here, we either decide to keep
 it time invariant, meaning $\Delta_k = \Delta_0$ for all $k$, or to resample it
 at every step. The former models a wrongly identified system, while the latter
-simulates one that continuously changes. As with measurement noise, it is additive. 
+simulates one that continuously changes. As with measurement noise, it is additive.
 Applied, it acts on the system the
 following way:
-% updat equation with inflated loop
 \begin{equation}
     \label{eq:parametric-noise}
     \left( \Delta_k^{A} \right)_{ij},\ \left( \Delta_k^{B} \right)_{ij}
     \overset{\text{i.i.d.}}{\sim} \mathcal{N}\!\left(0, \sigma_{\mathrm{p}}^{2}\right),
     \qquad
-    x_{k+1} = \left( A + \Delta_k^{A} \right) x_k + \left( B + \Delta_k^{B} \right) \tilde{u}_k .
+    x_{k+1} = \left( A + \Delta_k^{A} \right) x_k + \left( B + \Delta_k^{B} \right) U_2\, \tilde{v}_k .
 \end{equation}
 Worth noting is that resampling every
 step leaves the model correct \emph{on average}, since
@@ -796,51 +841,42 @@ agent, or rain
 hitting it with some frequency. It only affects the position, so
 the noise is $n^{\mathrm{d}}_k = d_k\, e_1 \in \R^{n}$ where $e_1$ is the first unit vector.
 The push intensity $d_k$ is drawn as
-% updat equation with inflated loop
-\begin{subequations}
-\label{eq:disturbance-noise}
-\begin{align}
-    \text{Sinusoidal:} \quad
-        & d_k = \sigma_{\mathrm{d}} \sin(0.01\,k) , \label{eq:dist-sin}\\
-\end{align}
-\end{subequations}
-
-Only the first one can really be considered as noise; the others are more
-deterministic values, where $\sigma_{\mathrm{d}}$ acts as the amplitude of it. 
+\begin{equation}
+    \label{eq:dist-sin}
+    d_k = \sigma_{\mathrm{d}} \sin(0.01\,k) .
+\end{equation}
 As the disturbance acts on the true state $x_k$, it is applied before any
-lifting of the observation \needcite{section above}. The loop can thus
+lifting of the observation~\eqref{eq:inflated-obs}. The loop can thus
 be described as
-% update equation with inflated loop
 \begin{equation}
     \label{eq:disturbance-step}
-    x_{k+1} = A\, x_k + B\, \tilde{u}_k + n^{\mathrm{d}}_k .
+    x_{k+1} = A\, x_k + B U_2\, \tilde{v}_k + n^{\mathrm{d}}_k .
 \end{equation}
 
 \subsubsection{The Full Loop}
 \label{subsubsec:full-noise}
-While we, until now, have only regarded each noise type on their own,
-there is also the possibility to include them all at once. Combining all the channels
-with the inflated loop, a single step becomes:
 
-% update equation
+While we, until now, have only regarded each noise type on its own,
+there is also the possibility to include them all at once. Combining all the channels
+with the inflated loop, a single step becomes
 \begin{subequations}
 \label{eq:noisy-loop}
 \begin{align}
-    y_k     &= x_k + n^{\mathrm{m}}_k , \label{eq:noisy-obs}\\
-    u_k     &= -K y_k , \label{eq:noisy-ctrl}\\
-    \tilde{u}_k     &= \left( 1 + n^{\mathrm{c}}_k \right) \odot u_k , \label{eq:noisy-act}\\
-    x_{k+1} &= \left( A + \Delta_k^{A} \right) x_k + \left( B + \Delta_k^{B} \right) \tilde{u}_k + n^{\mathrm{d}}_k . \label{eq:noisy-dyn}
+    y_k         &= U_1 x_k + n^{\mathrm{m}}_k , \label{eq:noisy-obs}\\
+    v_k         &= -K y_k , \label{eq:noisy-ctrl}\\
+    \tilde{v}_k &= \left( \mathbf{1}_{d_{\mathrm{out}}} + n^{\mathrm{c}}_k \right) \odot v_k , \label{eq:noisy-act}\\
+    x_{k+1}     &= \left( A + \Delta_k^{A} \right) x_k + \left( B + \Delta_k^{B} \right) U_2\, \tilde{v}_k + n^{\mathrm{d}}_k . \label{eq:noisy-dyn}
 \end{align}
 \end{subequations}
- 
+
 % ---------------------------
 
 \subsection{Metrics and Robustness}
 \label{subsec:robustness}
 
-In this thesis we try to answer two main questions. First, how well a 
+In this thesis we try to answer two main questions. First, how well a
 trained low-dimensional controller performs generally, as well as under influences
-unknown to it during training. Thus we aim to define here the metrics to quantify 
+unknown to it during training. Thus we aim to define here the metrics to quantify
 our results.
 
 \subsubsection{Cost and Suboptimality}
@@ -865,22 +901,20 @@ a given controller, a noise condition $c$, which is a subset of channels and an
 intensity (\cref{subsubsec:noise-strength}), and a horizon $T$, we
 simulate starting from a randomly drawn $x_0 \sim \mathcal{D}$.
 The resulting loop \eqref{eq:noisy-loop} under $c$ thus accumulates
-
-% update with the inflated loop
 \begin{equation}
     \label{eq:empirical-return}
     J_T^{(i,s)}(K; c)
     = \sum_{k=0}^{T-1}
-      \left( x_k\T Q\, x_k + \tilde{u}_k\T R\, \tilde{u}_k \right) ,
+      \left( \left( U_1 x_k \right)\T Q \left( U_1 x_k \right) + \tilde{v}_k\T R\, \tilde{v}_k \right) ,
 \end{equation}
 where $s$ indexes the seed the run was trained under and $i$ the episode
 within it.
 
-It is important to note where Q and R act on. As Q penalizes the difference
+It is important to note where $Q$ and $R$ act. As $Q$ penalizes the difference
 from the origin, we apply it on the inflated state \emph{before} any noise is
-applied. This way we can evaluate the actual position of the mass, as mentioned
-in \needcite{cref to where Q formula lies}. For R, we handle it differently. Here,
-every actuation energy adds to the cost, indiscriminate of its origin (so whether the
+applied. This way we can evaluate the actual position of the mass, as shown
+in \eqref{eq:lifted-state-cost}. For $R$, we handle it differently. Here,
+every actuation energy adds to the cost, irrespective of its origin (so whether the
 controller commanded it or it is noise).
 
 Writing $\mathcal{F}$ for the pairs $(s,i)$ whose episode stayed finite,
@@ -893,14 +927,13 @@ the cost estimate becomes
     \qquad
     \mathcal{F} = \left\{ (s,i) \;:\; J^{(i,s)}_T(K; c) < \infty \right\} .
 \end{equation}
-
 Given this information, we can state our main metric, which
 is the relative excess of the cost produced by a
 trained controller over the cost of the optimal controller $K^{*}$
 under the same condition. It is taken \emph{per episode}, meaning
 an episode $(s,i)$ of a trained controller and episode $(s,i)$ of the baseline
-are compared here. Both start from the same $x_0$ and are affected by 
-the same noise. Overall this yields:
+are compared here. Both start from the same $x_0$ and are affected by
+the same noise. Overall this yields
 \begin{equation}
     \label{eq:suboptimality}
     S^{(i,s)}(K; c)
@@ -922,10 +955,10 @@ hold, unless no noise is applied, which is only true if $c=\varnothing$.
 \subsubsection{The Size of a Policy}
 \label{subsubsec:policy-size}
 
-We often mentioned "low-dimensional" controllers until now, however
-we want to make the amount of parameters comparable, not only
+We have often mentioned ``low-dimensional'' controllers until now; however,
+we want to make the number of parameters comparable, not only
 between different LQR controllers, but also across LQR and RL.
-So it is indeed a question of size. For a neural network the known way 
+So it is indeed a question of size. For a neural network the known way
 is simply to count the number of weights and biases of the actor~\needcite{TODO}.
 For a gain matrix however, we need to find a definition that is comparable to it.
 
@@ -944,7 +977,7 @@ Optimizing the storage size for $K$ of rank $r$, the singular value decompositio
 with $U$ and $V$ having orthonormal columns and $\sigma_1 \geq \dots \geq
 \sigma_r > 0$ being the non-zero singular values. Hence, we only need to
 store $mr$ entries for $U$, $r$ for the diagonal of $\Sigma$ and
-$rn$ for $V$, which in total yields $r(m + n + 1)$. 
+$rn$ for $V$, which in total yields $r(m + n + 1)$.
 For a small enough $r$ this is less, so we take the minimum of both:
 
 \begin{definition}[Policy size]
@@ -962,20 +995,18 @@ actor.
 \subsubsection{Noise Intensity}
 \label{subsubsec:noise-strength}
 
-\Cref{subsec:uncertainty} introduced four channels which change the system
+\Cref{subsubsec:noise-injection} introduced four channels which change the system
 compared to the base model. Each noise channel is separated further
 into five intensities,
-
 \begin{center}
     \emph{none} $\prec$ \emph{weak} $\prec$ \emph{standard} $\prec$
     \emph{strong} $\prec$ \emph{divergent},
 \end{center}
-
 where \emph{none} leaves the system as it is and thus serves as our
 control condition. All the other intensities are calibrated by how much
-they increase the cost of the optimal gain $K^{*}$ on the uninflated system. 
-For each channel $c$ and intensity $\ell$, we choose the standard deviation 
-in a way such that with the test protocol of \cref{subsubsec:protocol}
+they increase the cost of the optimal gain $K^{*}$ on the uninflated system.
+For each channel $c$ and intensity $\ell$, we choose the standard deviation
+in a way such that with the test protocol of \cref{subsec:protocol}
 \begin{equation}
     \label{eq:noise-calibration}
     \hat{J}_T(K^{*}; c_{\ell}) = \rho_{\ell}\, \hat{J}_T(K^{*}; \varnothing),
@@ -991,36 +1022,85 @@ cost of $K^{*}$ by a factor of $3.0$ without inflation, but only by $1.22$ and
 $1.05$ at the sizes $d_{\mathrm{in}} \times d_{\mathrm{out}} = 50 \times 25$ and $200 \times 100$.
 For simplicity, however, we do not vary the levels by size, but instead accept this
 as a side effect.
-The concrete standard deviations per channel are listed in 
+The concrete standard deviations per channel are listed in
 \cref{tab:noise_levels}.
 
 \subsection{Test Protocol}
 \label{subsec:protocol}
 
-As we now have introduced our metrics, we now define a protocol for how
+Having introduced our metrics, we now define a protocol for how
 we train and compare the different solver approaches with these metrics.
 
-% TODO: Indicate dimension depending on d_in d_out for Q, R
-First, we note that we will always use Q = I and R = I which weighs position,
+First, we note that we will always use $Q = I_{d_{\mathrm{in}}}$ and $R = I_{d_{\mathrm{out}}}$, which weighs position,
 velocity and control effort equally. Initial states are drawn uniformly from the
 box $[-10, 10] \times [-1, 1]$. Some solvers require an initial stable gain, for
 which we will use $K_0 = [\,0.1,\ 0.5\,]$ throughout, whose closed loop has $\spr(A - B K_0) \approx 0.9975$.
 
-We train for each algorithm 10 different solvers, starting from 10 different fixed seeds,
+We train for each algorithm ten different solvers, starting from ten different fixed seeds,
 until convergence. We define convergence for LQR solvers as follows:
+\begin{definition}[Convergence]
+\label{def:convergence}
+Let $g_j$ be the signal that a solver observes at iteration $j$, and let $\bar{g}_j$ be its
+mean over the last $N_{\mathrm{w}}$ iterations. The solver has \emph{converged} at the first
+iteration $j$ for which
+\begin{equation*}
+    \bar{g}_j \ge \left( 1 - \epsilon_{\mathrm{rel}} \right) \bar{g}_{j - N_{\mathrm{p}}} ,
+\end{equation*}
+i.e.\ once the average has not decreased by the relative tolerance $\epsilon_{\mathrm{rel}}$
+within the last $N_{\mathrm{p}}$ iterations. After an iteration with an infinite signal, the mean
+calculation restarts from afterwards.
+\end{definition}
+% TODO: Verify — signals and values from lqr_solvers/* (should_stop calls) and settings.CONVERGENCE; S-PI's own step criterion from structured_policy_iteration.py
+The signal is something the solver itself observes and optimizes for.
+For Model-based PG and N4SID + Model-based PG it is the cost \eqref{eq:cost-of-gain} on the true or identified model, 
+for S-PI and N4SID + S-PI the regularized objective of S-PI
+(\cref{sec:known-model}), and for Model-free NPG and S-PI (model-free) the rollout estimate of the cost.
+All variants of S-PI additionally stop once
+$\lVert K_{j+1} - K_j \rVert_F < 10^{-8}$. For all of them, we use the best iterate by
+$\bar{g}_j$ to identify the policy we want to use.
 
-% definition based on the code
+The parameters of \cref{def:convergence} for the model-based and the model-free solvers are
+listed in \cref{tab:convergence-lqr}.
+\begin{table}[htbp]
+    \centering
+    \caption{Parameters of the convergence rule (\cref{def:convergence}) for the LQR solvers.}
+    \label{tab:convergence-lqr}
+    \begin{tabular}{@{}lrr@{}}
+        \toprule
+        Parameter & Model-based solvers & Model-free solvers \\
+        \midrule
+        Window $N_{\mathrm{w}}$                   & 1         & 50        \\
+        Patience $N_{\mathrm{p}}$                 & 50        & 100       \\
+        Relative tolerance $\epsilon_{\mathrm{rel}}$ & $10^{-4}$ & $10^{-3}$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
-The amount of steps the plant progressed and solver iterations until convergence are also
-counted and reported. An upper cap of TODO iterations is set, to prevent looping.
-For RL based algorithms, the convergence criteria have been calibrated based on experiments
-which can be found in the appendix \needcite{cref}. We define it as follows:
+The number of steps the plant progressed and solver iterations until convergence are also
+counted and reported. An upper cap of $20\,000$ iterations is set, to prevent looping.
 
-% definition based on results and code
+For RL-based algorithms, the convergence criteria have been calibrated based on experiments
+which can be found in the appendix \needcite{cref, TODO}. We apply \cref{def:convergence} 
+with one iteration corresponding to $25\,000$ environment steps.
+The signal $g_j$ is the mean (scaled) cost of the training episodes completed since the previous
+check. As a safety limit, we use the environment step caps in \cref{tab:rl-step-caps}.
+\begin{table}[htbp]
+    \centering
+    \caption{Safety cap on the environment steps of the RL solvers per inflation size.}
+    \label{tab:rl-step-caps}
+    \begin{tabular}{@{}lrrr@{}}
+        \toprule
+        & \emph{small} & \emph{medium} & \emph{large} \\
+        \midrule
+        Safety limit (environment steps) & $10^{7}$ & $1.5 \cdot 10^{7}$ & $3 \cdot 10^{7}$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
 After our controllers have been trained, we evaluate them per seed for \emph{100 episodes}
-each, running for \emph{2000 steps} per episodes at a sampling rate of $h = 0.01\,\mathrm{s}$.
-Each episode calculates its \needcite{empirical cost}, and thus \needcite{suboptimality} in
+each, running for \emph{2000 steps} per episode at a sampling rate of $h = 0.01\,\mathrm{s}$.
+Each episode calculates its empirical cost \eqref{eq:empirical-return}, and thus its
+suboptimality \eqref{eq:suboptimality} in
 comparison to the optimal gain on the same exact trajectory, with the same sampled $x_0 \sim \mathcal{D}$.
 In the end, for each solver architecture, we get a distribution of suboptimalities over a total
 of 1000 trajectories.
@@ -1029,21 +1109,23 @@ The inflated size will always be the same between training and evaluation, howev
 experiments, the controller is trained on a clean system, and then exposed to one with noise
 activated during testing.
 
-Under the stronger conditions individual rollouts might diverge. 
+Under the stronger conditions individual rollouts might diverge.
 To keep our mean finite, we remove them from the mean calculation,
-and report them separately as the divergence rate:
+and report them separately as the divergence rate
 \begin{equation}
     \label{eq:divergence-rate}
     D(K; c) \coloneqq \frac{1}{M N}
     \left\lvert \left\{ (s, i) \;:\; J^{(i,s)}_T(K; c) = \infty \right\} \right\rvert .
 \end{equation}
-
-An individual episode can be missing from the result due to another reason. 
+An individual episode can be missing from the result due to another reason.
 Where the \emph{baseline} evaluation of episode $(s,i)$ diverged,
-$S^{(i,s)}$ has no value at all, since \eqref{eq:suboptimality} would divide 
+$S^{(i,s)}$ has no value at all, since \eqref{eq:suboptimality} would divide
 by an infinity. Those episodes are excluded from $\hat{S}$ and noted separately.
 
-% section approach start
+% ------------------------------------------
+
+\section{Approach}
+\label{sec:approach}
 
 As mentioned before, the LQR serves as the perfect starting example,
 which is exactly why we start our investigation here. For our investigations, we will
@@ -1057,66 +1139,15 @@ Afterwards, we will take a look at the cases where we do not have access to the 
 the relative performance of both direct and indirect approaches to our baseline, which is
 the optimal controller calculated via the DARE \eqref{eq:dare} on the true model. For the indirect
 approaches, we will use numerical algorithms for subspace state space system identification
-(N4SID)\needcite{60 VanOverschee} to estimate the underlying model from one
+(N4SID)~\cite{VanOverschee1994N4SID} to estimate the underlying model from one
 trajectory. A more detailed description, as well as the exact parameters selected,
 will be provided in the sections discussing the results. With this estimated model as
 the basis, we employ three different approaches on how to learn our policy, called
 N4SID + DARE, N4SID + Model-based PG and N4SID + S-PI. All these will also be discussed in \cref{chap:lqr}.
 
-% move contents to the modified loop section
-
-As we want to investigate higher-dimensional controllers with underlying low-dimensional
-dynamics, we need to create such a setup. Here, we choose to use orthonormal projection matrices,
-which can be used to transfer observations between the low-dimensional true state of the state-space model
-and the inflated one our controller sees. Conversely, for a high-dimensional actuation, we project into the
-lower-dimensional space via a second matrix. In detail, for an inflated input dimension $d_{\mathrm{in}}$ and
-output dimension $d_{\mathrm{out}}$, the two lifts are constructed the following way:
-\begin{equation}
-    \label{eq:lifts}
-    U_1 \in \R^{d_{\mathrm{in}} \times n}, \quad U_1\T U_1 = I_n,
-    \qquad
-    U_2 \in \R^{m \times d_{\mathrm{out}}}, \quad U_2 U_2\T = I_m,
-\end{equation}
-where $U_1$ is the orthonormal factor of the QR decomposition of a random matrix, whose
-entries are sampled from the standard normal distribution. $U_2$ is the transpose of such a factor
-sampled from a separately drawn matrix.
-The controller now only sees the lifted observation and acts through the lifted action, so a single
-step of the loop becomes
-\begin{subequations}
-\label{eq:inflated-loop}
-\begin{align}
-    y_k     &= U_1 x_k , \label{eq:inflated-obs}\\
-    v_k     &= -K y_k , \qquad K \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}} , \label{eq:inflated-ctrl}\\
-    u_k     &= U_2 v_k , \label{eq:inflated-act}\\
-    x_{k+1} &= A x_k + B u_k . \label{eq:inflated-dyn}
-\end{align}
-\end{subequations}
-The system is therefore controlled by the effective gain $U_2 K U_1 \in \R^{m \times n}$, whose rank is at most
-$\min(m, n)$.
-
-For \cref{chap:lqr} and the following chapter, we will use these preset inflation sizes under the
-names given in \cref{tab:inflation-sizes}.
-\begin{table}[htbp]
-    \centering
-    \caption{Preset inflation sizes.}
-    \label{tab:inflation-sizes}
-    \begin{tabular}{@{}lrr@{}}
-        \toprule
-        Name & $d_{\mathrm{in}}$ & $d_{\mathrm{out}}$ \\
-        \midrule
-        \emph{base}   & 2   & 1   \\
-        \emph{small}  & 10  & 5   \\
-        \emph{medium} & 50  & 25  \\
-        \emph{large}  & 200 & 100 \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-% end move
-
 Our first approach for \cref{chap:lqr} is to compare our selected methods across the inflation sizes, and see how increasing
 the dimension affects the performance of each. As the next step, we will introduce the different noise channels
-named in \cref{subsec:uncertainty} first to the base double integrator, where no overparameterization exists. The results
+named in \cref{subsubsec:noise-injection} first to the base double integrator, where no overparameterization exists. The results
 we observe here will then be compared with evaluations of the controllers for a system with \emph{large} inflation
 under different noise channels and strengths.
 
