@@ -426,7 +426,44 @@ SOLVER_HYPERPARAMS = {
 # `python -m experiments.figures.appendix_spi_mf_figures`,
 # `python -m experiments.figures.appendix_learning_rate_figures` and
 # `python -m experiments.figures.appendix_rl_learning_rate_figures`.
-SIZE_HYPERPARAMS = {}
+SIZE_HYPERPARAMS = {
+    "mb_pg": {
+        "base": {"gradient_lr": 1e-05},
+        "small": {"gradient_lr": 1e-05},
+        "medium": {"gradient_lr": 1e-05},
+        "large": {"gradient_lr": 1e-05},
+    },
+    "mb_est": {
+        "base": {"gradient_lr": 0.0001},
+        "small": {"gradient_lr": 0.0001},
+        "medium": {"gradient_lr": 0.0001},
+        "large": {"gradient_lr": 0.0001},
+    },
+    "mf_npg": {
+        "base": {"gradient_lr": 0.1},
+        "small": {"gradient_lr": 0.03},
+        "medium": {"gradient_lr": 0.01},
+        "large": {"gradient_lr": 0.01},
+    },
+    "spi": {
+        "base": {"lambda_": 1},
+        "small": {"lambda_": 5},
+        "medium": {"lambda_": 5},
+        "large": {"lambda_": 5},
+    },
+    "spi_est": {
+        "base": {"lambda_": 1},
+        "small": {"lambda_": 1},
+        "medium": {"lambda_": 1},
+        "large": {"lambda_": 1},
+    },
+    "spi_mf": {
+        "base": {"lambda_": 4, "stepsize": 3.5e-06},
+        "small": {"lambda_": 400, "stepsize": 3.5e-05},
+        "medium": {"lambda_": 400, "stepsize": 3.5e-05},
+        "large": {"lambda_": 40000, "stepsize": 3.5e-08},
+    },
+}
 
 
 # ---------------------------------------------------------------------------
