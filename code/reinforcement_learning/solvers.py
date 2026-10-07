@@ -291,7 +291,9 @@ def pixel_presets() -> dict:
         "ppo_pixel_fc": _pixel_solver("ppo_pixel_fc", FCExtractor),
         "ppo_pixel_posvel": _pixel_solver(
             "ppo_pixel_posvel", PosVelExtractor,
-            features_extractor_kwargs={"n_keypoints": 4, "dt_agent": dt_agent},
+            features_extractor_kwargs={
+                "position_dim": settings.PVE_POSITION_DIM, "alpha": 1.0 / dt_agent,
+            },
             freeze_extractor=True,
         ),
         "ppo_pixel_ortho": _pixel_solver(

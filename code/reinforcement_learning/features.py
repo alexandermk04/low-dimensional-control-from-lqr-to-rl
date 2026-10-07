@@ -6,7 +6,7 @@ References
        Position-Velocity Encoders for Unsupervised Learning of Structured State
        Representations", RSS 2017 Workshop on New Frontiers for Deep Learning
        in Robotics. https://arxiv.org/abs/1705.09805
-       :class:`PosVelExtractor` and :func:`pretrain_pve`.
+       :class:`PosVelExtractor` and :func:`pretrain_pve`
 .. [2] R. Jonschkowski, O. Brock, "Learning State Representations with Robotic
        Priors", Autonomous Robots 39(3), 2015.
        https://doi.org/10.1007/s10514-015-9459-7
@@ -90,6 +90,8 @@ class LatentExtractor(BaseFeaturesExtractor):
     @torch.no_grad()
     def calibrate_latent(self, observations: torch.Tensor) -> None:
         """Fix the latent's mean and scale from the fitting data."""
+        if not hasattr(self, "latent_mean"):
+            return
         z = self._raw_latent(observations)
         scale = z.std(dim=0)
         scale[scale < 1e-6] = 1.0
@@ -127,67 +129,52 @@ class FCExtractor(LatentExtractor):
 
 
 class PosVelExtractor(LatentExtractor):
-    """Keypoint positions from a spatial softmax, and velocity as their frame difference.
+    """Position state encoded per frame, and velocity as its scaled frame difference.
 
-    Follows Jonschkowski et al. [1]_.
+    Follows Jonschkowski et al. [1]_, Sec. III-A and the network of Sec. III-C.
 
     Parameters
     ----------
     observation_space : gymnasium.spaces.Box
         Frame stack of at least two frames.
-    n_keypoints : int, optional
-        Spatial features tracked per frame, at least two.
-    temperature : float, optional
-        Softmax temperature.
-    dt_agent : float, optional
-        Interval between two frames, scaling the difference into a velocity.
-    features_dim : int, optional
-        Output width.
+    position_dim : int, optional
+        Width of the position state, five in [1]_.
+    alpha : float, optional
+        Velocity scaling, which also subsumes the time step.
     """
 
-    def __init__(self, observation_space, n_keypoints: int = 4, temperature: float = 1.0,
-                 dt_agent: float = 0.1, features_dim: int = 64):
-        super().__init__(observation_space, features_dim)
+    def __init__(self, observation_space, position_dim: int = 5, alpha: float = 1.0):
+        super().__init__(observation_space, 2 * position_dim)
 
         if self.n_frames < 2:
             raise ValueError("A position-velocity encoder needs at least two frames.")
-        if n_keypoints < 2:
-            raise ValueError("A single keypoint degenerates to the frame's centroid.")
 
-        self.n_keypoints = n_keypoints
-        self.temperature = temperature
-        self.dt_agent = dt_agent
+        self.position_dim = position_dim
 
         # Shared across frames
-        self.conv = nn.Sequential(
-            nn.Conv2d(1, 32, 5, stride=2, padding=2), nn.ReLU(),
-            nn.Conv2d(32, 32, 3, padding=1), nn.ReLU(),
-            nn.Conv2d(32, n_keypoints, 3, padding=1),
-        )
-        h, w = (self.height + 1) // 2, (self.width + 1) // 2
-        self.register_buffer("grid_x", torch.linspace(-1.0, 1.0, w).view(1, 1, 1, w))
-        self.register_buffer("grid_y", torch.linspace(-1.0, 1.0, h).view(1, 1, h, 1))
+        layers: list[nn.Module] = []
+        channels, h, w = 1, self.height, self.width
+        for out in (16, 32, 64):
+            layers += [nn.Conv2d(channels, out, 5, stride=2, padding=2), nn.ReLU()]
+            channels, h, w = out, (h + 1) // 2, (w + 1) // 2
+        hidden, width = _mlp(channels * h * w, (128, 128))
+        self.encoder = nn.Sequential(*layers, *hidden, nn.Linear(width, position_dim))
 
-        self.head = nn.Sequential(nn.Linear(4 * n_keypoints, features_dim), nn.ReLU())
-        self._register_latent_scaling(4 * n_keypoints)
+        # Buffer
+        self.register_buffer("alpha", torch.tensor(float(alpha)))
 
-    def keypoints(self, frames: torch.Tensor) -> torch.Tensor:
-        """Coordinates of shape ``(B, k, 2 * n_keypoints)`` for scaled frames ``(B, k, H, W)``."""
+        self.head = nn.Identity()
+
+    def positions(self, frames: torch.Tensor) -> torch.Tensor:
+        """Position states ``(B, k, position_dim)`` of scaled frames ``(B, k, H, W)``."""
         batch, k = frames.shape[:2]
-
-        maps = self.conv(frames.reshape(batch * k, 1, self.height, self.width))
-        weights = torch.softmax(maps.flatten(2) / self.temperature, dim=-1).view_as(maps)
-
-        x = (weights * self.grid_x).sum(dim=(2, 3))
-        y = (weights * self.grid_y).sum(dim=(2, 3))
-
-        return torch.cat([x, y], dim=1).view(batch, k, 2 * self.n_keypoints)
+        flat = frames.reshape(batch * k, 1, self.height, self.width)
+        return self.encoder(flat).view(batch, k, self.position_dim)
 
     def _raw_latent(self, observations: torch.Tensor) -> torch.Tensor:
-        """Newest keypoint positions, concatenated with their rate of change."""
-        points = self.keypoints(self._prepare(observations))
-        velocity = (points[:, -1] - points[:, -2]) / self.dt_agent
-        return torch.cat([points[:, -1], velocity], dim=1)
+        """Newest position state, stacked with the velocity state."""
+        s = self.positions(self._prepare(observations))
+        return torch.cat([s[:, -1], self.alpha * (s[:, -1] - s[:, -2])], dim=1)
 
 
 class OrthoBottleneck(LatentExtractor):
@@ -332,29 +319,90 @@ def _fit(extractor: LatentExtractor, data: torch.Tensor, n: int, loss_fn,
     return {k: v.detach().cpu().clone() for k, v in extractor.state_dict().items()}
 
 
-def pretrain_pve(extractor: PosVelExtractor, observations: np.ndarray, epochs: int = 20,
-                 w_variation: float = 1.0, w_slowness: float = 1.0, w_inertia: float = 1.0) -> dict:
+def pretrain_pve(extractor: PosVelExtractor, observations: np.ndarray, linked: np.ndarray,
+                 weights: dict, epochs: int = 20, sequence_length: int = 10,
+                 batch_sequences: int = 32, jitter: float = 1e-3) -> dict:
     """Fit a position-velocity encoder from unsupervised robotic priors.
 
-    The variation, slowness and inertia terms of Jonschkowski et al. [1]_.
+    The priors, the minibatches of short sequences and the velocity scaling
+    curriculum of Jonschkowski et al. [1]_, Sec. III-B and III-C.
+
+    Parameters
+    ----------
+    extractor : PosVelExtractor
+        The architecture to fit, modified in place. Its ``alpha`` is the final
+        velocity scaling, and is left unchanged.
+    observations, linked : np.ndarray
+        As returned by :func:`_collect`.
+    weights : dict
+        Loss weights, keyed ``variation``, ``slowness``, ``inertia``,
+        ``inertia_abs`` and ``conservation``.
+    epochs : int, optional
+        Passes over the data, the first half with ``alpha = 0`` and the second
+        with ``alpha`` ramped linearly to its final value.
+    sequence_length : int, optional
+        Steps per sequence.
+    batch_sequences : int, optional
+        Sequences per minibatch.
+    jitter : float, optional
+        Gaussian noise on the encoded positions, so that the norms have a
+        gradient at zero ([1]_, footnote 3).
+
+    Returns
+    -------
+    dict
+        The fitted ``state_dict``.
     """
     data = torch.from_numpy(observations)
 
+    # Sequence starts whose steps all belong to one episode
+    breaks = np.concatenate([[0], np.cumsum(~linked)])
+    starts = [
+        i for i in range(0, len(linked) - sequence_length + 1, sequence_length)
+        if breaks[i + sequence_length - 1] == breaks[i]
+    ]
+    sequences = torch.as_tensor(starts)[:, None] + torch.arange(sequence_length)
+
+    alpha_final = float(extractor.alpha)
+    phase = epochs // 2
+    batches = -(-len(starts) // batch_sequences)
+    ramp = max((epochs - phase) * batches, 1)
+    step = 0
+
     def loss_fn(index):
-        latent_t = extractor.latent(data[index])
-        latent_next = extractor.latent(data[index + 1])
-        half = latent_t.shape[1] // 2
+        nonlocal step
+        alpha = alpha_final * min(max(step - phase * batches + 1, 0) / ramp, 1.0)
+        step += 1
 
-        position = latent_t[:, :half]
-        shuffled = position[torch.randperm(position.shape[0])]
+        frames = extractor._prepare(data[sequences[index]])
+        n, length = frames.shape[:2]
 
-        variation = torch.exp(-torch.norm(position - shuffled, dim=1)).mean()
-        slowness = (latent_next[:, :half] - position).pow(2).mean()
-        inertia = (latent_next[:, half:] - latent_t[:, half:]).pow(2).mean()
+        positions = extractor.positions(
+            torch.cat(
+                [frames[:, 0, :1], frames[:, :, -1]], dim=1
+            ).flatten(0, 1)[:, None]
+        ).view(n, length + 1, -1)
+        
+        positions = positions + jitter * torch.randn_like(positions)
 
-        return w_variation * variation + w_slowness * slowness + w_inertia * inertia
+        velocity = alpha * positions.diff(dim=1)
+        acceleration = velocity.diff(dim=1)
+        speed = velocity.norm(dim=2)
 
-    return _fit(extractor, data, data.shape[0] - 2, loss_fn, epochs)
+        # All pairs at the same time step, from different sequences
+        pairs = torch.triu_indices(n, n, offset=1)
+        distance = (positions[pairs[0]] - positions[pairs[1]]).norm(dim=2)
+
+        terms = {
+            "variation": torch.exp(-distance).mean(),
+            "slowness": positions.diff(dim=1).pow(2).sum(2).mean(),
+            "inertia": acceleration.pow(2).sum(2).mean(),
+            "inertia_abs": acceleration.norm(dim=2).mean(),
+            "conservation": speed.diff(dim=1).pow(2).mean(),
+        }
+        return sum(weights[name] * value for name, value in terms.items())
+
+    return _fit(extractor, data, len(starts), loss_fn, epochs, batch_size=batch_sequences)
 
 
 def pretrain_state_encoder(extractor: StateEncoder, observations: np.ndarray,
@@ -445,6 +493,8 @@ def fit_extractor_weights(preset, env, explore, n_steps: int = 20_000,
     observations, actions, linked = _collect(env, explore, n_steps)
 
     if extractor_class is PosVelExtractor:
-        return pretrain_pve(extractor, observations, epochs)
+        import settings
+
+        return pretrain_pve(extractor, observations, linked, settings.PVE_LOSS_WEIGHTS, epochs)
 
     return pretrain_state_encoder(extractor, observations, actions, linked, epochs)

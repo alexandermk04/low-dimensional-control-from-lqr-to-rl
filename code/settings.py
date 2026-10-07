@@ -289,6 +289,19 @@ PIXEL_PROBE_EPISODES = 100
 PRETRAIN_STEPS = 20_000
 PRETRAIN_EPOCHS = 20
 
+# Chapter 6: pretraining episodes from random starts
+PIXEL_PRETRAIN_EPISODE_LENGTH = 20
+
+# Position-velocity encoder parameters from the paper
+PVE_POSITION_DIM = 5
+PVE_LOSS_WEIGHTS = {
+    "variation": 1.0,
+    "slowness": 1.0,
+    "inertia": 0.1,
+    "inertia_abs": 0.1,
+    "conservation": 0.2,
+}
+
 # Width of the orthonormal projection, as suggested by the paper
 BOTTLENECK_DIM = 2
 
@@ -304,15 +317,19 @@ CH6_SOLVERS = (
     "ppo_pixel_posvel",
 )
 
+# Exclusion of oracle, as doesn't work without measurement
+CH6_NOISE_SOLVERS = tuple(s for s in CH6_SOLVERS if s != "oracle_coarse")
+
 
 # Filled from `python -m experiments.figures.appendix_calibrate_pixel_noise_figures`.
+# Measurment set based on visual observation
 CH6_NOISE_STD = {
     "measurement": {
         "none": 0.0,
-        "weak": None,
-        "standard": None,
-        "strong": None,
-        "divergent": None,
+        "weak": 0.0625,
+        "standard": 0.125,
+        "strong": 0.25,
+        "divergent": 0.5,
     },
     "control": {
         "none": 0.0,
