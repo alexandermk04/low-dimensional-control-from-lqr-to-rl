@@ -20,18 +20,18 @@ convention as we do, we can implement the loop directly in the following way.
 
 % Def mb_pg
 Starting from an initial, stabilizing gain $K_0 \in \mathcal{K}$ and the second moment $\Sigma_0$ of the initial
-state distribution, every iteration $i$ first solves the discrete Lyapunov equation \eqref{eq:lyapunov}
-for $P_{K_i}$ using the implementation from SciPy~\needcite{scipy}. The state correlation matrix
-$\Sigma_{K_i}$ then follows from solving a second Lyapunov equation,
+state distribution, every iteration $j$ first solves the discrete Lyapunov equation \eqref{eq:lyapunov}
+for $P_{K_j}$ using the implementation from SciPy~\needcite{scipy}. The state correlation matrix
+$\Sigma_{K_j}$ then follows from solving a second Lyapunov equation,
 \begin{equation}
     \label{eq:state-correlation}
-    \Sigma_{K_i} = (A - B K_i) \Sigma_{K_i} (A - B K_i)\T + \Sigma_0 ,
+    \Sigma_{K_j} = (A - B K_j) \Sigma_{K_j} (A - B K_j)\T + \Sigma_0 ,
 \end{equation}
 where, for initial states drawn uniformly from $[-10, 10] \times [-1, 1]$ as described in \cref{subsubsec:lqr-cost-of-gain},
 $\Sigma_0 = \operatorname{diag}\left( 10^2/3, \, 1^2/3 \right)$. The policy gradient
 \begin{equation}
     \label{eq:pg-gradient}
-    \nabla f(K_i) = 2 \left( \left( R + B\T P_{K_i} B \right) K_i - B\T P_{K_i} A \right) \Sigma_{K_i}
+    \nabla f(K_j) = 2 \left( \left( R + B\T P_{K_j} B \right) K_j - B\T P_{K_j} A \right) \Sigma_{K_j}
 \end{equation}
 is then used for a gradient step on the gain matrix. \Cref{alg:mb-pg} summarizes the loop.
 \begin{algorithm}[htbp]
@@ -39,11 +39,11 @@ is then used for a gradient step on the gain matrix. \Cref{alg:mb-pg} summarizes
     \label{alg:mb-pg}
     \begin{algorithmic}[1]
         \REQUIRE stabilizing gain $K_0 \in \mathcal{K}$, second moment $\Sigma_0$, step size $\eta$
-        \FOR{$i = 0, 1, 2, \dots$}
-            \STATE solve \eqref{eq:lyapunov} for $P_{K_i}$
-            \STATE solve \eqref{eq:state-correlation} for $\Sigma_{K_i}$
-            \STATE compute the policy gradient $\nabla f(K_i)$ by \eqref{eq:pg-gradient}
-            \STATE update the gain by $K_{i+1} = K_i - \eta \nabla f(K_i)$
+        \FOR{$j = 0, 1, 2, \dots$}
+            \STATE solve \eqref{eq:lyapunov} for $P_{K_j}$
+            \STATE solve \eqref{eq:state-correlation} for $\Sigma_{K_j}$
+            \STATE compute the policy gradient $\nabla f(K_j)$ by \eqref{eq:pg-gradient}
+            \STATE update the gain by $K_{j+1} = K_j - \eta \nabla f(K_j)$
         \ENDFOR
     \end{algorithmic}
 \end{algorithm}
@@ -69,25 +69,26 @@ based on norms, one of them being the nuclear norm. We implement the model-based
 with small adaptations in the following way.
 
 % Def mb_spi
-We reuse the computation of the gradient $\nabla f(K_i)$ from \cref{alg:mb-pg}.
+We reuse the computation of the gradient $\nabla f(K_j)$ from \cref{alg:mb-pg}.
 For inducing the structure, we use an adaptive learning rate combined with a line search criterion.
 Starting from the initial step size $\eta = 1 / (2 \lambda)$, each iteration takes a gradient step and applies the
 proximal operator of the nuclear norm, which soft-thresholds the singular values,
 \begin{equation}
     \label{eq:spi-prox}
     K^{+} = U \operatorname{diag} \left( \max\{\sigma_1 - \eta \lambda, 0\}, \dots,
-    \max\{\sigma_r - \eta \lambda, 0\} \right) V\T ,
+    \max\{\sigma_{\bar{r}} - \eta \lambda, 0\} \right) V\T ,
+    \qquad \bar{r} \coloneqq \min\{d_{\mathrm{out}}, d_{\mathrm{in}}\} ,
 \end{equation}
-where $U \operatorname{diag}(\sigma_1, \dots, \sigma_r) V\T$ is the singular value decomposition of
-the next policy candidate $K^{+} = K_i - \eta \nabla f(K_i)$. The candidate $K^{+}$ is accepted if it is stabilizing, $\spr(A - B K^{+}) < 1$, and
+where $U \operatorname{diag}(\sigma_1, \dots, \sigma_{\bar{r}}) V\T$ is the singular value decomposition of
+the next policy candidate $K^{+} = K_j - \eta \nabla f(K_j)$. The candidate $K^{+}$ is accepted if it is stabilizing, $\spr(A - B K^{+}) < 1$, and
 satisfies the sufficient decrease condition
 \begin{equation}
     \label{eq:spi-sufficient-decrease}
-    f(K^{+}) \leq f(K_i) - \eta \tr \left( \nabla f(K_i)\T G \right) + \frac{\eta}{2} \lVert G \rVert_F^2 ,
-    \qquad G \coloneqq \frac{1}{\eta} \left( K_i - K^{+} \right) .
+    f(K^{+}) \leq f(K_j) - \eta \tr \left( \nabla f(K_j)\T G \right) + \frac{\eta}{2} \lVert G \rVert_F^2 ,
+    \qquad G \coloneqq \frac{1}{\eta} \left( K_j - K^{+} \right) .
 \end{equation}
 Otherwise, the step size is reduced to $\beta \eta$ and the proximal step is repeated. The learning loop further can be
-stopped earlier if the criterion $\lVert K_{i+1} - K_i \rVert_F \leq \varepsilon$ is satisfied.
+stopped earlier if the criterion $\lVert K_{j+1} - K_j \rVert_F \leq \varepsilon$ is satisfied.
 \Cref{alg:mb-spi} summarizes the loop.
 \begin{algorithm}[htbp]
     \caption{S-PI}
@@ -95,18 +96,18 @@ stopped earlier if the criterion $\lVert K_{i+1} - K_i \rVert_F \leq \varepsilon
     \begin{algorithmic}[1]
         \REQUIRE stabilizing gain $K_0 \in \mathcal{K}$, second moment $\Sigma_0$, weight $\lambda$, factor $\beta$,
         tolerance $\varepsilon$
-        \FOR{$i = 0, 1, 2, \dots$}
-            \STATE compute $\nabla f(K_i)$ as in \cref{alg:mb-pg}
+        \FOR{$j = 0, 1, 2, \dots$}
+            \STATE compute $\nabla f(K_j)$ as in \cref{alg:mb-pg}
             \STATE set the initial step size $\eta = 1 / (2 \lambda)$
-            \FOR{$\ell = 1, \dots, 20$}
+            \FOR{at most $20$ line search steps}
                 \STATE compute the candidate $K^{+}$ by \eqref{eq:spi-prox}
                 \IF{$\spr(A - B K^{+}) < 1$ and \eqref{eq:spi-sufficient-decrease} holds}
                     \STATE \textbf{break}
                 \ENDIF
                 \STATE reduce the step size, $\eta \leftarrow \beta \eta$
             \ENDFOR
-            \STATE update the gain, $K_{i+1} = K^{+}$
-            \IF{$\lVert K_{i+1} - K_i \rVert_F \leq \varepsilon$}
+            \STATE update the gain, $K_{j+1} = K^{+}$
+            \IF{$\lVert K_{j+1} - K_j \rVert_F \leq \varepsilon$}
                 \STATE \textbf{stop}
             \ENDIF
         \ENDFOR
@@ -395,10 +396,10 @@ actuation output. For the exact implementation, please refer to the repository~\
 
 Additionally, we also use direct model-free approaches, which are variations of the model-based approaches
 from \cref{sec:known-model}. Unlike before, they do not calculate the gradient directly, but estimate
-it based on the returns of $m$ slightly perturbed versions of the current policy, simulated for $l$ steps. As one might
+it based on the returns of $N_{\mathrm{traj}}$ slightly perturbed versions of the current policy, simulated for $l$ steps. As one might
 assume, more ``data'', could conversely to better estimation, and thus better policy updates. So, to
 settle this, we evaluated different combinations of them in \cref{sec:app-sample-size}. The best
-trade-off between computational efficiency and quality gave $m = 100$ and $l = 800$.
+trade-off between computational efficiency and quality gave $N_{\mathrm{traj}} = 100$ and $l = 800$.
 
 % mf npg
 We use the model-free natural policy gradient (NPG) estimation described by Fazel et al.~\cite{Fazel2018Global},
@@ -410,29 +411,29 @@ as this drastically reduced the variance of the estimates, and thus the instabil
     \caption{Two-point gradient estimation}
     \label{alg:mf-gradient}
     \begin{algorithmic}[1]
-        \REQUIRE gain $K \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$, number of perturbation pairs $m$,
+        \REQUIRE gain $K \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$, number of perturbation pairs $N_{\mathrm{traj}}$,
         rollout length $l$, smoothing radius $r$
-        \FOR{$j = 1, \dots, m$}
-            \STATE sample $U_j$ uniformly from the matrices with $\lVert U_j \rVert_F = r$
+        \FOR{$i = 1, \dots, N_{\mathrm{traj}}$}
+            \STATE sample $\Xi_i$ uniformly from the matrices with $\lVert \Xi_i \rVert_F = r$
             \STATE sample an initial state $x_0 \sim \mathcal{D}$
-            \STATE simulate $K + U_j$ and $K - U_j$ for $l$ steps from $x_0$, with stage costs $c_k^{\pm}$ and
+            \STATE simulate $K + \Xi_i$ and $K - \Xi_i$ for $l$ steps from $x_0$, with stage costs $c_k^{\pm}$ and
             observations $y_k^{\pm}$
-            \STATE $\hat{C}_j^{\pm} = \sum_{k=0}^{l-1} c_k^{\pm}$, \quad
-            $\hat{\Sigma}_j^{\pm} = \sum_{k=0}^{l-1} y_k^{\pm} \left( y_k^{\pm} \right)\T$, \quad
-            $\delta_j = \hat{C}_j^{+} - \hat{C}_j^{-}$
+            \STATE $\hat{J}_i^{\pm} = \sum_{k=0}^{l-1} c_k^{\pm}$, \quad
+            $\hat{\Sigma}_i^{\pm} = \sum_{k=0}^{l-1} y_k^{\pm} \left( y_k^{\pm} \right)\T$, \quad
+            $\delta_i = \hat{J}_i^{+} - \hat{J}_i^{-}$
         \ENDFOR
-        \STATE $\bar{\delta} = \frac{1}{m} \sum_{j=1}^{m} \delta_j$
-        \STATE $\widehat{\nabla f}(K) = \frac{1}{m} \sum_{j=1}^{m}
-        \frac{d_{\mathrm{out}} d_{\mathrm{in}}}{2 r^2} \left( \delta_j - \bar{\delta} \right) U_j$
-        \STATE $\hat{\Sigma}_K = \frac{1}{m} \sum_{j=1}^{m} \left( \hat{\Sigma}_j^{+} + \hat{\Sigma}_j^{-} \right)$
-        \STATE $\hat{f}(K) = \frac{1}{m} \sum_{j=1}^{m} \frac{1}{2} \left( \hat{C}_j^{+} + \hat{C}_j^{-} \right)$
+        \STATE $\bar{\delta} = \frac{1}{N_{\mathrm{traj}}} \sum_{i=1}^{N_{\mathrm{traj}}} \delta_i$
+        \STATE $\widehat{\nabla f}(K) = \frac{1}{N_{\mathrm{traj}}} \sum_{i=1}^{N_{\mathrm{traj}}}
+        \frac{d_{\mathrm{out}} d_{\mathrm{in}}}{2 r^2} \left( \delta_i - \bar{\delta} \right) \Xi_i$
+        \STATE $\hat{\Sigma}_K = \frac{1}{N_{\mathrm{traj}}} \sum_{i=1}^{N_{\mathrm{traj}}} \left( \hat{\Sigma}_i^{+} + \hat{\Sigma}_i^{-} \right)$
+        \STATE $\hat{f}(K) = \frac{1}{N_{\mathrm{traj}}} \sum_{i=1}^{N_{\mathrm{traj}}} \frac{1}{2} \left( \hat{J}_i^{+} + \hat{J}_i^{-} \right)$
         \RETURN $\widehat{\nabla f}(K)$, $\hat{\Sigma}_K$, $\hat{f}(K)$
     \end{algorithmic}
 \end{algorithm}
 
 We further aim to clarify a couple of things about the given loop.
 Subtracting the mean difference $\bar{\delta}$ does not change the expected value of the estimate, since
-$\E[U_j] = 0$, but lowers its variance. A rollout whose observation exceeds $\lVert y_k \rVert = 10^{5}$,
+$\E[\Xi_i] = 0$, but lowers its variance. A rollout whose observation exceeds $\lVert y_k \rVert = 10^{5}$,
 we count as diverged. It is therefore ended early and charged a penalty cost of $10^{10}$. 
 Additionally, for inflated dimensions, $\hat{\Sigma}_K$ is singular, so we precondition with its
 truncated pseudoinverse $\hat{\Sigma}_K^{\dagger}$ instead, which discards singular values below $10^{-6}$ times the largest one.
@@ -442,10 +443,10 @@ Our full learning algorithm is then given in \cref{alg:mf-npg}.
     \caption{Model-free NPG}
     \label{alg:mf-npg}
     \begin{algorithmic}[1]
-        \REQUIRE stabilizing gain $K_0 \in \mathcal{K}$, $m$, $l$, $r$, step size $\eta$
-        \FOR{$i = 0, 1, 2, \dots$}
-            \STATE compute $\widehat{\nabla f}(K_i)$ and $\hat{\Sigma}_{K_i}$ by \cref{alg:mf-gradient}
-            \STATE update the gain by $K_{i+1} = K_i - \eta \, \widehat{\nabla f}(K_i) \, \hat{\Sigma}_{K_i}^{\dagger}$
+        \REQUIRE stabilizing gain $K_0 \in \mathcal{K}$, $N_{\mathrm{traj}}$, $l$, $r$, step size $\eta$
+        \FOR{$j = 0, 1, 2, \dots$}
+            \STATE compute $\widehat{\nabla f}(K_j)$ and $\hat{\Sigma}_{K_j}$ by \cref{alg:mf-gradient}
+            \STATE update the gain by $K_{j+1} = K_j - \eta \, \widehat{\nabla f}(K_j) \, \hat{\Sigma}_{K_j}^{\dagger}$
         \ENDFOR
     \end{algorithmic}
 \end{algorithm}
@@ -458,18 +459,18 @@ Next, we implement a model-free version of S-PI that relies on the same gradient
 estimation (\cref{alg:mf-gradient}) as Model-free NPG. Another crucial difference,
 apart from the estimation of the gradient compared to the calculation, is the ``usage of a fixed stepsize
 $\eta$, rather than an adaptive stepsize from a backtracking linesearch''~\cite[Sec.~3.1]{Park2020Structured}, as that
-would require access to the function value $f(K) = \tr(\Sigma_0 P_K)$. Before we look at how we select this step size
+would require access to the function value $f(K) = \tr(P_K \Sigma_0)$. Before we look at how we select this step size
 and $\lambda$, we define our learning loop in \cref{alg:mf-spi}.
 \begin{algorithm}[htbp]
     \caption{S-PI (model-free)}
     \label{alg:mf-spi}
     \begin{algorithmic}[1]
-        \REQUIRE stabilizing gain $K_0 \in \mathcal{K}$, $m$, $l$, $r$, fixed step size $\eta$, weight $\lambda$,
+        \REQUIRE stabilizing gain $K_0 \in \mathcal{K}$, $N_{\mathrm{traj}}$, $l$, $r$, fixed step size $\eta$, weight $\lambda$,
         tolerance $\varepsilon$
-        \FOR{$i = 0, 1, 2, \dots$}
-            \STATE compute $\widehat{\nabla f}(K_i)$ by \cref{alg:mf-gradient}
-            \STATE compute $K_{i+1}$ by \eqref{eq:spi-prox}, with $\widehat{\nabla f}(K_i)$ in place of $\nabla f(K_i)$
-            \IF{$\lVert K_{i+1} - K_i \rVert_F \leq \varepsilon$}
+        \FOR{$j = 0, 1, 2, \dots$}
+            \STATE compute $\widehat{\nabla f}(K_j)$ by \cref{alg:mf-gradient}
+            \STATE compute $K_{j+1}$ by \eqref{eq:spi-prox}, with $\widehat{\nabla f}(K_j)$ in place of $\nabla f(K_j)$
+            \IF{$\lVert K_{j+1} - K_j \rVert_F \leq \varepsilon$}
                 \STATE \textbf{stop}
             \ENDIF
         \ENDFOR
@@ -485,7 +486,7 @@ did not induce any structure at all, hinting at a too low $\lambda$. If we remem
 mapped to
 \begin{equation}
     \label{eq:spi-threshold}
-    \sigma_l \mapsto \max\{ \sigma_l - \eta \lambda, 0 \} .
+    \sigma_i \mapsto \max\{ \sigma_i - \eta \lambda, 0 \} .
 \end{equation}
 Even after some improvement by using the two-point estimator (\cref{alg:mf-gradient}), it remained quite a difficult
 topic. So rather extensive experiments on the variation of $\lambda$ and the step size can be found in \cref{sec:app-spi-mf}.

@@ -32,7 +32,7 @@ $\pi_{\theta_{\mathrm{old}}}$ that collected the data, the clipped objective bec
     \begin{aligned}
         r_k(\theta) &= \frac{\pi_\theta(v_k \mid y_k)}{\pi_{\theta_{\mathrm{old}}}(v_k \mid y_k)} , \\
         L^{\mathrm{CLIP}}(\theta) &= \hat{\E}_k \left[ \min\left\{ r_k(\theta) \hat{A}_k ,\;
-            \operatorname{clip}\left( r_k(\theta), 1 - \epsilon_{\mathrm{clip}}, 1 + \epsilon_{\mathrm{clip}} \right) \hat{A}_k \right\} \right] .
+            \operatorname{clip}\left( r_k(\theta), 1 - \varepsilon_{\mathrm{clip}}, 1 + \varepsilon_{\mathrm{clip}} \right) \hat{A}_k \right\} \right] .
     \end{aligned}
 \end{equation}
 
@@ -77,7 +77,7 @@ were:
     \label{alg:ppo}
     \begin{algorithmic}[1]
         \REQUIRE initial actor $\pi_{\theta}$ and critic $V_{\phi}$, initial learning rate $\eta_0$, step cap $N_{\max}$,
-        convergence parameters $N_{\mathrm{w}}$, $N_{\mathrm{p}}$, $\epsilon_{\mathrm{rel}}$
+        convergence parameters $N_{\mathrm{w}}$, $N_{\mathrm{p}}$, $\varepsilon_{\mathrm{rel}}$
         \STATE $N_{\mathrm{env}} \leftarrow 0$
         \WHILE{$N_{\mathrm{env}} < N_{\max}$}
             \STATE run $\pi_\theta$ for $2048$ steps, sampling $v_k \sim \pi_\theta(\cdot \mid y_k)$; store $y_k$, $v_k$ and the rewards
@@ -180,13 +180,14 @@ here as well. \Cref{alg:encoder-pretraining} summarizes the pretraining.
 
 The second trainable extractor we used is based on Todorov et al.'s paper~\cite{Todorov2026Orthogonal}
 using orthogonal bottlenecks. It consists of a fully connected MLP, with 512 neurons in the first,
-and 256 neurons in the second layer. Following it is an orthogonal matrix, which projects the output
-into a state of bottleneck dimension, which we here set to $2$. The matrix is the Q component of a QR decomposition
-of a random matrix sampled from a standard normal distribution:
+and 256 neurons in the second layer. Following it is a matrix with orthonormal columns, which projects the output
+into a state of bottleneck dimension $d_{\mathrm{b}}$, which we here set to $2$. Like $U_1$ in \eqref{eq:lifts}, the matrix
+is the orthonormal factor of the QR decomposition of a random matrix with standard normal entries, so that the
+feature extractor output $z_k \in \R^{d_{\mathrm{z}}}$ is mapped to
 \begin{equation}
     \label{eq:ortho-bottleneck}
-    G = U_{\mathrm{b}} R_{\mathrm{b}} , \quad G \in \R^{D \times d_{\mathrm{b}}} , \quad G_{ij} \sim \mathcal{N}(0, 1) ,
-    \qquad h = U_{\mathrm{b}}\T z , \quad U_{\mathrm{b}}\T U_{\mathrm{b}} = I_{d_{\mathrm{b}}} .
+    U_{\mathrm{b}}\T z_k \in \R^{d_{\mathrm{b}}} ,
+    \qquad U_{\mathrm{b}} \in \R^{d_{\mathrm{z}} \times d_{\mathrm{b}}} , \quad U_{\mathrm{b}}\T U_{\mathrm{b}} = I_{d_{\mathrm{b}}} .
 \end{equation}
 
 Different to the previous encoder, this one is trained together with PPO, so we just combine them.

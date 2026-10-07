@@ -126,13 +126,13 @@ we drop the subscript $d$ in the following, writing simply $A$ and $B$.
  
 To make the comparisons across all chapters
 meaningful, all experiments are built on a single system: the
-\emph{double integrator}, a frictionless point mass of mass $m$ moving along a
+\emph{double integrator}, a frictionless point mass of unit mass moving along a
 line under an applied force $u$\needcite{find some reference}. Its dynamics are Newton's second law,
 \begin{equation}
     \label{eq:newton}
-    m \, \ddot{p}(t) = u(t),
+    \ddot{p}(t) = u(t),
 \end{equation}
-where $p(t)$ denotes the position of the mass. We simplify by using $m = 1$, so that
+where $p(t)$ denotes the position of the mass. We simplify by using a mass of one, so that
 force and acceleration coincide numerically. Choosing position and velocity as
 the state, $x = [\,p,\ v\,]\T \in \R^{2}$, the second-order equation
 \eqref{eq:newton} decomposes into the first-order system
@@ -540,12 +540,12 @@ One dependency remains, namely on the initial state. Evaluating the gain
 based on a single $x_0$ would reward gains that happen to fit that one
 point, so we instead draw the initial state from a distribution,
 $x_0 \sim \mathcal{D}$, and average. Writing
-$\Sigma \coloneqq \E_{x_0 \sim \mathcal{D}}[x_0 x_0\T]$ for its second moment,
+$\Sigma_0 \coloneqq \E_{x_0 \sim \mathcal{D}}[x_0 x_0\T]$ for its second moment,
 the objective becomes
 \begin{equation}
     \label{eq:cost-of-gain}
     f(K) \coloneqq \E_{x_0 \sim \mathcal{D}} \left[ x_0\T P_K x_0 \right]
-    = \tr \left( P_K \Sigma \right) ,
+    = \tr \left( P_K \Sigma_0 \right) ,
 \end{equation}
 using the cyclic property of the trace. \Cref{eq:cost-of-gain} is the object
 that every remaining chapter of this thesis minimizes, and the algorithms differ
@@ -815,7 +815,7 @@ the \emph{relative} error. Applying this to the input, the next step becomes
 \label{subsubsec:parametric-uncertainty}
 
 This noise acts directly on the matrices of the model. Here, we either decide to keep
-it time invariant, meaning $\Delta_k = \Delta_0$ for all $k$, or to resample it
+it time invariant, meaning $\Delta^{A}_k = \Delta^{A}_0$ and $\Delta^{B}_k = \Delta^{B}_0$ for all $k$, or to resample it
 at every step. The former models a wrongly identified system, while the latter
 simulates one that continuously changes. As with measurement noise, it is additive.
 Applied, it acts on the system the
@@ -829,7 +829,7 @@ following way:
 \end{equation}
 Worth noting is that resampling every
 step leaves the model correct \emph{on average}, since
-$\E[\Delta_k] = 0$, and mainly adds variance to the trajectory. This stands
+$\E[\Delta^{A}_k] = \E[\Delta^{B}_k] = 0$, and mainly adds variance to the trajectory. This stands
 in contrast to the time-invariant version, where we have a discrepancy between
 what we compute actions on, and what actually happens.
 
@@ -838,12 +838,11 @@ what we compute actions on, and what actually happens.
 
 This noise models external influences, like a wind pushing on our
 agent, or rain
-hitting it with some frequency. It only affects the position, so
-the noise is $n^{\mathrm{d}}_k = d_k\, e_1 \in \R^{n}$ where $e_1$ is the first unit vector.
-The push intensity $d_k$ is drawn as
+hitting it with some frequency. It only affects the position, so with the first unit
+vector $e_1 \in \R^{n}$ the noise is drawn as
 \begin{equation}
     \label{eq:dist-sin}
-    d_k = \sigma_{\mathrm{d}} \sin(0.01\,k) .
+    n^{\mathrm{d}}_k = \sigma_{\mathrm{d}} \sin(0.01\,k)\, e_1 .
 \end{equation}
 As the disturbance acts on the true state $x_k$, it is applied before any
 lifting of the observation~\eqref{eq:inflated-obs}. The loop can thus
@@ -1009,9 +1008,9 @@ For each channel $c$ and intensity $\ell$, we choose the standard deviation
 in a way such that with the test protocol of \cref{subsec:protocol}
 \begin{equation}
     \label{eq:noise-calibration}
-    \hat{J}_T(K^{*}; c_{\ell}) = \rho_{\ell}\, \hat{J}_T(K^{*}; \varnothing),
+    \hat{J}_T(K^{*}; c_{\ell}) = \kappa_{\ell}\, \hat{J}_T(K^{*}; \varnothing),
     \qquad
-    \rho_{\ell} \in \{1.2,\ 1.5,\ 3,\ 10\}
+    \kappa_{\ell} \in \{1.2,\ 1.5,\ 3,\ 10\}
 \end{equation}
 applies for \emph{weak}, \emph{standard}, \emph{strong} and \emph{divergent}
 respectively.
@@ -1044,9 +1043,9 @@ Let $g_j$ be the signal that a solver observes at iteration $j$, and let $\bar{g
 mean over the last $N_{\mathrm{w}}$ iterations. The solver has \emph{converged} at the first
 iteration $j$ for which
 \begin{equation*}
-    \bar{g}_j \ge \left( 1 - \epsilon_{\mathrm{rel}} \right) \bar{g}_{j - N_{\mathrm{p}}} ,
+    \bar{g}_j \ge \left( 1 - \varepsilon_{\mathrm{rel}} \right) \bar{g}_{j - N_{\mathrm{p}}} ,
 \end{equation*}
-i.e.\ once the average has not decreased by the relative tolerance $\epsilon_{\mathrm{rel}}$
+i.e.\ once the average has not decreased by the relative tolerance $\varepsilon_{\mathrm{rel}}$
 within the last $N_{\mathrm{p}}$ iterations. After an iteration with an infinite signal, the mean
 calculation restarts from afterwards.
 \end{definition}
@@ -1071,7 +1070,7 @@ listed in \cref{tab:convergence-lqr}.
         \midrule
         Window $N_{\mathrm{w}}$                   & 1         & 50        \\
         Patience $N_{\mathrm{p}}$                 & 50        & 100       \\
-        Relative tolerance $\epsilon_{\mathrm{rel}}$ & $10^{-4}$ & $10^{-3}$ \\
+        Relative tolerance $\varepsilon_{\mathrm{rel}}$ & $10^{-4}$ & $10^{-3}$ \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -1115,8 +1114,9 @@ and report them separately as the divergence rate
 \begin{equation}
     \label{eq:divergence-rate}
     D(K; c) \coloneqq \frac{1}{M N}
-    \left\lvert \left\{ (s, i) \;:\; J^{(i,s)}_T(K; c) = \infty \right\} \right\rvert .
+    \left\lvert \left\{ (s, i) \;:\; J^{(i,s)}_T(K; c) = \infty \right\} \right\rvert ,
 \end{equation}
+where $M = 10$ is the number of seeds and $N = 100$ the number of episodes per seed.
 An individual episode can be missing from the result due to another reason.
 Where the \emph{baseline} evaluation of episode $(s,i)$ diverged,
 $S^{(i,s)}$ has no value at all, since \eqref{eq:suboptimality} would divide
@@ -1162,8 +1162,8 @@ the high-dimensional observation first into the low-dimensionality, and then tra
 A similar approach is used for Scalable encoder + PPO, which is based on Jonschkowski and Brock~\cite{Jonschkowski2015Learning} and
 Botteghi et al.~\cite{Botteghi2021LowDimensional}, and uses
 robotic priors to derive a low-dimensional latent state via a trainable encoder. Again, the construction following this encoder is PPO. Lastly, we
-implement the orthonormal bottlenecks introduced by Todorov et al.~\cite{Todorov2026Orthogonal} (Bottleneck PPO). It consists of sampling a fixed orthonormal matrix
-$B$ of rank $k$, which is added at the end of a trainable feature extractor, and used to project the output into a $k$-dimensional space. Like with the other
+implement the orthonormal bottlenecks introduced by Todorov et al.~\cite{Todorov2026Orthogonal} (Bottleneck PPO). It consists of sampling a fixed matrix
+$U_{\mathrm{b}}$ with $d_{\mathrm{b}}$ orthonormal columns, which is added at the end of a trainable feature extractor, and used to project the output into a $d_{\mathrm{b}}$-dimensional space. Like with the other
 encoders, we follow it with our PPO architecture.
 
 All these low-dimensional approaches, if visualized, exhibit a ``bow-tie'' shape, which in nature can actually

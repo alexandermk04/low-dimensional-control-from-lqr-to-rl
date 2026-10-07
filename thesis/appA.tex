@@ -7,69 +7,119 @@ What goes in the appendices? Any material which impedes the smooth development o
 \label{sec:notation}
 
 The following table contains the conventions regarding symbols
-used throughout this thesis:
+used throughout this thesis, together with the place where each is defined:
 
-\begin{longtable}{@{}p{0.20\textwidth}p{0.74\textwidth}@{}}
+\begin{longtable}{@{}p{0.22\textwidth}p{0.52\textwidth}>{\raggedright\arraybackslash}p{0.18\textwidth}@{}}
 \toprule
-\textbf{Symbol} & \textbf{Meaning} \\
+\textbf{Symbol} & \textbf{Meaning} & \textbf{Defined in} \\
 \midrule
 \endfirsthead
 \toprule
-\textbf{Symbol} & \textbf{Meaning} \\
+\textbf{Symbol} & \textbf{Meaning} & \textbf{Defined in} \\
 \midrule
 \endhead
 \bottomrule
 \endfoot
-\multicolumn{2}{@{}l}{\emph{Sets and operators}} \\[2pt]
-$I_n$, $\mathbf{1}_n$ & identity matrix and all-ones vector of dimension $n$ \\
-$\lambda_i(M)$, $\sigma_i(M)$ & $i$-th eigenvalue and $i$-th singular value of $M$ \\
-$\spr(M)$ & spectral radius, $\max_i \lvert \lambda_i(M) \rvert$ \\
-$M \succeq 0$, $M \succ 0$ & $M$ symmetric positive semi-definite / positive definite \\
-$\lVert \cdot \rVert$, $\lVert \cdot \rVert_F$, $\lVert \cdot \rVert_{*}$ & Euclidean (spectral) norm, Frobenius norm, nuclear norm \\
-$\odot$ & elementwise product \\
-$\mathcal{N}(\mu, \Sigma)$ & Gaussian distribution with mean $\mu$ and covariance $\Sigma$ \\
-$\nabla f$, $\widehat{\nabla} f$ & gradient of $f$ and the estimate of it\\
+\multicolumn{3}{@{}l}{\emph{Sets and operators}} \\[2pt]
+$\R$, $\C$, $\mathbb{N}_0$ & real numbers, complex numbers, natural numbers including zero & \\
+$I_n$, $\mathbf{1}_n$, $e_1$ & identity matrix and all-ones vector of dimension $n$, first unit vector & \\
+$M\T$, $M^{\dagger}$ & transpose and (truncated) pseudoinverse of $M$ & \cref{alg:mf-npg} \\
+$\tr$, $\rank$, $\operatorname{diag}$ & trace, rank, diagonal matrix & \\
+$\lambda_i(M)$, $\sigma_i(M)$ & $i$-th eigenvalue and $i$-th singular value of $M$ & \\
+$U \Sigma V\T$ & singular value decomposition, $\Sigma = \operatorname{diag}(\sigma_1, \dots, \sigma_r)$ & \eqref{eq:svd} \\
+$\spr(M)$ & spectral radius, $\max_i \lvert \lambda_i(M) \rvert$ & \cref{thm:asymptotic-stability} \\
+$M \succeq 0$, $M \succ 0$ & $M$ symmetric positive semi-definite / positive definite & \\
+$\lVert \cdot \rVert$, $\lVert \cdot \rVert_F$, $\lVert \cdot \rVert_{*}$ & Euclidean (spectral) norm, Frobenius norm, nuclear norm & \\
+$\lvert \cdot \rvert$ & absolute value, cardinality of a set, size of a policy & \cref{def:policy-size} \\
+$\odot$ & elementwise product & \eqref{eq:control-noise} \\
+$\E$, $\hat{\E}_k$ & expectation, empirical average over the collected steps & \eqref{eq:ppo-clip} \\
+$\mathcal{N}(\mu, \Sigma)$ & Gaussian distribution with mean $\mu$ and covariance $\Sigma$ & \\
+$\nabla f$, $\widehat{\nabla f}$ & gradient of $f$ and its estimate & \eqref{eq:pg-gradient}, \cref{alg:mf-gradient} \\
 \midrule
-\multicolumn{2}{@{}l}{\emph{System description}} \\[2pt]
-$n$, $m$, $q$ & dimension of the state, input and output \\
-$t$, $k$, $h$ & continuous time, discrete step index, sampling period \\
-$x_k \in \R^{n}$ & state \\
-$u_k \in \R^{m}$ & control input computed by the controller \\
-$\tilde{u}_k \in \R^{m}$ & control input actually applied to the plant \\
-$y_k \in \R^{q}$ & observed output \\
-$p$, $v$ & position and velocity of the double integrator, $x = [\,p,\ v\,]\T$ \\
-$A_c$, $B_c$ & continuous-time system and input matrix \\
-$A$, $B$ & their zero-order-hold discretizations \\
-$C$, $D$ & output and feedthrough matrix; $D = 0$ throughout \\
-$A_K$ & closed-loop matrix, $A_K = A - BK$ \\
-$\mathcal{C}(A,B)$, $\mathcal{O}(C,A)$ & controllability and observability matrix \\
-$\hat{x}_k$, $\tilde{x}_k$ & state estimate and estimation error $x_k - \hat{x}_k$ \\
-$L$ & observer gain \\
+\multicolumn{3}{@{}l}{\emph{System description}} \\[2pt]
+$n$, $m$, $q$ & dimension of the state, input and output & \eqref{eq:ss-cont} \\
+$t$, $k$, $h$ & continuous time, discrete step index, sampling period & \eqref{eq:zoh-input} \\
+$x_k \in \R^{n}$ & state & \eqref{eq:ss-disc} \\
+$u_k \in \R^{m}$ & control input of the plant & \eqref{eq:ss-disc} \\
+$y_k \in \R^{q}$ & observed output & \eqref{eq:ss-cont} \\
+$p$, $v$ & position and velocity of the double integrator, $x = [\,p,\ v\,]\T$ & \eqref{eq:di-first-order} \\
+$A_c$, $B_c$ & continuous-time system and input matrix & \eqref{eq:ss-cont} \\
+$A$, $B$ & their zero-order-hold discretizations & \eqref{eq:zoh-matrices} \\
+$C$, $D$ & output and feedthrough matrix; $D = 0$ throughout & \eqref{eq:ss-cont} \\
+$A_K$ & closed-loop matrix, $A_K = A - BK$ & \eqref{eq:lyapunov} \\
+$\mathcal{C}(A,B)$, $\mathcal{O}(C,A)$ & controllability and observability matrix & \eqref{eq:controllability-matrix}, \eqref{eq:observability-matrix} \\
+$\hat{x}_k$, $\tilde{x}_k$ & state estimate and estimation error $x_k - \hat{x}_k$ & \eqref{eq:estimation-error} \\
+$L$ & observer gain & \cref{def:detectability} \\
 \midrule
-\multicolumn{2}{@{}l}{\emph{Optimal control}} \\[2pt]
-$Q$, $R$ & state and input cost matrices, $Q \succeq 0$, $R \succ 0$ \\
-$K \in \R^{m \times n}$ & feedback gain, $u_k = -K x_k$ \\
-$K^{*}$ & optimal gain, solution of \eqref{eq:optimal-gain} \\
-$\mathcal{K}$ & set of stabilizing gains, \eqref{eq:stabilizing-set} \\
-$J(x_0, u)$ & infinite-horizon cost of an input sequence \\
-$P$ & stabilizing solution of the DARE \eqref{eq:dare} \\
-$P_K$ & solution of the Lyapunov equation \eqref{eq:lyapunov} for a fixed $K$ \\
-$\mathcal{D}$, $\Sigma_0$ & distribution of $x_0$ and its second moment $\E[x_0 x_0\T]$ \\
-$f(K)$ & expected cost of a gain, $\tr(P_K \Sigma_0)$ \\
+\multicolumn{3}{@{}l}{\emph{Optimal control}} \\[2pt]
+$Q$, $R$ & state and input cost matrices, $Q \succeq 0$, $R \succ 0$ & \eqref{eq:lqr-cost-finite} \\
+$V_T(x_0, u)$ & continuous-time cost over the finite horizon $T$ & \eqref{eq:lqr-cost-finite} \\
+$J(x_0, u)$, $J(x_0, K)$ & infinite-horizon cost of an input sequence or of a gain & \eqref{eq:lqr-cost-infinite} \\
+$K \in \R^{m \times n}$ & feedback gain, $u_k = -K x_k$ & \eqref{eq:feedback-law} \\
+$K^{*}$, $u_k^{*}$ & optimal gain and optimal input & \eqref{eq:optimal-gain} \\
+$P$, $J^{*}(x)$ & stabilizing solution of the DARE and optimal cost-to-go $x\T P x$ & \eqref{eq:dare}, \eqref{eq:cost-to-go} \\
+$P_K$ & solution of the Lyapunov equation for a fixed $K$ & \eqref{eq:lyapunov} \\
+$\mathcal{K}$ & set of stabilizing gains & \eqref{eq:stabilizing-set} \\
+$K_0$ & stabilizing initial gain, $K_0 = [\,0.1,\ 0.5\,]$ & \cref{subsec:protocol} \\
+$\mathcal{D}$, $\Sigma_0$ & distribution of $x_0$ and its second moment $\E[x_0 x_0\T]$ & \eqref{eq:cost-of-gain} \\
+$f(K)$ & expected cost of a gain, $\tr(P_K \Sigma_0)$ & \eqref{eq:cost-of-gain} \\
 \midrule
-\multicolumn{2}{@{}l}{\emph{Noise}} \\[2pt]
-$n^{\mathrm{m}}_k$, $\sigma_{\mathrm{m}}$ & measurement noise and its standard deviation \\
-$n^{\mathrm{c}}_k$, $\sigma_{\mathrm{c}}$ & control noise (relative) and its standard deviation \\
-$\Delta^{A}_k$, $\Delta^{B}_k$, $\sigma_{\mathrm{p}}$ & parametric perturbations and their standard deviation \\
-$n^{\mathrm{d}}_k$, $\sigma_{\mathrm{d}}$ & external disturbance and its standard deviation / amplitude \\
+\multicolumn{3}{@{}l}{\emph{Inflated system}} \\[2pt]
+$d_{\mathrm{in}}$, $d_{\mathrm{out}}$ & inflated dimension of the controller input and output & \eqref{eq:lifts} \\
+$U_1$, $U_2$ & lifts with orthonormal columns and rows & \eqref{eq:lifts} \\
+$K \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$ & inflated feedback gain, $v_k = -K y_k$ & \eqref{eq:inflated-loop} \\
+$v_k$, $\tilde{v}_k \in \R^{d_{\mathrm{out}}}$ & controller output, before and after control noise & \eqref{eq:inflated-loop}, \eqref{eq:control-noise} \\
+$Q_n$ & state cost of the uninflated problem, $Q_n = U_1\T Q U_1 = I_n$ & \eqref{eq:lifted-state-cost} \\
 \midrule
-\multicolumn{2}{@{}l}{\emph{Learning and inflated systems}} \\[2pt]
-$d_{in}$, $d_{out}$ & inflated input and output dimension, $d \gg n$ \\
-$U_1$, $U_2$ & orthonormal inflation matrices \\
-$\lambda$ & weight of the nuclear-norm regulariser \\
-$\eta$ & step size \\
-$r$ & smoothing radius of the zeroth-order gradient estimator \\
-$N$, $T$ & number of rollouts and rollout horizon \\
+\multicolumn{3}{@{}l}{\emph{Noise}} \\[2pt]
+$n^{\mathrm{m}}_k$, $\sigma_{\mathrm{m}}$ & measurement noise and its standard deviation & \eqref{eq:measurement-noise} \\
+$n^{\mathrm{c}}_k$, $\sigma_{\mathrm{c}}$ & control noise (relative) and its standard deviation & \eqref{eq:control-noise} \\
+$\Delta^{A}_k$, $\Delta^{B}_k$, $\sigma_{\mathrm{p}}$ & parametric perturbations and their standard deviation & \eqref{eq:parametric-noise} \\
+$n^{\mathrm{d}}_k$, $\sigma_{\mathrm{d}}$ & external disturbance and its amplitude & \eqref{eq:dist-sin} \\
+$c$, $\varnothing$ & noise condition (channels and intensity), noise-free condition & \eqref{eq:empirical-return} \\
+$\ell$, $c_{\ell}$, $\kappa_{\ell}$ & noise intensity, a channel at intensity $\ell$, its cost ratio & \eqref{eq:noise-calibration} \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Evaluation and training protocol}} \\[2pt]
+$T$ & horizon of a rollout & \eqref{eq:empirical-return} \\
+$s$, $i$ & index of the seed and of the episode & \eqref{eq:empirical-return} \\
+$M$, $N$ & number of seeds and of episodes per seed & \eqref{eq:divergence-rate} \\
+$J^{(i,s)}_T(K; c)$ & empirical cost of one episode & \eqref{eq:empirical-return} \\
+$\hat{J}_T(K; c)$, $\mathcal{F}$ & mean empirical cost, set of finite episodes & \eqref{eq:empirical-cost} \\
+$S^{(i,s)}(K; c)$, $\hat{S}(K; c)$ & suboptimality of one episode and its mean & \eqref{eq:suboptimality} \\
+$D(K; c)$ & divergence rate & \eqref{eq:divergence-rate} \\
+$\lvert K \rvert$, $r$ & size and rank of a linear policy & \cref{def:policy-size} \\
+$j$ & iteration index of a solver & \cref{def:convergence} \\
+$g_j$, $\bar{g}_j$ & convergence signal and its moving mean & \cref{def:convergence} \\
+$N_{\mathrm{w}}$, $N_{\mathrm{p}}$, $\varepsilon_{\mathrm{rel}}$ & window, patience and relative tolerance of the convergence rule & \cref{def:convergence} \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{LQR solvers}} \\[2pt]
+$\eta$ & step size (learning rate) & \cref{alg:mb-pg} \\
+$\Sigma_K$ & state correlation matrix of a gain & \eqref{eq:state-correlation} \\
+$\lambda$ & weight of the nuclear-norm regularizer & \eqref{eq:spi-prox} \\
+$K^{+}$, $\bar{r}$ & candidate gain of S-PI, number of its singular values & \eqref{eq:spi-prox} \\
+$G$ & gradient mapping & \eqref{eq:spi-sufficient-decrease} \\
+$\beta$, $\varepsilon$ & step-size reduction factor and stopping tolerance of S-PI & \cref{alg:mb-spi} \\
+$\sigma_{\mathrm{e}}$, $w_k$ & excitation amplitude and excitation noise for identification & \eqref{eq:identification-input} \\
+$\hat{n}$, $\hat{C}$ & order and output matrix of the identified model & \eqref{eq:state-encoder} \\
+$N_{\mathrm{traj}}$, $l$, $r$ & number of perturbation pairs, rollout length, smoothing radius & \cref{alg:mf-gradient} \\
+$\Xi_i$ & perturbation of the gain & \cref{alg:mf-gradient} \\
+$c_k^{\pm}$, $\hat{J}_i^{\pm}$ & stage cost and rollout cost of $K \pm \Xi_i$ & \cref{alg:mf-gradient} \\
+$\delta_i$, $\bar{\delta}$ & cost difference of a pair and its mean & \cref{alg:mf-gradient} \\
+$\hat{\Sigma}_K$, $\hat{f}(K)$ & estimated state correlation and cost & \cref{alg:mf-gradient} \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Reinforcement learning}} \\[2pt]
+$\theta$, $\pi_\theta$, $\mu$ & actor parameters, policy, mean of the policy & \eqref{eq:ppo-clip}, \eqref{eq:linear-ppo} \\
+$\phi$, $V_\phi$ & critic parameters and critic & \cref{alg:ppo} \\
+$r_k(\theta)$, $\hat{A}_k$ & probability ratio and advantage estimate & \eqref{eq:ppo-clip} \\
+$L^{\mathrm{CLIP}}$, $\varepsilon_{\mathrm{clip}}$ & clipped surrogate objective and clip range & \eqref{eq:ppo-clip} \\
+$\gamma$ & discount factor & \cref{subsec:rl-training} \\
+$\eta_0$, $N_{\mathrm{env}}$, $N_{\max}$ & initial learning rate, environment steps so far, step cap & \eqref{eq:lr-annealing} \\
+$W$ & weight matrix of Linear PPO, $W = -K$ & \eqref{eq:linear-ppo} \\
+$f_\psi$, $\psi$ & scalable encoder and its parameters & \cref{alg:encoder-pretraining} \\
+$a_{\max}$ & action bound & \cref{alg:encoder-pretraining} \\
+$\mathcal{L}$, $\omega_1, \dots, \omega_4$ & prior loss and its weights & \eqref{eq:prior-loss} \\
+$z_k$, $d_{\mathrm{z}}$ & output of the bottleneck extractor and its dimension & \eqref{eq:ortho-bottleneck} \\
+$U_{\mathrm{b}}$, $d_{\mathrm{b}}$ & orthonormal bottleneck projection and bottleneck dimension & \eqref{eq:ortho-bottleneck} \\
 \end{longtable}
 
 \section{Noise intensities}
