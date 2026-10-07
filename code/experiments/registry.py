@@ -1055,7 +1055,10 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
     if preset.freeze_extractor:
         from lqr_base.thruster_ring import ThrusterOraclePolicy
 
-        fit_env = build_pixel_env(sub_seed(spec.seed, "pixel-fit", spec.solver), horizon=horizon)
+        fit_env = build_pixel_env(
+            sub_seed(spec.seed, "pixel-fit", spec.solver),
+            horizon=settings.PIXEL_PRETRAIN_EPISODE_LENGTH,
+        )
         oracle = ThrusterOraclePolicy(K, fit_env.c)
         weights = fit_extractor_weights(
             preset, fit_env,

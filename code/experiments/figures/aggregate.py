@@ -232,6 +232,45 @@ def with_suboptimality(
     return rows
 
 
+def with_clean_ratio(
+    rows: list[dict],
+    by=("solver", "seed"),
+    metric: str = "test_cost_mean",
+) -> list[dict]:
+    """Score every controller against themselves without noise.
+
+    Parameters
+    ----------
+    rows : list[dict]
+        From :func:`tidy`.
+    by : tuple of str, optional
+        What has to agree between a row and its clean counterpart.
+    metric : str, optional
+        Cost column to compare.
+
+    Returns
+    -------
+    list[dict]
+        The same rows. Where no clean cost was found, ``clean_ratio`` is ``None``.
+    """
+    clean = {
+        group_key(row, by): float(row[metric])
+        for row in rows
+        if row.get("channel") == "clean" and row.get(metric) is not None
+    }
+
+    for row in rows:
+        cost = row.get(metric)
+        j_clean = clean.get(group_key(row, by))
+        usable = (
+            cost is not None and np.isfinite(float(cost))
+            and j_clean is not None and np.isfinite(j_clean) and j_clean != 0.0
+        )
+        row["clean_ratio"] = float(cost) / j_clean if usable else None
+
+    return rows
+
+
 def latest_per_experiment(records: list[RunRecord], keys=("solver", "seed")) -> list[RunRecord]:
     """Keep only the newest run of each experiment setting.
 

@@ -97,10 +97,19 @@ class PixelLQREnv(gym.Env):
     def _observation(self) -> np.ndarray:
         return np.stack(self._frames, axis=0)
 
-    def _observed_position(self) -> float:
-        """Position the camera shows, with measurement noise if it is active.
+    def _capture(self) -> np.ndarray:
+        """The camera frame of the true position, with measurement noise if it is active.
+
         """
-        return float(self.lqr.observe()[0])
+        frame = self.renderer.frame(float(self.lqr.x[0]))
+
+        noise = self.lqr.measurement_noise
+        if self.lqr.noise and noise is not None:
+            scaled = frame / 255.0
+            scaled += noise.sample_measurement_noise(scaled, self.lqr.noise_rng)
+            frame = np.rint(255.0 * np.clip(scaled, 0.0, 1.0)).astype(np.uint8)
+
+        return frame
 
     def _info_state(self) -> np.ndarray:
         return np.asarray(self.lqr.x, dtype=float).copy()
@@ -111,7 +120,7 @@ class PixelLQREnv(gym.Env):
         self.lqr.reset()
         self.agent_steps = 0
 
-        frame = self.renderer.frame(self._observed_position())
+        frame = self._capture()
         self._frames.extend(frame.copy() for _ in range(self.config.frame_stack))
 
         return self._observation(), {"state": self._info_state()}
@@ -135,7 +144,7 @@ class PixelLQREnv(gym.Env):
         self.agent_steps += 1
         self._last_thrust = v
         x = float(self.lqr.x[0])
-        self._frames.append(self.renderer.frame(self._observed_position()))
+        self._frames.append(self._capture())
 
         u = float(np.ravel(result.u_t)[0])
         energy = float(v @ v)

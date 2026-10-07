@@ -39,6 +39,7 @@ METRIC_ROWS = {
     "J_final": (r"True cost $J$", "{:.4g}"),
     "training_subopt_final": (r"Training suboptimality $(J-J^*)/J^*$", "{:.3g}"),
     "subopt": (r"Suboptimality $S$", "{:+.3g}"),
+    "clean_ratio": (r"Cost ratio to the clean loop", "{:.3g}"),
     "policy_complexity": (r"Policy parameters", "{:.0f}"),
     "rank_final": (r"Gain rank", "{:.1f}"),
     "iterations": (r"Iterations", "{:.0f}"),
