@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+\centering
+\caption{S-PI (model-free) with $\lambda = 40$ under \emph{base} inflation, over the seeds. Mean $\pm$ standard deviation over 10 runs.}
+\label{tab:appendix-spi-mf-base-40}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Step size & 3.5e-09 & 3.5e-08 & 3.5e-07 & 3.5e-06 & 3.5e-05 \\
+\midrule
+True cost $J$ & $1.145 \times 10^{4} \pm 641.6$ & $7988 \pm 10.59$ & $6978 \pm 21.25$ & $6090 \pm 13.3$ & $6226 \pm 88.29$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.958 \pm 0.11$ & $0.366 \pm 0.00181$ & $0.193 \pm 0.00363$ & $0.0414 \pm 0.00227$ & $0.0646 \pm 0.0151$ \\
+Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ \\
+Spectral radius & $0.9975 \pm 0.0000$ & $0.9974 \pm 0.0000$ & $0.9970 \pm 0.0000$ & $0.9948 \pm 0.0001$ & $0.9942 \pm 0.0003$ \\
+Iterations & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ \\
+Env.\ steps to convergence & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ \\
+Env.\ steps to best policy & $6.78 \times 10^{6} \pm 4.44 \times 10^{6}$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

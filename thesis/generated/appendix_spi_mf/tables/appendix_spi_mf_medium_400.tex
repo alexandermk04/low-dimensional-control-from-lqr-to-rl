@@ -5,15 +5,15 @@
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
-Step size & 3.5e-09 & 3.5e-08 & 3.5e-07 & 3.5e-06 & 3.5e-05 \\
+Step size & 3.5e-08 & 3.5e-07 & 3.5e-06 & 3.5e-05 & 0.00035 \\
 \midrule
-True cost $J$ & $1.204 \times 10^{4} \pm 416.6$ & $9080 \pm 42.58$ & $7527 \pm 37.58$ & $6374 \pm 31.73$ & $1.241 \times 10^{4} \pm 1.917 \times 10^{-12}$ \\
-Training suboptimality $(J-J^*)/J^*$ & $1.06 \pm 0.0712$ & $0.553 \pm 0.00728$ & $0.287 \pm 0.00643$ & $0.09 \pm 0.00543$ & $1.12 \pm 2.96 \times 10^{-16}$ \\
-Gain rank & $25.0 \pm 0.0$ & $25.0 \pm 0.0$ & $25.0 \pm 0.0$ & $25.0 \pm 0.0$ & $25.0 \pm 0.0$ \\
-Spectral radius & $0.9975 \pm 0.0000$ & $0.9975 \pm 0.0000$ & $0.9974 \pm 0.0000$ & $0.9959 \pm 0.0001$ & $0.9975 \pm 0.0000$ \\
+True cost $J$ & $9836 \pm 925.7$ & $7633 \pm 19.57$ & $6653 \pm 25.09$ & $1.182 \times 10^{4} \pm 2059$ & $1.247 \times 10^{4} \pm 16.62$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.682 \pm 0.158$ & $0.305 \pm 0.00335$ & $0.138 \pm 0.00429$ & $1.02 \pm 0.352$ & $1.13 \pm 0.00284$ \\
+Gain rank & $25.0 \pm 0.0$ & $25.0 \pm 0.0$ & $25.0 \pm 0.0$ & $24.2 \pm 2.5$ & $25.0 \pm 0.0$ \\
+Spectral radius & $0.9975 \pm 0.0000$ & $0.9976 \pm 0.0000$ & $0.9966 \pm 0.0000$ & $0.9971 \pm 0.0011$ & $0.9975 \pm 0.0000$ \\
 Iterations & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ \\
-Env.\ steps to convergence & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $6.47 \times 10^{6} \pm 3.23 \times 10^{6}$ \\
-Env.\ steps to best policy & $3.47 \times 10^{6} \pm 3.71 \times 10^{6}$ & $7.98 \times 10^{6} \pm 5.06 \times 10^{4}$ & $7.98 \times 10^{6} \pm 5.06 \times 10^{4}$ & $7.98 \times 10^{6} \pm 5.06 \times 10^{4}$ & $1.6 \times 10^{5} \pm 0$ \\
+Env.\ steps to convergence & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $4.37 \times 10^{5} \pm 8.35 \times 10^{3}$ \\
+Env.\ steps to best policy & $9.02 \times 10^{6} \pm 3.1 \times 10^{6}$ & $10^{7} \pm 0$ & $9.98 \times 10^{6} \pm 6.32 \times 10^{4}$ & $1.18 \times 10^{6} \pm 3.1 \times 10^{6}$ & $2 \times 10^{5} \pm 0$ \\
 \bottomrule
 \end{tabular}
 }

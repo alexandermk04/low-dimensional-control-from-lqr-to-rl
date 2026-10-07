@@ -5,12 +5,12 @@
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
-Learning rate & 0.0003 & 3e-05 & 3e-06 & 1e-05 & 0.0001 \\
+Learning rate & 0.0003 & 3e-05 & 1e-05 & 3e-06 & 0.0001 \\
 \midrule
-True cost $J$ & $6633 \pm 741.3$ & $6232 \pm 360$ & $6857 \pm 369.5$ & $6333 \pm 376.7$ & $6117 \pm 208.9$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.134 \pm 0.127$ & $0.0657 \pm 0.0616$ & $0.172 \pm 0.0632$ & $0.0829 \pm 0.0644$ & $0.046 \pm 0.0357$ \\
-Test cost$^{\dagger}$ & $6726 \pm 5971$ & $6320 \pm 5591$ & $6956 \pm 6140$ & $6422 \pm 5682$ & $6203 \pm 5475$ \\
-Env.\ steps to best policy & $5.91 \times 10^{6} \pm 3.02 \times 10^{6}$ & $5.91 \times 10^{6} \pm 3.02 \times 10^{6}$ & $8.18 \times 10^{6} \pm 1.43 \times 10^{6}$ & $5.91 \times 10^{6} \pm 3.02 \times 10^{6}$ & $5.91 \times 10^{6} \pm 3.02 \times 10^{6}$ \\
+True cost $J$ & $6821 \pm 215.2$ & $6079 \pm 76.68$ & $6166 \pm 117.5$ & $6933 \pm 413.4$ & $6213 \pm 251.3$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.166 \pm 0.0368$ & $0.0395 \pm 0.0131$ & $0.0543 \pm 0.0201$ & $0.186 \pm 0.0707$ & $0.0624 \pm 0.043$ \\
+Test cost$^{\dagger}$ & $6925 \pm 6092$ & $6165 \pm 5429$ & $6253 \pm 5509$ & $7033 \pm 6211$ & $6301 \pm 5565$ \\
+Env.\ steps to best policy & $5.91 \times 10^{6} \pm 3.02 \times 10^{6}$ & $8.18 \times 10^{6} \pm 1.43 \times 10^{6}$ & $8.18 \times 10^{6} \pm 1.43 \times 10^{6}$ & $8.18 \times 10^{6} \pm 1.43 \times 10^{6}$ & $5.91 \times 10^{6} \pm 3.02 \times 10^{6}$ \\
 Env.\ steps to convergence & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ \\
 \bottomrule
 \end{tabular}

@@ -1,19 +1,21 @@
 \begin{table}[htbp]
 \centering
-\caption{S-PI (model-free) with $\lambda = 40000$ under \emph{medium} inflation, over the seeds. Mean $\pm$ standard deviation over 10 runs.}
+\caption{S-PI (model-free) with $\lambda = 40000$ under \emph{medium} inflation, over the seeds. Mean $\pm$ standard deviation over 10 runs. Stable counts the seeds whose controller left the plant stable.}
 \label{tab:appendix-spi-mf-medium-40000}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
-Step size & 3.5e-09 & 3.5e-08 & 3.5e-07 & 3.5e-06 & 3.5e-05 \\
+Step size & 3.5e-08 & 3.5e-07 & 3.5e-06 & 3.5e-05 & 0.00035 \\
 \midrule
-True cost $J$ & $1.16 \times 10^{4} \pm 29.37$ & $9466 \pm 40.8$ & $2.996 \times 10^{4} \pm 2887$ & $2.978 \times 10^{4} \pm 8845$ & $1.241 \times 10^{4} \pm 1.917 \times 10^{-12}$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.983 \pm 0.00502$ & $0.619 \pm 0.00698$ & $4.12 \pm 0.494$ & $4.09 \pm 1.51$ & $1.12 \pm 2.96 \times 10^{-16}$ \\
-Gain rank & $25.0 \pm 0.0$ & $17.9 \pm 0.7$ & $15.5 \pm 2.4$ & $7.3 \pm 5.0$ & $25.0 \pm 0.0$ \\
-Spectral radius & $0.9975 \pm 0.0000$ & $0.9979 \pm 0.0000$ & $0.9996 \pm 0.0000$ & $0.9996 \pm 0.0001$ & $0.9975 \pm 0.0000$ \\
+Stable & $10/10$ & $10/10$ & $10/10$ & $5/10$ & $9/10$ \\
+\midrule
+True cost $J$ & $9895 \pm 33.32$ & $8.505 \times 10^{4} \pm 6265$ & $3.953 \times 10^{5} \pm 4.647 \times 10^{5}$ & $3.08 \times 10^{4} \pm 6539$ & $1.626 \times 10^{4} \pm 1.139 \times 10^{4}$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.692 \pm 0.0057$ & $13.5 \pm 1.07$ & $66.6 \pm 79.5$ & $4.27 \pm 1.12$ & $1.78 \pm 1.95$ \\
+Gain rank & $17.8 \pm 0.6$ & $3.7 \pm 2.5$ & $1.0 \pm 0.0$ & $1.2 \pm 0.4$ & $22.3 \pm 8.0$ \\
+Spectral radius & $0.9978 \pm 0.0000$ & $0.9999 \pm 0.0000$ & $1.0000 \pm 0.0000$ & $0.9992 \pm 0.0003$ & $0.9977 \pm 0.0007$ \\
 Iterations & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ & $50 \pm 0$ \\
-Env.\ steps to convergence & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $6.18 \times 10^{6} \pm 3.08 \times 10^{6}$ \\
-Env.\ steps to best policy & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $8 \times 10^{6} \pm 0$ & $1.14 \times 10^{6} \pm 2.19 \times 10^{5}$ & $1.6 \times 10^{5} \pm 0$ \\
+Env.\ steps to convergence & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $5.51 \times 10^{5} \pm 1.77 \times 10^{5}$ \\
+Env.\ steps to best policy & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $6.42 \times 10^{6} \pm 2.45 \times 10^{6}$ & $6 \times 10^{5} \pm 0$ & $2.22 \times 10^{5} \pm 6.67 \times 10^{4}$ \\
 \bottomrule
 \end{tabular}
 }

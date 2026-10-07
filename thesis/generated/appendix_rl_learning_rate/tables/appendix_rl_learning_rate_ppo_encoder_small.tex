@@ -5,11 +5,11 @@
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
-Learning rate & 0.0003 & 3e-06 & 3e-05 & 0.0001 & 1e-05 \\
+Learning rate & 0.0003 & 0.0001 & 3e-06 & 3e-05 & 1e-05 \\
 \midrule
-True cost $J$ & $5981 \pm 993.1$ & $6849 \pm 1104$ & $5886 \pm 837.5$ & $5844 \pm 846.6$ & $6076 \pm 789.5$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.0488 \pm 0.0203$ & $0.206 \pm 0.142$ & $0.0344 \pm 0.00684$ & $0.0268 \pm 0.00375$ & $0.0693 \pm 0.0404$ \\
-Test cost$^{\dagger}$ & $6231 \pm 5643$ & $8332 \pm 6648$ & $6152 \pm 5531$ & $6104 \pm 5478$ & $6792 \pm 5620$ \\
+True cost $J$ & $6018 \pm 967.1$ & $5943 \pm 858.3$ & $6872 \pm 1087$ & $5933 \pm 843.7$ & $6105 \pm 795.1$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.0559 \pm 0.0168$ & $0.0442 \pm 0.00749$ & $0.21 \pm 0.14$ & $0.0426 \pm 0.00667$ & $0.0743 \pm 0.0415$ \\
+Test cost$^{\dagger}$ & $6280 \pm 5668$ & $6217 \pm 5614$ & $8371 \pm 6643$ & $6206 \pm 5577$ & $6830 \pm 5635$ \\
 Env.\ steps to best policy & $8.76 \times 10^{6} \pm 1.94 \times 10^{6}$ & $8.76 \times 10^{6} \pm 1.94 \times 10^{6}$ & $8.76 \times 10^{6} \pm 1.94 \times 10^{6}$ & $8.76 \times 10^{6} \pm 1.94 \times 10^{6}$ & $8.76 \times 10^{6} \pm 1.94 \times 10^{6}$ \\
 Env.\ steps to convergence & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ & $10^{7} \pm 0$ \\
 \bottomrule
