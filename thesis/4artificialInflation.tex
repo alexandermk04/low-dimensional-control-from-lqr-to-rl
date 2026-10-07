@@ -1,110 +1,333 @@
-\chapter{Robustness Of Reinforcement Learning Approaches}\label{chap:inflation}
+\chapter{Robustness of Reinforcement Learning Approaches}
+\label{chap:inflation}
 
 Having seen how low-dimensionality affects robustness with a simple, LQR-based controller, we
 now want to take a look at a setting which allows us to judge architectures used in more
 complex tasks as well. Still, we will stay with our introduced double integrator system,
 but change the controllers for now.
 
-\section{PPO and its Variants}
+\section{PPO and Its Variants}
+\label{sec:ppo-variants}
+
+\subsection{Proximal Policy Optimization}
+\label{subsec:ppo}
 
 Before getting into our implementation details, we want to explain the basic construction
-of PPO. Introduced by Schulman et al. in 2017 \needcite{65 schulman}, it is an actor-critic algorithm,
+of PPO. Introduced by Schulman et al.~\cite{Schulman2017Proximal} in 2017, it is an actor-critic algorithm,
 which means it consists of an actor, guided by a policy, that is simulated in an environment,
 and a critic, which tries to estimate the underlying value function based on the current policy
-and the actors returns\needcite{62 Konda}. In the case of PPO, as we're trying to optimize a policy
-via policy gradient optimization, we "[construct] an objective function whose gradient is the policy
-gradient estimator" \needcite{65}. What makes PPO special is the construction of this surrogate
-function, based on ideas from Trust Region Policy Optimization \needcite{63}. 
-In the paper, two approaches are proposed: Clipped Surrogate Objective or Adaptive KL % TODO: explain KL and prob ratio
-Penalty coefficient. The former clips the probability ratio past a limit set by a hyperparameter,
-imposing constraints on the policy update size\needcite{65}, while the latter, rather than setting
-a fixed KL for an update, sets a target KL divergence\needcite{65}. In case further interest
-arises, we refer to the original paper here\needcite{65}.
+and the actor's returns~\cite{Konda2000ActorCritic}. In the case of PPO, as we are trying to optimize a policy
+via policy gradient optimization, we ``[construct] an objective function whose gradient is the policy
+gradient estimator''~\cite[Sec.~2.1]{Schulman2017Proximal}. What makes PPO special is the construction of this surrogate
+function, based on ideas from Trust Region Policy Optimization~\cite{Schulman2015Trust}.
+In the paper, two approaches are proposed: a Clipped Surrogate Objective or an Adaptive Kullback--Leibler (KL)
+Penalty Coefficient. The former clips the probability ratio past a limit set by a hyperparameter,
+imposing constraints on the policy update size~\cite[Sec.~3]{Schulman2017Proximal}, while the latter, rather than setting
+a fixed KL for an update, sets a target KL divergence~\cite[Sec.~4]{Schulman2017Proximal}. In case further interest
+arises, we refer to the original paper~\cite{Schulman2017Proximal}.
+With the probability ratio $r_k(\theta)$ between the current policy $\pi_\theta$ and the policy
+$\pi_{\theta_{\mathrm{old}}}$ that collected the data, the clipped objective becomes
+\begin{equation}
+    \label{eq:ppo-clip}
+    \begin{aligned}
+        r_k(\theta) &= \frac{\pi_\theta(v_k \mid y_k)}{\pi_{\theta_{\mathrm{old}}}(v_k \mid y_k)} , \\
+        L^{\mathrm{CLIP}}(\theta) &= \hat{\E}_k \left[ \min\left\{ r_k(\theta) \hat{A}_k ,\;
+            \operatorname{clip}\left( r_k(\theta), 1 - \epsilon_{\mathrm{clip}}, 1 + \epsilon_{\mathrm{clip}} \right) \hat{A}_k \right\} \right] .
+    \end{aligned}
+\end{equation}
 
-However, as has been noted before \needcite{66, 68}, the actual implementation of PPO matters,
+\subsection{Training Setup}
+\label{subsec:rl-training}
+
+However, as has been noted before~\cite{Engstrom2020Implementation,Hsu2020Revisiting}, the actual implementation of PPO matters,
 and can influence the effectiveness of it in practice. For our construction, we use
-the architecture provided by StableBaselines3\needcite{https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html}.
-As the standard architecture, for our MLP PPO, we use the standard 2-layer with 64 neurons approach for both
-actor and the critic \needcite{https://stable-baselines3.readthedocs.io/en/master/guide/custom_policy.html}.
+the architecture provided by Stable-Baselines3 (SB3)~\cite{StableBaselines2026PPO}.
+As the standard architecture, for our Fully-connected PPO, we use the standard two-layer multilayer perceptron (MLP) with 64 neurons for both
+the actor and the critic~\cite{StableBaselines2026Policy}.
 Additionally, unless named otherwise, we will use the standard parameters from the SB3 library.
-For the above named parts, we leave the clip range at the standard of 0.2 and set the target kl to 0.02. 
+For the above named parts, we leave the clip range at the standard of $0.2$ and set the target KL to $0.02$.
 Experimenting with different runtime lengths, we settled on the following values, which differ by inflation size:
 
-% insert table here
+% TODO: insert table here after experiments
 
-Across all, the evaluation frequency, so when the policy of the actor is updated, is set to 25 000.
+Across all, the evaluation frequency, so when the policy of the actor is updated, is set to $25\,000$.
 
 After initial runs with this basic setup, we could observe some divergence behavior, which
-lead us to consider additional implementation improvements, as suggested by \needcite{https://iclr-blog-track.github.io/2022/03/25/ppo-implementation-details/}.
-Specifically, we started using a vectorized environment, similar to the paper \needcite{65}. Additonally,
-we modified the discount factor to gamma = 0.999 instead of 0.99. However, the two most effective changes
-where:
+led us to consider additional implementation improvements, as suggested by Huang et al.~\cite{Huang2022Implementation}.
+Specifically, we started using a vectorized environment, similar to the paper~\cite{Schulman2017Proximal}. Additionally,
+we modified the discount factor to $\gamma = 0.999$ instead of $0.99$. However, the two most effective changes
+were:
+\begin{enumerate}
+    \item Using learning rate annealing instead of a fixed rate~\cite[Detail~4]{Huang2022Implementation}. Now the learning
+    rate is decreased with every update, such that at the end of the number of steps (\cref{tab:rl-step-caps}) it is equal
+    to $0$. So this is
+    \begin{equation}
+        \label{eq:lr-annealing}
+        \eta(N_{\mathrm{env}}) = \eta_0 \max\left\{ 1 - \frac{N_{\mathrm{env}}}{N_{\max}}, \; 0 \right\} .
+    \end{equation}
+    \item Separating the feature extractors for actor and critic~\cite[Detail~13]{Huang2022Implementation}. As described
+    by~\cite{StableBaselines2026Policy}, to reduce computation, in the standard implementation,
+    they share the extractor, which is ``a simple MLP network consisting of two layers of 64 neurons and Hyperbolic Tangent as the
+    activation function''~\cite{Huang2022Implementation}.
+    Later, when introducing pretrained extractors, they will be shared again, but for still learning ones, we will separate them.
+\end{enumerate}
+\Cref{alg:ppo} summarizes the resulting training loop.
+\begin{algorithm}[htbp]
+    \caption{PPO implemented here}
+    \label{alg:ppo}
+    \begin{algorithmic}[1]
+        \REQUIRE initial actor $\pi_{\theta}$ and critic $V_{\phi}$, initial learning rate $\eta_0$, step cap $N_{\max}$,
+        convergence parameters $N_{\mathrm{w}}$, $N_{\mathrm{p}}$, $\epsilon_{\mathrm{rel}}$
+        \STATE $N_{\mathrm{env}} \leftarrow 0$
+        \WHILE{$N_{\mathrm{env}} < N_{\max}$}
+            \STATE run $\pi_\theta$ for $2048$ steps, sampling $v_k \sim \pi_\theta(\cdot \mid y_k)$; store $y_k$, $v_k$ and the rewards
+            \STATE normalize the rewards by a running estimate of the return's standard deviation
+            \STATE compute the advantages $\hat{A}_k$ and value targets with $V_\phi$
+            \STATE $\theta_{\mathrm{old}} \leftarrow \theta$, \quad set the learning rate $\eta(N_{\mathrm{env}})$ by \eqref{eq:lr-annealing}
+            \FOR{epoch $= 1, \dots, 10$}
+                \FOR{each minibatch of $64$ stored steps}
+                    \STATE take an Adam step on $-L^{\mathrm{CLIP}}(\theta) + 0.5 \cdot (\text{value loss of } V_\phi)$,
+                    with the gradient norm clipped to $0.5$
+                \ENDFOR
+                \IF{the approximate KL divergence to $\pi_{\theta_{\mathrm{old}}}$ exceeds $1.5 \cdot 0.02$}
+                    \STATE \textbf{break}
+                \ENDIF
+            \ENDFOR
+            \STATE $N_{\mathrm{env}} \leftarrow N_{\mathrm{env}} + 2048$
+            \IF{$25\,000$ steps have passed since the last check}
+                \STATE evaluate $\pi_\theta$, update $g_j$ with the mean training cost since the last check
+                \IF{\cref{def:convergence} holds}
+                    \STATE \textbf{stop}
+                \ENDIF
+            \ENDIF
+        \ENDWHILE
+        \STATE \textbf{return} the policy with the best smoothed signal $\bar{g}_j$
+    \end{algorithmic}
+\end{algorithm}
 
-1. Using learning rate annealing instead of a fixed rate \needcite{37 implementation details, point 4}. Now the learning
-rate is decreased with every update, such that at the end of the number steps \needcite{cref to table above} it is equal
-to 0. So this is: %insert formula
-
-2. Seperating the feature extractors for actor and critic \needcite{37 implementation details, point 13}. As described by
-\needcite{https://stable-baselines3.readthedocs.io/en/master/guide/custom_policy.html}, to reduce computation, in the standard implementation,
-they share the extract, which is "a simple MLP network consisting of two layers of 64 neurons and Hyperbolic Tangent as the activation function" \needcite{https://iclr-blog-track.github.io/2022/03/25/ppo-implementation-details/}.
-Later, when introducing pretrained extractors, they will be shared again, but for still learning ones, we will seperate them.
+\subsection{Policy Architectures}
+\label{subsec:rl-architectures}
 
 Now, after having introduced the base construction, it makes it easier for us to describe variations of the same. We start with
-LinearPPO, which allows us to compare the performance of PPO to the previous chapter. Here, our actor becomes a singular layer,
+Linear PPO, which allows us to compare the performance of PPO to the previous chapter. Here, our actor becomes a single layer,
 with the bias removed, such that we can rewrite this network as
-
-% formula
-
-which allows us to extract a gain matrix K that is comparable to the previous chapter. A second, already known, component is
-used for PPO Encoder. Here, we reuse an identified system from N4SID \needcite{cref to chap 3} to encode an observation into
+\begin{equation}
+    \label{eq:linear-ppo}
+    \mu(y_k) = W y_k = -K y_k , \qquad K \coloneqq -W \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}} ,
+\end{equation}
+which allows us to extract a gain matrix $K$ that is comparable to the previous chapter. A second, already known, component is
+used for State encoder + PPO. Here, we reuse an identified system from N4SID (\cref{sec:unknown-model}) to encode an observation into
 a latent state:
+\begin{equation}
+    \label{eq:state-encoder}
+    \hat{x}_k = \hat{C}\T y_k , \qquad \hat{C} \in \R^{d_{\mathrm{in}} \times \hat{n}} , \quad \hat{C}\T \hat{C} = I_{\hat{n}} .
+\end{equation}
+The input dimension for both the actor and the critic thus becomes $\hat{n}$, which is the order of the identified model.
 
-% Formula using identified C and observation y to map to latent state x
-
-The input dimension for both the actor and the critic thus becomes n_hat, which is the order of the identified model.
-
-However, as we will later scale our inputs to larger dimensions \needcite{cref chapter 5}, N4SID will become unfeasible for such dimensions.
+However, as we will later scale our inputs to larger dimensions (\cref{chap:perception}), N4SID will become infeasible for such dimensions.
 Still, we want to stay in line with the idea of encoding our observations into a latent state, as this exactly introduces the bow-tie structure
-we want. So, we introduce another encoder, which offers this scalability and call the combination PPO Encoder Scalable. This feature extractor
-is based on the results from \needcite{Jonschkowski2015Learning,Botteghi2021LowDimensional} which use robotic priors. Robotic priors, simply described,
+we want. So, we introduce another encoder, which offers this scalability, and call the combination Scalable encoder + PPO. This feature extractor
+is based on the results from~\cite{Jonschkowski2015Learning,Botteghi2021LowDimensional}, which use robotic priors. Robotic priors, simply described,
 are prior knowledge, like physical laws, from which we define loss functions. By adding them to the training process, and optimizing for them, we can
-ensure that learned representation is in line with these laws. As mentioned in \needcite{cref to appraoch}, this allows us to make use of the embodiment
-to improve our controller architecture. Here, we will use the following priors\needcite{Botteghi2021LowDimensional}:
+ensure that the learned representation is in line with these laws. As mentioned in \cref{sec:approach}, this allows us to make use of the embodiment
+to improve our controller architecture. Here, we will use the following priors~\cite{Botteghi2021LowDimensional}:
+\begin{itemize}
+    \item simplicity: the state is lower in dimensionality than the observation,
+    \item temporal coherence: state changes are rather slow,
+    \item proportionality: same actions should show similar output strength,
+    \item repeatability: same actions should show similar output changes,
+    \item causality: TODO
+\end{itemize}
 
-- simplicity: State is lower in dimensionality than the observation
-- temporal coherence: States changes are rather slow
-- proportionality: Same actions should show similar output strength
-- repeatability: Same actions should show similar output changes
-- causality: ?
+We modify the loss calculations taken from the paper~\cite{Botteghi2021LowDimensional} slightly,
+by dropping the Lreg term, and thus get the total loss function of
+% TODO - cross check with code again
+\begin{equation}
+    \label{eq:prior-loss}
+    \mathcal{L} = \omega_1 \mathcal{L}_{\mathrm{temp}} + \omega_2 \mathcal{L}_{\mathrm{prop}} + \omega_3 \mathcal{L}_{\mathrm{rep}}
+        + \omega_4 \mathcal{L}_{\mathrm{caus}} .
+\end{equation}
 
-With the exact loss calculations taken from the paper \needcite{Botteghi2021LowDimensional},
-we get the total loss function of:
-
-% insert formula from paper: L= ω1Ltemp+ω2Lprop+ω3Lrep+ω4Lcaus+ω5Lreg
-
-As this encoder must be trained first, we pretrain it for a total of 20 000 steps
-and 20 epochs (so 1000 steps per epoch), before freezing its parameters and prepending
+As this encoder must be trained first, we pretrain it for a total of $20\,000$ steps
+and $20$ epochs (so $1000$ steps per epoch), before freezing its parameters and prepending
 it to the actor and the critic. An important parameter is also the dimension of the latent
-state, which we set to the actual "2" here. Although for later application, one might not know
+state, which we set to the actual ``2'' here. Although for later application, one might not know
 the real, underlying dimension of the dynamics, we want to make it comparable across the solvers by
-using the same low-dimension. And as N4SID moslty correctly identifies the true dimension, we use it
-here as well. 
+using the same low dimension. And as N4SID mostly correctly identifies the true dimension, we use it
+here as well. \Cref{alg:encoder-pretraining} summarizes the pretraining.
+\begin{algorithm}[htbp]
+    \caption{Pretraining of the scalable encoder}
+    \label{alg:encoder-pretraining}
+    \begin{algorithmic}[1]
+        \REQUIRE initial gain $K_0$, action bound $a_{\max}$, encoder $f_\psi \colon \R^{d_{\mathrm{in}}} \to \R^{2}$,
+        weights $\omega_1, \dots, \omega_4$
+        \FOR{$k = 0, \dots, 20\,000 - 1$}
+            \STATE with probability $0.3$, draw $v_k$ uniformly from $[-a_{\max}/10, a_{\max}/10]^{d_{\mathrm{out}}}$,
+            otherwise set $v_k = -K_0 y_k$
+            \STATE apply $v_k$, store $(y_k, v_k, y_{k+1})$, and reset the plant after $800$ steps
+        \ENDFOR
+        \FOR{epoch $= 1, \dots, 20$}
+            \FOR{each minibatch of $128$ stored transitions}
+                \STATE pair every transition with a randomly drawn second transition
+                \STATE take an Adam step on $\omega_1 \mathcal{L}_{\mathrm{temp}} + \omega_2 \mathcal{L}_{\mathrm{prop}}
+                + \omega_3 \mathcal{L}_{\mathrm{rep}} + \omega_4 \mathcal{L}_{\mathrm{caus}}$ of these pairs
+            \ENDFOR
+        \ENDFOR
+        \STATE standardize the latent state with its mean and standard deviation over the stored observations
+        \STATE freeze $\psi$ and place $f_\psi$ in front of the actor and the critic
+    \end{algorithmic}
+\end{algorithm}
 
-The second trainable extractor we used is based on Todorov et al.'s paper\needcite{Todorov2026Orthogonal}
+The second trainable extractor we used is based on Todorov et al.'s paper~\cite{Todorov2026Orthogonal}
 using orthogonal bottlenecks. It consists of a fully connected MLP, with 512 neurons in the first,
 and 256 neurons in the second layer. Following it is an orthogonal matrix, which projects the output
-into a state of bottleneck dimension, which we here set to 2. The matrix is the Q component of a QR decomposition
+into a state of bottleneck dimension, which we here set to $2$. The matrix is the Q component of a QR decomposition
 of a random matrix sampled from a standard normal distribution:
+\begin{equation}
+    \label{eq:ortho-bottleneck}
+    G = U_{\mathrm{b}} R_{\mathrm{b}} , \quad G \in \R^{D \times d_{\mathrm{b}}} , \quad G_{ij} \sim \mathcal{N}(0, 1) ,
+    \qquad h = U_{\mathrm{b}}\T z , \quad U_{\mathrm{b}}\T U_{\mathrm{b}} = I_{d_{\mathrm{b}}} .
+\end{equation}
 
-% formula for matrix B
+Different to the previous encoder, this one is trained together with PPO, so we just combine them.
 
-Again, like the other encoder, we pretrain for the same number of steps and epochs.
+The following figure visualizes the architecture for all our solvers.\needcite{figure below}
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+            x=0.85cm, y=1cm,
+            layer/.style={draw, minimum width=0.26cm, inner sep=0pt, line width=0.4pt},
+            trained/.style={layer, fill=blue!25},
+            frozen/.style={layer, fill=orange!40},
+            fixedmap/.style={draw=none, fill=none, font=\scriptsize, inner sep=1pt},
+            io/.style={layer, dashed, fill=white},
+            link/.style={-{Stealth[length=1.6mm]}, line width=0.4pt},
+            size/.style={font=\scriptsize, anchor=north},
+            row/.style={font=\small, anchor=east},
+        ]
+        % columns: input, trunk 1-3, latent, head, actor 1-2, output
+        \def\xin{0}\def\xa{1.25}\def\xb{2.35}\def\xc{3.45}\def\xz{4.75}\def\xh{6.0}
+        \def\xp{7.25}\def\xq{8.45}\def\xout{9.85}
+        % heights: d_in, 512, 256, 64, latent, d_out
+        \def\hin{1.5}\def\hfh{1.8}\def\htf{1.45}\def\hsf{0.85}\def\hz{0.3}\def\hout{1.25}
 
-\section{Comparison Across Dimensions}
+        % Linear PPO
+        \def\y{0}
+        \node[row] at (-0.5,\y) {Linear PPO};
+        \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
+        \node[io, minimum height=\hout cm] (out) at (\xout,\y) {};
+        \draw[link] (in) -- node[above, font=\scriptsize] {$W = -K$} (out);
 
-Now that we have all our methods setup, we can train and compare them across the different inflation sizes.
+        % Fully-connected PPO
+        \def\y{-2.4}\def\lb{0.55}
+        \node[row] at (-0.5,\y) {Fully-connected PPO};
+        \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
+        \node[trained, minimum height=\hsf cm] (p) at (\xp,\y) {};
+        \node[trained, minimum height=\hsf cm] (q) at (\xq,\y) {};
+        \node[io, minimum height=\hout cm] (out) at (\xout,\y) {};
+        \draw[link] (in) -- (p);
+        \draw[link] (p) -- (q);
+        \draw[link] (q) -- (out);
+        \node[size] at (\xp,\y-\lb) {64};
+        \node[size] at (\xq,\y-\lb) {64};
 
-\section{Noise On Large Inflation}
+        % State encoder + PPO
+        \def\y{-4.8}\def\lb{0.55}
+        \node[row] at (-0.5,\y) {State encoder + PPO};
+        \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
+        \node[frozen, minimum height=\hz cm] (z) at (\xz,\y) {};
+        \node[trained, minimum height=\hsf cm] (p) at (\xp,\y) {};
+        \node[trained, minimum height=\hsf cm] (q) at (\xq,\y) {};
+        \node[io, minimum height=\hout cm] (out) at (\xout,\y) {};
+        \draw[link] (in) -- node[above, font=\scriptsize] {$\hat{C}\T$ (N4SID)} (z);
+        \draw[link] (z) -- (p);
+        \draw[link] (p) -- (q);
+        \draw[link] (q) -- (out);
+        \node[size] at (\xz,\y-\lb) {$\hat{n}$};
+        \node[size] at (\xp,\y-\lb) {64};
+        \node[size] at (\xq,\y-\lb) {64};
+
+        % Scalable encoder + PPO
+        \def\y{-7.2}\def\lb{1.0}
+        \node[row] at (-0.5,\y) {Scalable encoder + PPO};
+        \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
+        \node[frozen, minimum height=\hfh cm] (a) at (\xa,\y) {};
+        \node[frozen, minimum height=\htf cm] (b) at (\xb,\y) {};
+        \node[frozen, minimum height=\hz cm] (z) at (\xz,\y) {};
+        \node[frozen, minimum height=\hsf cm] (h) at (\xh,\y) {};
+        \node[trained, minimum height=\hsf cm] (p) at (\xp,\y) {};
+        \node[trained, minimum height=\hsf cm] (q) at (\xq,\y) {};
+        \node[io, minimum height=\hout cm] (out) at (\xout,\y) {};
+        \draw[link] (in) -- (a);
+        \draw[link] (a) -- (b);
+        \draw[link] (b) -- (z);
+        \draw[link] (z) -- (h);
+        \draw[link] (h) -- (p);
+        \draw[link] (p) -- (q);
+        \draw[link] (q) -- (out);
+        \node[size] at (\xa,\y-\lb) {512};
+        \node[size] at (\xb,\y-\lb) {256};
+        \node[size] at (\xz,\y-\lb) {2};
+        \node[size] at (\xh,\y-\lb) {64};
+        \node[size] at (\xp,\y-\lb) {64};
+        \node[size] at (\xq,\y-\lb) {64};
+
+        % Bottleneck PPO
+        \def\y{-9.6}\def\lb{1.0}
+        \node[row] at (-0.5,\y) {Bottleneck PPO};
+        \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
+        \node[trained, minimum height=\hfh cm] (a) at (\xa,\y) {};
+        \node[trained, minimum height=\htf cm] (b) at (\xb,\y) {};
+        \node[trained, minimum height=\htf cm] (c) at (\xc,\y) {};
+        \node[layer, fill=gray!35, minimum height=\hz cm] (z) at (\xz,\y) {};
+        \node[trained, minimum height=\hsf cm] (p) at (\xp,\y) {};
+        \node[trained, minimum height=\hsf cm] (q) at (\xq,\y) {};
+        \node[io, minimum height=\hout cm] (out) at (\xout,\y) {};
+        \draw[link] (in) -- (a);
+        \draw[link] (a) -- (b);
+        \draw[link] (b) -- (c);
+        \draw[link] (c) -- node[above, font=\scriptsize] {$U_{\mathrm{b}}\T$} (z);
+        \draw[link] (z) -- (p);
+        \draw[link] (p) -- (q);
+        \draw[link] (q) -- (out);
+        \node[size] at (\xa,\y-\lb) {512};
+        \node[size] at (\xb,\y-\lb) {256};
+        \node[size] at (\xc,\y-\lb) {256};
+        \node[size] at (\xz,\y-\lb) {2};
+        \node[size] at (\xp,\y-\lb) {64};
+        \node[size] at (\xq,\y-\lb) {64};
+
+        % column captions
+        \node[font=\scriptsize, align=center] at (\xin,1.3) {observation\\$y_k \in \R^{d_{\mathrm{in}}}$};
+        \node[font=\scriptsize, align=center] at (\xb,1.3) {encoder\\(ReLU)};
+        \node[font=\scriptsize, align=center] at (\xz,1.3) {latent\\state};
+        \node[font=\scriptsize, align=center] at ({(\xp+\xq)/2},1.3) {actor\\(tanh)};
+        \node[font=\scriptsize, align=center] at (\xout,1.3) {action\\$v_k \in \R^{d_{\mathrm{out}}}$};
+
+        % legend
+        \def\y{-11.3}
+        \node[trained, minimum height=0.3cm] (l1) at (-3.6,\y) {};
+        \node[right=2pt of l1, font=\scriptsize] (t1) {trained by PPO};
+        \node[frozen, minimum height=0.3cm, right=12pt of t1] (l2) {};
+        \node[right=2pt of l2, font=\scriptsize] (t2) {fitted before PPO, then frozen};
+        \node[layer, fill=gray!35, minimum height=0.3cm, right=12pt of t2] (l3) {};
+        \node[right=2pt of l3, font=\scriptsize] {fixed random projection};
+    
+    \end{tikzpicture}
+    \caption{Actor architectures of our PPO variants. For each layer, the number below indicates its neurons. 
+    The critic receives the same encoder structure and uses its own 64-64 tanh perceptron with a scalar output.
+    Visualization created with Claude Code.}
+    \label{fig:ppo-architectures}
+\end{figure}
+
+\section{Comparison across Dimensions}
+\label{sec:rl-comparison}
+
+Now that we have all our methods set up, we can train and compare them across the different inflation sizes.
+
+\section{Noise on Large Inflation}
+\label{sec:rl-noise-large}
 
 
 \section{Discussion}
+\label{sec:rl-discussion}
