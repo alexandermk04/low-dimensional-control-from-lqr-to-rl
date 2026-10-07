@@ -15,7 +15,7 @@ from experiments.figures.aggregate import (
 )
 from experiments.figures.panels import trajectory_overlay, box_metric
 from experiments.figures.style import figure_dir, save, save_variants, table_dir
-from experiments.figures.tables import metric_table, setting_table, write_table
+from experiments.figures.tables import METRIC_ROWS, metric_table, setting_table, write_table
 from experiments.settings_guard import require_choice
 from experiments.ch4_noise import SIZES
 from experiments.store import load_experiment
@@ -28,7 +28,8 @@ SET_BY = "python -m experiments.ch4_noise"
 
 
 def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=None,
-           dt: float = 0.01):
+           dt: float = 0.01, metric: str = "subopt", scorer=with_suboptimality,
+           log: bool | str = "symlog"):
     """Draw the noise figures and tables of one chapter.
 
     Parameters
@@ -45,6 +46,12 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
         Restrict to one inflation size.
     dt : float, optional
         Time between two trajectory samples, in seconds.
+    metric : str, optional
+        Column that is plotted and tabulated.
+    scorer : callable, optional
+        Adds ``metric`` to the tidy rows.
+    log : bool or str, optional
+        Axis scaling of the box plots.
     """
     level = require_choice(
         settings.CHOSEN_NOISE_LEVEL, "CHOSEN_NOISE_LEVEL",
@@ -64,7 +71,8 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
             print(f"  no {experiment} runs at size {size!r}, skipping")
             return
 
-    rows = with_suboptimality(tidy(records))
+    rows = scorer(tidy(records))
+    name = METRIC_ROWS[metric][0]
 
     level_order = tuple(settings.NOISE_LEVELS)
     channel_order = ("clean",) + tuple(settings.NOISE_CHANNELS) + ("all",)
@@ -91,15 +99,14 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
             short_title = f"{cell_channel}, {cell_level}"
             stem = f"{cell_channel}-{cell_level}"
 
-        # Suboptimality can be negative
         def draw(subset=subset, title=title, short_title=short_title, **size):
             ax = box_metric(
-                subset, "solver", "subopt", order=solvers, log="symlog", **size
+                subset, "solver", metric, order=solvers, log=log, **size
             )
             ax.set_title(short_title if size else title)
             return ax
 
-        save_variants(draw, f"{prefix}_subopt_{stem}", experiment)
+        save_variants(draw, f"{prefix}_{metric}_{stem}", experiment)
 
     reference = "baseline" if "baseline" in solvers else solvers[0]
     reference_records = [r for r in records if r.solver == reference]
@@ -130,10 +137,11 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
         setting_table(
             [r for r in rows if r.get("channel") in (channel, "clean")],
             "level",
+            metric=metric,
             row_order=level_order,
             column_order=solvers,
             row_header="Intensity",
-            caption=f"Suboptimality $S${inflation} {channel} noise of increasing intensity.",
+            caption=f"{name}{inflation} {channel} noise of increasing intensity.",
             label=f"tab:{slug}-levels",
         ),
         f"{prefix}_levels",
@@ -144,11 +152,12 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
         setting_table(
             [r for r in rows if r.get("level") in (level, "none")],
             "channel",
+            metric=metric,
             row_order=channel_order,
             column_order=solvers,
             row_header="Channel",
             caption=(
-                f"Suboptimality $S${inflation} each noise channel at intensity \\emph{{{level}}}."
+                f"{name}{inflation} each noise channel at intensity \\emph{{{level}}}."
             ),
             label=f"tab:{slug}-channels",
         ),
@@ -168,7 +177,7 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
             metric_table(
                 [r for r in solver_rows if r.get("channel") in (channel, "clean")],
                 "level",
-                metrics=("subopt",),
+                metrics=(metric,),
                 column_order=level_order,
                 column_header="Intensity",
                 caption=f"{label_for(solver)} under {channel} noise of increasing intensity.",
@@ -183,7 +192,7 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
             metric_table(
                 [r for r in solver_rows if r.get("level") in (level, "none")],
                 "channel",
-                metrics=("subopt",),
+                metrics=(metric,),
                 column_order=channel_order,
                 column_header="Channel",
                 caption=(

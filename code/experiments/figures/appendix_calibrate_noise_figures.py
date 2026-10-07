@@ -23,8 +23,9 @@ CHANNEL_ROWS = {
 }
 
 
-def noise_table(calibration: dict, label: str = "tab:noise_levels") -> str:
-    """The standard deviation per channel and level, with the targeted cost ratio."""
+def noise_table(calibration: dict, label: str = "tab:noise_levels", note: str = "") -> str:
+    """The standard deviation per channel and level, with the targeted cost ratio.
+    """
     levels = calibration["levels"]
     names = list(next(iter(levels.values())))
 
@@ -57,7 +58,7 @@ def noise_table(calibration: dict, label: str = "tab:noise_levels") -> str:
         r"Standard deviation per noise channel and intensity, calibrated to the "
         r"cost ratio $\rho_{\ell}$ of \eqref{eq:noise-calibration}. Every value "
         rf"reaches its ratio within ${100 * worst:.1f}\,\%$."
-    )
+    ) + (f" {note}" if note else "")
 
     return "\n".join([
         r"\begin{table}[htbp]",

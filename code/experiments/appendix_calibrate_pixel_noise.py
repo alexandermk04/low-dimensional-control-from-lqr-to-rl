@@ -21,6 +21,9 @@ EXPERIMENT = "appendix_calibrate_pixel_noise"
 
 REFERENCE = "oracle_coarse"
 
+# Don't calibrate measurement
+CALIBRATED_CHANNELS = tuple(c for c in settings.NOISE_CHANNELS if c != "measurement")
+
 
 class _Reference:
     solver = REFERENCE
@@ -46,7 +49,7 @@ def mean_cost(channel=None, std=None) -> float:
 def main():
     clean = mean_cost()
 
-    for index, channel in enumerate(settings.NOISE_CHANNELS):
+    for index, channel in enumerate(CALIBRATED_CHANNELS):
         if not in_shard(index):
             continue
 

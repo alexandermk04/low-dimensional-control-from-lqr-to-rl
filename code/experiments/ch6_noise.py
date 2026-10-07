@@ -65,7 +65,10 @@ def evaluate_grid(verbose: bool = True):
 
     require_noise(settings.NOISE_CHANNELS, table="CH6_NOISE_STD")
 
-    source_runs = load_run_index(SOURCE)
+    source_runs = {
+        key: record for key, record in load_run_index(SOURCE).items()
+        if record.solver in settings.CH6_NOISE_SOLVERS
+    }
     if not source_runs:
         raise MissingExperimentError(
             f"No runs of {SOURCE!r}. Run `python -m experiments.{SOURCE}` first."
@@ -77,6 +80,7 @@ def evaluate_grid(verbose: bool = True):
         EXPERIMENT,
         used_settings={
             "source_experiment": SOURCE,
+            "solvers": settings.CH6_NOISE_SOLVERS,
             "noise_levels": settings.NOISE_LEVELS,
             "noise_channels": settings.NOISE_CHANNELS,
             "noise_std": settings.CH6_NOISE_STD,

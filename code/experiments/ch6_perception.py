@@ -61,6 +61,9 @@ def main():
             "probe_episodes": settings.PIXEL_PROBE_EPISODES,
             "pretrain_steps": settings.PRETRAIN_STEPS,
             "pretrain_epochs": settings.PRETRAIN_EPOCHS,
+            "pretrain_episode_length": settings.PIXEL_PRETRAIN_EPISODE_LENGTH,
+            "pve_position_dim": settings.PVE_POSITION_DIM,
+            "pve_loss_weights": settings.PVE_LOSS_WEIGHTS,
         },
     )
 
