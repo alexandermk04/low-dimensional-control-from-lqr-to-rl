@@ -136,7 +136,13 @@ def gradient_descent_discrete(lqr: LQRDiscrete, settings: ModelBasedPolicyGradie
     progress_bar = tqdm(range(settings.gradient_steps), desc="Model-Based Policy Gradient", unit="step")
 
     for i in progress_bar:
-        grad, expected_cost = calculate_gradient_model_based_discrete(model, K)
+        # stop if infinite
+        if not np.all(np.isfinite(K)):
+            break
+        try:
+            grad, expected_cost = calculate_gradient_model_based_discrete(model, K)
+        except np.linalg.LinAlgError:
+            break
         costs.append(expected_cost)
 
         K = K - settings.gradient_lr * grad
