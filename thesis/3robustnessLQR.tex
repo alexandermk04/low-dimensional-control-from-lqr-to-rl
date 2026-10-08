@@ -176,7 +176,7 @@ noise channels \needcite{table below}.
 \subsection{Discussion}
 \label{sec:true-model-discussion}
 
-Overall, we note that trained controllers are mostly at an advantage compared to statically calculated controllers in regards to
+Generally, we note that trained controllers are mostly at an advantage compared to statically calculated controllers in regards to
 robustness. When comparing now trained fully parameterized and structured approaches, differences definitely appear. Changes in
 the underlying model, as in Parametric Uncertainty, affect all controllers mostly the same, even though a fully parameterized
 version might offer better robustness on average. Looking at the other cases, we find that low-dimensional controllers actually
@@ -353,11 +353,80 @@ Based on those, $\lambda = 4000$ and a step size of $\eta = 3.5 \times 10^{-6}$ 
 \subsection{Results}
 \label{subsec:unknown-model-results}
 
+Looking at the time until convergence, as well as the achieved training suboptimality, we notice that the model-free version of
+SPI did in fact diverge under large inflation, while still not achieving a strong reduction in rank. As this was the same problem
+we observed during our parameter search \needcite{SPI MF appendix}, we will accept that it is not applicable in practice. Apart from
+this, it is noticable that the MF NPG takes longer to converge, the large the inflation gets, with it being much slower than N4SID +
+SPI and N4SID + PG, where SPI again is still much faster than the PG. THe fastest appraoch here being the DARE solution, as it only
+requires the identification step, and no iteration.
+
+Looking at the policy sizes, we can see that N4SID + SPI indeed reduce its size to the optimal policy, with the DARE policy
+also being smaller than the iterative versions, but still slightly larger. 
+
+% policy sizes across
+
+Analyzing the resulting test suboptimality, we see the expected worse performance of MF SPI, but also that the direct approaches
+underperform the indirect (Identification) approaches. Here, we can also notice a difference: With increasing inflation size,
+the directly trained approaches suboptimality increases, while for the identified model they stay more or less the same.
+What also jumps out is that N4SID + DARE in some cases even achieves optimal performance.
+
+% identified across sizes subopt
+
 \subsection{Noise Experiments on Large Inflation}
 \label{subsec:noise-large-inflation}
+
+We first start by analyzing the effects we can observe on the uninflated system under noise. For parametric noise, the spread
+of suboptimality again ranges from +0.1 to -0.1 for all the iteratively trained approaches, with the DARE solution having a much
+smaller spread, centered around the baseline. Still, it is observable that the N4SID based solvers perform on average much better
+than the direct approaches. For control noise a similar structure can be noticed, however, here, the spreads seperate much clearer
+into worse for direct approaches and better for indirect approaches.
+For both external disturbance and measurement noise the DARE solution remains closely spread around 0. For external disturbance all
+the other solvers, except for MF NPG perform worse than the baseline, while MF NPG sits at a -0.1 suboptimality for divergent. For
+measurement noise, the image suddenly flips, with MF NPG performing worse, while all the other approaches sit at around -0.01 suboptimality.
+
+Now inflating the system to large size and repeating our experiments, we see similar observations at parametric uncertainty, except for
+SPI MF who performs worse by multiple orders of magnitudes than the others. Looking at control noise, the clear winners here are again
+the iterative N4SID solvers, which are much more robust than the baseline or the direct approaches. Still on average MF NPG performs
+similarly or slightly better under strong or divergent control noise, even though the spread shows that a worse performance than baseline is indeed possible.
+The most interesting observation here is, that SPI MF, even though performing much worse on the clean plant, actually performs on average
+on par with MF NPG under divergent control noise.
+
+% external disturbance strong, right control large divergent
+
+For external disturbance, the indirect solvers perform worse here, while MF NPG is the clearly robust choice here, under any strength. Again,
+it is noticable that the stronger the noise gets, the more runs of SPI MF achieve a negative suboptimality. While on average still worse,
+under divergent intensity, some do indeed perform the same as MF NPG. This phenomenon can also be observed with measurement noise:
+Here SPI MF is for weak, standard and strong on average at 10, 1 and 0.1 suboptimality, but for divergent then clearly sits at -1.
+With increasing intensity, the spread can be seen shifting more and more downwards. Looking at the whole picture however, SPI + N4SID
+is the most robust policy here, being far better across all intensities. Still, it can be seen that the reduction based solvers
+perform here far better.
+
+% left measurement standard large, right measurement large divergent
 
 \subsection{Discussion}
 \label{sec:id-model-discussion}
 
+Overall we notice that for a clean plant identifying the system and solving the D4RE based on these observations is the fastest
+solution, and achieves even under noise similar performances compared to the baseline solution. A good alternative offer approaches
+using the same identified system, and combining it with model-based appraoches. They offer, in the case of SPI, a not too long 
+training, but are indeed more robust under parametric and control noise on inflated systems. Compared to it, direct approaches
+require much more training, and perform worse on the clean system. The only exception is under external disturbances, where
+MF NPG as a fully parameterized, iteratively trained policy outperforms all other appraoches.
+
+This distinction of fully parameterized or dimensionally reduced must also be made. While the direct MF SPI approach varies
+quite a lot in its performances, under measurement noise on inflated systems, dimensionally reduced systems do outperform
+the others. Combining both of these distinctions, in the most cases, except for external disturbance, an N4SID + SPI based
+controller is the best choice. It offers the advantages of fast training, robustness to parametric and control noise from
+N4SID, together with the robustness under measurement noise from the reduced dimensionality, while also being magnitudes
+smaller. Solving the DARE directly, also offers a good solution, being stable across all experiments, but often being
+outperformed by the reduced controller.
+
 \section{Discussion}
 \label{sec:ch4-discussion}
+
+We take from this chapter, that direct approaches are easily outperformed by indirect approaches which try to identify the
+model first. This identification adds uncertainty to the policy, which improves its performance later, especially under
+noise influence, as well as faster training. Overall, having access to the model itself or calculating the optimal controller 
+from an identified model doesn't always offer the best robustness. Regarding noise, it is also noticable that low-dimensional
+controllers strength is their resistance to measurement noise, which becomes much clearer under increasingly larger dimensions.
+With these learnings in mind, we will now progress to our RL approaches next.
