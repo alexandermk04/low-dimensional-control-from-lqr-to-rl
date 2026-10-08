@@ -16,6 +16,7 @@ __all__ = [
     "curve_band",
     "latest_per_experiment",
     "label_for",
+    "clip_roundoff",
 ]
 
 # How a solver is named in a legend or a table header.
@@ -49,6 +50,16 @@ DERIVED_ARRAYS = {"subopt": "subopt_episodes"}
 
 # Every metric that is summarized over pooled episodes
 CELL_ARRAYS = {**EPISODE_ARRAYS, **DERIVED_ARRAYS}
+
+# Round below this at suboptimlaity
+ROUNDOFF_TOL = 1e-12
+
+
+def clip_roundoff(values):
+    """Set relative cost differences within round-off to exactly zero."""
+    values = np.asarray(values, dtype=float)
+    return np.where(np.abs(values) < ROUNDOFF_TOL, 0.0, values)
+
 
 # How a condition value is named, mapped to a more readable format.
 VALUE_LABELS = {
@@ -102,6 +113,11 @@ def tidy(records: list[RunRecord]) -> list[dict]:
             **record.condition,
             **record.summary,
         }
+
+        if row.get("training_subopt_final") is not None:
+            row["training_subopt_final"] = float(
+                clip_roundoff(row["training_subopt_final"])
+            )
 
         # Additional episode arrays
         for column in EPISODE_ARRAYS.values():
@@ -215,6 +231,7 @@ def with_suboptimality(
                     episodes[usable] - base[usable]
                 ) / base[usable]
 
+            paired = clip_roundoff(paired)
             row["subopt_episodes"] = paired
             finite = paired[np.isfinite(paired)]
             row["subopt"] = float(np.mean(finite)) if finite.size else None
@@ -225,7 +242,8 @@ def with_suboptimality(
         j_ref = scalar_references.get(key)
         finite = cost is not None and np.isfinite(float(cost))
         row["subopt"] = (
-            (float(cost) - j_ref) / j_ref if finite and j_ref else None
+            float(clip_roundoff((float(cost) - j_ref) / j_ref))
+            if finite and j_ref else None
         )
         row.pop("subopt_episodes", None)
 

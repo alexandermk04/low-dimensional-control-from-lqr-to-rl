@@ -10,6 +10,7 @@ import numpy as np
 from evaluation.records import RunRecord
 from experiments.figures.aggregate import (
     aggregate,
+    clip_roundoff,
     curve_band,
     group,
     label_for,
@@ -118,6 +119,15 @@ def _linthresh_for(cells: list[np.ndarray]) -> float:
         return 1.0
 
     return float(10.0 ** np.floor(np.log10(min(smallest))))
+
+
+def _symlog_axis(ax, cells: list[np.ndarray], linscale: float):
+    """Symlog y-axis fitted to the shown values."""
+    linthresh = _linthresh_for(cells)
+    ax.set_yscale("symlog", linthresh=linthresh, linscale=linscale)
+
+    if not any(np.any(np.asarray(values) < 0) for values in cells):
+        ax.set_ylim(bottom=-0.5 * linthresh)
 
 
 def box_metric(
@@ -242,10 +252,10 @@ def box_metric(
 
     if symlog:
         if width < 1.0:
-            ax.set_yscale("symlog", linthresh=_linthresh_for(data), linscale=1.0)
+            _symlog_axis(ax, data, linscale=1.0)
             ax.yaxis.get_major_locator().set_params(numticks=8)
         else:
-            ax.set_yscale("symlog", linthresh=_linthresh_for(data), linscale=0.35)
+            _symlog_axis(ax, data, linscale=0.35)
     elif log:
         ax.set_yscale("log")
 
@@ -340,7 +350,7 @@ def learning_bands(
 
     def rescale(values):
         if normalize and j_star:
-            scaled = (np.asarray(values) - j_star) / j_star
+            scaled = clip_roundoff((np.asarray(values) - j_star) / j_star)
         else:
             scaled = np.asarray(values)
         drawn.append(np.atleast_1d(scaled))
@@ -359,7 +369,7 @@ def learning_bands(
             if not np.isfinite(median):
                 continue
             exact = median <= 0.0
-            suffix = "exact, no curve" if exact else "no curve"
+            suffix = "no iterations"
             ax.axhline(
                 median, linestyle=(2 * flat_drawn % 8, (2, 6)), linewidth=1.5,
                 color=color, label=f"{label} ({suffix})",
@@ -381,7 +391,7 @@ def learning_bands(
         ax.set_xscale("log")
 
     if normalize:
-        ax.set_yscale("symlog", linthresh=_linthresh_for(drawn), linscale=0.35)
+        _symlog_axis(ax, drawn, linscale=0.35)
     else:
         ax.set_yscale("log")
 
