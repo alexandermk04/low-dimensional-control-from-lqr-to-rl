@@ -7,14 +7,14 @@
 \toprule
 Solver & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model-free NPG & S-PI (model-free) \\
 \midrule
-True cost $J$ & $5848 \pm 9.673 \times 10^{-12}$ & $5848 \pm 2.036 \times 10^{-6}$ & $5848 \pm 0.0005446$ & $5848 \pm 0.0001816$ & $5849 \pm 0.5453$ & $7288 \pm 43.32$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $4.33 \times 10^{-10} \pm 3.48 \times 10^{-10}$ & $3.18 \times 10^{-5} \pm 9.31 \times 10^{-8}$ & $7.05 \times 10^{-6} \pm 3.1 \times 10^{-8}$ & $8.85 \times 10^{-5} \pm 9.32 \times 10^{-5}$ & $0.246 \pm 0.00741$ \\
-Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+4.54 \times 10^{-10} \pm 3.82 \times 10^{-10}$ & $+3.89 \times 10^{-5} \pm 2.43 \times 10^{-5}$ & $+8.53 \times 10^{-6} \pm 5.31 \times 10^{-6}$ & $+9.37 \times 10^{-5} \pm 0.000104$ & $+0.323 \pm 0.252$ \\
-Iterations & $1 \pm 0$ & $1 \pm 0$ & $346 \pm 0$ & $68 \pm 0$ & $194 \pm 31$ & $209 \pm 14$ \\
-Env.\ steps to convergence & $0 \pm 0$ & $8 \times 10^{3} \pm 0$ & $8 \times 10^{3} \pm 0$ & $8 \times 10^{3} \pm 0$ & $3.11 \times 10^{7} \pm 5 \times 10^{6}$ & $3.34 \times 10^{7} \pm 2.18 \times 10^{6}$ \\
-Env.\ steps to best policy & $0 \pm 0$ & $8 \times 10^{3} \pm 0$ & $8 \times 10^{3} \pm 0$ & $8 \times 10^{3} \pm 0$ & $2.21 \times 10^{7} \pm 5.69 \times 10^{6}$ & $2.48 \times 10^{7} \pm 5.23 \times 10^{6}$ \\
-Policy parameters & $301 \pm 0$ & $301 \pm 0$ & $20000 \pm 0$ & $301 \pm 0$ & $20000 \pm 0$ & $20000 \pm 0$ \\
-Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $100.0 \pm 0.0$ & $1.0 \pm 0.0$ & $100.0 \pm 0.0$ & $89.7 \pm 4.1$ \\
+True cost $J$ & $5848 \pm 8.776 \times 10^{-12}$ & $5848 \pm 0.001746$ & $5848 \pm 0.002319$ & $5848 \pm 0.0004728$ & $5887 \pm 28.18$ & $3.933 \times 10^{4} \pm 6574$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $1.61 \times 10^{-7} \pm 2.99 \times 10^{-7}$ & $3.2 \times 10^{-5} \pm 3.97 \times 10^{-7}$ & $7.06 \times 10^{-6} \pm 8.09 \times 10^{-8}$ & $0.00658 \pm 0.00482$ & $5.73 \pm 1.12$ \\
+Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+1.54 \times 10^{-7} \pm 2.76 \times 10^{-7}$ & $+3.91 \times 10^{-5} \pm 2.43 \times 10^{-5}$ & $+8.53 \times 10^{-6} \pm 5.31 \times 10^{-6}$ & $+0.00755 \pm 0.00667$ & $+5.99 \pm 7.72$ \\
+Iterations & $1 \pm 0$ & $1 \pm 0$ & $346 \pm 0$ & $68 \pm 0$ & $610 \pm 104$ & $451 \pm 5$ \\
+Env.\ steps to convergence & $0 \pm 0$ & $2 \times 10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ & $1.22 \times 10^{8} \pm 2.08 \times 10^{7}$ & $9.03 \times 10^{7} \pm 1.09 \times 10^{6}$ \\
+Env.\ steps to best policy & $0 \pm 0$ & $2 \times 10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ & $2 \times 10^{3} \pm 0$ & $1.14 \times 10^{8} \pm 2.17 \times 10^{7}$ & $7.97 \times 10^{7} \pm 2.93 \times 10^{6}$ \\
+Policy parameters & $301 \pm 0$ & $572 \pm 95$ & $20000 \pm 0$ & $301 \pm 0$ & $20000 \pm 0$ & $15200 \pm 2003$ \\
+Gain rank & $1.0 \pm 0.0$ & $1.9 \pm 0.3$ & $100.0 \pm 0.0$ & $1.0 \pm 0.0$ & $100.0 \pm 0.0$ & $50.5 \pm 6.7$ \\
 \bottomrule
 \end{tabular}
 }

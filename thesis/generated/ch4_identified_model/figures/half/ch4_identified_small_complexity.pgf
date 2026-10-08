@@ -106,8 +106,8 @@
 \pgfsetstrokeopacity{0.800000}%
 \pgfsetdash{}{0pt}%
 \pgfpathmoveto{\pgfqpoint{1.349866in}{-226.701573in}}%
-\pgfpathlineto{\pgfqpoint{1.349866in}{1.180551in}}%
-\pgfpathlineto{\pgfqpoint{1.170685in}{1.180551in}}%
+\pgfpathlineto{\pgfqpoint{1.349866in}{1.941971in}}%
+\pgfpathlineto{\pgfqpoint{1.170685in}{1.941971in}}%
 \pgfpathlineto{\pgfqpoint{1.170685in}{-226.701573in}}%
 \pgfusepath{fill}%
 \end{pgfscope}%
