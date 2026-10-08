@@ -65,14 +65,14 @@ visualizes the thrust directions for eight thrusters.
 \end{figure}
 
 We deliberately chose the action repeat and scaling of the frame, as well as other parameters such that it is possible to
-observe position changes, and thus possibly velocity, from two different frames. For a better approximation the amount
+observe position changes, and thus possibly velocity, from two different frames. For a better approximation the number
 of frames stacked could be increased, or anti-aliasing could be used to display changes better. But this will further be discussed
 in \cref{sec:perception-discussion}.
 
 \subsection{Position-Velocity Encoder}
 \label{subsec:pve}
 
-For this new environment we introduce another feature extractor, which is based on robotic priors used
+For this new environment, we introduce another feature extractor, which is based on robotic priors used
 in Scalable encoder + PPO~\cite{Jonschkowski2015Learning}. Called Position-Velocity Encoders~\cite{Jonschkowski2017PVE},
 it tries to encode a position and velocity state from an observation, by learning a latent position state, and then
 reconstructing the velocity state using temporal differences. As we specifically look for position and velocity in our
@@ -86,14 +86,14 @@ helps in designing the controller architecture (\cref{sec:approach}). The priors
     \item Controllability: ``Controllable things are relevant.''
 \end{enumerate}
 
-For our implementation, we follow the papers' recommended approach. Each frame is input
-into a Convolutional Neural Network (CNN), which encodes a latent position state $s^{(\mathrm{p})}_k$ 
-from it. The dimension of it is a hyperparameter, but recommended to be set to five\needcite{Jonschkowski2017PVE},
-which we will follow. The velocity is then calculated as the difference between two frames, 
+For our implementation, we follow the paper's recommended approach. Each frame is input
+into a convolutional neural network (CNN), which encodes a latent position state $s^{(\mathrm{p})}_k$
+from it. The dimension of it is a hyperparameter, but recommended to be set to five~\cite[Sec.~III-C]{Jonschkowski2017PVE},
+which we follow. The velocity is then calculated as the difference between two frames,
 or $s^{(\mathrm{v})}_k = \alpha \left(s^{(\mathrm{p})}_k - s^{(\mathrm{p})}_{k-1}\right)$, where
 $\alpha$ is the inverse of the time between two agent actions. For the weighting of our
 prior loss terms, we use the combination suggested for similar tasks in~\cite[Tab.~I]{Jonschkowski2017PVE}, and thus
-exclude the controllability prior. For the training process we further follow the one proposed in ~\cite[Sec.~III-C]{Jonschkowski2017PVE}.
+exclude the controllability prior. For the training process we further follow the one proposed in~\cite[Sec.~III-C]{Jonschkowski2017PVE}.
 For details on how exactly the total loss function is constructed, we refer the reader to the original paper~\cite{Jonschkowski2017PVE}.
 Similar to the previous chapter, we train this extractor for a total of $20\,000$ steps, here split into $1\,000$ episodes of $20$ steps,
 before freezing its weights and using it in front of our PPO construct (\cref{sec:ppo-variants}).
@@ -123,15 +123,14 @@ as an input, we flatten the images, such that they receive an $18\,432$-dimensio
 \label{subsec:perception-noise-setting}
 
 As our environment setup changed drastically, the cost increases associated with the noise levels
-calculated from before no longer apply. Thus, we again ran a calibration with the optimal controller 
-to set them to respective levels \needcite{cref to TODO appendix figure}. With these new values, we can use them like before
-to change how the loop behaves. Parametric noise still changes the underlying model, disturbance
+calculated from before no longer apply. Thus, we again ran a calibration with the optimal controller
+to set them to respective levels (\cref{sec:app-pixel-noise-levels}). With these new values, we can use them like before
+to change how the loop behaves. Parametric uncertainty still changes the underlying model, external disturbance
 still acts on the position of our mass, and control noise changes the commanded actuation outputs.
 Measurement noise now affects the visual input, as shown in \cref{fig:pixel-measurement-noise},
-by applying Gaussian Noise to all the pixels in the image. Here, we set the levels ourselves, 
+by applying Gaussian noise to all the pixels in the image. Here, we set the levels ourselves,
 as the optimal controller is not acting from the camera image, but rather from the true state,
-so this noise doesn't affect it. Still, the chosen values are found in the appendix \needcite{cref to table}.
-
+so this noise does not affect it. Still, the chosen values are found in the appendix (\cref{tab:pixel-noise-levels}).
 
 % figure left without noise, middle with standard, right with divergent measurement noise
 \begin{figure}[htbp]
@@ -145,7 +144,7 @@ so this noise doesn't affect it. Still, the chosen values are found in the appen
 We now run the trained controllers from \cref{sec:visual-inputs} on
 noise-affected trajectories under different strengths according to our test protocol.
 To make the comparison under each noise channel equal, we exclude our optimal controller
-baseline, as it doesn't observe the measurement noise like the other controllers do. So
+baseline, as it does not observe the measurement noise like the other controllers do. So
 instead we calculate the suboptimality for each controller in comparison to its clean
 run from \cref{sec:visual-inputs}.
 

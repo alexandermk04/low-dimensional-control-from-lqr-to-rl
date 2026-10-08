@@ -122,8 +122,8 @@ $z_k$, $d_{\mathrm{z}}$ & output of the bottleneck extractor and its dimension &
 $U_{\mathrm{b}}$, $d_{\mathrm{b}}$ & orthonormal bottleneck projection and bottleneck dimension & \eqref{eq:ortho-bottleneck} \\
 \end{longtable}
 
-\section{Noise intensities}
-\label{sec:app_noise_levels}
+\section{Noise Intensities}
+\label{sec:app-noise-levels}
 
 The settings used for the different noise intensities, obtained by the
 calibration \eqref{eq:noise-calibration} on the non-inflated system.
@@ -131,3 +131,13 @@ It is important to note that parametric noise is resampled at every step,
 and that the disturbance noise uses its sinusoidal variant \eqref{eq:dist-sin}.
 
 \input{generated/appendix_calibrate_noise/tables/noise_levels.tex}
+
+\section{Noise Intensities of the Perception Environment}
+\label{sec:app-pixel-noise-levels}
+
+The settings used for the different noise intensities in the perception-based environment
+of \cref{sec:pixel-env}, obtained by the calibration \eqref{eq:noise-calibration}
+with the optimal controller acting on the true state as reference. Measurement
+noise is not calibrated but set by hand (\cref{subsec:perception-noise-setting}).
+
+\input{generated/appendix_calibrate_pixel_noise/tables/pixel_noise_levels.tex}
