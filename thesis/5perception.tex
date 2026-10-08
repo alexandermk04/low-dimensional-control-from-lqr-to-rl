@@ -1,4 +1,5 @@
-\chapter{Perception-based Experiments}\label{chap:perception}
+\chapter{Perception-Based Experiments}
+\label{chap:perception}
 
 From the previous artificially inflated inputs, we aim to move to a more realistic
 example, which shows the robustness of low-dimensional controllers in a scenario involving
@@ -8,93 +9,148 @@ actually build a new environment, which combines perception-based observation wi
 multiple actuators acting on our double integrator.
 
 \section{Artificial Inflation to Pixel Size}
+\label{sec:pixel-inflation}
 
 \subsection{Setting}
+\label{subsec:pixel-inflation-setting}
 
-As mentioned, we take our loop from before \needcite{cref} and scale it up further. The input
-dimension in this case becomes 18432, while the output dimension stays at 256. These numbers
-were specifically selected to match the setup in \needcite{new environment}, such that we can
-compare both more closely. For the input dimension, this is an 96 x 96 image stack of two images,
+As mentioned, we take our loop from before (\cref{subsubsec:inflated-model}) and scale it up further. The input
+dimension in this case becomes $18\,432$, while the output dimension stays at $256$. These numbers
+were specifically selected to match the setup in \cref{sec:pixel-env}, such that we can
+compare both more closely. For the input dimension, this is a $96 \times 96$ image stack of two images,
 while for the output dimension it was chosen due to the specific construction.
 
-We further note that PPO Encoder can not be applied at this scale, as the identification
-for such large matrices is computationally impossible. Additionally, we excluded the PPO Linear
-approach, as it was only used to compare with LQR approaches.
+We further note that State encoder + PPO cannot be applied at this scale, as the identification
+for such large matrices is computationally impossible. Additionally, we excluded Linear PPO,
+as it was only used to compare with LQR approaches.
 
 \subsection{Results}
+\label{subsec:pixel-inflation-results}
 
-\section{The New Environment and Pos-Vel}
+\section{The New Environment and the Position-Velocity Encoder}
+\label{sec:pixel-env}
 
 \subsection{Pixelated Environment}
+\label{subsec:pixelated-environment}
 
-For our perception setup, we still use the underlying double-integrator as a basis, however now
-simulate its actual movement. This simulation is observed by a monochromatic camera producing 96 x 96 pixel
-images of a mass with radius of z pixels moving along a horizontal line. To be able to see 
-changes between the pictures, we hold any action commanded by the agent for 30 timesteps before
-capturing another frame. The agent then receives a stack of two images as the input. Figure x shows
-an example of such an image
+For our perception setup, we still use the underlying double integrator as a basis, however now
+simulate its actual movement. This simulation is observed by a monochromatic camera producing $96 \times 96$-pixel
+images of a mass with radius of z pixels moving along a horizontal line. To be able to see
+changes between the pictures, we hold any action commanded by the agent for $30$ time steps before
+capturing another frame. The agent then receives a stack of two images as the input. \Cref{fig:pixel-setup-observation} shows
+an example of such an image.
 
 But not only the input is high-dimensional compared to the actual state. We also modify the way
-our mass is actuated. We also multiply the number of actuators to 256, distributed equally around
-a half circle, with their thrust direction acting on different angles on the mass. The picture below
-visualizes the thrust directions for eight thrusters. 
+our mass is actuated. We also multiply the number of actuators to $256$, distributed equally around
+a half circle, with their thrust direction acting on different angles on the mass. \Cref{fig:pixel-setup-thrusters}
+visualizes the thrust directions for eight thrusters.
 
 % TODO: pictures side by side - left: image stack of the actual observation, right: schematic mass with thruster arrows
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[t]{0.49\linewidth}
+        \centering
+        \fbox{\parbox[c][4cm][c]{0.9\linewidth}{\centering TODO: observation stack}}
+        \caption{TODO}
+        \label{fig:pixel-setup-observation}
+    \end{subfigure}\hfill
+    \begin{subfigure}[t]{0.49\linewidth}
+        \centering
+        \fbox{\parbox[c][4cm][c]{0.9\linewidth}{\centering TODO: thruster schematic}}
+        \caption{TODO}
+        \label{fig:pixel-setup-thrusters}
+    \end{subfigure}
+    \caption{TODO}
+    \label{fig:pixel-setup}
+\end{figure}
 
 We deliberately chose the action repeat and scaling of the frame, as well as other parameters such that it is possible to
 observe position changes, and thus possibly velocity, from two different frames. For a better approximation the amount
 of frames stacked could be increased, or anti-aliasing could be used to display changes better. But this will further be discussed
-in \needcite{discussion}.
+in \cref{sec:perception-discussion}.
 
-\subsection{Pos-Vel Encoder}
+\subsection{Position-Velocity Encoder}
+\label{subsec:pve}
 
 For this new environment we introduce another feature extractor, which is based on robotic priors used
-in our Scalable Encoder \needcite{Jonschkowski2015Learning}. Called Position-Velocity Encoders \needcite{Jonschkowski2017PVE},
+in Scalable encoder + PPO~\cite{Jonschkowski2015Learning}. Called Position-Velocity Encoders~\cite{Jonschkowski2017PVE},
 it tries to encode a position and velocity state from an observation, by learning a latent position state, and then
 reconstructing the velocity state using temporal differences. As we specifically look for position and velocity in our
 states, we can construct even more specific priors, again in line with our reasoning that knowledge about the embodiment
-helps designing the controller architecture \needcite{section motivation?}. The priors used in \needcite{Jonschkowski2017PVE} are:
+helps in designing the controller architecture (\cref{sec:approach}). The priors used in~\cite[Sec.~III-B]{Jonschkowski2017PVE} are:
+\begin{enumerate}
+    \item Variation: ``Positions of relevant things vary.''
+    \item Slowness: ``Positions change slowly.''
+    \item Inertia: ``Velocities change slowly.''
+    \item Conservation: ``Velocity magnitudes change slowly.''
+    \item Controllability: ``Controllable things are relevant.''
+\end{enumerate}
 
-1. Variation - "Positions of relevant things vary"
-2. Slowness - "Positions change slowly"
-3. Inertia - "Velocities change slowly"
-4. Conservation - "Velocity magnitudes change slowly"
-5. Controllability - "Controllable things are relevant"
+For our implementation, we follow the papers' recommended approach. Each frame is input
+into a Convolutional Neural Network (CNN), which encodes a latent position state $s^{(\mathrm{p})}_k$ 
+from it. The dimension of it is a hyperparameter, but recommended to be set to five\needcite{Jonschkowski2017PVE},
+which we will follow. The velocity is then calculated as the difference between two frames, 
+or $s^{(\mathrm{v})}_k = \alpha \left(s^{(\mathrm{p})}_k - s^{(\mathrm{p})}_{k-1}\right)$, where
+$\alpha$ is the inverse of the time between two agent actions. For the weighting of our
+prior loss terms, we use the combination suggested for similar tasks in~\cite[Tab.~I]{Jonschkowski2017PVE}, and thus
+exclude the controllability prior. For the training process we further follow the one proposed in ~\cite[Sec.~III-C]{Jonschkowski2017PVE}.
+For details on how exactly the total loss function is constructed, we refer the reader to the original paper~\cite{Jonschkowski2017PVE}.
+Similar to the previous chapter, we train this extractor for a total of $20\,000$ steps, here split into $1\,000$ episodes of $20$ steps,
+before freezing its weights and using it in front of our PPO construct (\cref{sec:ppo-variants}).
 
-% TODO - check how to indicate that the descriptions are taken from the paper
-Again, for details on how exactly the total loss function is constructed, we refer the reader to the original paper\needcite{Jonschkowski2017PVE}.
-Similar to the previous chapter, we train this extractor for 20000 steps across x episodes, before freezing its weights, and using it
-in front of our PPO construct \needcite{PPO section}.
+Scalable encoder + PPO is pretrained with a similar data split for this setting.
 
-\section{Effect Of Visual Inputs On The Solvers}
+\section{Effect of Visual Inputs on the Solvers}
+\label{sec:visual-inputs}
 
 \subsection{Setting}
+\label{subsec:visual-inputs-setting}
 
-For the experiments here, we again compare the performance of the optimal controller K* with
-our different approaches, which here consist of the FC PPO, Encoder PPO, Ortho PPO as well as our
-PosVel PPO. The optimal controller here only gives us the cost to compare it to, as it actually
+For the experiments here, we again compare the performance of the optimal controller $K^{*}$ with
+our different approaches, which here consist of Pixels + PPO, Scalable encoder + PPO, Bottleneck PPO as well as our
+Position-Velocity Encoder + PPO. The optimal controller here only gives us the cost to compare it to, as it actually
 never acts based on the perception and with the thrusters, but instead on the true loop.
-For the other approaches, except for PosVel, which takes images
-as an input, we flatten the images, such that they receive an 18432 dimensional input vector.
+For the other approaches, except for Position-Velocity Encoder + PPO, which takes images
+as an input, we flatten the images, such that they receive an $18\,432$-dimensional input vector.
 
 \subsection{Results}
+\label{subsec:visual-inputs-results}
 
 \section{Noisy Perception}
+\label{sec:perception-noise}
 
 \subsection{Setting}
+\label{subsec:perception-noise-setting}
 
 As our environment setup changed drastically, the cost increases associated with the noise levels
-calculated from before no longer apply. Thus, we again ran a calibration to set them to respective
-levels \needcite{cref to TODO appendix figure}. With these new values, we can use them like before
+calculated from before no longer apply. Thus, we again ran a calibration with the optimal controller 
+to set them to respective levels \needcite{cref to TODO appendix figure}. With these new values, we can use them like before
 to change how the loop behaves. Parametric noise still changes the underlying model, disturbance
 still acts on the position of our mass, and control noise changes the commanded actuation outputs.
-Measurement noise now affects the visual input, leading to smaller discolorations:
+Measurement noise now affects the visual input, as shown in \cref{fig:pixel-measurement-noise},
+by applying Gaussian Noise to all the pixels in the image. Here, we set the levels ourselves, 
+as the optimal controller is not acting from the camera image, but rather from the true state,
+so this noise doesn't affect it. Still, the chosen values are found in the appendix \needcite{cref to table}.
+
 
 % figure left without noise, middle with standard, right with divergent measurement noise
+\begin{figure}[htbp]
+    \centering
+    \generatedfigure{appendix_calibrate_pixel_noise}{pixel_measurement_noise}
+    \caption{An observation without measurement noise, and with measurement noise of intensity \emph{standard} and \emph{divergent}.
+    The older of the two stacked frames is on the left.}
+    \label{fig:pixel-measurement-noise}
+\end{figure}
 
-We now run the trained controllers from \needcite{cref effec of visual inputs} on
-noise affected trajectories under different strengths according to our test protocol.
+We now run the trained controllers from \cref{sec:visual-inputs} on
+noise-affected trajectories under different strengths according to our test protocol.
+To make the comparison under each noise channel equal, we exclude our optimal controller
+baseline, as it doesn't observe the measurement noise like the other controllers do. So
+instead we calculate the suboptimality for each controller in comparison to its clean
+run from \cref{sec:visual-inputs}.
 
 \subsection{Results}
+\label{subsec:perception-noise-results}
 
 \section{Discussion}
+\label{sec:perception-discussion}
