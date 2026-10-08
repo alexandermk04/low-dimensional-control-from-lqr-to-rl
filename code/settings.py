@@ -247,7 +247,7 @@ CH4_IDENTIFICATION_SOLVERS = ("mb_est",)
 ROLLOUT_SOLVERS = ("mf_npg", "spi_mf")
 
 # Every solver that can learn from an identified model
-IDENTIFICATION_SOLVERS = ("mb_est", "ce_dare", "spi_est", "spi_est", "ppo_encoder")
+IDENTIFICATION_SOLVERS = ("mb_est", "ce_dare", "spi_est", "ppo_encoder")
 
 # --- Chapter 4: true model ------------------------------------
 CH4_TRUE_SOLVERS = ("baseline", "mb_pg", "spi")
@@ -462,6 +462,31 @@ SIZE_HYPERPARAMS = {
         "small": {"lambda_": 400, "stepsize": 3.5e-05},
         "medium": {"lambda_": 400, "stepsize": 3.5e-05},
         "large": {"lambda_": 40000, "stepsize": 3.5e-08},
+    },
+    "ppo_linear": {
+        "small": {"learning_rate": 0.0001},
+        "medium": {"learning_rate": 4.5e-06},
+        "large": {"learning_rate": 2.2e-06},
+    },
+    "ppo_bottleneck": {
+        "small": {"learning_rate": 3e-05},
+        "medium": {"learning_rate": 4.5e-05},
+        "large": {"learning_rate": 6.7e-06},
+    },
+    "ppo_encoder": {
+        "small": {"learning_rate": 0.0001},
+        "medium": {"learning_rate": 4.5e-05},
+        "large": {"learning_rate": 6.7e-06},
+    },
+    "ppo_encoder_scalable": {
+        "small": {"learning_rate": 1e-05},
+        "medium": {"learning_rate": 1.3e-05},
+        "large": {"learning_rate": 2.2e-06},
+    },
+    "ppo_mlp": {
+        "small": {"learning_rate": 3e-05},
+        "medium": {"learning_rate": 1.3e-05},
+        "large": {"learning_rate": 6.7e-06},
     },
 }
 
