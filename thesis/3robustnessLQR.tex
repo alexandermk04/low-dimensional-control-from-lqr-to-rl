@@ -130,208 +130,66 @@ solution \eqref{eq:dare} from \cref{subsubsec:lqr-optimal}.
 \label{subsec:known-model-results}
 
 We apply our solvers to the true models base and inflated versions, for now noise-free, as described in \needcite{cref inflation loop}. 
-As described in \needcite{cref to test protocol}, we train 10 controllers each per solver, before evaluating them on the test episodes.
-The results are then pooled. Let's first take a look at the training process at the uninflated system:
+Specifically, as in \needcite{cref to test protocol}, we train 10 controllers each per solver, before evaluating them on the test episodes.
+The results are then pooled.
 
-% Base figures
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_true_model}{ch4_true_base_curves_iterations}
-    \caption{Training suboptimality over the solver iterations.}
-    \label{fig:ch4-true-base-curves-iterations}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_true_model}{ch4_true_base_complexity}
-    \caption{Policy size of the learned gain.}
-    \label{fig:ch4-true-base-complexity}
-  \end{subfigure}
-  \caption{Training process and policy size of the solvers on the true model under
-    \emph{base} inflation.}
-  \label{fig:ch4-true-base-training}
-\end{figure}
+The most interesting finding is, how much faster SPI converges compared to the Policy Gradient. While it achieves its best training
+suboptimality within around 50 iterations, MB PG still falls drastically short of it after 450 iterations. We can also see in 
+\needcite{table showing rank / complexity} that the reduction in complexity for all inflation sizes has worked well with SPI. 
+For our test suboptimality, SPI also outperforms MB PG here by at least one order of magnitude. \needcite{across sizes suboptimality}
+visualizes this.
 
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{ch4_true_model}{ch4_true_base_subopt}
-  \caption{TODO}
-  \label{fig:ch4-true-base-subopt}
-\end{figure}
+% the table and figure from above
 
-\input{generated/ch4_true_model/tables/ch4_true_base.tex}
-
-% Large figures
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_true_model}{ch4_true_large_curves_iterations}
-    \caption{Training suboptimality over the solver iterations.}
-    \label{fig:ch4-true-large-curves-iterations}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_true_model}{ch4_true_large_complexity}
-    \caption{Policy size of the learned gain.}
-    \label{fig:ch4-true-large-complexity}
-  \end{subfigure}
-  \caption{Training process and policy size of the solvers on the true model under
-    \emph{large} inflation.}
-  \label{fig:ch4-true-large-training}
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{ch4_true_model}{ch4_true_large_subopt}
-  \caption{TODO}
-  \label{fig:ch4-true-large-subopt}
-\end{figure}
-
-\input{generated/ch4_true_model/tables/ch4_true_large.tex}
-
-% Comparison figures
-
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{ch4_true_model}{ch4_true_across_sizes_complexity}
-  \caption{TODO}
-  \label{fig:ch4-true-across-sizes-complexity}
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{ch4_true_model}{ch4_true_across_sizes_subopt}
-  \caption{TODO}
-  \label{fig:ch4-true-across-sizes-subopt}
-\end{figure}
-
-\input{generated/ch4_true_model/tables/ch4_true_across_sizes.tex}
-
-% TODO: Analysis
+Overall, this looks very promising for SPI, still, our goal is to find out whether it also is a robust controller.
 
 \subsection{Noise Experiments}
 \label{sec:true-model-noise}
 
 Now, we reuse the controllers we trained in \needcite{cref to subsec above} and evaluate them under the test protocol
-with noise\needcite{cref to noise introduction} injected. We only show a selection of the results here, and will append
-further relevant figures in the appendix \needcite{cref}. All plots, including some that were excluded in this thesis, can be
-found in the code repository \needcite{link to repo}.
+with noise\needcite{cref to noise introduction} injected. 
 
-% Measurement none, strong inflation figure
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_clean}
-    \caption{No noise}
-    \label{fig:ch4-true-noise-large-clean}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_measurement-strong}
-    \caption{Measurement noise at intensity \emph{strong}}
-    \label{fig:ch4-true-noise-large-measurement-strong}
-  \end{subfigure}
-  \caption{Suboptimality $S$ of the solvers on the true model under \emph{large} inflation,
-    without noise and under measurement noise.}
-  \label{fig:ch4-true-noise-large-measurement}
-\end{figure}
+When looking at the results, one can notice that our baseline controller, which was optimal for the clean loop, mostly
+performs worse than our trained controllers, except for external disturbance. However, when only comparing MB PG with
+SPI, we can see differences in their performance, depending on the type of noise that is applied, as well as whether the
+loop is inflated or not. For parametric noise for example, MB PG performs on average better than SPI here, however also
+has a higher variance. When looking at external disturbance under large inflation, one can notice that with increasing
+noise it becomes clearer that SPI is more robust here compared to MB PG. While for weak and standard their total spread
+still shows some overlap, for strong and divergent SPI shows a cleanly seperated suboptimality below MB PG.
 
-% Table for the above
-\input{generated/ch4_true_model_noise/tables/ch4_true_model_noise_large_levels.tex}
+% figure of comparison across the sizes for external disturbance
 
-% Control weak, standard, strong in large inflation figures
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_control-weak}
-    \caption{Intensity \emph{weak}.}
-    \label{fig:ch4-true-noise-large-control-weak}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_control-standard}
-    \caption{Intensity \emph{standard}.}
-    \label{fig:ch4-true-noise-large-control-standard}
-  \end{subfigure}
+For control noise in comparison, we can see that here MB PG is more robust on average across settings. However, its worst case
+performance here is worse than SPI, so it has an overall wider spread of suboptimalities. Still, both mostly outperform the
+baseline controller. Measurement noise becomes an interesting case here. While both controllers outperform the baseline, under
+no inflation, MB PG seems to be much more robust here. However, when looking at the controllers under large inflation with the
+same noise level applied, suddenly SPI shows more robustness here with little variation. MB PG on the other hand is only on
+average better than the baseline, but in some cases worse. \needcite{figure below} visualizes this.
 
-  \medskip
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_control-strong}
-    \caption{Intensity \emph{strong}.}
-    \label{fig:ch4-true-noise-large-control-strong}
-  \end{subfigure}
-  \caption{Suboptimality $S$ of the solvers on the true model under \emph{large} inflation
-    and control noise of increasing intensity.}
-  \label{fig:ch4-true-noise-large-control}
-\end{figure}
+% left base noise measurement divergent, right large noise measurement divergent
 
-% side by side all standard, base vs. large inflation figures
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_base_subopt_all-standard}
-    \caption{\emph{base} inflation.}
-    \label{fig:ch4-true-noise-base-all-standard}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_all-standard}
-    \caption{\emph{large} inflation.}
-    \label{fig:ch4-true-noise-large-all-standard}
-  \end{subfigure}
-  \caption{Suboptimality $S$ of the solvers on the true model with all noise channels at
-    intensity \emph{standard}.}
-  \label{fig:ch4-true-noise-all-standard}
-\end{figure}
+Overall, for the strong level and large inflation, this is how both controllers compare to the baseline and each other across the
+noise channels \needcite{table below}.
 
-% Table
-\input{generated/ch4_true_model_noise/tables/sizes/ch4_true_model_noise_sizes_all-standard.tex}
-
-% Counterexamples
-% parametric standard under large, note that no real change occurs accross sizes
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_parametric-standard}
-  \caption{Suboptimality $S$ of the solvers on the true model under \emph{large} inflation
-    and parametric uncertainty at intensity \emph{standard}.}
-  \label{fig:ch4-true-noise-large-parametric-standard}
-\end{figure}
-
-% no noise side by side with disturbance at large divergent
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_clean}
-    \caption{No noise.}
-    \label{fig:ch4-true-noise-large-clean-disturbance}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_disturbance-divergent}
-    \caption{External disturbance at intensity \emph{divergent}.}
-    \label{fig:ch4-true-noise-large-disturbance-divergent}
-  \end{subfigure}
-  \caption{Suboptimality $S$ of the solvers on the true model under \emph{large} inflation,
-    without noise and under external disturbance at intensity \emph{divergent}.}
-  \label{fig:ch4-true-noise-large-disturbance}
-\end{figure}
-
-% TODO: Analysis
+% table true model noise large channels
 
 \subsection{Discussion}
 \label{sec:true-model-discussion}
 
+Overall, we note that trained controllers are mostly at an advantage compared to statically calculated controllers in regards to
+robustness. When comparing now trained fully parameterized and structured approaches, differences definitely appear. Changes in
+the underlying model, as in Parametric Uncertainty, affect all controllers mostly the same, even though a fully parameterized
+version might offer better robustness on average. Looking at the other cases, we find that low-dimensional controllers actually
+offer better robustness in noise related to the inputs of the controller, especially the larger the input dimension. Measurement
+noise shows this clearly, as the performance of a overparameterized controller degrades here with increasing size, while a
+regularized controller stays mostly the same, or even shows improvement. However, related to the output dimensions, under control
+noise reduced controllers perform worse on average, however still better in the worst case than the full controller. And under large
+size the reduction in needed parameters is of two magnitudes of order, which shows the efficiency of the reduced controller.
+
 \section{Unknown Model across Dimensions}
 \label{sec:unknown-model}
 
-Here we take a look at the more realistic case, where we do not know the underlying model, and compare different approaches.
+Now we take a look at the more realistic case, where we do not know the underlying model, and compare different approaches.
 Before we can get into the results, we first take a deeper look at the solvers that we use and how the experiments are
 set up.
 
@@ -495,137 +353,8 @@ Based on those, $\lambda = 4000$ and a step size of $\eta = 3.5 \times 10^{-6}$ 
 \subsection{Results}
 \label{subsec:unknown-model-results}
 
-% training curves iteration under large
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{ch4_identified_model}{ch4_identified_large_curves_iterations}
-  \caption{Training suboptimality of the model-free solvers over the training iterations
-    under \emph{large} inflation.}
-  \label{fig:ch4-identified-large-curves-iterations}
-\end{figure}
-
-% TODO: Insert table with iteration counts / environments steps
-
-% subopt table at large
-\input{generated/ch4_identified_model/tables/ch4_identified_large.tex}
-
-% side by side subopt of base, small, medium, large
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_identified_model}{ch4_identified_base_subopt}
-    \caption{\emph{base} inflation.}
-    \label{fig:ch4-identified-base-subopt}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_identified_model}{ch4_identified_small_subopt}
-    \caption{\emph{small} inflation.}
-    \label{fig:ch4-identified-small-subopt}
-  \end{subfigure}
-
-  \medskip
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_identified_model}{ch4_identified_medium_subopt}
-    \caption{\emph{medium} inflation.}
-    \label{fig:ch4-identified-medium-subopt}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_identified_model}{ch4_identified_large_subopt}
-    \caption{\emph{large} inflation.}
-    \label{fig:ch4-identified-large-subopt}
-  \end{subfigure}
-  \caption{Suboptimality $S$ of the solvers without the model for each inflation size,
-    without noise.}
-  \label{fig:ch4-identified-subopt}
-\end{figure}
-
-% across sizes complexity
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{ch4_identified_model}{ch4_identified_across_sizes_complexity}
-  \caption{Policy size of the gains learned without the model, across every inflation size.}
-  \label{fig:ch4-identified-across-sizes-complexity}
-\end{figure}
-
 \subsection{Noise Experiments on Large Inflation}
 \label{subsec:noise-large-inflation}
-
-\subsection{Results}
-\label{subsec:noise-results}
-
-% large traj levels baseline plot
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{ch4_noise}{ch4_noise_large_traj_levels_baseline}
-  \caption{Trajectories of the optimal controller under \emph{large} inflation and measurement noise of
-    increasing intensity.}
-  \label{fig:ch4-noise-large-traj-levels-baseline}
-\end{figure}
-
-% clean large vs. measurement noise strong large
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_noise}{ch4_noise_large_subopt_clean}
-    \caption{No noise.}
-    \label{fig:ch4-noise-large-clean}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_noise}{ch4_noise_large_subopt_measurement-strong}
-    \caption{Measurement noise at intensity \emph{strong}.}
-    \label{fig:ch4-noise-large-measurement-strong}
-  \end{subfigure}
-  \caption{Suboptimality $S$ of the solvers without the model under \emph{large} inflation,
-    without noise and under measurement noise.}
-  \label{fig:ch4-noise-large-measurement}
-\end{figure}
-
-% large weak, standard, strong, divergent control
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_noise}{ch4_noise_large_subopt_control-weak}
-    \caption{Intensity \emph{weak}.}
-    \label{fig:ch4-noise-large-control-weak}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_noise}{ch4_noise_large_subopt_control-standard}
-    \caption{Intensity \emph{standard}.}
-    \label{fig:ch4-noise-large-control-standard}
-  \end{subfigure}
-
-  \medskip
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_noise}{ch4_noise_large_subopt_control-strong}
-    \caption{Intensity \emph{strong}.}
-    \label{fig:ch4-noise-large-control-strong}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_noise}{ch4_noise_large_subopt_control-divergent}
-    \caption{Intensity \emph{divergent}.}
-    \label{fig:ch4-noise-large-control-divergent}
-  \end{subfigure}
-  \caption{Suboptimality $S$ of the solvers without the model under \emph{large} inflation
-    and control noise of increasing intensity.}
-  \label{fig:ch4-noise-large-control}
-\end{figure}
-
-% disturbance at strong base vs. large as table comparison
-\input{generated/ch4_noise/tables/sizes/ch4_noise_sizes_disturbance-strong.tex}
-
-% TODO: Reference \cref{tab:ch4-noise-large-channels,fig:app-noise-large-parametric-strong} in the analysis.
-
-% TODO: Analysis
 
 \subsection{Discussion}
 \label{sec:id-model-discussion}
