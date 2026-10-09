@@ -1,6 +1,6 @@
 \begin{table}[htbp]
 \centering
-\caption{Policy architectures optimized by the exact gradients on the true model under \emph{small} inflation, without noise. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
+\caption{Policy architectures optimized by the exact gradients on the true model under \emph{small} inflation, without noise.}
 \label{tab:ch4-true-small}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrr}
@@ -9,7 +9,7 @@ Solver & Baseline & Model-based PG & S-PI \\
 \midrule
 True cost $J$ & $5848 \pm 8.623 \times 10^{-12}$ & $5849 \pm 0.004687$ & $5848 \pm 0.000522$ \\
 Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $0.000164 \pm 8.01 \times 10^{-7}$ & $4.82 \times 10^{-6} \pm 8.93 \times 10^{-8}$ \\
-Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+0.0002 \pm 0.000125$ & $+5.86 \times 10^{-6} \pm 3.65 \times 10^{-6}$ \\
+Suboptimality $S$ & $+0 \pm 0$ & $+0.0002 \pm 0.000125$ & $+5.86 \times 10^{-6} \pm 3.65 \times 10^{-6}$ \\
 Iterations & $1 \pm 0$ & $455 \pm 1$ & $100 \pm 11$ \\
 Env.\ steps to convergence & $0 \pm 0$ & $0 \pm 0$ & $0 \pm 0$ \\
 Env.\ steps to best policy & $0 \pm 0$ & $0 \pm 0$ & $0 \pm 0$ \\

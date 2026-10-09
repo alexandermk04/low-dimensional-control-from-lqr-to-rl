@@ -1,6 +1,6 @@
 \begin{table}[htbp]
 \centering
-\caption{Scalable encoder + PPO under \emph{large} inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 300 test episodes (100 per seed, 3 seeds) pooled; every other row over the 3 runs.}
+\caption{Scalable encoder + PPO under \emph{large} inflation, over the seeds.}
 \label{tab:appendix-rl-learning-rate-ppo-encoder-scalable-large}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrr}
@@ -9,7 +9,7 @@ Learning rate & 6.7e-05 & 2.2e-05 & 2.2e-06 & 6.7e-07 & 6.7e-06 \\
 \midrule
 True cost $J$ & $8832 \pm 3933$ & $9511 \pm 3324$ & $1.103 \times 10^{4} \pm 8106$ & $1.281 \times 10^{4} \pm 2126$ & $1.254 \times 10^{4} \pm 6828$ \\
 Training suboptimality $(J-J^*)/J^*$ & $0.598 \pm 0.849$ & $0.681 \pm 0.629$ & $0.834 \pm 1.07$ & $1.29 \pm 0.551$ & $1.14 \pm 0.953$ \\
-Test cost$^{\dagger}$ & $7.691 \times 10^{4} \pm 1.053 \times 10^{6}$ & $1.316 \times 10^{4} \pm 1.252 \times 10^{4}$ & $1.302 \times 10^{4} \pm 1.257 \times 10^{4}$ & $2.712 \times 10^{4} \pm 3.175 \times 10^{4}$ & $1.804 \times 10^{4} \pm 1.505 \times 10^{4}$ \\
+Test cost & $7.691 \times 10^{4} \pm 1.053 \times 10^{6}$ & $1.316 \times 10^{4} \pm 1.252 \times 10^{4}$ & $1.302 \times 10^{4} \pm 1.257 \times 10^{4}$ & $2.712 \times 10^{4} \pm 3.175 \times 10^{4}$ & $1.804 \times 10^{4} \pm 1.505 \times 10^{4}$ \\
 Env.\ steps to best policy & $2.1 \times 10^{7} \pm 6.6 \times 10^{6}$ & $1.89 \times 10^{7} \pm 9.79 \times 10^{6}$ & $2.75 \times 10^{7} \pm 1.56 \times 10^{6}$ & $1.6 \times 10^{7} \pm 9.85 \times 10^{6}$ & $2.73 \times 10^{7} \pm 1.73 \times 10^{6}$ \\
 Env.\ steps to convergence & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ & $3 \times 10^{7} \pm 0$ \\
 \bottomrule

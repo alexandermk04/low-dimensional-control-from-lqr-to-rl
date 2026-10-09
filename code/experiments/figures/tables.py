@@ -16,9 +16,6 @@ __all__ = [
 # Counts for system identification tables
 CENSUS_ROWS = ("Identified", "Stable")
 
-# Marks a row whose statistics are over pooled test episodes rather than runs.
-EPISODE_MARKER = r"$^{\dagger}$"
-
 # Label of the row with the divergence rate of the metric above it.
 DIVERGED_ROW = r"\quad diverged"
 
@@ -127,41 +124,6 @@ def _math(value: float, fmt: str) -> str:
         return f"10^{{{power}}}"
 
     return f"{mantissa} \\times 10^{{{power}}}"
-
-
-def _provenance(stats: dict, episode_metrics: list, show_spread: bool) -> str:
-    """Sentence stating what the numbers were taken over.
-    """
-    if not show_spread:
-        return ""
-
-    cells = [cell for metric in stats.values() for cell in metric.values()]
-    if not cells:
-        return ""
-
-    runs = max(cell["n_total"] for cell in cells)
-    per_run_metrics = [m for m in stats if m not in episode_metrics]
-
-    if not episode_metrics:
-        return f" Mean $\\pm$ standard deviation over {runs} runs."
-
-    # The total episodes seen
-    episodes = max(
-        (cell["n_episodes"] for metric in episode_metrics
-         for cell in stats[metric].values() if cell["episodes"]),
-        default=0,
-    )
-    per_seed = episodes // runs if runs else episodes
-
-    clause = (
-        f" {EPISODE_MARKER} mean $\\pm$ standard deviation over all {episodes} "
-        f"test episodes ({per_seed} per seed, {runs} seeds) pooled"
-    )
-
-    if not per_run_metrics:
-        return clause + "."
-
-    return clause + f"; every other row over the {runs} runs."
 
 
 def _fit(tabular: str) -> str:
@@ -322,14 +284,8 @@ def metric_table(
         ) + r" \\")
         lines.append(r"\midrule")
 
-    episode_metrics = []
-
     for metric in metrics:
         row_label, fmt = METRIC_ROWS.get(metric, (_escape(metric), "{:.4g}"))
-
-        if any(cell["episodes"] for cell in stats[metric].values()):
-            episode_metrics.append(metric)
-            row_label += EPISODE_MARKER
 
         cells = [
             _cell(stats[metric].get(key), fmt, show_spread) for key in keys
@@ -365,7 +321,6 @@ def metric_table(
 
     full_caption = (
         caption
-        + _provenance(stats, episode_metrics, show_spread)
         + ((CENSUS_NOTE if with_identification else CENSUS_NOTE_STABLE_ONLY)
            if show_census else "")
     )
@@ -435,14 +390,12 @@ def setting_table(
     columns = ordered((key[1] for key in stats), column_order)
 
     _, fmt = METRIC_ROWS.get(metric, (_escape(metric), "{:.4g}"))
-    episodes = any(cell["episodes"] for cell in stats.values())
-    marker = EPISODE_MARKER if episodes else ""
 
     lines = [
         r"\begin{tabular}{l" + "r" * len(columns) + "}",
         r"\toprule",
         " & ".join(
-            [(row_header or "") + marker]
+            [row_header or ""]
             + [_escape(str(label_for(column))) for column in columns]
         ) + r" \\",
         r"\midrule",
@@ -476,9 +429,7 @@ def setting_table(
     if caption is None and label is None:
         return tabular
 
-    full_caption = caption + _provenance(
-        {metric: stats}, [metric] if episodes else [], show_spread
-    )
+    full_caption = caption
 
     return "\n".join([
         r"\begin{table}[htbp]",

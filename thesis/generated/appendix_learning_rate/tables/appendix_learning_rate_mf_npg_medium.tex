@@ -1,6 +1,6 @@
 \begin{table}[htbp]
 \centering
-\caption{Model-free NPG under \emph{medium} inflation, over the seeds. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
+\caption{Model-free NPG under \emph{medium} inflation, over the seeds.}
 \label{tab:appendix-learning-rate-mf-npg-medium}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrr}
@@ -9,7 +9,7 @@ Learning rate & 0.001 & 0.003 & 0.01 & 0.03 & 0.1 \\
 \midrule
 True cost $J$ & $6201 \pm 78.76$ & $5997 \pm 66.31$ & $5861 \pm 7.912$ & $8498 \pm 3419$ & $1.18 \times 10^{4} \pm 2093$ \\
 Training suboptimality $(J-J^*)/J^*$ & $0.0604 \pm 0.0135$ & $0.0254 \pm 0.0113$ & $0.00216 \pm 0.00135$ & $0.453 \pm 0.585$ & $1.02 \pm 0.358$ \\
-Test cost$^{\dagger}$ & $6329 \pm 5591$ & $6119 \pm 5406$ & $5981 \pm 5284$ & $8642 \pm 9030$ & $1.209 \times 10^{4} \pm 1.117 \times 10^{4}$ \\
+Test cost & $6329 \pm 5591$ & $6119 \pm 5406$ & $5981 \pm 5284$ & $8642 \pm 9030$ & $1.209 \times 10^{4} \pm 1.117 \times 10^{4}$ \\
 Iterations & $622 \pm 59$ & $418 \pm 76$ & $356 \pm 46$ & $239 \pm 121$ & $128 \pm 84$ \\
 Iterations to 1\,\% & \multicolumn{1}{c}{--} & $574$ & $212 \pm 36$ & $170 \pm 31$ & $226$ \\
 Env.\ steps to 1\,\% & \multicolumn{1}{c}{--} & $1.15 \times 10^{8}$ & $4.27 \times 10^{7} \pm 7.19 \times 10^{6}$ & $3.42 \times 10^{7} \pm 6.17 \times 10^{6}$ & $4.54 \times 10^{7}$ \\

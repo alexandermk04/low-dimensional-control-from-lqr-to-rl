@@ -1,6 +1,6 @@
 \begin{table}[htbp]
 \centering
-\caption{Solvers learning without the model under \emph{base} inflation, without noise. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
+\caption{Solvers learning without the model under \emph{base} inflation, without noise.}
 \label{tab:ch4-identified-base}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrrr}
@@ -9,7 +9,7 @@ Solver & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model
 \midrule
 True cost $J$ & $5848 \pm 9.054 \times 10^{-12}$ & $5848 \pm 7.414 \times 10^{-12}$ & $5848 \pm 7.116 \times 10^{-12}$ & $5848 \pm 5.83 \times 10^{-7}$ & $5891 \pm 1.541$ & $5858 \pm 4.374$ \\
 Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $0 \pm 0$ & $3.18 \times 10^{-5} \pm 2.24 \times 10^{-15}$ & $7.05 \times 10^{-6} \pm 9.97 \times 10^{-11}$ & $0.00728 \pm 0.000264$ & $0.00162 \pm 0.000748$ \\
-Suboptimality $S$$^{\dagger}$ & $+0 \pm 0$ & $+0 \pm 0$ & $+3.89 \times 10^{-5} \pm 2.43 \times 10^{-5}$ & $+8.52 \times 10^{-6} \pm 5.31 \times 10^{-6}$ & $+0.00862 \pm 0.00527$ & $+0.00172 \pm 0.00111$ \\
+Suboptimality $S$ & $+0 \pm 0$ & $+0 \pm 0$ & $+3.89 \times 10^{-5} \pm 2.43 \times 10^{-5}$ & $+8.52 \times 10^{-6} \pm 5.31 \times 10^{-6}$ & $+0.00862 \pm 0.00527$ & $+0.00172 \pm 0.00111$ \\
 Iterations & $1 \pm 0$ & $1 \pm 0$ & $346 \pm 0$ & $34 \pm 1$ & $167 \pm 9$ & $368 \pm 58$ \\
 Env.\ steps to convergence & $0 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $3.34 \times 10^{7} \pm 1.82 \times 10^{6}$ & $7.36 \times 10^{7} \pm 1.17 \times 10^{7}$ \\
 Env.\ steps to best policy & $0 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $500 \pm 0$ & $2.16 \times 10^{7} \pm 7.1 \times 10^{6}$ & $6.78 \times 10^{7} \pm 1.22 \times 10^{7}$ \\
