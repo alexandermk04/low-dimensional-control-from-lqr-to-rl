@@ -145,9 +145,11 @@ The results are then pooled.
 
 The most interesting finding is how much faster S-PI converges compared to Model-based PG. While it achieves its best training
 suboptimality within around 50 iterations, Model-based PG still falls drastically short of it after 450 iterations. We can also see in
-\needcite{TODO: table showing rank / complexity} that the reduction in complexity for all inflation sizes has worked well with S-PI.
+\cref{tab:ch4-true-across-sizes} that the reduction in complexity for all inflation sizes has worked well with S-PI.
 For our test suboptimality, S-PI also outperforms Model-based PG here by at least one order of magnitude. \Cref{fig:true-across-sizes-subopt}
 visualizes this.
+
+\input{generated/ch4_true_model/tables/ch4_true_across_sizes.tex}
 
 \begin{figure}[htbp]
   \centering
@@ -218,9 +220,9 @@ that, S-PI shows more robustness here with little variation and stays at a simil
 \end{figure}
 
 Overall, for the \emph{strong} level and \emph{large} inflation, this is how both controllers compare to the baseline and each other across the
-noise channels \needcite{table below}.
+noise channels (\cref{tab:ch4-true-model-noise-large-solver-channels-strong}).
 
-% table true model noise large channels
+\input{generated/ch4_true_model_noise/tables/channels/ch4_true_model_noise_large_channels_strong.tex}
 
 \subsection{Discussion}
 \label{subsec:true-model-discussion}

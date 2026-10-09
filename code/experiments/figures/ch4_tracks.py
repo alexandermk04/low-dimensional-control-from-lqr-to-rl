@@ -14,7 +14,7 @@ from experiments.figures.panels import (
     box_metric,
 )
 from experiments.figures.style import figure_dir, save, save_variants, table_dir
-from experiments.figures.tables import metric_table, write_table
+from experiments.figures.tables import metric_table, setting_table, write_table
 from config import DEFAULT_DT
 from experiments.store import load_experiment
 
@@ -119,11 +119,13 @@ def render_across_sizes(
     save(ax.figure, f"{stem}_complexity", experiment)
 
     write_table(
-        metric_table(
-            rows, ("size", "solver"),
-            metrics=("training_subopt_final", "subopt", "policy_complexity", "rank_final"),
-            column_order=order,
-            column_header="(size, solver)",
+        setting_table(
+            rows, "solver",
+            metric=("policy_complexity", "rank_final"),
+            column_by="size",
+            row_order=solvers,
+            column_order=settings.CH4_INFLATION_SIZES,
+            row_header="Solver",
             caption=caption,
             label=f"tab:{stem.replace('_', '-')}",
         ),

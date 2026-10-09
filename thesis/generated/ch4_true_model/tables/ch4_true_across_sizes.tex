@@ -1,16 +1,17 @@
 \begin{table}[htbp]
 \centering
-\caption{Policy architectures on the true model, across every inflation size.}
+\caption{Size of the policy architectures on the true model, across every inflation size.}
 \label{tab:ch4-true-across-sizes}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrrrrrrrrr}
+\begin{tabular}{lrrrrrrrr}
 \toprule
-(size, solver) & base, Baseline & base, Model-based PG & base, S-PI & small, Baseline & small, Model-based PG & small, S-PI & medium, Baseline & medium, Model-based PG & medium, S-PI & large, Baseline & large, Model-based PG & large, S-PI \\
+ & \multicolumn{4}{c}{Policy parameters} & \multicolumn{4}{c}{Gain rank} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+Solver & base & small & medium & large & base & small & medium & large \\
 \midrule
-Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $0.000163 \pm 1.39 \times 10^{-15}$ & $4.81 \times 10^{-6} \pm 2.26 \times 10^{-10}$ & $0 \pm 0$ & $0.000164 \pm 8.01 \times 10^{-7}$ & $4.82 \times 10^{-6} \pm 8.93 \times 10^{-8}$ & $0 \pm 0$ & $0.000163 \pm 2.34 \times 10^{-7}$ & $4.81 \times 10^{-6} \pm 1.29 \times 10^{-8}$ & $0 \pm 0$ & $0.000163 \pm 2.2 \times 10^{-8}$ & $4.81 \times 10^{-6} \pm 8.1 \times 10^{-9}$ \\
-Suboptimality $S$ & $+0 \pm 0$ & $+0.000199 \pm 0.000124$ & $+5.88 \times 10^{-6} \pm 3.68 \times 10^{-6}$ & $+0 \pm 0$ & $+0.0002 \pm 0.000125$ & $+5.86 \times 10^{-6} \pm 3.65 \times 10^{-6}$ & $+0 \pm 0$ & $+0.0002 \pm 0.000125$ & $+5.87 \times 10^{-6} \pm 3.67 \times 10^{-6}$ & $+0 \pm 0$ & $+0.000199 \pm 0.000125$ & $+5.87 \times 10^{-6} \pm 3.67 \times 10^{-6}$ \\
-Policy parameters & $2 \pm 0$ & $2 \pm 0$ & $2 \pm 0$ & $16 \pm 0$ & $50 \pm 0$ & $16 \pm 0$ & $76 \pm 0$ & $1250 \pm 0$ & $76 \pm 0$ & $301 \pm 0$ & $20000 \pm 0$ & $301 \pm 0$ \\
-Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $5.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $25.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $100.0 \pm 0.0$ & $1.0 \pm 0.0$ \\
+Baseline & $2$ & $16$ & $76$ & $301$ & $1.0$ & $1.0$ & $1.0$ & $1.0$ \\
+Model-based PG & $2$ & $50$ & $1250$ & $20000$ & $1.0$ & $5.0$ & $25.0$ & $100.0$ \\
+S-PI & $2$ & $16$ & $76$ & $301$ & $1.0$ & $1.0$ & $1.0$ & $1.0$ \\
 \bottomrule
 \end{tabular}
 }

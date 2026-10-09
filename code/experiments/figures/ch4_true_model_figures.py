@@ -22,7 +22,7 @@ def main():
             "Policy architectures optimized by the exact gradients on the true model"
         ),
         across_caption=(
-            "Policy architectures on the true model, across every inflation size."
+            "Size of the policy architectures on the true model, across every inflation size."
         ),
         # Count in iterations as we don't sample
         curve_x="iteration",

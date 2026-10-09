@@ -136,7 +136,7 @@ def _fit(tabular: str) -> str:
     ])
 
 
-def _cell(stats: dict, fmt: str, show_spread: bool) -> str:
+def _cell(stats: dict, fmt: str, show_spread: bool, scale: float = 1.0) -> str:
     """One table cell, containing its mean, optionally with its spread.
 
     Parameters
@@ -146,18 +146,20 @@ def _cell(stats: dict, fmt: str, show_spread: bool) -> str:
     fmt : str
         Format of the number.
     show_spread : bool
-        Append the standard deviation.
+        Append the standard deviation, unless it is exactly zero.
+    scale : float, optional
+        Factor applied to mean and spread before formatting.
     """
     if stats is None or stats["n"] == 0:
         # A cell where every seed diverged
         return r"\multicolumn{1}{c}{--}"
 
-    mean = _math(stats["mean"], fmt)
+    mean = _math(scale * stats["mean"], fmt)
 
-    if not show_spread or stats["n"] < 2:
+    if not show_spread or stats["n"] < 2 or stats["std"] == 0:
         return f"${mean}$"
 
-    return f"${mean} \\pm {_math(stats['std'], fmt.replace('+', ''))}$"
+    return f"${mean} \\pm {_math(scale * stats['std'], fmt.replace('+', ''))}$"
 
 
 def _share(count: int, total: int) -> str:
@@ -338,7 +340,7 @@ def metric_table(
 def setting_table(
     rows: list[dict],
     row_by: str,
-    metric: str = "subopt",
+    metric: str | tuple[str, ...] = "subopt",
     column_by: str = "solver",
     row_order=None,
     column_order=None,
@@ -347,8 +349,10 @@ def setting_table(
     show_spread: bool = True,
     row_header: str | None = None,
     fit: bool = True,
+    fmt: str | None = None,
+    scale: float = 1.0,
 ) -> str:
-    """Render one metric as a table of settings by solvers (or ``column_by``).
+    """Render a metric as a table of settings by solvers (or ``column_by``).
 
     Parameters
     ----------
@@ -356,8 +360,10 @@ def setting_table(
         From :func:`~experiments.figures.aggregate.tidy`.
     row_by : str
         Column defining one table row, e.g. ``"level"`` or ``"size"``.
-    metric : str, optional
-        Key of :data:`METRIC_ROWS`, the value of every cell.
+    metric : str or tuple of str, optional
+        Key of :data:`METRIC_ROWS`, the value of every cell. Several keys
+        place one group of columns per metric side by side, headed by its
+        label.
     column_by : str, optional
         Column defining one table column, ``"solver"`` by default.
     row_order, column_order : sequence or None, optional
@@ -371,14 +377,21 @@ def setting_table(
         Text over the settings column, e.g. ``"Intensity"``.
     fit : bool, optional
         Whether to wrap the tabular in the shrink-to-fit box of :func:`_fit`.
+    fmt : str or None, optional
+        Number format replacing the one of :data:`METRIC_ROWS`.
+    scale : float, optional
+        Factor applied to every value, e.g. ``1e3`` to show in
+        :math:`10^{-3}`.
 
     Returns
     -------
     str
         Ready to ``\\input``.
     """
+    metrics = (metric,) if isinstance(metric, str) else tuple(metric)
     kept = [row for row in rows if usable(row)]
-    stats = aggregate(kept, (row_by, column_by), metric)
+    stats = {m: aggregate(kept, (row_by, column_by), m) for m in metrics}
+    keys = [key for m in metrics for key in stats[m]]
 
     def ordered(values, order):
         values = list(dict.fromkeys(values))
@@ -386,26 +399,46 @@ def setting_table(
             return values
         return [v for v in order if v in values] + [v for v in values if v not in order]
 
-    settings = ordered((key[0] for key in stats), row_order)
-    columns = ordered((key[1] for key in stats), column_order)
+    settings = ordered((key[0] for key in keys), row_order)
+    columns = ordered((key[1] for key in keys), column_order)
 
-    _, fmt = METRIC_ROWS.get(metric, (_escape(metric), "{:.4g}"))
+    labels = {m: METRIC_ROWS.get(m, (_escape(m), "{:.4g}")) for m in metrics}
+    n = len(columns)
 
     lines = [
-        r"\begin{tabular}{l" + "r" * len(columns) + "}",
+        r"\begin{tabular}{l" + "r" * (n * len(metrics)) + "}",
         r"\toprule",
+    ]
+
+    # One group header per metric
+    if len(metrics) > 1:
+        lines.append(" & ".join(
+            [""] + [rf"\multicolumn{{{n}}}{{c}}{{{labels[m][0]}}}" for m in metrics]
+        ) + r" \\")
+        lines.append("".join(
+            rf"\cmidrule(lr){{{2 + i * n}-{1 + (i + 1) * n}}}"
+            for i in range(len(metrics))
+        ))
+
+    lines += [
         " & ".join(
             [row_header or ""]
-            + [_escape(str(label_for(column))) for column in columns]
+            + [_escape(str(label_for(column))) for column in columns] * len(metrics)
         ) + r" \\",
         r"\midrule",
     ]
 
     for setting in settings:
-        cells = [stats.get((setting, column)) for column in columns]
+        cells = [
+            stats[m].get((setting, column)) for m in metrics for column in columns
+        ]
+        formats = [fmt or labels[m][1] for m in metrics for _ in columns]
         lines.append(" & ".join(
             [_escape(str(label_for(setting)))]
-            + [_cell(cell, fmt, show_spread) for cell in cells]
+            + [
+                _cell(cell, cell_fmt, show_spread, scale)
+                for cell, cell_fmt in zip(cells, formats)
+            ]
         ) + r" \\")
 
         # Divergence rate of the solvers in this setting

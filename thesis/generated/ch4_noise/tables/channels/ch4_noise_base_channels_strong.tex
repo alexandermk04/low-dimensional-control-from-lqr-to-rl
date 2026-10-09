@@ -1,17 +1,17 @@
 \begin{table}[htbp]
 \centering
-\caption{Suboptimality $S$ under \emph{base} inflation and each noise channel at intensity \emph{strong}.}
+\caption{Suboptimality $S$ (in $10^{-3}$) under \emph{base} inflation and each noise channel at intensity \emph{strong}.}
 \label{tab:ch4-noise-base-solver-channels-strong}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrrr}
 \toprule
 Solver & none & measurement & control & parametric & disturbance & all channels \\
 \midrule
-N4SID + DARE & $+0 \pm 0$ & $+0 \pm 0$ & $+0 \pm 0$ & $-2.34 \times 10^{-15} \pm 5.25 \times 10^{-14}$ & $+0 \pm 0$ & $+3.8 \times 10^{-13} \pm 2.49 \times 10^{-12}$ \\
-N4SID + Model-based PG & $+3.89 \times 10^{-5} \pm 2.43 \times 10^{-5}$ & $-0.0208 \pm 0.00561$ & $-0.00583 \pm 0.00402$ & $-0.000894 \pm 0.0102$ & $+0.00471 \pm 0.00131$ & $-0.0926 \pm 0.385$ \\
-N4SID + S-PI & $+8.52 \times 10^{-6} \pm 5.31 \times 10^{-6}$ & $-0.00987 \pm 0.00265$ & $-0.00308 \pm 0.00189$ & $-0.000459 \pm 0.0048$ & $+0.00206 \pm 0.000592$ & $-0.0521 \pm 0.122$ \\
-Model-free NPG & $+0.00862 \pm 0.00527$ & $+0.405 \pm 0.107$ & $+0.125 \pm 0.0734$ & $+0.0518 \pm 0.173$ & $-0.0558 \pm 0.018$ & $+1.62 \times 10^{4} \pm 4.09 \times 10^{5}$ \\
-S-PI (model-free) & $+0.00172 \pm 0.00111$ & $-0.0504 \pm 0.0501$ & $+0.0338 \pm 0.0246$ & $+0.00166 \pm 0.0572$ & $+0.0346 \pm 0.0194$ & $-0.0254 \pm 3.12$ \\
+N4SID + DARE & $+0$ & $+0$ & $+0$ & $-2.3 \times 10^{-12} \pm 5.2 \times 10^{-11}$ & $+0$ & $+3.8 \times 10^{-10} \pm 2.5 \times 10^{-9}$ \\
+N4SID + Model-based PG & $+0.039 \pm 0.024$ & $-21 \pm 5.6$ & $-5.8 \pm 4$ & $-0.89 \pm 10$ & $+4.7 \pm 1.3$ & $-93 \pm 3.9 \times 10^{2}$ \\
+N4SID + S-PI & $+0.0085 \pm 0.0053$ & $-9.9 \pm 2.7$ & $-3.1 \pm 1.9$ & $-0.46 \pm 4.8$ & $+2.1 \pm 0.59$ & $-52 \pm 1.2 \times 10^{2}$ \\
+Model-free NPG & $+8.6 \pm 5.3$ & $+4.1 \times 10^{2} \pm 1.1 \times 10^{2}$ & $+1.3 \times 10^{2} \pm 73$ & $+52 \pm 1.7 \times 10^{2}$ & $-56 \pm 18$ & $+1.6 \times 10^{7} \pm 4.1 \times 10^{8}$ \\
+S-PI (model-free) & $+1.7 \pm 1.1$ & $-50 \pm 50$ & $+34 \pm 25$ & $+1.7 \pm 57$ & $+35 \pm 19$ & $-25 \pm 3.1 \times 10^{3}$ \\
 \bottomrule
 \end{tabular}
 }

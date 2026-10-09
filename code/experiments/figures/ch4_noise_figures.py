@@ -183,8 +183,11 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
                 row_order=trained,
                 column_order=channel_order,
                 row_header="Solver",
+                fmt="{:+.2g}",
+                scale=1e3,
                 caption=(
-                    f"{name}{inflation} each noise channel at intensity \\emph{{{cell_level}}}."
+                    f"{name} (in $10^{{-3}}$){inflation} each noise channel at "
+                    f"intensity \\emph{{{cell_level}}}."
                 ),
                 label=f"tab:{slug}-solver-channels-{cell_level}",
             ),

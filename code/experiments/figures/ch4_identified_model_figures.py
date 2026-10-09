@@ -20,7 +20,7 @@ def main():
         stem_prefix="ch4_identified",
         track_caption="Solvers learning without the model",
         across_caption=(
-            "Solvers learning without the model, across every inflation size."
+            "Size of the policies learned without the model, across every inflation size."
         ),
         curve_x="iteration",
         trajectories=False,
