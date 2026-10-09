@@ -145,16 +145,9 @@ def _probe(lqr, scorer) -> Probe:
     )
 
 
-def _stopper(kind: str, overrides: dict | None = None) -> Plateau:
-    """The convergence criterion of ``settings.CONVERGENCE[kind]``, with ``overrides`` on top."""
-    if overrides is None:
-        base = require(
-            settings.CONVERGENCE[kind], f'CONVERGENCE["{kind}"]',
-            "python -m experiments.figures.appendix_rl_convergence_figures",
-        )
-    else:
-        base = settings.CONVERGENCE[kind] or {}
-    return Plateau(**{**base, **(overrides or {})})
+def _stopper(kind: str) -> Plateau:
+    """The convergence criterion of ``settings.CONVERGENCE[kind]``."""
+    return Plateau(**settings.CONVERGENCE[kind])
 
 
 def _tuned(spec: RunSpec, key: str, figures: str):
@@ -728,7 +721,6 @@ def _run_rl(
         evaluate,
         eval_freq=solver_settings.eval_freq,
         env_steps_offset=env_steps_offset,
-        stopper=_stopper("rl", spec.hyperparams().get("convergence")),
     )
     model = build_model(env, solver_settings, seed=spec.seed)
 
@@ -746,13 +738,9 @@ def _run_rl(
             j_star=None if linear else probe_reference_cost(scorer, problem),
         )
 
-    callback.restore_best()
-    stopper = callback.stopper
-
     extra = {
         "action_clips": env.n_action_clips,
         "obs_scale": obs_scale,
-        **stopper.extra(),
     }
 
     if preset.features_extractor_class is not None:
@@ -783,15 +771,7 @@ def _run_rl(
         extra=extra,
         save_policy=None if linear else _sb3_saver(model, solver_settings, encoder, obs_scale),
         j_star=None if linear else probe_reference_cost(scorer, problem),
-        j_final=_best_record_cost(callback.records, stopper),
     )
-
-
-def _best_record_cost(records, stopper) -> float | None:
-    """The probed cost of the policy the stopper kept, ``None`` if it kept none."""
-    if stopper.best_iteration is None:
-        return None
-    return float(records[stopper.best_iteration].cost)
 
 
 def _policy_is_finite(model) -> bool:
@@ -1087,7 +1067,6 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
         eval_freq=solver_settings.eval_freq,
         env_steps_scale=repeat,
         env_steps_offset=settings.PRETRAIN_STEPS * repeat if weights is not None else 0,
-        stopper=_stopper("rl"),
     )
 
     model = build_model(train_env, solver_settings, seed=spec.seed)
@@ -1096,7 +1075,6 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
         callback=callback,
         progress_bar=False,
     )
-    callback.restore_best()
 
     policy = SB3EnvPolicy(model)
 
@@ -1108,7 +1086,6 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
 
     extra = _pixel_extra(callback.n_action_clips, diagnostics)
     extra.update(latent_extra(model, score_env, policy))
-    extra.update(callback.stopper.extra())
 
     evaluate_test, trajectory = _pixel_protocol(score_env, policy, horizon)
 
@@ -1124,7 +1101,6 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
         j_star=j_star,
         evaluate_test=evaluate_test,
         trajectory=trajectory,
-        j_final=_best_record_cost(callback.records, callback.stopper),
     )
 
 

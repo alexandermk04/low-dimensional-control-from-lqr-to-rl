@@ -92,13 +92,11 @@ PIXEL_RL_MAX_AGENT_STEPS = 10_000_000
 # Environment steps between learning-curve samples
 RL_EVAL_FREQ = 25_000
 
-# Convergence stopping rule. Stop once the moving mean over ``window`` updates 
+# Convergence stopping rule. Stop once the moving mean over ``window`` updates
 # is not ``rel_tol`` lower than ``patience`` updates ago.
 CONVERGENCE = {
     "model_based": dict(rel_tol=1e-4, patience=50, window=1),
     "model_free": dict(rel_tol=1e-3, patience=100, window=50),
-    # Filled from `python -m experiments.figures.appendix_rl_convergence_figures`.
-    "rl": None,
 }
 
 
@@ -226,7 +224,7 @@ RL_LEARNING_RATES = {
     for size in ("small", "medium", "large")
 }
 
-# Stopping-rule settings for RL runs.
+# Stopping-rule settings for RL runs
 RL_CONVERGENCE_GRID = dict(
     rel_tol=(1e-3, 3e-3, 1e-2, 3e-2),
     patience=(5, 10, 20, 40),
@@ -479,7 +477,7 @@ SIZE_HYPERPARAMS = {
         "large": {"learning_rate": 6.7e-06},
     },
     "ppo_encoder_scalable": {
-        "small": {"learning_rate": 1e-05},
+        "small": {"learning_rate": 0.0001},
         "medium": {"learning_rate": 1.3e-05},
         "large": {"learning_rate": 2.2e-06},
     },

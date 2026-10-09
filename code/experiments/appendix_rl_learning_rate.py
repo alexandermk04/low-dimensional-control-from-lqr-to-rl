@@ -6,7 +6,7 @@ Run with::
 """
 
 import settings
-from experiments.appendix_rl_convergence import NEVER_STOP, SEEDS, SIZES, SOLVERS
+from experiments.appendix_rl_convergence import SEEDS, SIZES, SOLVERS
 from experiments.ch4_budget import budget, condition
 from experiments.ch5_inflation_sizes import supported
 from experiments.problem import RunSpec
@@ -36,10 +36,7 @@ def build_specs() -> list[RunSpec]:
                         n_trajectories=n_trajectories,
                         iterations=settings.SOLVER_MAX_ITERATIONS,
                         condition={**condition(solver, size), "lr": lr},
-                        hyperparam_overrides={
-                            "convergence": NEVER_STOP,
-                            "learning_rate": lr,
-                        },
+                        hyperparam_overrides={"learning_rate": lr},
                     )
                     for seed in SEEDS
                 ]

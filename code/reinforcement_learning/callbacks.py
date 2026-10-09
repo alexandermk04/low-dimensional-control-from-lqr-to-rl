@@ -4,7 +4,6 @@ A :class:`~evaluation.probe.Probe` samples a solver once per iteration; this
 callback samples an RL algorithm once per ``eval_freq`` environment steps.
 """
 
-import copy
 import time
 
 import numpy as np
@@ -32,22 +31,18 @@ class ProbeCallback(BaseCallback):
     env_steps_scale : int, optional
         Multiplies the algorithm's step count before the offset is added.
         Used for agents acting slower than the environment. Defaults to ``1``.
-    stopper : evaluation.analysis.Plateau or None, optional
-        Fed at every sample with the mean cost of the training episodes
-        finished since the previous one. That signal is also stored as the
-        record's ``cost_estimate``.
 
     Attributes
     ----------
     records : list[IterationRecord]
-        The learning curve, in order.
+        The learning curve, in order. Each record's ``cost_estimate`` is the
+        mean cost of the training episodes finished since the previous one.
     n_action_clips : int
         Environment steps in which the action box bound during training.
     """
 
     def __init__(self, evaluate, eval_freq: int, verbose: int = 0,
-                 env_steps_offset: int = 0, env_steps_scale: int = 1,
-                 stopper=None):
+                 env_steps_offset: int = 0, env_steps_scale: int = 1):
         super().__init__(verbose)
 
         if env_steps_scale < 1:
@@ -57,7 +52,6 @@ class ProbeCallback(BaseCallback):
         self.eval_freq = eval_freq
         self.env_steps_offset = int(env_steps_offset)
         self.env_steps_scale = int(env_steps_scale)
-        self.stopper = stopper
 
         self.records: list[IterationRecord] = []
 
@@ -73,7 +67,6 @@ class ProbeCallback(BaseCallback):
         self.records = []
         self._next_eval = 0
         self._returns: list[float] = []
-        self._stop = False
         self.n_action_clips = 0
         self._sample()
 
@@ -98,12 +91,6 @@ class ProbeCallback(BaseCallback):
         )
         self.records.append(record)
         self._next_eval = self.num_timesteps + self.eval_freq
-
-        if self.stopper is not None and signal is not None:
-            self._stop = self.stopper.update(
-                signal, copy.deepcopy(self.model.policy.state_dict()),
-                record.iteration, record.env_steps,
-            )
         self._returns = []
 
         if self.verbose:
@@ -125,12 +112,7 @@ class ProbeCallback(BaseCallback):
 
         if self.num_timesteps >= self._next_eval:
             self._sample()
-        return not self._stop
-
-    def restore_best(self) -> None:
-        """Load the best policy weights the stopper kept into the model."""
-        if self.stopper is not None and self.stopper.best_payload is not None:
-            self.model.policy.load_state_dict(self.stopper.best_payload)
+        return True
 
     def _on_training_end(self) -> None:
         """Take a final sample."""

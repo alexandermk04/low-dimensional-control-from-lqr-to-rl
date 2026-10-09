@@ -1,4 +1,4 @@
-"""Appendix: calibration of the RL stopping rule.
+"""Appendix: whether the RL runs reach a plateau a stopping rule could detect.
 
 Run with::
 
@@ -18,9 +18,6 @@ SOLVERS = tuple(s for s in settings.CH5_SOLVERS if s != "baseline")
 SIZES = settings.CH5_INFLATION_SIZES
 
 SEEDS = settings.SEEDS[:3]
-
-# A patience no run reaches, so the stopper only tracks the best iterate.
-NEVER_STOP = {"rel_tol": 1e-2, "patience": 10**9, "window": 3}
 
 
 def build_specs() -> list[RunSpec]:
@@ -43,7 +40,6 @@ def build_specs() -> list[RunSpec]:
                     n_trajectories=n_trajectories,
                     iterations=settings.SOLVER_MAX_ITERATIONS,
                     condition=condition(solver, size),
-                    hyperparam_overrides={"convergence": NEVER_STOP},
                 )
                 for seed in SEEDS
             ]

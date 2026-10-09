@@ -1,4 +1,7 @@
-"""Test the RL stop parameters to find the optimal settings.
+"""Why the RL solvers have no stopping rule.
+
+Replays the stopping rule of the LQR solvers on the full-length RL runs, and
+shows per solver and size how late the runs still improve.
 
 Run with::
 
@@ -13,18 +16,27 @@ import numpy as np
 import settings
 from evaluation.analysis import Plateau
 from experiments.appendix_rl_convergence import EXPERIMENT, SOLVERS
-from experiments.figures.aggregate import latest_per_experiment
+from experiments.figures.aggregate import SOLVER_LABELS, latest_per_experiment
 from experiments.figures.panels import learning_bands
 from experiments.figures.style import figure_dir, save, table_dir
 from experiments.figures.tables import write_table
 from experiments.store import MissingExperimentError, load_experiment
 
-# Median and maximum regret needed
+# Median and maximum regret a stopping rule would have to keep
 MEDIAN_REGRET = 0.01
 MAX_REGRET = 0.05
 
 # Settings shown in the table
 TABLE_ROWS = 10
+
+# Share of the budget the "still improving" column looks at
+LATE = 0.75
+
+
+def _cost(record) -> np.ndarray:
+    """The probed cost, with every non-finite value as ``inf``."""
+    cost = record.arrays["cost"]
+    return np.where(np.isfinite(cost), cost, np.inf)
 
 
 def replay(record, rel_tol: float, patience: int, window: int) -> tuple[float, float]:
@@ -33,10 +45,10 @@ def replay(record, rel_tol: float, patience: int, window: int) -> tuple[float, f
     Returns
     -------
     tuple[float, float]
-        ``(env_steps at the stop, cost kept / best cost - 1)``.
+        ``(share of the budget used at the stop, cost kept / best cost - 1)``.
     """
     signal = record.arrays["cost_estimate"]
-    cost = record.arrays["cost"]
+    cost = _cost(record)
     steps = record.arrays["env_steps"]
 
     stopper = Plateau(rel_tol=rel_tol, patience=patience, window=window)
@@ -51,25 +63,71 @@ def replay(record, rel_tol: float, patience: int, window: int) -> tuple[float, f
             break
 
     kept = stopper.best_iteration if stopper.best_iteration is not None else stop
-    best = np.nanmin(np.where(np.isfinite(cost), cost, np.nan))
 
-    return float(steps[stop]), float(cost[kept] / best - 1.0)
+    return float(steps[stop] / steps[-1]), float(cost[kept] / cost.min() - 1.0)
 
 
-def _table(results: list[tuple]) -> str:
-    """The best settings, and the current one, as a tabular."""
+def _regrets(record) -> dict:
+    """Where a run is best, and the regret of the iterates one could keep."""
+    cost = _cost(record)
+    n = len(cost)
+    return {
+        "best_at": int(np.argmin(cost)) / (n - 1),
+        "late": cost[int(LATE * (n - 1))] / cost.min() - 1.0,
+        "final": cost[-1] / cost.min() - 1.0,
+        "selected": replay(record, 0.0, 10**9, 1)[1],
+    }
+
+
+def _percent(value: float) -> str:
+    if not np.isfinite(value):
+        return r"$\infty$"
+    value = 100 * value
+    return f"{value:.0f}\\,\\%" if value >= 10 else f"{value:.2g}\\,\\%"
+
+
+def _grid_table(results: list[tuple]) -> str:
+    """The stopping-rule settings with the lowest median regret, as a tabular."""
     lines = [
         r"\begin{tabular}{rrrrrr}",
         r"\toprule",
-        r"rel.\ tol. & patience & window & median steps & median regret & max regret \\",
+        r"$\varepsilon_{\mathrm{rel}}$ & $N_{\mathrm{p}}$ & $N_{\mathrm{w}}$ & budget used & median regret & max regret \\",
         r"\midrule",
     ]
-    for (rel_tol, patience, window), stops, regrets in results:
+    for (rel_tol, patience, window), used, regrets in results:
         lines.append(
-            f"{rel_tol:g} & {patience} & {window} & {np.median(stops):.3g} & "
-            f"{np.median(regrets):.3g} & {np.max(regrets):.3g} \\\\"
+            f"{rel_tol:g} & {patience} & {window} & {_percent(np.median(used))} & "
+            f"{_percent(np.median(regrets))} & {_percent(np.max(regrets))} \\\\"
         )
     lines += [r"\bottomrule", r"\end{tabular}"]
+    return "\n".join(lines)
+
+
+def _cell_table(records, order) -> str:
+    """Per solver and size, the median over seeds of :func:`_regrets`, as a tabular."""
+    lines = [
+        r"\begin{tabular}{llrrrr}",
+        r"\toprule",
+        r"Solver & Size & best policy at & regret at "
+        f"{100 * LATE:.0f}\\,\\%"
+        r" & regret final & regret by $\bar{g}_j$ \\",
+        r"\midrule",
+    ]
+    for size in settings.CH5_INFLATION_SIZES:
+        for solver in order:
+            cell = [_regrets(r) for r in records
+                    if r.solver == solver and r.condition.get("size") == size]
+            if not cell:
+                continue
+            median = {k: np.median([c[k] for c in cell]) for k in cell[0]}
+            lines.append(
+                f"{SOLVER_LABELS[solver]} & \\emph{{{size}}} & {_percent(median['best_at'])} & "
+                f"{_percent(median['late'])} & {_percent(median['final'])} & "
+                f"{_percent(median['selected'])} \\\\"
+            )
+        lines.append(r"\midrule")
+    lines[-1] = r"\bottomrule"
+    lines.append(r"\end{tabular}")
     return "\n".join(lines)
 
 
@@ -78,25 +136,22 @@ def render():
         r for r in latest_per_experiment(load_experiment(EXPERIMENT))
         if "cost_estimate" in r.arrays
     ]
+    order = tuple(s for s in SOLVERS if any(r.solver == s for r in records))
+
+    # Diverged runs have infinite regret under every setting
+    diverged = [r for r in records if not np.isfinite(r.arrays["cost"]).all()]
+    stable = [r for r in records if r not in diverged]
 
     grid = settings.RL_CONVERGENCE_GRID
     results = []
     for setting in product(grid["rel_tol"], grid["patience"], grid["window"]):
-        outcomes = np.array([replay(r, *setting) for r in records])
+        outcomes = np.array([replay(r, *setting) for r in stable])
         results.append((setting, outcomes[:, 0], outcomes[:, 1]))
+    results.sort(key=lambda r: np.median(r[2]))
 
-    admissible = [
-        r for r in results
-        if np.median(r[2]) <= MEDIAN_REGRET and np.max(r[2]) <= MAX_REGRET
-    ]
-    admissible.sort(key=lambda r: np.median(r[1]))
+    write_table(_grid_table(results[:TABLE_ROWS]), EXPERIMENT, EXPERIMENT)
+    write_table(_cell_table(records, order), f"{EXPERIMENT}_cells", EXPERIMENT)
 
-    current = tuple((settings.CONVERGENCE["rl"] or {}).get(k) for k in ("rel_tol", "patience", "window"))
-    shown = admissible[:TABLE_ROWS] + [r for r in results if r[0] == current]
-
-    write_table(_table(shown), EXPERIMENT, EXPERIMENT)
-
-    order = tuple(s for s in SOLVERS if any(r.solver == s for r in records))
     for size in settings.CH5_INFLATION_SIZES:
         subset = [r for r in records if r.condition.get("size") == size]
         if subset:
@@ -104,23 +159,26 @@ def render():
             save(ax.figure, f"{EXPERIMENT}_{size}_curves_steps", EXPERIMENT)
     plt.close("all")
 
-    for setting, stops, regrets in shown:
-        print(f"  {setting}: median steps {np.median(stops):.3g}, "
+    admissible = [
+        r for r in results
+        if np.median(r[2]) <= MEDIAN_REGRET and np.max(r[2]) <= MAX_REGRET
+    ]
+    print(f"{len(admissible)}/{len(results)} settings meet the regret bounds "
+          f"on the {len(stable)} stable runs.")
+    for setting, used, regrets in results[:TABLE_ROWS]:
+        print(f"  {setting}: budget used {np.median(used):.2f}, "
               f"median regret {np.median(regrets):.3g}, max regret {np.max(regrets):.3g}")
 
-    if admissible:
-        rel_tol, patience, window = admissible[0][0]
-        print(f'\nCONVERGENCE["rl"] = dict(rel_tol={rel_tol:g}, patience={patience}, window={window})')
-    else:
-        print("\nNo setting meets the regret bounds.")
-        floor = np.array([replay(r, 0.0, 10**9, 1)[1] for r in records])
-        print(f"Never stopping gives median regret {np.median(floor):.3g}, "
-              f"max {np.max(floor):.3g}: the bounds fail on the iterate selection.")
-        for solver in order:
-            probes = [r.arrays["cost"] for r in records if r.solver == solver]
-            diverged = sum(not np.isfinite(c).all() for c in probes)
-            if diverged:
-                print(f"  {solver}: {diverged}/{len(probes)} runs with a non-finite probe cost")
+    for solver in order:
+        n = sum(r.solver == solver for r in diverged)
+        if n:
+            print(f"  {solver}: {n}/{sum(r.solver == solver for r in records)} "
+                  "runs with a non-finite probe cost")
+
+    for name in ("final", "selected"):
+        values = [_regrets(r)[name] for r in stable]
+        print(f"Keeping the {name} iterate: median regret {np.median(values):.3g}, "
+              f"max {np.max(values):.3g}")
 
 
 def main():
