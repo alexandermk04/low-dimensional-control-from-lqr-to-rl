@@ -446,7 +446,7 @@ SIZE_HYPERPARAMS = {
         "large": {"gradient_lr": 0.01},
     },
     "spi": {
-        "base": {"lambda_": 1},
+        "base": {"lambda_": 5},
         "small": {"lambda_": 5},
         "medium": {"lambda_": 5},
         "large": {"lambda_": 5},
