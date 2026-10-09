@@ -165,6 +165,34 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
         experiment,
     )
 
+    # Solvers by channels, one table per intensity
+    trained = [s for s in solvers if s != "baseline"]
+    for cell_level in level_order:
+        if cell_level == "none":
+            continue
+
+        write_table(
+            setting_table(
+                [
+                    r for r in rows
+                    if r["solver"] in trained and r.get("level") in (cell_level, "none")
+                ],
+                "solver",
+                metric=metric,
+                column_by="channel",
+                row_order=trained,
+                column_order=channel_order,
+                row_header="Solver",
+                caption=(
+                    f"{name}{inflation} each noise channel at intensity \\emph{{{cell_level}}}."
+                ),
+                label=f"tab:{slug}-solver-channels-{cell_level}",
+            ),
+            f"{prefix}_channels_{cell_level}",
+            experiment,
+            subdir="channels",
+        )
+
     for solver in solvers:
         solver_rows = [r for r in rows if r["solver"] == solver]
         if not solver_rows:

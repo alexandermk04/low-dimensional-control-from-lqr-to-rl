@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\caption{Suboptimality $S$ under \emph{base} inflation and each noise channel at intensity \emph{divergent}. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled.}
+\label{tab:ch4-true-model-noise-base-solver-channels-divergent}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Solver$^{\dagger}$ & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Model-based PG & $+0.000199 \pm 0.000124$ & $-0.0579 \pm 0.00494$ & $-0.0172 \pm 0.0191$ & $-0.00275 \pm 0.0457$ & $+0.0135 \pm 0.00118$ & $+73.4 \pm 1.12 \times 10^{3}$ \\
+S-PI & $+5.88 \times 10^{-6} \pm 3.68 \times 10^{-6}$ & $-0.0103 \pm 0.000875$ & $-0.0031 \pm 0.00339$ & $-0.000749 \pm 0.00801$ & $+0.00228 \pm 0.000201$ & $+6.73 \pm 108$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

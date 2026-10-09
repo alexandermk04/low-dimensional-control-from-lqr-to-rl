@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering
+\caption{Suboptimality $S$ under \emph{base} inflation and each noise channel at intensity \emph{weak}. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled.}
+\label{tab:ch4-noise-base-solver-channels-weak}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Solver$^{\dagger}$ & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+N4SID + DARE & $+0 \pm 0$ & $+0 \pm 0$ & $+0 \pm 0$ & $+0 \pm 0$ & $+0 \pm 0$ & $+0 \pm 0$ \\
+N4SID + Model-based PG & $+3.89 \times 10^{-5} \pm 2.43 \times 10^{-5}$ & $-0.00974 \pm 0.00832$ & $-0.00159 \pm 0.0011$ & $-0.000105 \pm 0.00283$ & $+0.00211 \pm 0.00196$ & $-0.0106 \pm 0.0055$ \\
+N4SID + S-PI & $+8.52 \times 10^{-6} \pm 5.31 \times 10^{-6}$ & $-0.00462 \pm 0.00394$ & $-0.000841 \pm 0.000519$ & $-6.39 \times 10^{-5} \pm 0.00136$ & $+0.000917 \pm 0.000877$ & $-0.00512 \pm 0.00261$ \\
+Model-free NPG & $+0.00862 \pm 0.00527$ & $+0.194 \pm 0.159$ & $+0.0397 \pm 0.0213$ & $+0.0148 \pm 0.0464$ & $-0.0205 \pm 0.0266$ & $+0.226 \pm 0.108$ \\
+S-PI (model-free) & $+0.00172 \pm 0.00111$ & $-0.0223 \pm 0.0339$ & $+0.00914 \pm 0.0059$ & $+0.00165 \pm 0.0164$ & $+0.0166 \pm 0.0164$ & $-0.0106 \pm 0.0305$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

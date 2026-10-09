@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\caption{Suboptimality $S$ under \emph{large} inflation and each noise channel at intensity \emph{strong}. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled.}
+\label{tab:ch4-true-model-noise-large-solver-channels-strong}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Solver$^{\dagger}$ & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Model-based PG & $+0.000199 \pm 0.000125$ & $-0.00152 \pm 0.00177$ & $-0.0122 \pm 0.00516$ & $-0.00157 \pm 0.0232$ & $+0.0107 \pm 0.00296$ & $-0.0291 \pm 0.048$ \\
+S-PI & $+5.87 \times 10^{-6} \pm 3.67 \times 10^{-6}$ & $-0.00782 \pm 0.00223$ & $-0.0022 \pm 0.000897$ & $-0.000386 \pm 0.00398$ & $+0.0018 \pm 0.000504$ & $-0.00908 \pm 0.0159$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

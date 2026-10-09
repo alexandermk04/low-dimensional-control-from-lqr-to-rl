@@ -384,6 +384,7 @@ def setting_table(
     rows: list[dict],
     row_by: str,
     metric: str = "subopt",
+    column_by: str = "solver",
     row_order=None,
     column_order=None,
     caption: str | None = None,
@@ -392,7 +393,7 @@ def setting_table(
     row_header: str | None = None,
     fit: bool = True,
 ) -> str:
-    """Render one metric as a table of settings by solvers.
+    """Render one metric as a table of settings by solvers (or ``column_by``).
 
     Parameters
     ----------
@@ -402,8 +403,10 @@ def setting_table(
         Column defining one table row, e.g. ``"level"`` or ``"size"``.
     metric : str, optional
         Key of :data:`METRIC_ROWS`, the value of every cell.
+    column_by : str, optional
+        Column defining one table column, ``"solver"`` by default.
     row_order, column_order : sequence or None, optional
-        Order of the settings and of the solvers.
+        Order of the rows and of the columns.
     caption, label : str or None, optional
         Wrap the tabular in a ``table`` float with this caption and
         ``\\label``.
@@ -420,7 +423,7 @@ def setting_table(
         Ready to ``\\input``.
     """
     kept = [row for row in rows if usable(row)]
-    stats = aggregate(kept, (row_by, "solver"), metric)
+    stats = aggregate(kept, (row_by, column_by), metric)
 
     def ordered(values, order):
         values = list(dict.fromkeys(values))
@@ -429,24 +432,24 @@ def setting_table(
         return [v for v in order if v in values] + [v for v in values if v not in order]
 
     settings = ordered((key[0] for key in stats), row_order)
-    solvers = ordered((key[1] for key in stats), column_order)
+    columns = ordered((key[1] for key in stats), column_order)
 
     _, fmt = METRIC_ROWS.get(metric, (_escape(metric), "{:.4g}"))
     episodes = any(cell["episodes"] for cell in stats.values())
     marker = EPISODE_MARKER if episodes else ""
 
     lines = [
-        r"\begin{tabular}{l" + "r" * len(solvers) + "}",
+        r"\begin{tabular}{l" + "r" * len(columns) + "}",
         r"\toprule",
         " & ".join(
             [(row_header or "") + marker]
-            + [_escape(str(label_for(solver))) for solver in solvers]
+            + [_escape(str(label_for(column))) for column in columns]
         ) + r" \\",
         r"\midrule",
     ]
 
     for setting in settings:
-        cells = [stats.get((setting, solver)) for solver in solvers]
+        cells = [stats.get((setting, column)) for column in columns]
         lines.append(" & ".join(
             [_escape(str(label_for(setting)))]
             + [_cell(cell, fmt, show_spread) for cell in cells]
