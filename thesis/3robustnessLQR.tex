@@ -50,12 +50,12 @@ is then used for a gradient step on the gain matrix. \Cref{alg:mb-pg} summarizes
 
 The fixed learning rate $\eta$ is a hyperparameter, which we set to $\eta = 10^{-5}$ for all inflation sizes, based on
 experiments whose results can be found in \cref{sec:app-learning-rate-mb-pg}. This
-policy gradient approach serves us as the basic, fully-parameterized implementation for this experiment.
+policy gradient approach serves us as the basic, fully parameterized implementation for this experiment.
 
 It is important to note that the above implementation is described for the uninflated loop. However,
-this can be easily applied to our inflated version in which A_squiggle = U_1 A U_1', B_squiggle = U_1 B U_2, as well
-as our inflated weights Q, R \cref{eq:inflated-cost} and sigma_0_squiggle = U_1 Sigma_0 U_1', and K_0_squiggle = U_1 K_0 U_2 % TODO: Verify
-such that the resulting gain is K in R^d_inxd_out.
+this can be easily applied to our inflated version in which $\tilde{A} = U_1 A U_1\T$, $\tilde{B} = U_1 B U_2$, as well
+as our inflated weights $Q$, $R$ in \eqref{eq:inflated-cost} and $\tilde{\Sigma}_0 = U_1 \Sigma_0 U_1\T$,
+such that the resulting gain is $K \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$.
 
 % mb spi
 
@@ -75,11 +75,11 @@ with small adaptations in the following way.
 
 % Def mb_spi
 We reuse the computation of the gradient $\nabla f(K_j)$ from \cref{alg:mb-pg}.
-For inducing the structure, we optimize the regularized cost f(K) + lambda * |K|,
-where the nuclear norm | . | can be reduced by eliminating singular values in K,
-and lambda is its weight in the whole cost. It further uses an adaptive learning rate,
-combined with a linesearch criterion, consisting of a stability and sufficient descrease condition.
-Starting from the initial step size $\eta = 1 / (2 \lambda)$, following the papers recommendation of O(1/lambda),
+For inducing the structure, we optimize the regularized cost $f(K) + \lambda \lVert K \rVert_{*}$,
+where the nuclear norm $\lVert \cdot \rVert_{*}$ can be reduced by eliminating singular values of $K$,
+and $\lambda$ is its weight in the whole cost. It further uses an adaptive learning rate,
+combined with a line search criterion, consisting of a stability and a sufficient decrease condition.
+Starting from the initial step size $\eta = 1 / (2 \lambda)$, following the paper's recommendation of $\mathcal{O}(1/\lambda)$,
 each iteration takes a gradient step and applies the
 proximal operator of the nuclear norm, which soft-thresholds the singular values,
 \begin{equation}
@@ -167,27 +167,27 @@ with noise (\cref{subsubsec:noise-injection}) injected.
 When looking at the results, one can notice that our baseline controller, which was optimal for the clean loop, mostly
 performs worse than our trained controllers, except for external disturbance. However, when only comparing Model-based PG with
 S-PI, we can see differences in their performance, depending on the type of noise that is applied, as well as whether the
-loop is inflated or not. For parametric uncertainty, no real difference can be seen between the mean performance of all controllers,
-however Model-based PG shows a higher variance. When looking at external disturbance under \emph{large} inflation, one can notice that with increasing
+loop is inflated or not. For parametric uncertainty, no real difference can be seen between the mean performance of all controllers;
+however, Model-based PG shows a higher variance. When looking at external disturbance under \emph{large} inflation, one can notice that with increasing
 noise it becomes clearer that S-PI is more robust here compared to Model-based PG. While for \emph{weak} and \emph{standard} their total spread
 still shows some overlap, for \emph{strong} and \emph{divergent} S-PI shows a cleanly separated suboptimality below Model-based PG
-(\cref{fig:true-noise-disturbance-strong}).
+(\cref{fig:true-noise-large-disturbance}).
 
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[t]{0.49\linewidth}
     \centering
     \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_disturbance-standard}
-    \caption{\emph{base} inflation.}
+    \caption{Intensity \emph{standard}.}
     \label{fig:true-noise-large-disturbance-standard}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.49\linewidth}
     \centering
     \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_disturbance-divergent}
-    \caption{\emph{large} inflation.}
+    \caption{Intensity \emph{divergent}.}
     \label{fig:true-noise-large-disturbance-divergent}
   \end{subfigure}
-  \caption{Suboptimality $S$ of the solvers on the true model under external disturbance at different intensities.}
+  \caption{Suboptimality $S$ of the solvers on the true model under \emph{large} inflation and external disturbance at different intensities.}
   \label{fig:true-noise-large-disturbance}
 \end{figure}
 
@@ -226,17 +226,17 @@ noise channels \needcite{table below}.
 \label{subsec:true-model-discussion}
 
 Generally, we note that trained controllers are mostly at an advantage compared to statically calculated controllers with regard to
-robustness. By not achieving full optimality on the nominal problem, they can endure measurement and control noise better, however
-are still more affected by external disturbances.
+robustness. By not achieving full optimality on the nominal problem, they can endure measurement and control noise better; however,
+they are still more affected by external disturbances.
 When comparing now trained fully parameterized and structured approaches, differences definitely appear. Changes in
 the underlying model, as in parametric uncertainty, affect all controllers mostly the same, with on average no real difference
 to the baseline. Looking at the other cases, we find that low-dimensional controllers actually
 offer better robustness in noise related to the inputs of the controller, especially the larger the input dimension. Measurement
 noise shows this clearly, as the performance of an overparameterized controller degrades here with increasing size, while a
-regularized controller stays robust across sizes. This stems from the construction of our initial policy. As the full rank
-component of K_0 is not affected by any inflated input on the nominal plant, Model-PG, contrary to SPI, does not remove it.
-These components then become costly under measurement noise, whereas SPI stays resistant. However, related to the output dimensions, under control
-noise reduced controllers perform worse on average, however still better in the worst case than the full controller. And under \emph{large}
+regularized controller stays robust across sizes. This stems from the construction of our initial policy. As the full-rank
+component of $K_0$ is not affected by any inflated input on the nominal plant, Model-based PG, contrary to S-PI, does not remove it.
+These components then become costly under measurement noise, whereas S-PI stays resistant. However, related to the output dimensions, under control
+noise reduced controllers perform worse on average, but still better in the worst case than the full controller. And under \emph{large}
 size the reduction in needed parameters is two orders of magnitude, which shows the efficiency of the reduced controller.
 
 \section{Unknown Model across Dimensions}
@@ -267,14 +267,10 @@ sampled excitation added on top of it,
     \qquad k = 0, \dots, T - 1 .
 \end{equation}
 
-As mentioned in the paper, ``as $i$ grows larger, the approximation error grows smaller''~\cite[Sec.~5.3]{VanOverschee1994N4SID},
-with $i$ being dependent on the length of our trajectory described above used for identification. The other variable $j$
-defines the dimensions of the Hankel matrices, and thus how far the projections reach into the future and the past.
-
-The paper mentions that the approximation error becomes smaller, as the amount of block rows of the Hankel matrices
-grows~\cite[Sec.~5.3]{VanOverschee1994N4SID}. With the number of columns being dependent our trajectory length $T$,
-we aim to find the best combination of both. Denoting the number of block rows as the "Hankel horizon", we evaluated different
-combinations, to find the optimal setting to use in our experiment. The full results of the selection can be found in the
+The paper mentions that the approximation error becomes smaller as the number of block rows of the Hankel matrices
+grows~\cite[Sec.~5.3]{VanOverschee1994N4SID}. With the number of columns being dependent on our trajectory length $T$,
+we aim to find the best combination of both. Denoting the number of block rows as the ``Hankel horizon'', we evaluated different
+combinations to find the optimal setting to use in our experiment. The full results of the selection can be found in
 \cref{sec:app-identification}. Specifically, we use the settings in
 \cref{tab:identification-settings}.
 \begin{table}[htbp]
@@ -294,17 +290,19 @@ combinations, to find the optimal setting to use in our experiment. The full res
 \end{table}
 
 The resulting identified system then serves as a surrogate for the true model
-for the model-based approaches from \cref{subsec:known-model-setting}. This thus produces results without
-ever having access to the real model.
+for the model-based approaches from \cref{subsec:known-model-setting}. We use
+for N4SID + Model-based PG an $\eta = 10^{-4}$ and for N4SID + S-PI
+$\lambda = 1$ across all sizes. This thus produces results without ever having
+access to the real model.
 
 An attentive reader might now ask why we would even want to use these iterative approaches, if we could just
-solve the DARE \eqref{eq:dare} directly on this estimation. And indeed we include it this N4SID + DARE
+solve the DARE \eqref{eq:dare} directly on this estimation. And indeed we include this N4SID + DARE
 controller as an indicator for how well N4SID identifies the system in our following comparisons.
 
 Additionally, we also use direct model-free approaches, which are variations of the model-based approaches
 from \cref{sec:known-model}. Unlike before, they do not calculate the gradient directly, but estimate
 it based on the returns of $N_{\mathrm{traj}}$ pairs of perturbed versions $K \pm \Xi_i$ of the current policy $K$, each simulated for $l$ steps. As one might
-assume, more ``data'', could conversely lead to better estimation, and thus better policy updates, however requires more computation. So, to
+assume, more ``data'' could conversely lead to better estimation and thus better policy updates, but it requires more computation. So, to
 settle this, we evaluated different combinations of them in \cref{sec:app-sample-size}. The best
 trade-off between computational efficiency and quality gave $N_{\mathrm{traj}} = 200$ and $l = 500$.
 
@@ -341,7 +339,7 @@ as this drastically reduced the variance of the estimates, and thus the instabil
 We further aim to clarify a couple of things about the given loop.
 Subtracting the mean difference $\bar{\delta}$ does not change the expected value of the estimate, since
 $\E[\Xi_i] = 0$, but lowers its variance. A rollout whose observation exceeds $\lVert y_k \rVert = 10^{5}$,
-we count as diverged. It is therefore ended early and charged a penalty cost of $10^{10}$. 
+we count as diverged. It is therefore ended early and charged a penalty cost of $10^{10}$.
 Additionally, for inflated dimensions, $\hat{\Sigma}_K$ is singular, so we precondition with its
 truncated pseudoinverse $\hat{\Sigma}_K^{\dagger}$ instead, which discards singular values below $10^{-6}$ times the largest one.
 
@@ -358,7 +356,8 @@ Our full learning algorithm is then given in \cref{alg:mf-npg}.
     \end{algorithmic}
 \end{algorithm}
 
-After some evaluations, we have decided on a smoothing parameter of $r = 0.5$, and a learning rate of $\eta = 0.01$, based
+After some evaluations, we have decided on a smoothing parameter of $r = 0.5$, and a learning rate of $\eta_{\mathrm{base}} = 0.1$,
+$\eta_{\mathrm{small}} = 0.03$, $\eta_{\mathrm{medium}} = 0.01$ and $\eta_{\mathrm{large}} = 0.01$ based
 on the results in \cref{sec:app-learning-rate-mf-npg}.
 
 % spi mf
@@ -397,16 +396,17 @@ mapped to
 \end{equation}
 Even after some improvement by using the two-point estimator (\cref{alg:mf-gradient}), it remained quite a difficult
 topic. So rather extensive experiments on the variation of $\lambda$ and the step size can be found in \cref{sec:app-spi-mf}.
-Based on those, $\lambda = 4000$ and a step size of $\eta = 3.5 \times 10^{-6}$ were selected.
+Based on those, we selected $\lambda_{\mathrm{base}} = 4$ and $\eta_{\mathrm{base}} = 3.5 \times 10^{-6}$, $\lambda_{\mathrm{small}} = 400$ and $\eta_{\mathrm{small}} = 3.5 \times 10^{-5}$,
+$\lambda_{\mathrm{medium}} = 400$ and $\eta_{\mathrm{medium}} = 3.5 \times 10^{-5}$; and $\lambda_{\mathrm{large}} = 40\,000$ and $\eta_{\mathrm{large}} = 3.5 \times 10^{-8}$.
 
 \subsection{Results}
 \label{subsec:unknown-model-results}
 
 Looking at the time until convergence, as well as the achieved training suboptimality, we notice that S-PI (model-free)
-did in fact diverge under \emph{large} inflation, while still not achieving a strong reduction in rank. As this was the same problem
-we observed during our parameter search (\cref{sec:app-spi-mf}), we will accept that it is not applicable in practice. Apart from
+produced under \emph{large} inflation a very expensive gain, while still not achieving a strong reduction in rank. As this was the same problem
+we observed during our parameter search (\cref{sec:app-spi-mf}), we accept it as an unsuccessful attempt and difficult to implement. Apart from
 this, it is noticeable that Model-free NPG takes longer to converge the larger the inflation gets, with it being much slower than N4SID +
-S-PI and N4SID + Model-based PG, where S-PI again is still much faster than Model-based PG. The fastest approach here is the DARE solution, as it only
+S-PI and N4SID + Model-based PG, where N4SID + S-PI again is still much faster than N4SID + Model-based PG. The fastest approach here is the DARE solution, as it only
 requires the identification step, and no iteration.
 
 Looking at the policy sizes, we can see that N4SID + S-PI indeed reduces its size to that of the optimal policy, with the DARE policy
@@ -421,8 +421,9 @@ also being smaller than the iterative versions, but still slightly larger (\cref
 
 Analyzing the resulting test suboptimality, we see the expected worse performance of S-PI (model-free), but also that the direct approaches
 underperform the indirect (identification) approaches. Here, we can also notice a difference: with increasing inflation size,
-the model-free approaches train for more iterations, while for the identification-based policies they stay more or less the same.
-What also jumps out is that N4SID + DARE in some cases even achieves optimal performance (\cref{fig:identified-across-sizes-subopt}).
+the Model-free NPG trains for more iterations, with an increase from $167$ at \emph{base} to $610$ at \emph{large},
+while for the identification-based policies it stays similar. What also jumps out is that N4SID + DARE in some
+cases even achieves optimal performance (\cref{fig:identified-across-sizes-subopt}).
 
 \begin{figure}[htbp]
   \centering
@@ -444,11 +445,11 @@ the other solvers except for Model-free NPG perform worse than the baseline, whi
 measurement noise, the image suddenly flips, with Model-free NPG performing worse, while all the other approaches sit at a suboptimality of around $-0.01$.
 
 Now inflating the system to \emph{large} size and repeating our experiments, we see similar observations for parametric uncertainty, except for
-S-PI (model-free), which performs worse than the others by multiple orders of magnitude. 
-Looking at control noise, on average Model-free NPG performs best here, even though the spread under \emph{strong} or \emph{divergent} control noise,
+S-PI (model-free), which performs worse than the others by multiple orders of magnitude.
+Looking at control noise, on average Model-free NPG performs best here, even though the spread under \emph{strong} or \emph{divergent} control noise
 admits episodes worse than the baseline. Iterative N4SID solvers in comparison here do also outperform the baseline, but are slightly worse than
 Model-free NPG. However, they remain consistently below baseline across all intensities and runs.
-The most interesting observation here is that S-PI (model-free), even though it performs much worse on the clean plant, its median is
+The most interesting observation here is that, even though S-PI (model-free) performs much worse on the clean plant, its median is
 on par with Model-free NPG under \emph{divergent} control noise (\cref{fig:noise-large-disturbance-control}), even though its mean lies
 above the baseline.
 
@@ -474,8 +475,8 @@ For external disturbance, the indirect solvers perform worse here, while Model-f
 it is noticeable that the stronger the noise gets, the more runs of S-PI (model-free) achieve a negative suboptimality. While on average still worse,
 under \emph{divergent} intensity, some do indeed perform the same as Model-free NPG. This phenomenon can also be observed with measurement noise:
 here, S-PI (model-free) is on average at a suboptimality of $10$, $1$ and $0.1$ for \emph{weak}, \emph{standard} and \emph{strong}, but for \emph{divergent} it then clearly sits at $-1$.
-With increasing intensity, the spread can be seen shifting more and more downwards. Between indirect solvers, N4SID + SPI is the only one that
-stays below baseline at every intensity, performing better than N4SID + Model-based PG whose only difference a full rank gain is. Overall, it can be
+With increasing intensity, the spread can be seen shifting more and more downwards. Between indirect solvers, N4SID + S-PI is the only one that
+stays below baseline at every intensity, performing better than N4SID + Model-based PG, which differs from it only by its full-rank gain. Overall, it can be
 seen that the reduction-based solvers do perform better here than their fully parameterized counterparts (\cref{fig:noise-large-measurement}).
 
 \begin{figure}[htbp]
@@ -502,24 +503,26 @@ seen that the reduction-based solvers do perform better here than their fully pa
 Overall, we notice that for a clean plant, identifying the system and solving the DARE based on these observations is the fastest
 solution, and even under noise it achieves a performance similar to the baseline solution. A good alternative is offered by approaches
 that use the same identified system and combine it with model-based approaches. They offer, in the case of S-PI, a much shorter training
-than direct approaches, and due to their suboptimality on the nominal loop more robust to control noise. Compared to them, direct approaches
+than direct approaches, and, due to their suboptimality on the nominal loop, they are more robust to control noise. Compared to them, direct approaches
 require much more training, and perform worse on the clean system. The only exception is external disturbance, where
 Model-free NPG, as a fully parameterized, iteratively trained policy, outperforms all other approaches.
 
 This distinction between fully parameterized and dimensionally reduced must also be made. While the direct S-PI (model-free) approach varies
-quite a lot in its performance, under measurement noise on inflated systems, dimensionally reduced systems do outperform
-the others. Combining both of these distinctions, in most cases, except for external disturbance, an N4SID + S-PI-based
-controller is the best choice. It offers the advantages of fast training and robustness to parametric and control noise from
-N4SID, together with the robustness under measurement noise from the reduced dimensionality, while also being orders of magnitude
+quite a lot in its performance, under measurement noise on inflated systems, it improves in comparison to its counterpart, and even outperforms
+it under \emph{divergent} noise. N4SID + S-PI compared with N4SID + Model-based PG does so across all measurement noise intensities.
+
+Combining both of these distinctions, in most cases, except for external disturbance, an N4SID + S-PI-based
+controller is the best choice. It offers the advantages of fast training of N4SID, better performance than baseline
+under control noise, together with the robustness under measurement noise from the reduced dimensionality, while also being orders of magnitude
 smaller. Solving the DARE directly also offers a good solution, being stable across all experiments, but it is often
 outperformed by the reduced controller.
 
 \section{Discussion}
 \label{sec:lqr-discussion}
 
-We take from this chapter that direct approaches are easily outperformed by indirect approaches, which try to identify the
+We take from this chapter that direct approaches are mostly outperformed by indirect approaches, which try to identify the
 model first. They require around four orders of magnitude of training steps less, and achieve performances close to optimal
-on the clean plant. By not reaching full optimality, they are less affected by control and measurement noise than
+on the clean plant. By not reaching full optimality, they are less affected by control noise than
 the DARE solution on the clean plant. Regarding noise, it is also noticeable that the strength of low-dimensional
-controllers is their resistance to measurement noise, which becomes much clearer under increasingly larger dimensions as full rank
-parameterizations don't remove components in the nullspace. With these learnings in mind, we will now progress to our RL approaches next.
+controllers is their resistance to measurement noise, which becomes much clearer under increasingly larger dimensions as full-rank
+parameterizations do not remove components in the null space. With these learnings in mind, we will now progress to our RL approaches next.
