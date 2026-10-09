@@ -89,7 +89,7 @@ proximal operator of the nuclear norm, which soft-thresholds the singular values
     \qquad \bar{r} \coloneqq \min\{d_{\mathrm{out}}, d_{\mathrm{in}}\} ,
 \end{equation}
 where $U \operatorname{diag}(\sigma_1, \dots, \sigma_{\bar{r}}) V\T$ is the singular value decomposition of
-the next policy candidate $K^{+} = K_j - \eta \nabla f(K_j)$. The candidate $K^{+}$ is accepted if it is stabilizing, $\spr(A - B K^{+}) < 1$, and
+the gradient step $K_j - \eta \nabla f(K_j)$. The candidate $K^{+}$ is accepted if it is stabilizing, $\spr(A - B K^{+}) < 1$, and
 satisfies the sufficient decrease condition
 \begin{equation}
     \label{eq:spi-sufficient-decrease}
@@ -231,7 +231,7 @@ they are still more affected by external disturbances.
 When comparing now trained fully parameterized and structured approaches, differences definitely appear. Changes in
 the underlying model, as in parametric uncertainty, affect all controllers mostly the same, with on average no real difference
 to the baseline. Looking at the other cases, we find that low-dimensional controllers actually
-offer better robustness in noise related to the inputs of the controller, especially the larger the input dimension. Measurement
+offer better robustness in strong noise related to the inputs of the controller, especially the larger the input dimension. Measurement
 noise shows this clearly, as the performance of an overparameterized controller degrades here with increasing size, while a
 regularized controller stays robust across sizes. This stems from the construction of our initial policy. As the full-rank
 component of $K_0$ is not affected by any inflated input on the nominal plant, Model-based PG, contrary to S-PI, does not remove it.
@@ -477,7 +477,7 @@ under \emph{divergent} intensity, some do indeed perform the same as Model-free 
 here, S-PI (model-free) is on average at a suboptimality of $10$, $1$ and $0.1$ for \emph{weak}, \emph{standard} and \emph{strong}, but for \emph{divergent} it then clearly sits at $-1$.
 With increasing intensity, the spread can be seen shifting more and more downwards. Between indirect solvers, N4SID + S-PI is the only one that
 stays below baseline at every intensity, performing better than N4SID + Model-based PG, which differs from it only by its full-rank gain. Overall, it can be
-seen that the reduction-based solvers do perform better here than their fully parameterized counterparts (\cref{fig:noise-large-measurement}).
+seen that the reduction-based solvers do perform better here than their fully parameterized counterparts under \emph{divergent} intensity (\cref{fig:noise-large-measurement}).
 
 \begin{figure}[htbp]
   \centering
