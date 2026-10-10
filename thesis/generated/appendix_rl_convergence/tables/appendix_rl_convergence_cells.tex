@@ -1,0 +1,23 @@
+\begin{tabular}{llrrrr}
+\toprule
+Solver & Size & best policy at & regret at 75\,\% & regret final & regret by $\bar{g}_j$ \\
+\midrule
+Linear PPO & \emph{small} & 99\,\% & 0.92\,\% & 0.0079\,\% & 0.15\,\% \\
+Bottleneck PPO & \emph{small} & 99\,\% & 1.2\,\% & 0.034\,\% & 1.9\,\% \\
+State encoder + PPO & \emph{small} & 87\,\% & 2.1\,\% & 0.22\,\% & 1.9\,\% \\
+Scalable encoder + PPO & \emph{small} & 97\,\% & 1.5\,\% & 0.3\,\% & 0.7\,\% \\
+Fully-connected PPO & \emph{small} & 87\,\% & 1.9\,\% & 0.43\,\% & 0.64\,\% \\
+\midrule
+Linear PPO & \emph{medium} & 97\,\% & 1.2\,\% & 0.14\,\% & 0.07\,\% \\
+Bottleneck PPO & \emph{medium} & 94\,\% & 2.2\,\% & 0.046\,\% & 0.13\,\% \\
+State encoder + PPO & \emph{medium} & 98\,\% & 2.1\,\% & 0.091\,\% & 1.8\,\% \\
+Scalable encoder + PPO & \emph{medium} & 99\,\% & 2\,\% & 0.0014\,\% & 2.9\,\% \\
+Fully-connected PPO & \emph{medium} & 57\,\% & 3\,\% & 0.4\,\% & 3.5\,\% \\
+\midrule
+Linear PPO & \emph{large} & 4.6\,\% & 1664\,\% & 391\,\% & 391\,\% \\
+Bottleneck PPO & \emph{large} & 98\,\% & 0.89\,\% & 0.059\,\% & 0.059\,\% \\
+State encoder + PPO & \emph{large} & 98\,\% & 0.96\,\% & 0.025\,\% & 0.043\,\% \\
+Scalable encoder + PPO & \emph{large} & 16\,\% & 26\,\% & 22\,\% & 16\,\% \\
+Fully-connected PPO & \emph{large} & 95\,\% & 2.6\,\% & 0.69\,\% & 1.2\,\% \\
+\bottomrule
+\end{tabular}
