@@ -53,8 +53,9 @@ experiments whose results can be found in \cref{sec:app-learning-rate-mb-pg}. Th
 policy gradient approach serves us as the basic, fully parameterized implementation for this experiment.
 
 It is important to note that the above implementation is described for the uninflated loop. However,
-this can be easily applied to our inflated version in which $\tilde{A} = U_1 A U_1\T$, $\tilde{B} = U_1 B U_2$, as well
-as our inflated weights $Q$, $R$ in \eqref{eq:inflated-cost} and $\tilde{\Sigma}_0 = U_1 \Sigma_0 U_1\T$,
+this can be easily applied to our inflated version by replacing every quantity with its inflated counterpart: 
+$\tilde{A} = U_1 A U_1\T$, $\tilde{B} = U_1 B U_2$, the inflated weights $\tilde{Q}$, $\tilde{R}$ in
+\eqref{eq:inflated-cost}, $\tilde{\Sigma}_0 = U_1 \Sigma_0 U_1\T$ and the initial gain $\tilde{K}_0$ from \eqref{eq:initial-gain},
 such that the resulting gain is $K \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$.
 
 % mb spi
@@ -236,7 +237,7 @@ to the baseline. Looking at the other cases, we find that low-dimensional contro
 offer better robustness in strong noise related to the inputs of the controller, especially the larger the input dimension. Measurement
 noise shows this clearly, as the performance of an overparameterized controller degrades here with increasing size, while a
 regularized controller stays robust across sizes. This stems from the construction of our initial policy. As the full-rank
-component of $K_0$ is not affected by any inflated input on the nominal plant, Model-based PG, contrary to S-PI, does not remove it.
+component of $\tilde{K}_0$ is not affected by any inflated input on the nominal plant, Model-based PG, contrary to S-PI, does not remove it.
 These components then become costly under measurement noise, whereas S-PI stays resistant. However, related to the output dimensions, under control
 noise reduced controllers perform worse on average, but still better in the worst case than the full controller. And under \emph{large}
 size the reduction in needed parameters is two orders of magnitude, which shows the efficiency of the reduced controller.
@@ -258,14 +259,14 @@ onto the past and future inputs and the past outputs''~\cite[Sec.~3]{VanOversche
 allows us to reconstruct exactly that from the results. Important are further the assumptions that the systems are
 observable (\cref{def:observability}) and controllable (\cref{def:controllability}). For simplicity, we rely on the
 implementation of N4SID from SIPPY~\needcite{TODO}, which we integrate into our own setup. This implementation allows us
-to recover the system matrices $A$, $B$ and $C$, whereas the cost matrices $Q$ and $R$ are choices of the controller design
+to recover the system matrices $A$, $B$ and $C$, whereas the cost matrices $\tilde{Q}$ and $\tilde{R}$ are choices of the controller design
 (\cref{subsec:protocol}), and thus already known beforehand.
 
 The collection of observation and action data runs the plant for $T$ steps under the initial gain, with a randomly
 sampled excitation added on top of it,
 \begin{equation}
     \label{eq:identification-input}
-    v_k = -K_0 y_k + \sigma_{\mathrm{e}} w_k , \qquad w_k \sim \mathcal{N}(0, I_{d_{\mathrm{out}}}) ,
+    v_k = -\tilde{K}_0 y_k + \sigma_{\mathrm{e}} w_k , \qquad w_k \sim \mathcal{N}(0, I_{d_{\mathrm{out}}}) ,
     \qquad k = 0, \dots, T - 1 .
 \end{equation}
 
@@ -378,7 +379,7 @@ and $\lambda$, we define our learning loop in \cref{alg:mf-spi}.
         \FOR{$j = 0, 1, 2, \dots$}
             \STATE compute $\widehat{\nabla f}(K_j)$ by \cref{alg:mf-gradient}
             \STATE compute $K_{j+1}$ by \eqref{eq:spi-prox}, with $\widehat{\nabla f}(K_j)$ in place of $\nabla f(K_j)$
-            \IF{$\lVert K_{j+1} - K_j \rVert_F \leq \varepsilon$}
+            \IF{$\lVert K_{j+1} - K_j \rVert_F < 10^{-8}$}
                 \STATE \textbf{stop}
             \ENDIF
         \ENDFOR

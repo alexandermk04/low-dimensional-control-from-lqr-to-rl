@@ -1,17 +1,27 @@
 \chapter{Background}
 \label{chap:background}
 
+Before turning to the experiments, we need to lay the groundwork and
+reasoning for them. We start by defining some important concepts from
+control theory, as well as introducing the system that serves as our
+core example throughout (\cref{sec:preliminaries}). Then, we discuss
+the current state of research around embodiment, low-dimensional
+control, and in that context robustness as well (\cref{sec:motivation}).
+We further reason about the relevance of this thesis, as well as comparable
+papers. After that, we move on to introducing our specifically chosen
+setup for our experiments, define constants used and explain
+our test protocol (\cref{sec:setup}). Finally, we walk the reader
+through our upcoming chapters, building on the previously introduced
+information, and giving reason for certain design choices (\cref{sec:approach}).
+
 \section{Preliminaries}
 \label{sec:preliminaries}
 
-Before turning to the experiments, this chapter revisits the concepts that all
-later parts of this thesis build on. \Cref{subsec:state-space} introduces linear
-state-space models and their discretization, \cref{subsec:double-integrator}
-shows them on the double integrator that serves as our running example
-throughout, and \cref{subsec:characteristics,subsec:lqr} recall the stability notions and
-the linear quadratic regulator. \Cref{subsubsec:noise-injection,subsec:robustness} define the
-perturbation models and the robustness metrics used to evaluate every
-controller we construct.
+Here, we revisit the concepts that are necessary for understanding the
+following chapters. This section introduces basics of control theory, such as
+linear state-space models (\cref{subsec:state-space}), the double
+integrator as our example (\cref{subsec:double-integrator}), and the
+linear quadratic regulator (\cref{subsec:lqr}).
 
 \subsection{Linear State-Space Models}
 \label{subsec:state-space}
@@ -22,7 +32,7 @@ a state space the instantaneous rate at which the system moves through it.
 Throughout this thesis we restrict attention to the class of
 \emph{linear time-invariant} (LTI) systems, for which this rule is linear in
 both the state and the input and does not itself depend on
-time\needcite{ControlSystemsTheoryAndDesign.pdf}.
+time~\needcite{ControlSystemsTheoryAndDesign.pdf}.
  
 A continuous-time LTI system is given by
 \begin{subequations}
@@ -50,7 +60,7 @@ $B_c$ describing how the input of the agent influences them. \Cref{eq:ss-cont-ou
 contains no derivative at all. It is an instantaneous readout, and the pair $(C, D)$ therefore
 describes how the system is \emph{observed} rather than how it evolves. We set
 $D = 0$ throughout, which is the standard assumption for systems in which the
-actuator has no direct instantaneous influence on the sensor\needcite{either same notes or textbook}.
+actuator has no direct instantaneous influence on the sensor~\needcite{either same notes or textbook}.
  
 Given an input signal $u(\cdot)$, the trajectory of \eqref{eq:ss-cont-state} is
 obtained by integration and is given in closed form by the variation-of-constants
@@ -59,7 +69,7 @@ formula
     \label{eq:variation-of-constants}
     x(t) = e^{A_c t} x_0 + \int_{0}^{t} e^{A_c (t - s)} B_c\, u(s)\, \mathrm{d}s ,
 \end{equation}
-where $e^{A_c t}$ denotes the matrix exponential\needcite{same textbook}. This
+where $e^{A_c t}$ denotes the matrix exponential~\needcite{same textbook}. This
 makes the interpretation of $A_c$ precise: in the scalar case
 $\dot{x} = a x$ yields $x(t) = e^{at} x_0$, so $a$ is a growth \emph{rate}
 rather than a value. \Cref{eq:variation-of-constants} generalizes this, with the
@@ -83,7 +93,7 @@ Digital controllers, as in our case, do not act continuously: they sample the ou
 rate and hold the computed control input constant until the next sampling point. The
 learning algorithms studied in this thesis operate on such sampled trajectories
 as well, so our model has to reflect this. The standard approach is the
-\emph{zero-order hold} (ZOH)\needcite{find reference}. Fixing a sampling period $h > 0$ and writing
+\emph{zero-order hold} (ZOH)~\needcite{find reference}. Fixing a sampling period $h > 0$ and writing
 $x_k \coloneqq x(kh)$, the input is assumed to be piecewise constant,
 \begin{equation}
     \label{eq:zoh-input}
@@ -127,7 +137,7 @@ we drop the subscript $d$ in the following, writing simply $A$ and $B$.
 To make the comparisons across all chapters
 meaningful, all experiments are built on a single system: the
 \emph{double integrator}, a frictionless point mass of unit mass moving along a
-line under an applied force $u$\needcite{find some reference}. Its dynamics are Newton's second law,
+line under an applied force $u$~\needcite{find some reference}. Its dynamics are Newton's second law,
 \begin{equation}
     \label{eq:newton}
     \ddot{p}(t) = u(t),
@@ -170,7 +180,7 @@ account for momentum; it is controllable for every $h > 0$; and it is not
 open-loop stable, since $A_c$ has a double eigenvalue at the origin and $A_d$
 correspondingly a double eigenvalue at $1$. The last property matters for the
 learning experiments: an uncontrolled or badly initialized policy diverges, so
-the assumption of a known stabilizing initial gain (\cref{subsec:lqr}) is a real
+the assumption of a known stabilizing initial gain (\cref{subsec:protocol}) is a real
 restriction. These properties are made precise in
 \cref{subsec:characteristics}.
 
@@ -238,7 +248,7 @@ powers
     A_d^{\,k} = \begin{bmatrix} 1 & k h \\ 0 & 1 \end{bmatrix},
 \end{equation}
 which are growing without bound in $k$. This is also logical from a physical
-point of view as a frictionless mass with a nonzero initial velocity continues 
+point of view, as a frictionless mass with a nonzero initial velocity continues 
 its trajectory forever if nothing acts on it. 
 Every controller we construct therefore has to \emph{create} stability rather than preserve it.
 
@@ -310,11 +320,10 @@ The pair $(A, B)$ is stabilizable if and only if
 \end{equation}
 \end{theorem}
 
-Comparing \eqref{eq:pbh-stabilizability} with
-\eqref{eq:controllability-matrix} shows that the latter
-applies the same rank condition as the former, however 
-imposed for \emph{every} $\lambda \in \C$. 
-Thus, controllability implies stabilizability but not vice versa. 
+There also exists a PBH test for controllability~\needcite{TODO}, which
+requires the same rank condition as \eqref{eq:pbh-stabilizability},
+however imposed for every $\lambda \in \C$. Thus, controllability
+implies stabilizability but not vice versa. 
 The difference contains systems which have uncontrollable
 directions decaying on their own, and a controller can hence never
 influence.
@@ -392,7 +401,7 @@ detectable if and only if every unobservable mode of $A$ is already
 asymptotically stable.
 \end{definition}
 
-Detectability is the dual of \cref{def:stabilizability} which gives us
+Detectability is the dual of \cref{def:stabilizability}, which gives us
 that $(A, C)$ is detectable if and only if $(A\T, C\T)$ is
 stabilizable~\needcite{ControlSystemsTheoryAndDesign}. This follows as
 $\spr(A - LC) = \spr\!\left(A\T - C\T L\T\right)$. Transposing the test
@@ -465,7 +474,7 @@ Using this as our definition, $J$ becomes well defined for every gain.
 
 What makes the LQR problem special is that its solution is a static linear feedback
 law: the optimal input at time $k$ depends only on the current state of the model.
-Introducing a gain matrix $K \in \R^{m \times n}$, we write it as
+Introducing a gain matrix $K \in \R^{m \times n}$, we write it as%
 \footnote{Note that the minus in front of $K$ has been chosen as the convention for this thesis.
 This turns our closed loop into the format $A - BK$, while some referenced literature
 uses $A + BK$. Formulas cited have been adapted to our convention by replacing $K$ with $-K$.
@@ -513,10 +522,9 @@ definite.
 \label{subsubsec:lqr-cost-of-gain}
 
 \Cref{eq:optimal-gain} solves the problem, but it solves it directly and
-tells us nothing about the quality of non-optimal gains. The learning algorithms of
-the following chapters never see the model itself; they search over gains
-directly, and for that we need the cost as a function of $K$ rather than of an
-input sequence.
+tells us nothing about the quality of non-optimal gains. As the learning 
+algorithms of the following chapters will produce such $K$ directly, 
+we need to be able to calculate the cost as a function of $K$.
 
 Fix a gain $K$ and write the resulting closed loop as
 $x_{k+1} = A_K x_k$ with $A_K \coloneqq A - BK$. Substituting
@@ -565,7 +573,7 @@ hence able to approximate any function, in the case of an embodied agent, differ
 be taken into account. Ay~\cite{Ay2015Geometric} names additionally to external embodiment constraints
 possible intrinsic constraints, and argues that such can even be ``beneficial'' for the control
 structure. Additionally, fewer parameters for deployment are helpful due to energy usage and storage
-capacity, the core of the notion of cheap design\needcite{TODO}.
+capacity, the core of the notion of cheap design~\needcite{TODO}.
 So, for such embodied agents, the goal is to find an ``embodied universal
 approximator''~\cite[p.~3]{Montufar2015CheapControl}, which restricts the neural network
 architecture to an intrinsic, unknown dimension, encoding physical properties belonging to the agent
@@ -573,10 +581,10 @@ and the environment, while disallowing impossible movements~\cite[Sec.~3]{Montuf
 
 Biology motivates this approach even further: here it is clear to see that by commanding a body,
 some features of the control architecture can be simplified and delegated to the
-embodiment\needcite{TODO}. For example, McGeer's passive walker~\cite{McGeer1990Passive} clearly
+embodiment~\needcite{TODO}. For example, McGeer's passive walker~\cite{McGeer1990Passive} clearly
 shows that some movements can be produced by the body without any control input, just by choosing
 the right embodiment. While obviously here being simplified to not include any control at all, it
-can quite simply be extended with such\needcite{\#9, McGeer reference to his previous paper}.
+can quite simply be extended with such~\needcite{\#9, McGeer reference to his previous paper}.
 M{\"u}ller and Hoffmann~\cite[p.~4]{Mueller2017Morphological} mention such a combination, a robot
 climbing up walls, whose design was inspired by geckos, indeed using energy for control, however
 very little compared to an approach not exploiting this specific embodiment design. Further, it can
@@ -596,7 +604,7 @@ the dimensionality can be reduced by $99.6\,\%$. For a convolutional neural
 network, it is still a $99.3\,\%$ reduction.
 Others show that the ``least complex model which is able to learn
 an optimal policy does learn faster''~\cite{Montufar2015Geometry}. For a neural network, reducing
-parameters can be done in different ways\needcite{TODO}, some of which we look at in
+parameters can be done in different ways~\needcite{TODO}, some of which we look at in
 \cref{chap:inflation}. In comparison, for LQR, where the controller is a gain matrix, the
 corresponding approach is reducing its rank~\cite{Recht2010Guaranteed}. However, while these
 approaches are more parameter-efficient while achieving similar or slightly worse performance, it
@@ -711,36 +719,33 @@ Compared with \eqref{eq:ss-cont}, the output matrix thus becomes $C = U_1$, so t
 and the controller acts through the input matrix $B U_2 \in \R^{n \times d_{\mathrm{out}}}$.
 
 This way, the controller only sees the inflated observation and acts in a higher dimension. As any actuation
-effort is penalized, $R$ acts on the inflated actuation and therefore has the dimension
+effort is penalized, its weight $\tilde{R}$ acts on the inflated actuation and therefore has the dimension
 $d_{\mathrm{out}} \times d_{\mathrm{out}}$. To
-simplify things, we also have $Q$ in this lifted dimension, acting on the observation. However, as $U_1$ has
-orthonormal columns, and we use $Q = I_{d_{\mathrm{in}}}$ throughout, this simplifies to
-% FROM DRAFT: here in the middle the identity; one more line with the identity replaced by a smaller Q
-% TODO: Verify — new symbol Q_n for the state cost of the uninflated problem (Q_n = I_n, the Q of \cref{subsec:lqr}); code name Q_x = U_1' Q U_1
+simplify things, we also have the state weight $\tilde{Q}$ in this lifted dimension, acting on the observation. Here and in the
+following, a tilde marks the inflated counterpart of a quantity of the uninflated problem. As $U_1$ has
+orthonormal columns, and we use $\tilde{Q} = I_{d_{\mathrm{in}}}$ throughout, this simplifies to
 \begin{equation}
     \label{eq:lifted-state-cost}
     \begin{aligned}
-    \left( U_1 x_k \right)\T Q \left( U_1 x_k \right)
+    \left( U_1 x_k \right)\T \tilde{Q} \left( U_1 x_k \right)
     &= x_k\T U_1\T U_1\, x_k \\
     &= x_k\T I_n\, x_k \\
-    &= x_k\T Q_n\, x_k , \qquad Q_n \coloneqq I_n \in \R^{n \times n} ,
+    &= x_k\T Q\, x_k , \qquad Q = I_n ,
     \end{aligned}
 \end{equation}
-so it indeed still penalizes how far our mass is from zero. The cost in the modified loop then
+with the uninflated $Q$ of \cref{subsec:lqr}, so it indeed still penalizes how far our mass is from zero. The cost in the modified loop then
 becomes
-% FROM DRAFT: formula
-% TODO: Verify — written as the infinite-horizon cost \eqref{eq:lqr-cost-infinite} of the noise-free loop \eqref{eq:inflated-loop}, as in code lqr_base/simple_lqr.py → stage_cost_matrix, closed_loop_matrix
 \begin{equation}
     \label{eq:inflated-cost}
     \begin{aligned}
     J(x_0, K)
-    &= \sum_{k=0}^{\infty} \left( y_k\T Q\, y_k + v_k\T R\, v_k \right) \\
-    &= \sum_{k=0}^{\infty} \left( x_k\T U_1\T Q\, U_1 x_k + x_k\T U_1\T K\T R K U_1 x_k \right) ,
+    &= \sum_{k=0}^{\infty} \left( y_k\T \tilde{Q}\, y_k + v_k\T \tilde{R}\, v_k \right) \\
+    &= \sum_{k=0}^{\infty} \left( x_k\T U_1\T \tilde{Q}\, U_1 x_k + x_k\T U_1\T K\T \tilde{R} K U_1 x_k \right) ,
     \end{aligned}
 \end{equation}
 with the closed loop $x_{k+1} = (A - B U_2 K U_1)\, x_k$.
 
-Throughout the thesis, we will use the following synonyms for different $d_{\mathrm{in}}$ and
+Throughout the thesis, we use the following synonyms for different $d_{\mathrm{in}}$ and
 $d_{\mathrm{out}}$ dimensionalities, applied to the loop, which can be found in \cref{tab:inflation-sizes}.
 \begin{table}[htbp]
     \centering
@@ -754,6 +759,7 @@ $d_{\mathrm{out}}$ dimensionalities, applied to the loop, which can be found in 
         \emph{small}  & 10  & 5   \\
         \emph{medium} & 50  & 25  \\
         \emph{large}  & 200 & 100 \\
+        \emph{pixel}  & 18\,432 & 256 \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -839,7 +845,7 @@ what we compute actions on, and what actually happens.
 This noise models external influences, like a wind pushing on our
 agent, or rain
 hitting it with some frequency. It only affects the position, so with the first unit
-vector $e_1 \in \R^{n}$ the noise is drawn as
+vector $e_1 \in \R^{n}$ and $\sigma_{\mathrm{d}}$ as the noise amplitude, we get
 \begin{equation}
     \label{eq:dist-sin}
     n^{\mathrm{d}}_k = \sigma_{\mathrm{d}} \sin(0.01\,k)\, e_1 .
@@ -890,10 +896,10 @@ it.
 While we can easily calculate the infinite-horizon cost of a gain
 via the Lyapunov equation \eqref{eq:lyapunov}, we cannot effectively
 use it. The reason for that is that \eqref{eq:lyapunov} can only
-be applied to the closed loop, however when adding noise to our
+be applied to the closed loop; however, when adding noise to our
 evaluation, this is not the case anymore. Additionally, the neural
 networks we train in later chapters do not admit a gain-matrix-based
-policy $P_K$, which would need a different approach anyway.
+policy $K$, which would need a different approach anyway.
 
 So, we instead evaluate them over a fixed horizon via rollout. Hence for
 a given controller, a noise condition $c$, which is a subset of channels and an
@@ -904,15 +910,15 @@ The resulting loop \eqref{eq:noisy-loop} under $c$ thus accumulates
     \label{eq:empirical-return}
     J_T^{(i,s)}(K; c)
     = \sum_{k=0}^{T-1}
-      \left( \left( U_1 x_k \right)\T Q \left( U_1 x_k \right) + \tilde{v}_k\T R\, \tilde{v}_k \right) ,
+      \left( \left( U_1 x_k \right)\T \tilde{Q} \left( U_1 x_k \right) + \tilde{v}_k\T \tilde{R}\, \tilde{v}_k \right) ,
 \end{equation}
 where $s$ indexes the seed the run was trained under and $i$ the episode
 within it.
 
-It is important to note where $Q$ and $R$ act. As $Q$ penalizes the difference
+It is important to note where $\tilde{Q}$ and $\tilde{R}$ act. As $\tilde{Q}$ penalizes the difference
 from the origin, we apply it on the inflated state \emph{before} any noise is
 applied. This way we can evaluate the actual position of the mass, as shown
-in \eqref{eq:lifted-state-cost}. For $R$, we handle it differently. Here,
+in \eqref{eq:lifted-state-cost}. For $\tilde{R}$, we handle it differently. Here,
 every actuation energy adds to the cost, irrespective of its origin (so whether the
 controller commanded it or it is noise).
 
@@ -1030,10 +1036,18 @@ The concrete standard deviations per channel are listed in
 Having introduced our metrics, we now define a protocol for how
 we train and compare the different solver approaches with these metrics.
 
-First, we note that we will always use $Q = I_{d_{\mathrm{in}}}$ and $R = I_{d_{\mathrm{out}}}$, which weighs position,
+First, we note that we always use $\tilde{Q} = I_{d_{\mathrm{in}}}$ and $\tilde{R} = I_{d_{\mathrm{out}}}$ (so $Q = I_n$ and $R = I_m$ on the uninflated system), which weighs position,
 velocity and control effort equally. Initial states are drawn uniformly from the
-box $[-10, 10] \times [-1, 1]$. Some solvers require an initial stable gain, for
-which we will use $K_0 = [\,0.1,\ 0.5\,]$ throughout, whose closed loop has $\spr(A - B K_0) \approx 0.9975$.
+box $[-10, 10] \times [-1, 1]$. Some solvers require an initial stabilizing gain,
+which for the uninflated system is $K_0 = [\,0.1,\ 0.5\,]$, whose closed loop has $\spr(A - B K_0) \approx 0.9975$.
+On an inflated system, we use
+\begin{equation}
+    \label{eq:initial-gain}
+    \tilde{K}_0 = U_2\T K_0 U_1\T + N , \qquad U_2 N U_1 = 0 , \qquad \lVert N \rVert_F = 0.5 .
+\end{equation}
+We create the random matrix $N$ such that $U_2 N U_1 = 0$, and thus adding it does not change
+the stability property of the matrix. This way, the effective gain remains $U_2 \tilde{K}_0 U_1 = K_0$,
+while $\tilde{K}_0$ is full rank, which offers the possibility of rank reduction.
 
 We train for each algorithm ten different solvers, starting from ten different fixed seeds,
 until convergence. We define convergence for LQR solvers as follows:
@@ -1046,10 +1060,9 @@ iteration $j$ for which
     \bar{g}_j \ge \left( 1 - \varepsilon_{\mathrm{rel}} \right) \bar{g}_{j - N_{\mathrm{p}}} ,
 \end{equation*}
 i.e.\ once the average has not decreased by the relative tolerance $\varepsilon_{\mathrm{rel}}$
-within the last $N_{\mathrm{p}}$ iterations. After an iteration with an infinite signal, the mean
-calculation restarts from afterwards.
+within the last $N_{\mathrm{p}}$ iterations. After an iteration with an infinite signal, the comparison
+restarts, such that we never compare with a window across an infinite iteration.
 \end{definition}
-% TODO: Verify — signals and values from lqr_solvers/* (should_stop calls) and settings.CONVERGENCE; S-PI's own step criterion from structured_policy_iteration.py
 The signal is something the solver itself observes and optimizes for.
 For Model-based PG and N4SID + Model-based PG it is the cost \eqref{eq:cost-of-gain} on the true or identified model, 
 for S-PI and N4SID + S-PI the regularized objective of S-PI
@@ -1076,39 +1089,40 @@ listed in \cref{tab:convergence-lqr}.
 \end{table}
 
 The number of steps the plant progressed and solver iterations until convergence are also
-counted and reported. An upper cap of $20\,000$ iterations is set, to prevent looping.
+counted and reported. An upper cap of $20\,000$ iterations is set to prevent looping.
 
-For RL-based algorithms, the convergence criteria have been calibrated based on experiments
-which can be found in the appendix \needcite{cref, TODO}. We apply \cref{def:convergence} 
-with one iteration corresponding to $25\,000$ environment steps.
-The signal $g_j$ is the mean (scaled) cost of the training episodes completed since the previous
-check. As a safety limit, we use the environment step caps in \cref{tab:rl-step-caps}.
+For RL-based algorithms we don't use such early-stopping logic. Following our experiments in
+\cref{sec:app-rl-convergence}, we observed that implementing such rule would lead to worse
+policies in the end. Instead, the best policy is achieved close to the end, which leads us
+to running each algorithm for as many steps as noted in \cref{tab:rl-step-caps}, and then
+taking the final policy. Every $25\,000$ environment steps throughout, we
+evaluate the current policies performance, to track its training process.
 \begin{table}[htbp]
     \centering
-    \caption{Safety cap on the environment steps of the RL solvers per inflation size.}
+    \caption{Environment step budget of the RL solvers per inflation size.}
     \label{tab:rl-step-caps}
     \begin{tabular}{@{}lrrr@{}}
         \toprule
         & \emph{small} & \emph{medium} & \emph{large} \\
         \midrule
-        Safety limit (environment steps) & $10^{7}$ & $1.5 \cdot 10^{7}$ & $3 \cdot 10^{7}$ \\
+        Budget (environment steps) & $10^{7}$ & $1.5 \cdot 10^{7}$ & $3 \cdot 10^{7}$ \\
         \bottomrule
     \end{tabular}
 \end{table}
 
 After our controllers have been trained, we evaluate them per seed for \emph{100 episodes}
-each, running for \emph{2000 steps} per episode at a sampling rate of $h = 0.01\,\mathrm{s}$.
+each, running for \emph{2000 steps} per episode with a sampling period of $h = 0.01\,\mathrm{s}$.
 Each episode calculates its empirical cost \eqref{eq:empirical-return}, and thus its
 suboptimality \eqref{eq:suboptimality} in
 comparison to the optimal gain on the same exact trajectory, with the same sampled $x_0 \sim \mathcal{D}$.
 In the end, for each solver architecture, we get a distribution of suboptimalities over a total
 of 1000 trajectories.
 
-The inflated size will always be the same between training and evaluation, however, for noise
-experiments, the controller is trained on a clean system, and then exposed to one with noise
+The inflated size is always the same between training and evaluation. For noise
+experiments, however, the controller is trained on a clean system, and then exposed to one with noise
 activated during testing.
 
-Under the stronger conditions individual rollouts might diverge.
+Under the stronger conditions, individual rollouts might diverge.
 To keep our mean finite, we remove them from the mean calculation,
 and report them separately as the divergence rate
 \begin{equation}
@@ -1117,7 +1131,7 @@ and report them separately as the divergence rate
     \left\lvert \left\{ (s, i) \;:\; J^{(i,s)}_T(K; c) = \infty \right\} \right\rvert ,
 \end{equation}
 where $M = 10$ is the number of seeds and $N = 100$ the number of episodes per seed.
-An individual episode can be missing from the result due to another reason.
+An individual episode can be missing from the result for another reason.
 Where the \emph{baseline} evaluation of episode $(s,i)$ diverged,
 $S^{(i,s)}$ has no value at all, since \eqref{eq:suboptimality} would divide
 by an infinity. Those episodes are excluded from $\hat{S}$ and noted separately.
@@ -1133,12 +1147,14 @@ use the double integrator, as mentioned in \cref{subsec:double-integrator}.
 
 First, as a basis, we will start by comparing
 the standard policy gradient (PG) approach~\cite{Fazel2018Global} with S-PI~\cite{Park2020Structured}
-on the true model. Their relative performance will be evaluated
+on the true model. Their relative performance to the baseline will be evaluated under the different
+inflation sizes introduced in \cref{tab:inflation-sizes}. Then, the same controllers will be exposed
+to the different noise channels and intensities we introduced.
 
 Afterwards, we will take a look at the cases where we do not have access to the real model. We compare
 the relative performance of both direct and indirect approaches to our baseline, which is
 the optimal controller calculated via the DARE \eqref{eq:dare} on the true model. For the indirect
-approaches, we will use numerical algorithms for subspace state space system identification
+approaches, we will use numerical algorithms for subspace state-space system identification
 (N4SID)~\cite{VanOverschee1994N4SID} to estimate the underlying model from one
 trajectory. A more detailed description, as well as the exact parameters selected,
 will be provided in the sections discussing the results. With this estimated model as
@@ -1146,23 +1162,24 @@ the basis, we employ three different approaches on how to learn our policy, call
 N4SID + DARE, N4SID + Model-based PG and N4SID + S-PI. All these will also be discussed in \cref{chap:lqr}.
 
 Our first approach for \cref{chap:lqr} is to compare our selected methods across the inflation sizes, and see how increasing
-the dimension affects the performance of each. As the next step, we will introduce the different noise channels
+the dimension affects the performance of each. As the next step, we will apply the different noise channels
 named in \cref{subsubsec:noise-injection} first to the base double integrator, where no overparameterization exists. The results
 we observe here will then be compared with evaluations of the controllers for a system with \emph{large} inflation
 under different noise channels and strengths.
 
 In \cref{chap:inflation}, we will then first introduce RL-based approaches. With proximal policy optimization
-(PPO)\needcite{TODO} being one of
-the most used variants in robotics\needcite{TODO}, we choose this as our main architecture, and apply different
-variations of it. First, by doing xyz\needcite{TODO, missing text} we force the trained controller to be linear, which allows us to extract
+(PPO)~\needcite{TODO} being one of
+the most used variants in robotics~\needcite{TODO}, we choose this as our main architecture, and apply different
+variations of it. First, by using only one layer and dropping the activation function and the biases,
+we force the trained controller to be linear, which allows us to extract
 it as a gain matrix that we can closely compare with our LQR approaches (Linear PPO). The fully connected, standard version is named
 Fully-connected PPO, and will also be evaluated. Additionally, we will introduce structures that force the observations through a low-dimensional latent
-space. Here, we will reuse the N4SID system identifier from before, by creating an encoding matrix from the singular value elimination, that projects
-the high-dimensional observation first into the low-dimensionality, and then trains PPO with this as the input. Therefore, the name for it is State encoder + PPO.
+space. Here, we will reuse the N4SID system identifier from before, by using its identified observation matrix $\hat{C}$, that projects
+the high-dimensional observation into a lower dimension, and then train PPO with this as the input. Therefore, the name for it is State encoder + PPO.
 A similar approach is used for Scalable encoder + PPO, which is based on Jonschkowski and Brock~\cite{Jonschkowski2015Learning} and
 Botteghi et al.~\cite{Botteghi2021LowDimensional}, and uses
 robotic priors to derive a low-dimensional latent state via a trainable encoder. Again, the construction following this encoder is PPO. Lastly, we
-implement the orthonormal bottlenecks introduced by Todorov et al.~\cite{Todorov2026Orthogonal} (Bottleneck PPO). It consists of sampling a fixed matrix
+implement the orthonormal bottlenecks introduced by Todorov and Sabatelli~\cite{Todorov2026Orthogonal} (Bottleneck PPO). It consists of sampling a fixed matrix
 $U_{\mathrm{b}}$ with $d_{\mathrm{b}}$ orthonormal columns, which is added at the end of a trainable feature extractor, and used to project the output into a $d_{\mathrm{b}}$-dimensional space. Like with the other
 encoders, we follow it with our PPO architecture.
 
@@ -1178,16 +1195,13 @@ evenly distributed among angles on a half-circle. This will give us an actual hi
 output, that is in reality governed by low-dimensional dynamics.
 
 By inputting images into our existing solvers, the dimensionality increases drastically. To be able to cleanly separate effects caused
-by the nonlinearity of the image construction from architecture-related effects, we will first artificially inflate our inputs to exactly the size that
-the images will be. Also, we set the output dimension to xyz\needcite{TODO}, mimicking the setting we will use for the pixelated
-environment. This evaluation will only be done on Scalable encoder + PPO, Fully-connected PPO and Bottleneck PPO, as the other
-approaches either do not scale well or are not relevant to the comparison.
+by the nonlinearity of the image construction from architecture-related effects, we will first artificially inflate our inputs and outputs 
+to exactly the sizes that will later be used by the pixelated environment. This evaluation will only be done on Scalable encoder + PPO,
+Fully-connected PPO and Bottleneck PPO, as the other approaches either do not scale well or are not relevant to the comparison.
 
 Then, using the same architectural constructions for these solvers, but applied to our new environment,
 we compare them with the additionally introduced position-velocity encoder~\cite{Jonschkowski2017PVE} (Position-Velocity Encoder + PPO),
 which uses similar robotic priors to Scalable encoder + PPO, but focuses
 more on position, velocity and acceleration. It learns positional encodings from the observations, and then calculates the velocity state based
 on finite differences. Here, it is quite clear that we use knowledge of the limitations of the embodiment to construct more optimal controllers,
-again in a bow-tie shape.
-
-% #56 dreamer used to reason mb approach
+again in a bow-tie shape. Finally, we will introduce this environment to noise as well, and observe the effects of it.
