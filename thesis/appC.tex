@@ -144,3 +144,30 @@ model-free approaches under \emph{large} inflation and \emph{strong} noise.
     and parametric uncertainty at intensity \emph{strong}.}
   \label{fig:app-noise-large-parametric-strong}
 \end{figure}
+
+\section{Stopping Rule of the RL Solvers}
+\label{sec:app-rl-convergence}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Stopping-rule settings with the lowest median regret.}
+  \label{tab:app-rl-convergence-grid}
+  \input{generated/appendix_rl_convergence/tables/appendix_rl_convergence.tex}
+\end{table}
+
+\begin{table}[htbp]
+  \centering
+  \caption{RL runs best policy, as a share of the step budget, and the regret
+    of the policy after $75\,\%$ of the budget, of the final policy, and of the policy with the best
+    $\bar{g}_j$.}
+  \label{tab:app-rl-convergence-cells}
+  \input{generated/appendix_rl_convergence/tables/appendix_rl_convergence_cells.tex}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{appendix_rl_convergence}{appendix_rl_convergence_large_curves_steps}
+  \caption{Training suboptimality of the RL solvers over the environment steps under \emph{large}
+    inflation.}
+  \label{fig:app-rl-convergence-large}
+\end{figure}

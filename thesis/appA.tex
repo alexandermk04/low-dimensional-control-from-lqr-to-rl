@@ -60,7 +60,7 @@ $K^{*}$, $u_k^{*}$ & optimal gain and optimal input & \eqref{eq:optimal-gain} \\
 $P$, $J^{*}(x)$ & stabilizing solution of the DARE and optimal cost-to-go $x\T P x$ & \eqref{eq:dare}, \eqref{eq:cost-to-go} \\
 $P_K$ & solution of the Lyapunov equation for a fixed $K$ & \eqref{eq:lyapunov} \\
 $\mathcal{K}$ & set of stabilizing gains & \eqref{eq:stabilizing-set} \\
-$K_0$ & stabilizing initial gain, $K_0 = [\,0.1,\ 0.5\,]$ & \cref{subsec:protocol} \\
+$K_0$ & stabilizing initial gain of the uninflated system, $K_0 = [\,0.1,\ 0.5\,]$ & \cref{subsec:protocol} \\
 $\mathcal{D}$, $\Sigma_0$ & distribution of $x_0$ and its second moment $\E[x_0 x_0\T]$ & \eqref{eq:cost-of-gain} \\
 $f(K)$ & expected cost of a gain, $\tr(P_K \Sigma_0)$ & \eqref{eq:cost-of-gain} \\
 \midrule
@@ -69,7 +69,9 @@ $d_{\mathrm{in}}$, $d_{\mathrm{out}}$ & inflated dimension of the controller inp
 $U_1$, $U_2$ & lifts with orthonormal columns and rows & \eqref{eq:lifts} \\
 $K \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$ & inflated feedback gain, $v_k = -K y_k$ & \eqref{eq:inflated-loop} \\
 $v_k$, $\tilde{v}_k \in \R^{d_{\mathrm{out}}}$ & controller output, before and after control noise & \eqref{eq:inflated-loop}, \eqref{eq:control-noise} \\
-$Q_n$ & state cost of the uninflated problem, $Q_n = U_1\T Q U_1 = I_n$ & \eqref{eq:lifted-state-cost} \\
+$\tilde{Q}$, $\tilde{R}$ & inflated state and input cost, $\tilde{Q} = I_{d_{\mathrm{in}}}$, $\tilde{R} = I_{d_{\mathrm{out}}}$; $U_1\T \tilde{Q} U_1 = Q = I_n$ & \eqref{eq:inflated-cost} \\
+$\tilde{K}_0$, $N$ & inflated initial gain $U_2\T K_0 U_1\T + N$ and its full-rank component, $U_2 N U_1 = 0$ & \eqref{eq:initial-gain} \\
+$\tilde{A}$, $\tilde{B}$, $\tilde{\Sigma}_0$ & model in the inflated coordinates, $U_1 A U_1\T$, $U_1 B U_2$, $U_1 \Sigma_0 U_1\T$ & \cref{sec:known-model} \\
 \midrule
 \multicolumn{3}{@{}l}{\emph{Noise}} \\[2pt]
 $n^{\mathrm{m}}_k$, $\sigma_{\mathrm{m}}$ & measurement noise and its standard deviation & \eqref{eq:measurement-noise} \\

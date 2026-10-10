@@ -76,8 +76,7 @@ were:
     \caption{PPO implemented here}
     \label{alg:ppo}
     \begin{algorithmic}[1]
-        \REQUIRE initial actor $\pi_{\theta}$ and critic $V_{\phi}$, initial learning rate $\eta_0$, step cap $N_{\max}$,
-        convergence parameters $N_{\mathrm{w}}$, $N_{\mathrm{p}}$, $\varepsilon_{\mathrm{rel}}$
+        \REQUIRE initial actor $\pi_{\theta}$ and critic $V_{\phi}$, initial learning rate $\eta_0$, step cap $N_{\max}$
         \STATE $N_{\mathrm{env}} \leftarrow 0$
         \WHILE{$N_{\mathrm{env}} < N_{\max}$}
             \STATE run $\pi_\theta$ for $2048$ steps, sampling $v_k \sim \pi_\theta(\cdot \mid y_k)$; store $y_k$, $v_k$ and the rewards
@@ -94,14 +93,11 @@ were:
                 \ENDIF
             \ENDFOR
             \STATE $N_{\mathrm{env}} \leftarrow N_{\mathrm{env}} + 2048$
-            \IF{$25\,000$ steps have passed since the last check}
-                \STATE evaluate $\pi_\theta$, update $g_j$ with the mean training cost since the last check
-                \IF{\cref{def:convergence} holds}
-                    \STATE \textbf{stop}
-                \ENDIF
+            \IF{$25\,000$ steps have passed since the last evaluation}
+                \STATE evaluate $\pi_\theta$ for the learning curve
             \ENDIF
         \ENDWHILE
-        \STATE \textbf{return} the policy with the best smoothed signal $\bar{g}_j$
+        \STATE \textbf{return} the final policy $\pi_\theta$
     \end{algorithmic}
 \end{algorithm}
 
@@ -159,11 +155,11 @@ here as well. \Cref{alg:encoder-pretraining} summarizes the pretraining.
     \caption{Pretraining of the scalable encoder}
     \label{alg:encoder-pretraining}
     \begin{algorithmic}[1]
-        \REQUIRE initial gain $K_0$, action bound $a_{\max}$, encoder $f_\psi \colon \R^{d_{\mathrm{in}}} \to \R^{2}$,
+        \REQUIRE initial gain $\tilde{K}_0$, action bound $a_{\max}$, encoder $f_\psi \colon \R^{d_{\mathrm{in}}} \to \R^{2}$,
         weights $\omega_1, \dots, \omega_4$
         \FOR{$k = 0, \dots, 20\,000 - 1$}
             \STATE with probability $0.3$, draw $v_k$ uniformly from $[-a_{\max}/10, a_{\max}/10]^{d_{\mathrm{out}}}$,
-            otherwise set $v_k = -K_0 y_k$
+            otherwise set $v_k = -\tilde{K}_0 y_k$
             \STATE apply $v_k$, store $(y_k, v_k, y_{k+1})$, and reset the plant after $800$ steps
         \ENDFOR
         \FOR{epoch $= 1, \dots, 20$}
