@@ -81,9 +81,7 @@ Generally, we assume that the state is fully
 measurable and therefore set $C = I_n$, which reduces
 \eqref{eq:ss-cont-output} to $y(t) = x(t)$. However, when we introduce disturbances
 through noise, this is no longer the case. More details on this are
-given in \cref{subsubsec:noise-injection}. The distinction between $u = -Kx$ and $u = -Ky$ is
-therefore critical, since the former admits an optimal solution while the
-latter might not; we return to this point in \cref{subsec:lqr}.
+given in \cref{subsubsec:noise-injection}.
  
 % -----------------------------------------------------------------------------
 \subsubsection{Discretization}
@@ -424,15 +422,6 @@ therefore detectable. The reason we introduce the weaker notion here is
 $(A, Q^{1/2})$ rather than $(A, C)$. This shifts the focus from what
 the sensor sees to which directions of the state space are penalized by the
 cost.
-
-The topic of observability becomes important again in
-\cref{subsubsec:noise-injection}, where we deliberately introduce noise so that
-$y_k \neq x_k$. This does not change our matrix $C = I_2$, 
-so the rank condition of \cref{thm:observability} still
-holds and the system remains observable by definition. However,
-$y_k$ is no longer a deterministic function of $x_k$, so we can
-never estimate the state exactly. We revisit this and its
-implications there.
  
 \subsection{The Linear Quadratic Regulator}
 \label{subsec:lqr}
@@ -887,7 +876,7 @@ our results.
 \subsubsection{Cost and Suboptimality}
 \label{subsubsec:suboptimality}
 
-By \cref{thm:dare-existence} no gain achieves a
+By \cref{subsubsec:lqr-optimal} no gain achieves a
 lower cost \eqref{eq:cost-of-gain} than $K^{*}$, and every controller we
 train is therefore in the best case only as good as it. This serves as our
 baseline, and we evaluate the cost produced by our controllers in relation to
@@ -1174,7 +1163,7 @@ variations of it. First, by using only one layer and dropping the activation fun
 we force the trained controller to be linear, which allows us to extract
 it as a gain matrix that we can closely compare with our LQR approaches (Linear PPO). The fully connected, standard version is named
 Fully-connected PPO, and will also be evaluated. Additionally, we will introduce structures that force the observations through a low-dimensional latent
-space. Here, we will reuse the N4SID system identifier from before, by using its identified observation matrix $\hat{C}$, that projects
+space. Here, we will reuse the N4SID system identifier from before, by using the transpose of its identified observation matrix $\hat{C}$, we project
 the high-dimensional observation into a lower dimension, and then train PPO with this as the input. Therefore, the name for it is State encoder + PPO.
 A similar approach is used for Scalable encoder + PPO, which is based on Jonschkowski and Brock~\cite{Jonschkowski2015Learning} and
 Botteghi et al.~\cite{Botteghi2021LowDimensional}, and uses
