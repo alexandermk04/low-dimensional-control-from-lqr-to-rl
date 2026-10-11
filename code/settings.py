@@ -470,6 +470,7 @@ SIZE_HYPERPARAMS = {
         "small": {"learning_rate": 3e-05},
         "medium": {"learning_rate": 4.5e-05},
         "large": {"learning_rate": 6.7e-06},
+        "pixel": {"learning_rate": 7e-07},
     },
     "ppo_encoder": {
         "small": {"learning_rate": 0.0001},
@@ -480,11 +481,13 @@ SIZE_HYPERPARAMS = {
         "small": {"learning_rate": 0.0001},
         "medium": {"learning_rate": 1.3e-05},
         "large": {"learning_rate": 2.2e-06},
+        "pixel": {"learning_rate": 2.3e-07},
     },
     "ppo_mlp": {
         "small": {"learning_rate": 3e-05},
         "medium": {"learning_rate": 1.3e-05},
         "large": {"learning_rate": 6.7e-06},
+        "pixel": {"learning_rate": 7e-07},
     },
 }
 
