@@ -1,18 +1,21 @@
 \begin{table}[htbp]
 \centering
+\caption{Baseline across inflation sizes.}
+\label{tab:ch5-inflation-baseline}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrr}
 \toprule
 Inflation & small & medium & large \\
 \midrule
-True cost $J$ & $5848 \pm 9.587 \times 10^{-13}$ & $5848 \pm 9.587 \times 10^{-13}$ & $5848 \pm 8.445 \times 10^{-12}$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0 \pm 0$ & $0 \pm 0$ & $0 \pm 0$ \\
-Test cost$^{\dagger}$ & $5968 \pm 5272$ & $5968 \pm 5272$ & $5968 \pm 5272$ \\
-Policy parameters & $16 \pm 0$ & $76 \pm 0$ & $301 \pm 0$ \\
-Gain rank & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ & $1.0 \pm 0.0$ \\
+True cost $J$ & $5848 \pm 5.136 \times 10^{-12}$ & $5848 \pm 9.383 \times 10^{-12}$ & $5848 \pm 1.068 \times 10^{-11}$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0$ & $0$ & $0$ \\
+Suboptimality $S$ & $+0$ & $+0$ & $+0$ \\
+Policy parameters & $16$ & $76$ & $301$ \\
+Gain rank & $1.0$ & $1.0$ & $1.0$ \\
+Iterations & $1$ & $1$ & $1$ \\
+Env.\ steps to convergence & $0$ & $0$ & $0$ \\
+Env.\ steps to best policy & $0$ & $0$ & $0$ \\
 \bottomrule
 \end{tabular}
 }
-\caption{baseline across inflation sizes. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
-\label{tab:ch5-inflation-baseline}
 \end{table}

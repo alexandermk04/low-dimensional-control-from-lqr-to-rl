@@ -1,0 +1,21 @@
+\begin{table}[htbp]
+\centering
+\caption{Bottleneck PPO across inflation sizes.}
+\label{tab:ch5-inflation-ppo-bottleneck}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrr}
+\toprule
+Inflation & small & medium & large \\
+\midrule
+True cost $J$ & $6135 \pm 584.3$ & $6202 \pm 585.3$ & $6174 \pm 580.7$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.0343 \pm 0.00685$ & $0.0457 \pm 0.00731$ & $0.041 \pm 0.00804$ \\
+Suboptimality $S$ & $+0.097 \pm 0.751$ & $+0.441 \pm 6.09$ & $+0.442 \pm 7.49$ \\
+Policy parameters & $4677$ & $5977$ & $10852$ \\
+Gain rank & $-1.0$ & $-1.0$ & $-1.0$ \\
+Iterations & $402$ & $602$ & $1202$ \\
+Env.\ steps to convergence & $10^{7}$ & $1.5 \times 10^{7}$ & $3 \times 10^{7}$ \\
+Env.\ steps to best policy & $10^{7}$ & $1.5 \times 10^{7}$ & $3 \times 10^{7}$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

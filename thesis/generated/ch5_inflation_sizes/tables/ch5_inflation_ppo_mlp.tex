@@ -1,18 +1,21 @@
 \begin{table}[htbp]
 \centering
+\caption{Fully-connected PPO across inflation sizes.}
+\label{tab:ch5-inflation-ppo-mlp}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrr}
 \toprule
 Inflation & small & medium & large \\
 \midrule
-True cost $J$ & $8728 \pm 2658$ & $7245 \pm 936.2$ & $1.616 \times 10^{6} \pm 2.828 \times 10^{6}$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.476 \pm 0.451$ & $0.224 \pm 0.133$ & $267 \pm 448$ \\
-Test cost$^{\dagger}$ & $9407 \pm 1.144 \times 10^{4}$ & $7455 \pm 6857$ & $1.383 \times 10^{8} \pm 2.325 \times 10^{8}$ \\
-Policy parameters & $5189 \pm 0$ & $9049 \pm 0$ & $23524 \pm 0$ \\
-Gain rank & $-1.0 \pm 0.0$ & $-1.0 \pm 0.0$ & $-1.0 \pm 0.0$ \\
+True cost $J$ & $6275 \pm 569.2$ & $6736 \pm 734.5$ & $6862 \pm 656.8$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.0585 \pm 0.0167$ & $0.135 \pm 0.0378$ & $0.157 \pm 0.0217$ \\
+Suboptimality $S$ & $+0.188 \pm 0.888$ & $+4.34 \pm 41.9$ & $+1.57 \pm 9.43$ \\
+Policy parameters & $5189$ & $9049$ & $23524$ \\
+Gain rank & $-1.0$ & $-1.0$ & $-1.0$ \\
+Iterations & $402$ & $602$ & $1202$ \\
+Env.\ steps to convergence & $10^{7}$ & $1.5 \times 10^{7}$ & $3 \times 10^{7}$ \\
+Env.\ steps to best policy & $10^{7}$ & $1.5 \times 10^{7}$ & $3 \times 10^{7}$ \\
 \bottomrule
 \end{tabular}
 }
-\caption{ppo\_mlp across inflation sizes. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled; every other row over the 10 runs.}
-\label{tab:ch5-inflation-ppo-mlp}
 \end{table}
