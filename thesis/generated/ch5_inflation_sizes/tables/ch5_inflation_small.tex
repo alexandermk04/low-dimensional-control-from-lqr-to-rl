@@ -1,0 +1,21 @@
+\begin{table}[htbp]
+\centering
+\caption{PPO variants under \emph{small} inflation, without noise.}
+\label{tab:ch5-inflation-small}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Solver & Baseline & Linear PPO & Bottleneck PPO & State encoder + PPO & Scalable encoder + PPO & Fully-connected PPO \\
+\midrule
+True cost $J$ & $5848 \pm 5.136 \times 10^{-12}$ & $6028 \pm 70.94$ & $6135 \pm 584.3$ & $6524 \pm 1258$ & $7462 \pm 3122$ & $6275 \pm 569.2$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0$ & $0.0308 \pm 0.0121$ & $0.0343 \pm 0.00685$ & $0.1 \pm 0.188$ & $0.257 \pm 0.512$ & $0.0585 \pm 0.0167$ \\
+Suboptimality $S$ & $+0$ & $+0.0357 \pm 0.025$ & $+0.097 \pm 0.751$ & $+1.36 \pm 22$ & $+378 \pm 9.78 \times 10^{3}$ & $+0.188 \pm 0.888$ \\
+Iterations & $1$ & $402$ & $402$ & $401$ & $401$ & $402$ \\
+Env.\ steps to convergence & $0$ & $10^{7}$ & $10^{7}$ & $10^{7}$ & $10^{7}$ & $10^{7}$ \\
+Env.\ steps to best policy & $0$ & $10^{7}$ & $10^{7}$ & $10^{7}$ & $10^{7}$ & $10^{7}$ \\
+Policy parameters & $16$ & $50$ & $4677$ & $4677$ & $8645$ & $5189$ \\
+Gain rank & $1.0$ & $5.0$ & $-1.0$ & $-1.0$ & $-1.0$ & $-1.0$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

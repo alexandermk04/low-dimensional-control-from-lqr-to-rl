@@ -1,0 +1,21 @@
+\begin{table}[htbp]
+\centering
+\caption{PPO variants under \emph{medium} inflation, without noise.}
+\label{tab:ch5-inflation-medium}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Solver & Baseline & Linear PPO & Bottleneck PPO & State encoder + PPO & Scalable encoder + PPO & Fully-connected PPO \\
+\midrule
+True cost $J$ & $5848 \pm 9.383 \times 10^{-12}$ & $6174 \pm 75.74$ & $6202 \pm 585.3$ & $6208 \pm 565.7$ & $8809 \pm 7996$ & $6736 \pm 734.5$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0$ & $0.0557 \pm 0.013$ & $0.0457 \pm 0.00731$ & $0.047 \pm 0.0108$ & $0.485 \pm 1.34$ & $0.135 \pm 0.0378$ \\
+Suboptimality $S$ & $+0$ & $+0.0573 \pm 0.0185$ & $+0.441 \pm 6.09$ & $+0.199 \pm 1$ & $+16.1 \pm 253$ & $+4.34 \pm 41.9$ \\
+Iterations & $1$ & $602$ & $602$ & $602$ & $601$ & $602$ \\
+Env.\ steps to convergence & $0$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ \\
+Env.\ steps to best policy & $0$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ \\
+Policy parameters & $76$ & $1250$ & $5977$ & $5977$ & $9945$ & $9049$ \\
+Gain rank & $1.0$ & $25.0$ & $-1.0$ & $-1.0$ & $-1.0$ & $-1.0$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

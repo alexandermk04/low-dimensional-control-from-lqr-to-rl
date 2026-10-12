@@ -95,6 +95,7 @@ def render_size(
 
 def render_across_sizes(
     records, solvers, stem_prefix: str, caption: str, experiment: str,
+    sizes=settings.CH4_INFLATION_SIZES,
 ):
     """How a solver degrades as the dimension grows.
     """
@@ -102,7 +103,7 @@ def render_across_sizes(
 
     order = [
         (size, solver)
-        for size in settings.CH4_INFLATION_SIZES
+        for size in sizes
         for solver in solvers
     ]
 
@@ -124,7 +125,7 @@ def render_across_sizes(
             metric=("policy_complexity", "rank_final"),
             column_by="size",
             row_order=solvers,
-            column_order=settings.CH4_INFLATION_SIZES,
+            column_order=sizes,
             row_header="Solver",
             caption=caption,
             label=f"tab:{stem.replace('_', '-')}",
@@ -138,8 +139,9 @@ def render_track(
     experiment: str, solvers, stem_prefix: str,
     track_caption: str, across_caption: str, curve_x: str = "env_steps",
     curves: bool = True, trajectories: bool = True,
+    sizes=settings.CH4_INFLATION_SIZES,
 ):
-    """Draw one chapter-4 setting.
+    """Draw one chapter-4 setting (also reused by chapter 5).
 
     Parameters
     ----------
@@ -159,18 +161,20 @@ def render_track(
         Whether to draw the learning curves.
     trajectories : bool, optional
         Whether to create the trajectory curves.
+    sizes : tuple[str, ...], optional
+        Inflation sizes to draw.
     """
     records = latest_per_experiment(load_experiment(experiment))
     order = tuple(solvers)
 
-    for size in settings.CH4_INFLATION_SIZES:
+    for size in sizes:
         render_size(
             records, size, order, stem_prefix, track_caption, experiment,
             curve_x, curves=curves, trajectories=trajectories,
         )
 
     render_across_sizes(
-        records, order, stem_prefix, across_caption, experiment
+        records, order, stem_prefix, across_caption, experiment, sizes
     )
 
     print("wrote figures to", figure_dir(experiment))

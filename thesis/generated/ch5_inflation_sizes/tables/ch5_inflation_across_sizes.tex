@@ -1,0 +1,21 @@
+\begin{table}[htbp]
+\centering
+\caption{Size of the PPO policies, across every inflation size.}
+\label{tab:ch5-inflation-across-sizes}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{3}{c}{Policy parameters} & \multicolumn{3}{c}{Gain rank} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Solver & small & medium & large & small & medium & large \\
+\midrule
+Baseline & $16$ & $76$ & $301$ & $1.0$ & $1.0$ & $1.0$ \\
+Linear PPO & $50$ & $1250$ & $20000$ & $5.0$ & $25.0$ & $100.0$ \\
+Bottleneck PPO & $4677$ & $5977$ & $10852$ & $-1.0$ & $-1.0$ & $-1.0$ \\
+State encoder + PPO & $4677$ & $5977$ & $10852$ & $-1.0$ & $-1.0$ & $-1.0$ \\
+Scalable encoder + PPO & $8645$ & $9945$ & $14820$ & $-1.0$ & $-1.0$ & $-1.0$ \\
+Fully-connected PPO & $5189$ & $9049$ & $23524$ & $-1.0$ & $-1.0$ & $-1.0$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

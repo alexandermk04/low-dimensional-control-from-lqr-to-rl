@@ -6,89 +6,24 @@ Run with::
 """
 
 import settings
-from experiments.figures.aggregate import label_for, latest_per_experiment, tidy, with_suboptimality
-from experiments.figures.panels import (
-    complexity_bars,
-    learning_bands,
-    trajectory_overlay,
-    box_metric,
-)
-from experiments.figures.style import figure_dir, save, table_dir
-from experiments.figures.tables import metric_table, write_table
-from experiments.store import MissingExperimentError, load_experiment
+from experiments.figures.ch4_tracks import render_track
 
-EXPERIMENTS = ("ch5_inflation_sizes",)
+EXPERIMENT = "ch5_inflation_sizes"
 
-SIZE_ORDER = tuple(settings.CH5_INFLATION_SIZES)
-
-
-def render(experiment: str):
-    """Draw one inflation sweep, one file set per solver in it."""
-    records = latest_per_experiment(load_experiment(experiment))
-
-    solvers = sorted({r.solver for r in records})
-
-    all_rows = with_suboptimality(tidy(records), by=("seed", "size"))
-
-    for solver in solvers:
-        subset = [r for r in records if r.solver == solver]
-        rows = [r for r in all_rows if r["solver"] == solver]
-
-        short = solver.replace("_", "-")
-
-        # Plot 1
-        ax = box_metric(
-            rows, "size", "training_subopt_final", order=SIZE_ORDER,
-            log="symlog",
-        )
-        ax.set_xlabel("Inflation size")
-        save(ax.figure, f"ch5_inflation_subopt_{solver}", experiment)
-
-        # Plot 2
-        ax = learning_bands(subset, "size", x="env_steps", order=SIZE_ORDER)
-        save(ax.figure, f"ch5_inflation_curves_{solver}", experiment)
-
-        # Plot 3
-        axes = trajectory_overlay(subset, "size", dt=0.01, order=SIZE_ORDER)
-        save(axes[0].figure, f"ch5_inflation_trajectories_{solver}", experiment)
-
-        # Plot 6
-        ax = box_metric(rows, "size", "subopt", order=SIZE_ORDER, log="symlog")
-        ax.set_xlabel("Inflation size")
-        save(ax.figure, f"ch5_inflation_test_subopt_{solver}", experiment)
-
-        # Plot 7
-        ax = complexity_bars(rows, "size", order=SIZE_ORDER)
-        ax.set_xlabel("Inflation size")
-        save(ax.figure, f"ch5_inflation_complexity_{solver}", experiment)
-
-        # Table 2
-        write_table(
-            metric_table(
-                rows, "size",
-                metrics=("J_final", "training_subopt_final", "subopt",
-                         "policy_complexity", "rank_final",
-                         "iterations", "total_env_steps", "best_env_steps"),
-                column_order=SIZE_ORDER,
-                column_header="Inflation",
-                caption=f"{label_for(solver)} across inflation sizes.",
-                label=f"tab:ch5-inflation-{short}",
-            ),
-            f"ch5_inflation_{solver}",
-            experiment,
-        )
+ORDER = tuple(settings.CH5_SOLVERS)
 
 
 def main():
-    for experiment in EXPERIMENTS:
-        try:
-            render(experiment)
-        except MissingExperimentError as error:
-            print(f"skipping {experiment}: {error}")
-            continue
-
-        print("wrote figures to", figure_dir(experiment))
-        print("wrote tables  to", table_dir(experiment))
+    render_track(
+        EXPERIMENT,
+        ORDER,
+        stem_prefix="ch5_inflation",
+        track_caption="PPO variants",
+        across_caption=(
+            "Size of the PPO policies, across every inflation size."
+        ),
+        sizes=settings.CH5_INFLATION_SIZES,
+    )
 
 
 if __name__ == "__main__":
