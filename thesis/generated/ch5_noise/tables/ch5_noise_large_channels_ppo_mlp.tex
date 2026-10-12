@@ -1,15 +1,14 @@
 \begin{table}[htbp]
 \centering
+\caption{Fully-connected PPO under each noise channel at intensity \emph{strong}.}
+\label{tab:ch5-noise-large-channels-ppo-mlp}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrrr}
 \toprule
 Channel & none & measurement & control & parametric & disturbance & all channels \\
 \midrule
-Test cost$^{\dagger}$ & $1.383 \times 10^{8} \pm 2.325 \times 10^{8}$ & $1.372 \times 10^{8} \pm 2.318 \times 10^{8}$ & $1.385 \times 10^{8} \pm 2.331 \times 10^{8}$ & $4.787 \times 10^{12} \pm 9.818 \times 10^{13}$ & $1.384 \times 10^{8} \pm 2.325 \times 10^{8}$ & $5.121 \times 10^{11} \pm 8.343 \times 10^{12}$ \\
-Suboptimality $S$$^{\dagger}$ & $+3.1 \times 10^{5} \pm 2.36 \times 10^{6}$ & $+2.57 \times 10^{4} \pm 5.45 \times 10^{4}$ & $+3.16 \times 10^{5} \pm 2.37 \times 10^{6}$ & $+6.53 \times 10^{8} \pm 1.09 \times 10^{10}$ & $+1.32 \times 10^{5} \pm 5.68 \times 10^{5}$ & $+7.21 \times 10^{7} \pm 1.15 \times 10^{9}$ \\
+Suboptimality $S$ & $+1.57 \pm 9.43$ & $+1.66 \pm 1.8$ & $+1.42 \pm 7.6$ & $+8.64 \times 10^{3} \pm 1.63 \times 10^{5}$ & $+0.0168 \pm 0.107$ & $+1.39 \times 10^{3} \pm 1.86 \times 10^{4}$ \\
 \bottomrule
 \end{tabular}
 }
-\caption{ppo\_mlp under each noise channel at intensity 'standard'. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled.}
-\label{tab:ch5-noise-large-channels-ppo-mlp}
 \end{table}

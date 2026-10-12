@@ -1,0 +1,14 @@
+\begin{table}[htbp]
+\centering
+\caption{State encoder + PPO under each noise channel at intensity \emph{strong}.}
+\label{tab:ch5-noise-large-channels-ppo-encoder}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Channel & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Suboptimality $S$ & $+0.711 \pm 4.9$ & $+0.00745 \pm 0.165$ & $+0.733 \pm 3.37$ & $+3.26 \times 10^{3} \pm 7.36 \times 10^{4}$ & $+0.0313 \pm 0.0639$ & $+546 \pm 1.15 \times 10^{4}$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

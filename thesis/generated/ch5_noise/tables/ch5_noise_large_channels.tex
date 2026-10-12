@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\caption{Suboptimality $S$ under \emph{large} inflation and each noise channel at intensity \emph{strong}.}
+\label{tab:ch5-noise-large-channels}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Channel & Baseline & Linear PPO & Bottleneck PPO & State encoder + PPO & Scalable encoder + PPO & Fully-connected PPO \\
+\midrule
+none & $+0$ & $+37 \pm 137$ & $+0.442 \pm 7.49$ & $+0.711 \pm 4.9$ & $+32.9 \pm 705$ & $+1.57 \pm 9.43$ \\
+measurement & $+0$ & $+6.51 \pm 16.3$ & $+0.108 \pm 0.143$ & $+0.00745 \pm 0.165$ & $+3.32 \pm 41.6$ & $+1.66 \pm 1.8$ \\
+control & $+0$ & $+57.4 \pm 201$ & $+0.306 \pm 4.09$ & $+0.733 \pm 3.37$ & $+20.8 \pm 266$ & $+1.42 \pm 7.6$ \\
+parametric & $+0$ & $+3.16 \times 10^{6} \pm 9.84 \times 10^{7}$ & $+3.69 \times 10^{3} \pm 8.06 \times 10^{4}$ & $+3.26 \times 10^{3} \pm 7.36 \times 10^{4}$ & $+1.32 \times 10^{4} \pm 1.49 \times 10^{5}$ & $+8.64 \times 10^{3} \pm 1.63 \times 10^{5}$ \\
+disturbance & $+0$ & $+8.6 \pm 20$ & $-0.0502 \pm 0.0413$ & $+0.0313 \pm 0.0639$ & $+147 \pm 572$ & $+0.0168 \pm 0.107$ \\
+all channels & $+0$ & $+1.36 \times 10^{4} \pm 2.68 \times 10^{5}$ & $+176 \pm 4.88 \times 10^{3}$ & $+546 \pm 1.15 \times 10^{4}$ & $+2.97 \times 10^{3} \pm 4.38 \times 10^{4}$ & $+1.39 \times 10^{3} \pm 1.86 \times 10^{4}$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

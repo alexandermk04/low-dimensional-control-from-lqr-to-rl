@@ -1,15 +1,14 @@
 \begin{table}[htbp]
 \centering
+\caption{Fully-connected PPO under measurement noise of increasing intensity.}
+\label{tab:ch5-noise-large-levels-ppo-mlp}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
 Intensity & none & weak & standard & strong & divergent \\
 \midrule
-Test cost$^{\dagger}$ & $1.383 \times 10^{8} \pm 2.325 \times 10^{8}$ & $1.382 \times 10^{8} \pm 2.325 \times 10^{8}$ & $1.372 \times 10^{8} \pm 2.318 \times 10^{8}$ & $1.271 \times 10^{8} \pm 2.234 \times 10^{8}$ & $3.469 \times 10^{7} \pm 8.951 \times 10^{7}$ \\
-Suboptimality $S$$^{\dagger}$ & $+3.1 \times 10^{5} \pm 2.36 \times 10^{6}$ & $+1.16 \times 10^{5} \pm 4.62 \times 10^{5}$ & $+2.57 \times 10^{4} \pm 5.45 \times 10^{4}$ & $+3.32 \times 10^{3} \pm 5.87 \times 10^{3}$ & $+9.75 \pm 27.7$ \\
+Suboptimality $S$ & $+1.57 \pm 9.43$ & $+3.63 \pm 3.1$ & $+2.66 \pm 1.87$ & $+1.66 \pm 1.8$ & $+1.02 \pm 2.15$ \\
 \bottomrule
 \end{tabular}
 }
-\caption{ppo\_mlp under measurement noise of increasing intensity. $^{\dagger}$ mean $\pm$ standard deviation over all 1000 test episodes (100 per seed, 10 seeds) pooled.}
-\label{tab:ch5-noise-large-levels-ppo-mlp}
 \end{table}

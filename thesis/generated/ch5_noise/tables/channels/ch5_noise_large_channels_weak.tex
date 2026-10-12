@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering
+\caption{Suboptimality $S$ (in $10^{-3}$) under \emph{large} inflation and each noise channel at intensity \emph{weak}.}
+\label{tab:ch5-noise-large-solver-channels-weak}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Solver & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Linear PPO & $+3.7 \times 10^{4} \pm 1.4 \times 10^{5}$ & $+1.7 \times 10^{4} \pm 3.6 \times 10^{4}$ & $+4.1 \times 10^{4} \pm 1.4 \times 10^{5}$ & $+3.4 \times 10^{5} \pm 4.4 \times 10^{6}$ & $+1.8 \times 10^{4} \pm 3.8 \times 10^{4}$ & $+1.8 \times 10^{5} \pm 1.4 \times 10^{6}$ \\
+Bottleneck PPO & $+4.4 \times 10^{2} \pm 7.5 \times 10^{3}$ & $+4.5 \times 10^{2} \pm 4 \times 10^{2}$ & $+4 \times 10^{2} \pm 6.6 \times 10^{3}$ & $+3.5 \times 10^{2} \pm 3.9 \times 10^{3}$ & $-12 \pm 63$ & $+3.5 \times 10^{2} \pm 2.6 \times 10^{2}$ \\
+State encoder + PPO & $+7.1 \times 10^{2} \pm 4.9 \times 10^{3}$ & $+3.5 \times 10^{2} \pm 3.7 \times 10^{2}$ & $+6.9 \times 10^{2} \pm 4.3 \times 10^{3}$ & $+8.2 \times 10^{2} \pm 4.8 \times 10^{3}$ & $+94 \pm 1.4 \times 10^{2}$ & $+2.9 \times 10^{2} \pm 2.5 \times 10^{2}$ \\
+Scalable encoder + PPO & $+3.3 \times 10^{4} \pm 7.1 \times 10^{5}$ & $+3 \times 10^{3} \pm 4.2 \times 10^{4}$ & $+3 \times 10^{4} \pm 6.1 \times 10^{5}$ & $+1.8 \times 10^{5} \pm 2.4 \times 10^{6}$ & $+2.6 \times 10^{4} \pm 1.6 \times 10^{5}$ & $+1.1 \times 10^{6} \pm 1.7 \times 10^{7}$ \\
+Fully-connected PPO & $+1.6 \times 10^{3} \pm 9.4 \times 10^{3}$ & $+3.6 \times 10^{3} \pm 3.1 \times 10^{3}$ & $+1.4 \times 10^{3} \pm 7.8 \times 10^{3}$ & $+1.8 \times 10^{3} \pm 1.1 \times 10^{4}$ & $+1.2 \times 10^{2} \pm 1.5 \times 10^{2}$ & $+2.8 \times 10^{3} \pm 1.6 \times 10^{3}$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
