@@ -115,7 +115,7 @@ $\phi$, $V_\phi$ & critic parameters and critic & \cref{alg:ppo} \\
 $r_k(\theta)$, $\hat{A}_k$ & probability ratio and advantage estimate & \eqref{eq:ppo-clip} \\
 $L^{\mathrm{CLIP}}$, $\varepsilon_{\mathrm{clip}}$ & clipped surrogate objective and clip range & \eqref{eq:ppo-clip} \\
 $\gamma$ & discount factor & \cref{subsec:rl-training} \\
-$\eta_0$, $N_{\mathrm{env}}$, $N_{\max}$ & initial learning rate, environment steps so far, step cap & \eqref{eq:lr-annealing} \\
+$\eta_0$, $N_{\mathrm{env}}$, $N_{\max}$ & initial learning rate, environment steps so far, step budget & \eqref{eq:lr-annealing} \\
 $W$ & weight matrix of Linear PPO, $W = -K$ & \eqref{eq:linear-ppo} \\
 $f_\psi$, $\psi$ & scalable encoder and its parameters & \cref{alg:encoder-pretraining} \\
 $a_{\max}$ & action bound & \cref{alg:encoder-pretraining} \\
@@ -143,3 +143,17 @@ with the optimal controller acting on the true state as reference. Measurement
 noise is not calibrated but set by hand (\cref{subsec:perception-noise-setting}).
 
 \input{generated/appendix_calibrate_pixel_noise/tables/pixel_noise_levels.tex}
+
+\section{Policy Architectures}
+\label{sec:app-ppo-architectures}
+
+The actor architectures of the PPO variants introduced in \cref{subsec:rl-architectures}.
+
+\begin{figure}[htbp]
+    \centering
+    \input{figures/ppo-architectures.tex}
+    \caption{Actor architectures of our PPO variants. For each layer, the number below indicates its neurons.
+    The critic receives the same encoder structure and uses its own 64-64 tanh perceptron with a scalar output.
+    Visualization created with Claude Code.}
+    \label{fig:ppo-architectures}
+\end{figure}

@@ -1,0 +1,121 @@
+% Actor architectures of the PPO variants, created with Claude Code
+
+\begin{tikzpicture}[
+        x=0.85cm, y=1cm,
+        layer/.style={draw, minimum width=0.26cm, inner sep=0pt, line width=0.4pt},
+        trained/.style={layer, fill=blue!25},
+        frozen/.style={layer, fill=orange!40},
+        fixedmap/.style={draw=none, fill=none, font=\scriptsize, inner sep=1pt},
+        io/.style={layer, dashed, fill=white},
+        link/.style={-{Stealth[length=1.6mm]}, line width=0.4pt},
+        size/.style={font=\scriptsize, anchor=north},
+        row/.style={font=\small, anchor=east},
+    ]
+    % columns: input, trunk 1-3, latent, head, actor 1-2, output
+    \def\xin{0}\def\xa{1.25}\def\xb{2.35}\def\xc{3.45}\def\xz{4.75}\def\xh{6.0}
+    \def\xp{7.25}\def\xq{8.45}\def\xout{9.85}
+    % heights: d_in, 512, 256, 64, latent, d_out
+    \def\hin{1.5}\def\hfh{1.8}\def\htf{1.45}\def\hsf{0.85}\def\hz{0.3}\def\hout{1.25}
+
+    % Linear PPO
+    \def\y{0}
+    \node[row] at (-0.5,\y) {Linear PPO};
+    \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
+    \node[io, minimum height=\hout cm] (out) at (\xout,\y) {};
+    \draw[link] (in) -- node[above, font=\scriptsize] {$W = -K$} (out);
+
+    % Fully-connected PPO
+    \def\y{-2.4}\def\lb{0.55}
+    \node[row] at (-0.5,\y) {Fully-connected PPO};
+    \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
+    \node[trained, minimum height=\hsf cm] (p) at (\xp,\y) {};
+    \node[trained, minimum height=\hsf cm] (q) at (\xq,\y) {};
+    \node[io, minimum height=\hout cm] (out) at (\xout,\y) {};
+    \draw[link] (in) -- (p);
+    \draw[link] (p) -- (q);
+    \draw[link] (q) -- (out);
+    \node[size] at (\xp,\y-\lb) {64};
+    \node[size] at (\xq,\y-\lb) {64};
+
+    % State encoder + PPO
+    \def\y{-4.8}\def\lb{0.55}
+    \node[row] at (-0.5,\y) {State encoder + PPO};
+    \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
+    \node[frozen, minimum height=\hz cm] (z) at (\xz,\y) {};
+    \node[trained, minimum height=\hsf cm] (p) at (\xp,\y) {};
+    \node[trained, minimum height=\hsf cm] (q) at (\xq,\y) {};
+    \node[io, minimum height=\hout cm] (out) at (\xout,\y) {};
+    \draw[link] (in) -- node[above, font=\scriptsize] {$\hat{C}\T$ (N4SID)} (z);
+    \draw[link] (z) -- (p);
+    \draw[link] (p) -- (q);
+    \draw[link] (q) -- (out);
+    \node[size] at (\xz,\y-\lb) {$\hat{n}$};
+    \node[size] at (\xp,\y-\lb) {64};
+    \node[size] at (\xq,\y-\lb) {64};
+
+    % Scalable encoder + PPO
+    \def\y{-7.2}\def\lb{1.0}
+    \node[row] at (-0.5,\y) {Scalable encoder + PPO};
+    \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
+    \node[frozen, minimum height=\hfh cm] (a) at (\xa,\y) {};
+    \node[frozen, minimum height=\htf cm] (b) at (\xb,\y) {};
+    \node[frozen, minimum height=\hz cm] (z) at (\xz,\y) {};
+    \node[frozen, minimum height=\hsf cm] (h) at (\xh,\y) {};
+    \node[trained, minimum height=\hsf cm] (p) at (\xp,\y) {};
+    \node[trained, minimum height=\hsf cm] (q) at (\xq,\y) {};
+    \node[io, minimum height=\hout cm] (out) at (\xout,\y) {};
+    \draw[link] (in) -- (a);
+    \draw[link] (a) -- (b);
+    \draw[link] (b) -- (z);
+    \draw[link] (z) -- (h);
+    \draw[link] (h) -- (p);
+    \draw[link] (p) -- (q);
+    \draw[link] (q) -- (out);
+    \node[size] at (\xa,\y-\lb) {512};
+    \node[size] at (\xb,\y-\lb) {256};
+    \node[size] at (\xz,\y-\lb) {2};
+    \node[size] at (\xh,\y-\lb) {64};
+    \node[size] at (\xp,\y-\lb) {64};
+    \node[size] at (\xq,\y-\lb) {64};
+
+    % Bottleneck PPO
+    \def\y{-9.6}\def\lb{1.0}
+    \node[row] at (-0.5,\y) {Bottleneck PPO};
+    \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
+    \node[trained, minimum height=\hfh cm] (a) at (\xa,\y) {};
+    \node[trained, minimum height=\htf cm] (b) at (\xb,\y) {};
+    \node[trained, minimum height=\htf cm] (c) at (\xc,\y) {};
+    \node[layer, fill=gray!35, minimum height=\hz cm] (z) at (\xz,\y) {};
+    \node[trained, minimum height=\hsf cm] (p) at (\xp,\y) {};
+    \node[trained, minimum height=\hsf cm] (q) at (\xq,\y) {};
+    \node[io, minimum height=\hout cm] (out) at (\xout,\y) {};
+    \draw[link] (in) -- (a);
+    \draw[link] (a) -- (b);
+    \draw[link] (b) -- (c);
+    \draw[link] (c) -- node[above, font=\scriptsize] {$U_{\mathrm{b}}\T$} (z);
+    \draw[link] (z) -- (p);
+    \draw[link] (p) -- (q);
+    \draw[link] (q) -- (out);
+    \node[size] at (\xa,\y-\lb) {512};
+    \node[size] at (\xb,\y-\lb) {256};
+    \node[size] at (\xc,\y-\lb) {256};
+    \node[size] at (\xz,\y-\lb) {2};
+    \node[size] at (\xp,\y-\lb) {64};
+    \node[size] at (\xq,\y-\lb) {64};
+
+    % column captions
+    \node[font=\scriptsize, align=center] at (\xin,1.3) {observation\\$y_k \in \R^{d_{\mathrm{in}}}$};
+    \node[font=\scriptsize, align=center] at (\xb,1.3) {encoder\\(ReLU)};
+    \node[font=\scriptsize, align=center] at (\xz,1.3) {latent\\state};
+    \node[font=\scriptsize, align=center] at ({(\xp+\xq)/2},1.3) {actor\\(tanh)};
+    \node[font=\scriptsize, align=center] at (\xout,1.3) {action\\$v_k \in \R^{d_{\mathrm{out}}}$};
+
+    % legend
+    \def\y{-11.3}
+    \node[trained, minimum height=0.3cm] (l1) at (-3.6,\y) {};
+    \node[right=2pt of l1, font=\scriptsize] (t1) {trained by PPO};
+    \node[frozen, minimum height=0.3cm, right=12pt of t1] (l2) {};
+    \node[right=2pt of l2, font=\scriptsize] (t2) {fitted before PPO, then frozen};
+    \node[layer, fill=gray!35, minimum height=0.3cm, right=12pt of t2] (l3) {};
+    \node[right=2pt of l3, font=\scriptsize] {fixed random projection};
+\end{tikzpicture}

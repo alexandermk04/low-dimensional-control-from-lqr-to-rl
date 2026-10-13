@@ -42,10 +42,10 @@ $\pi_{\theta_{\mathrm{old}}}$ that collected the data, the clipped objective bec
 However, as has been noted before~\cite{Engstrom2020Implementation,Hsu2020Revisiting}, the actual implementation of PPO matters,
 and can influence the effectiveness of it in practice. For our construction, we use
 the architecture provided by Stable-Baselines3 (SB3)~\cite{StableBaselines2026PPO}.
-As the standard architecture, for our Fully-connected PPO, we use the standard two-layer multilayer perceptron (MLP) with 64 neurons for both
-the actor and the critic~\cite{StableBaselines2026Policy}.
-Additionally, unless named otherwise, we will use the standard parameters from the SB3 library.
-For the above named parts, we leave the clip range at the standard of $0.2$ and set the target KL to $0.02$.
+As the standard architecture, for our Fully-connected PPO, we use the standard two-layer multilayer perceptron (MLP) with 64 neurons
+per layer for both the actor and the critic~\cite{StableBaselines2026Policy}.
+Additionally, unless named otherwise, we use the standard parameters from the SB3 library.
+For the above-named parts, we leave the clip range at the standard of $0.2$ and set the target KL to $0.02$.
 Experimenting with different runtime lengths, we settled on the following values, which differ by inflation size:
 
 % TODO: insert table here after experiments
@@ -58,15 +58,15 @@ Specifically, we started using a vectorized environment, similar to the paper~\c
 we modified the discount factor to $\gamma = 0.999$ instead of $0.99$. However, the two most effective changes
 were:
 \begin{enumerate}
-    \item Using learning rate annealing instead of a fixed rate~\cite[Detail~4]{Huang2022Implementation}. Now the learning
-    rate is decreased with every update, such that at the end of the number of steps (\cref{tab:rl-step-caps}) it is equal
+    \item Using learning-rate annealing instead of a fixed rate~\cite[Detail~4]{Huang2022Implementation}. Now the learning
+    rate is decreased with every update, such that at the end of the step budget (\cref{tab:rl-step-caps}) it is equal
     to $0$. So this is
     \begin{equation}
         \label{eq:lr-annealing}
         \eta(N_{\mathrm{env}}) = \eta_0 \max\left\{ 1 - \frac{N_{\mathrm{env}}}{N_{\max}}, \; 0 \right\} .
     \end{equation}
     \item Separating the feature extractors for actor and critic~\cite[Detail~13]{Huang2022Implementation}. As described
-    by~\cite{StableBaselines2026Policy}, to reduce computation, in the standard implementation,
+    in the SB3 documentation~\cite{StableBaselines2026Policy}, to reduce computation, in the standard implementation,
     they share the extractor, which is ``a simple MLP network consisting of two layers of 64 neurons and Hyperbolic Tangent as the
     activation function''~\cite{Huang2022Implementation}.
     Later, when introducing pretrained extractors, they will be shared again, but for still learning ones, we will separate them.
@@ -76,7 +76,7 @@ were:
     \caption{PPO implemented here}
     \label{alg:ppo}
     \begin{algorithmic}[1]
-        \REQUIRE initial actor $\pi_{\theta}$ and critic $V_{\phi}$, initial learning rate $\eta_0$, step cap $N_{\max}$
+        \REQUIRE initial actor $\pi_{\theta}$ and critic $V_{\phi}$, initial learning rate $\eta_0$, step budget $N_{\max}$
         \STATE $N_{\mathrm{env}} \leftarrow 0$
         \WHILE{$N_{\mathrm{env}} < N_{\max}$}
             \STATE run $\pi_\theta$ for $2048$ steps, sampling $v_k \sim \pi_\theta(\cdot \mid y_k)$; store $y_k$, $v_k$ and the rewards
@@ -104,7 +104,7 @@ were:
 \subsection{Policy Architectures}
 \label{subsec:rl-architectures}
 
-Now, after having introduced the base construction, it makes it easier for us to describe variations of the same. We start with
+Now that we have introduced the base construction, it is easier for us to describe variations of it. We start with
 Linear PPO, which allows us to compare the performance of PPO to the previous chapter. Here, our actor becomes a single layer,
 with the bias removed, such that we can rewrite this network as
 \begin{equation}
@@ -123,7 +123,7 @@ The input dimension for both the actor and the critic thus becomes $\hat{n}$, wh
 However, as we will later scale our inputs to larger dimensions (\cref{chap:perception}), N4SID will become infeasible for such dimensions.
 Still, we want to stay in line with the idea of encoding our observations into a latent state, as this exactly introduces the bow-tie structure
 we want. So, we introduce another encoder, which offers this scalability, and call the combination Scalable encoder + PPO. This feature extractor
-is based on the results from~\cite{Jonschkowski2015Learning,Botteghi2021LowDimensional}, which use robotic priors. Robotic priors, simply described,
+is based on the results of Jonschkowski and Brock~\cite{Jonschkowski2015Learning} and Botteghi et al.~\cite{Botteghi2021LowDimensional}, which use robotic priors. Robotic priors, simply described,
 are prior knowledge, like physical laws, from which we define loss functions. By adding them to the training process, and optimizing for them, we can
 ensure that the learned representation is in line with these laws. As mentioned in \cref{sec:approach}, this allows us to make use of the embodiment
 to improve our controller architecture. Here, we will use the following priors~\cite{Botteghi2021LowDimensional}:
@@ -136,7 +136,7 @@ to improve our controller architecture. Here, we will use the following priors~\
 \end{itemize}
 
 We modify the loss calculations taken from the paper~\cite{Botteghi2021LowDimensional} slightly,
-by dropping the Lreg term, and thus get the total loss function of
+by dropping the $\mathcal{L}_{\mathrm{reg}}$ term, and thus get the total loss function of
 % TODO - cross check with code again
 \begin{equation}
     \label{eq:prior-loss}
@@ -174,7 +174,7 @@ here as well. \Cref{alg:encoder-pretraining} summarizes the pretraining.
     \end{algorithmic}
 \end{algorithm}
 
-The second trainable extractor we used is based on Todorov et al.'s paper~\cite{Todorov2026Orthogonal}
+The second trainable extractor we used is based on the paper by Todorov and Sabatelli~\cite{Todorov2026Orthogonal},
 using orthogonal bottlenecks. It consists of a fully connected MLP, with 512 neurons in the first,
 and 256 neurons in the second layer. Following it is a matrix with orthonormal columns, which projects the output
 into a state of bottleneck dimension $d_{\mathrm{b}}$, which we here set to $2$. Like $U_1$ in \eqref{eq:lifts}, the matrix
@@ -186,231 +186,160 @@ feature extractor output $z_k \in \R^{d_{\mathrm{z}}}$ is mapped to
     \qquad U_{\mathrm{b}} \in \R^{d_{\mathrm{z}} \times d_{\mathrm{b}}} , \quad U_{\mathrm{b}}\T U_{\mathrm{b}} = I_{d_{\mathrm{b}}} .
 \end{equation}
 
-Different to the previous encoder, this one is trained together with PPO, so we just combine them.
+Unlike the previous encoder, this one is trained together with PPO, so we just combine them.
 
-The following figure visualizes the architecture for all our solvers.\needcite{figure below}
-\begin{figure}[htbp]
-    \centering
-    \begin{tikzpicture}[
-            x=0.85cm, y=1cm,
-            layer/.style={draw, minimum width=0.26cm, inner sep=0pt, line width=0.4pt},
-            trained/.style={layer, fill=blue!25},
-            frozen/.style={layer, fill=orange!40},
-            fixedmap/.style={draw=none, fill=none, font=\scriptsize, inner sep=1pt},
-            io/.style={layer, dashed, fill=white},
-            link/.style={-{Stealth[length=1.6mm]}, line width=0.4pt},
-            size/.style={font=\scriptsize, anchor=north},
-            row/.style={font=\small, anchor=east},
-        ]
-        % columns: input, trunk 1-3, latent, head, actor 1-2, output
-        \def\xin{0}\def\xa{1.25}\def\xb{2.35}\def\xc{3.45}\def\xz{4.75}\def\xh{6.0}
-        \def\xp{7.25}\def\xq{8.45}\def\xout{9.85}
-        % heights: d_in, 512, 256, 64, latent, d_out
-        \def\hin{1.5}\def\hfh{1.8}\def\htf{1.45}\def\hsf{0.85}\def\hz{0.3}\def\hout{1.25}
-
-        % Linear PPO
-        \def\y{0}
-        \node[row] at (-0.5,\y) {Linear PPO};
-        \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
-        \node[io, minimum height=\hout cm] (out) at (\xout,\y) {};
-        \draw[link] (in) -- node[above, font=\scriptsize] {$W = -K$} (out);
-
-        % Fully-connected PPO
-        \def\y{-2.4}\def\lb{0.55}
-        \node[row] at (-0.5,\y) {Fully-connected PPO};
-        \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
-        \node[trained, minimum height=\hsf cm] (p) at (\xp,\y) {};
-        \node[trained, minimum height=\hsf cm] (q) at (\xq,\y) {};
-        \node[io, minimum height=\hout cm] (out) at (\xout,\y) {};
-        \draw[link] (in) -- (p);
-        \draw[link] (p) -- (q);
-        \draw[link] (q) -- (out);
-        \node[size] at (\xp,\y-\lb) {64};
-        \node[size] at (\xq,\y-\lb) {64};
-
-        % State encoder + PPO
-        \def\y{-4.8}\def\lb{0.55}
-        \node[row] at (-0.5,\y) {State encoder + PPO};
-        \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
-        \node[frozen, minimum height=\hz cm] (z) at (\xz,\y) {};
-        \node[trained, minimum height=\hsf cm] (p) at (\xp,\y) {};
-        \node[trained, minimum height=\hsf cm] (q) at (\xq,\y) {};
-        \node[io, minimum height=\hout cm] (out) at (\xout,\y) {};
-        \draw[link] (in) -- node[above, font=\scriptsize] {$\hat{C}\T$ (N4SID)} (z);
-        \draw[link] (z) -- (p);
-        \draw[link] (p) -- (q);
-        \draw[link] (q) -- (out);
-        \node[size] at (\xz,\y-\lb) {$\hat{n}$};
-        \node[size] at (\xp,\y-\lb) {64};
-        \node[size] at (\xq,\y-\lb) {64};
-
-        % Scalable encoder + PPO
-        \def\y{-7.2}\def\lb{1.0}
-        \node[row] at (-0.5,\y) {Scalable encoder + PPO};
-        \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
-        \node[frozen, minimum height=\hfh cm] (a) at (\xa,\y) {};
-        \node[frozen, minimum height=\htf cm] (b) at (\xb,\y) {};
-        \node[frozen, minimum height=\hz cm] (z) at (\xz,\y) {};
-        \node[frozen, minimum height=\hsf cm] (h) at (\xh,\y) {};
-        \node[trained, minimum height=\hsf cm] (p) at (\xp,\y) {};
-        \node[trained, minimum height=\hsf cm] (q) at (\xq,\y) {};
-        \node[io, minimum height=\hout cm] (out) at (\xout,\y) {};
-        \draw[link] (in) -- (a);
-        \draw[link] (a) -- (b);
-        \draw[link] (b) -- (z);
-        \draw[link] (z) -- (h);
-        \draw[link] (h) -- (p);
-        \draw[link] (p) -- (q);
-        \draw[link] (q) -- (out);
-        \node[size] at (\xa,\y-\lb) {512};
-        \node[size] at (\xb,\y-\lb) {256};
-        \node[size] at (\xz,\y-\lb) {2};
-        \node[size] at (\xh,\y-\lb) {64};
-        \node[size] at (\xp,\y-\lb) {64};
-        \node[size] at (\xq,\y-\lb) {64};
-
-        % Bottleneck PPO
-        \def\y{-9.6}\def\lb{1.0}
-        \node[row] at (-0.5,\y) {Bottleneck PPO};
-        \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
-        \node[trained, minimum height=\hfh cm] (a) at (\xa,\y) {};
-        \node[trained, minimum height=\htf cm] (b) at (\xb,\y) {};
-        \node[trained, minimum height=\htf cm] (c) at (\xc,\y) {};
-        \node[layer, fill=gray!35, minimum height=\hz cm] (z) at (\xz,\y) {};
-        \node[trained, minimum height=\hsf cm] (p) at (\xp,\y) {};
-        \node[trained, minimum height=\hsf cm] (q) at (\xq,\y) {};
-        \node[io, minimum height=\hout cm] (out) at (\xout,\y) {};
-        \draw[link] (in) -- (a);
-        \draw[link] (a) -- (b);
-        \draw[link] (b) -- (c);
-        \draw[link] (c) -- node[above, font=\scriptsize] {$U_{\mathrm{b}}\T$} (z);
-        \draw[link] (z) -- (p);
-        \draw[link] (p) -- (q);
-        \draw[link] (q) -- (out);
-        \node[size] at (\xa,\y-\lb) {512};
-        \node[size] at (\xb,\y-\lb) {256};
-        \node[size] at (\xc,\y-\lb) {256};
-        \node[size] at (\xz,\y-\lb) {2};
-        \node[size] at (\xp,\y-\lb) {64};
-        \node[size] at (\xq,\y-\lb) {64};
-
-        % column captions
-        \node[font=\scriptsize, align=center] at (\xin,1.3) {observation\\$y_k \in \R^{d_{\mathrm{in}}}$};
-        \node[font=\scriptsize, align=center] at (\xb,1.3) {encoder\\(ReLU)};
-        \node[font=\scriptsize, align=center] at (\xz,1.3) {latent\\state};
-        \node[font=\scriptsize, align=center] at ({(\xp+\xq)/2},1.3) {actor\\(tanh)};
-        \node[font=\scriptsize, align=center] at (\xout,1.3) {action\\$v_k \in \R^{d_{\mathrm{out}}}$};
-
-        % legend
-        \def\y{-11.3}
-        \node[trained, minimum height=0.3cm] (l1) at (-3.6,\y) {};
-        \node[right=2pt of l1, font=\scriptsize] (t1) {trained by PPO};
-        \node[frozen, minimum height=0.3cm, right=12pt of t1] (l2) {};
-        \node[right=2pt of l2, font=\scriptsize] (t2) {fitted before PPO, then frozen};
-        \node[layer, fill=gray!35, minimum height=0.3cm, right=12pt of t2] (l3) {};
-        \node[right=2pt of l3, font=\scriptsize] {fixed random projection};
-    
-    \end{tikzpicture}
-    \caption{Actor architectures of our PPO variants. For each layer, the number below indicates its neurons. 
-    The critic receives the same encoder structure and uses its own 64-64 tanh perceptron with a scalar output.
-    Visualization created with Claude Code.}
-    \label{fig:ppo-architectures}
-\end{figure}
+\Cref{fig:ppo-architectures} in \cref{sec:app-ppo-architectures} visualizes the architectures of all our solvers.
 
 \section{Comparison across Dimensions}
 \label{sec:rl-comparison}
 
 Looking at achieved suboptimality during training, we overall see a learning process in all
-of our architectures. Noticable, however, is the long stagnation in the beginning of the learning,
-before decreasing towards the end. Significant is also Linear PPO, which doesn't achieve an 
-improvement under large, but this was expected, given its unsuccessful learning rate search results.
+of our architectures (\cref{fig:rl-large-curves}). Noticeable, however, is the long stagnation in the beginning of the learning,
+before decreasing towards the end. Significant is also Linear PPO, which does not achieve an
+improvement under \emph{large}, but this was expected, given its unsuccessful learning-rate search results.
 
-% training curves large
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch5_inflation_sizes}{ch5_inflation_large_curves_steps}
+  \caption{Training suboptimality $(J - J^{*})/J^{*}$ of the PPO variants under \emph{large} inflation.}
+  \label{fig:rl-large-curves}
+\end{figure}
 
 Looking at the complexity of our trained policies, we notice that the difference between
-our "low-dimensional" and fully connected architectures. Especially under small and medium,
-the Scalable Encoder + PPO is even larger as the Fully Connected PPO, while the others are
-on par. However, under large a difference does become noticable, with FC PPO being around
-xy the size of the Scalable Encoder, and xy the size of State Encoder or Bottleneck.
+our ``low-dimensional'' and fully connected architectures. Especially under \emph{small} and \emph{medium},
+Scalable encoder + PPO is even larger than Fully-connected PPO, while the others are
+on par. However, under \emph{large} a difference does become noticeable, with Fully-connected PPO being around
+$1.6$ times the size of Scalable encoder + PPO, and $2.2$ times the size of State encoder + PPO or Bottleneck PPO % TODO, verify calculations again
+(\cref{fig:rl-across-sizes-complexity}).
 
-% complexity across sizes
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch5_inflation_sizes}{ch5_inflation_across_sizes_complexity}
+  \caption{Policy size (\cref{def:policy-size}) of the PPO variants for each inflation size.}
+  \label{fig:rl-across-sizes-complexity}
+\end{figure}
 
-Regarding the performance, we can see that under small inflation all controllers achieve
-a similar median, with Scalable being the worst of them all. However, when looking at the spreads,
-State Encoder + PPO also has some runs in the 10 to 1000 suboptimality range. The best one here,
-and also in medium is the Linear PPO, which shows little spread. 
+Regarding the performance, we can see that under \emph{small} inflation all controllers achieve
+a similar median, with Scalable encoder + PPO being the worst of them all. However, when looking at the spreads,
+State encoder + PPO also has some runs in the $10$ to $1000$ suboptimality range. The best one here,
+and also in \emph{medium}, is Linear PPO, which shows little spread.
 
-Looking at medium, here FC becomes worse regarding its median, followed by Scalable, even though
-Scalable's spread still has worse runs. The other low-dimensional controllers show a good median
-similar to Linear PPO, however have a wider spread, with some runs worse than 100 suboptimality.
+Looking at \emph{medium}, here Fully-connected PPO becomes worse regarding its median, followed by Scalable encoder + PPO, even though
+the spread of Scalable encoder + PPO still has worse runs. The other low-dimensional controllers show a good median
+similar to Linear PPO, however have a wider spread, with some runs worse than $100$ suboptimality.
 
-Now under large it becomes interesting, as Linear PPOs performance has deteriorated, becoming the
-worse controller of them all. Scalable PPO is still second, now again worse than the fully connected
-version. However, Bottleneck shows a similar performance as under medium, while most others
-(except for FC) have shifted upwards. The simple State Encoder + PPO also remains in a good spot 
-even though it has worsened in comparison to Bottleneck PPO.
+Now under \emph{large} it becomes interesting, as Linear PPO's performance has deteriorated, becoming the
+worst controller of them all. Scalable encoder + PPO is still second, now again worse than the fully connected
+version. However, Bottleneck PPO shows a similar performance as under \emph{medium}, while most others
+(except for Fully-connected PPO) have shifted upwards. The simple State encoder + PPO also remains in a good spot
+even though it has worsened in comparison to Bottleneck PPO (\cref{fig:rl-across-sizes-subopt}).
 
-% subopt across sizes
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch5_inflation_sizes}{ch5_inflation_across_sizes_subopt}
+  \caption{Suboptimality $S$ of the PPO variants for each inflation size.}
+  \label{fig:rl-across-sizes-subopt}
+\end{figure}
 
 \section{Noise on Large Inflation}
 \label{sec:rl-noise-large}
 
-Simiar to what we have seen before in \needcite{chapter 3 identified noise}, parametric uncertainty
+Similar to what we have seen before in \cref{subsec:noise-large-inflation}, parametric uncertainty
 seems to affect all controllers similarly and generally increases suboptimality across all architectures.
-The median is shifted upwards, and especially apparent at divergent, the worst case runs get a couple orders
+The median is shifted upwards, and especially apparent at \emph{divergent}, the worst-case runs get a couple of orders
 of magnitude worse:
 
-% table showing for each row (controller) the worst performing run (under weak, standard, strong, divergent)
+% TODO: table showing for each row (controller) the worst performing run (under weak, standard, strong, divergent)
 
-However, this doesn't help us too much to answer the question whether low-dimensional architectures are more robust
+However, this does not help us too much to answer the question whether low-dimensional architectures are more robust
 here.
 
-So let's take a look at external disturbance next. Here we can see, that the median suboptimality of all approaches
-remains mostly stable throughout increase in the noise, except for Bottleneck PPO, whose improves into being even better
-than the baseline. Here, the shift of the 50 percent quantile becomes also interesting, as with increasing noise intensity
-its width becomes smaller and sits between -0.01 and -0.1.
-State Encoder PPO and Fully Connected PPO behave quite similarly, both with a spread across the 0 line (sometimes better, sometimes worse)
-and a similar median. The FC PPO only differs by maintaining a wider core quantile region across even under divergent noise. Linear
-PPO sits above baseline, similar to its noise free testing, whereas Scalable Encoder + PPO shows an increasing spread
+So let us take a look at external disturbance next. Here we can see that the median suboptimality of all approaches
+remains mostly stable throughout the increase in the noise, except for Bottleneck PPO, whose median improves into being even better
+than the baseline. Here, the shift of the $50\,\%$ quantile becomes also interesting, as with increasing noise intensity
+its width becomes smaller and sits between $-0.01$ and $-0.1$.
+State encoder + PPO and Fully-connected PPO behave quite similarly, both with a spread across the $0$ line (sometimes better, sometimes worse)
+and a similar median. Fully-connected PPO only differs by maintaining a wider core quantile region even under \emph{divergent} noise. Linear
+PPO sits above baseline, similar to its noise-free testing, whereas Scalable encoder + PPO shows an increasing spread
 under stronger noise, with its core region becoming smaller. Overall, it can be seen that Bottleneck PPO indeed outperforms
-the other architectures here.
+the other architectures here (\cref{fig:rl-noise-large-disturbance-strong}).
 
-% left strong external disturbance, right control noise
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch5_noise}{ch5_noise_large_subopt_disturbance-strong}
+    \caption{External disturbance at intensity \emph{strong}.}
+    \label{fig:rl-noise-large-disturbance-strong}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch5_noise}{ch5_noise_large_subopt_control-strong}
+    \caption{Control noise at intensity \emph{strong}.}
+    \label{fig:rl-noise-large-control-strong}
+  \end{subfigure}
+  \caption{Suboptimality $S$ of the PPO variants under \emph{large} inflation and different noise types.}
+  \label{fig:rl-noise-large-disturbance-control}
+\end{figure}
 
 Similarly, the robustness of Bottleneck PPO can be observed under control noise, where its median continuously shifts downwards
-with growing noise intensity, until falling below baseline at \emph{strong}. Otherwise, the order of performance for the other
+with growing noise intensity, until falling below baseline at \emph{strong} (\cref{fig:rl-noise-large-control-strong}). Otherwise, the order of performance for the other
 policies stays mostly the same, with just the spread under increasing noise passing the baseline. This however can most likely
-be attributed to a less robust baseline controller, than performance of the others.
+be attributed to a less robust baseline controller than performance of the others.
 
-Lastly, let us take a look at measurement noise. Under \emph{weak} intensity, linear PPO shows some
+Lastly, let us take a look at measurement noise. Under \emph{weak} intensity, Linear PPO shows some
 wide spread, while generally the low-dimensional architectures show a mean lower than the fully connected
-ones. With the step to standard, not much can be seen apart from an increase in the spread of
-Scalable Encoder + PPO across the baseline. At \emph{strong}, all, except for FC PPO, shift their 50 percent quantile
-across the baseline, in a similar spread, even though for Scalable Encoder PPO, the median also shifts towards -0.1, being
-the only architecture here. Still, some worse case runs are measured at around 1000 suboptimality. FC in comparison sits
-between 0.1 and 10 suboptimality. Under \emph{divergent} measurement noise, we can see that the low
-dimensional controllers outperform Linear and fully connected PPO here. All their medians lie below the baseline
-and have a very thin spread of the 50 percent quantile region. Scalable PPO shows some runs being much
-worse than the FC controllers, however, for Bottleneck and State Encoder, all the runs are below FC PPOs
-median. Linear PPO's median also lies below baseline and a little short of the other controllers, but has
-spread similar to FC PPO, whose median sits above the baseline between 0.1 and 0.01.
+ones. With the step to \emph{standard}, not much can be seen apart from an increase in the spread of
+Scalable encoder + PPO across the baseline. At \emph{strong}, all, except for Fully-connected PPO, shift their $50\,\%$ quantile
+across the baseline, in a similar spread, even though for Scalable encoder + PPO, the median also shifts towards $-0.1$, being
+the only architecture here. Still, some worst-case runs are measured at around $1000$ suboptimality. Fully-connected PPO in comparison sits
+between $0.1$ and $10$ suboptimality. Under \emph{divergent} measurement noise, we can see that the low-dimensional
+controllers outperform Linear PPO and Fully-connected PPO here. All their medians lie below the baseline
+and have a very thin spread of the $50\,\%$ quantile region. Scalable encoder + PPO shows some runs being much
+worse than Fully-connected PPO; however, for Bottleneck PPO and State encoder + PPO, all the runs are below the median of
+Fully-connected PPO. Linear PPO's median also lies below baseline and a little short of the other controllers, but has a
+spread similar to Fully-connected PPO, whose median sits above the baseline between $0.1$ and $0.01$ (\cref{fig:rl-noise-large-measurement}).
 
-% plot of standard, strong and divergent of measurement noise
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch5_noise}{ch5_noise_large_subopt_measurement-standard}
+    \caption{Intensity \emph{standard}.}
+    \label{fig:rl-noise-large-measurement-standard}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch5_noise}{ch5_noise_large_subopt_measurement-strong}
+    \caption{Intensity \emph{strong}.}
+    \label{fig:rl-noise-large-measurement-strong}
+  \end{subfigure}
+
+  \medskip
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch5_noise}{ch5_noise_large_subopt_measurement-divergent}
+    \caption{Intensity \emph{divergent}.}
+    \label{fig:rl-noise-large-measurement-divergent}
+  \end{subfigure}
+  \caption{Suboptimality $S$ of the PPO variants under \emph{large} inflation and measurement noise.}
+  \label{fig:rl-noise-large-measurement}
+\end{figure}
 
 \section{Discussion}
 \label{sec:rl-discussion}
 
 Throughout our experiments we can see that Bottleneck PPO outperforms all the other controllers, be it on the clean plant
-or under noise. While for some it might only be on par with other constructions, under divergent noise it exhibits very promising
-robustness properties. State Encoder and the fully connected PPO perform quite similarly, except under measurement noise, where
-the state encoder is more reliable. Scalable Encoder sadly isn't as promising throughout, with worse performances than the rest,
+or under noise. While for some it might only be on par with other constructions, under \emph{divergent} noise it exhibits very promising
+robustness properties. State encoder + PPO and Fully-connected PPO perform quite similarly, except under measurement noise, where
+State encoder + PPO is more reliable. Scalable encoder + PPO sadly is not as promising throughout, with worse performances than the rest,
 and much more variability. However, the effectiveness of its low-dimensional construction against measurement noise can still be
 seen here. Interesting to see is that Linear PPO, even though its training was ineffective, and it thus performed worse throughout
-most experiments, outclassed FC PPO under \emph{divergent} measurement noise.
+most experiments, outclassed Fully-connected PPO under \emph{divergent} measurement noise.
 
 Again, we have seen that low-dimensional approaches are more robust than fully parameterized ones under increasing measurement noise especially.
-Still, it depends on how exactly the policy is constructed, as we also have observed differences inbetween the appraoches. And while Bottleneck PPO
-of course already displayed a better suboptimality post-training than FC PPO, as it has continously, and even
+Still, it depends on how exactly the policy is constructed, as we also have observed differences between the approaches. And while Bottleneck PPO
+of course already displayed a better suboptimality post-training than Fully-connected PPO, as it has continuously, and even
 with greater leads outperformed its fully connected counterpart while also containing only half the parameters, we can
-more and more support our thesis that low-dimensional controller can perform at least as well as fully connected ones if 
-the design is cleverly chosen. 
+more and more support our thesis that low-dimensional controllers can perform at least as well as fully connected ones if
+the design is cleverly chosen.
