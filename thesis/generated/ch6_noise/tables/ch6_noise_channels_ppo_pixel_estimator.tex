@@ -1,0 +1,14 @@
+\begin{table}[htbp]
+\centering
+\caption{Scalable encoder + PPO under each noise channel at intensity \emph{strong}.}
+\label{tab:ch6-noise-channels-ppo-pixel-estimator}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Channel & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Cost ratio to the clean loop & $1$ & $5.05 \pm 6.76$ & $0.999 \pm 0.0239$ & $2.62 \times 10^{42} \pm 8.3 \times 10^{42}$ & $0.993 \pm 0.0336$ & $2.34 \times 10^{38} \pm 7.3 \times 10^{38}$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\caption{Cost ratio to the clean loop under each noise channel at intensity \emph{strong}.}
+\label{tab:ch6-noise-channels}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Channel & Pixels + PPO & Bottleneck PPO & Scalable encoder + PPO & Position-Velocity Encoder + PPO \\
+\midrule
+none & $1$ & $1$ & $1$ & $1$ \\
+measurement & $4.57 \times 10^{5} \pm 1.25 \times 10^{6}$ & $1.66 \times 10^{5} \pm 4.62 \times 10^{5}$ & $5.05 \pm 6.76$ & $2.69 \pm 3.77$ \\
+control & $4.07 \times 10^{3} \pm 8.88 \times 10^{3}$ & $1.38 \times 10^{4} \pm 2.07 \times 10^{4}$ & $0.999 \pm 0.0239$ & $1.01 \pm 0.03$ \\
+parametric & $2.59 \times 10^{47} \pm 8.02 \times 10^{47}$ & $4.87 \times 10^{43} \pm 1.29 \times 10^{44}$ & $2.62 \times 10^{42} \pm 8.3 \times 10^{42}$ & $2.58 \times 10^{36} \pm 8.14 \times 10^{36}$ \\
+disturbance & $1.01 \pm 0.289$ & $7.7 \times 10^{3} \pm 1.92 \times 10^{4}$ & $0.993 \pm 0.0336$ & $1.01 \pm 0.0405$ \\
+all channels & $6.87 \times 10^{43} \pm 1.99 \times 10^{44}$ & $6.01 \times 10^{44} \pm 1.75 \times 10^{45}$ & $2.34 \times 10^{38} \pm 7.3 \times 10^{38}$ & $1.58 \times 10^{35} \pm 2.3 \times 10^{35}$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

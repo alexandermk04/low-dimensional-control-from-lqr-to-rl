@@ -93,12 +93,15 @@ def tidy(records: list[RunRecord]) -> list[dict]:
     Raises
     ------
     ValueError
-        If a condition key collides with a summary key.
+        If a condition key collides with a summary key of a different value.
     """
     rows = []
 
     for record in records:
-        clash = set(record.condition) & set(record.summary)
+        clash = {
+            key for key in set(record.condition) & set(record.summary)
+            if record.condition[key] != record.summary[key]
+        }
         if clash:
             raise ValueError(
                 f"Run {record.run_id!r} has condition keys that collide with the "

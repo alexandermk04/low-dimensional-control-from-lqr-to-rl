@@ -1,0 +1,17 @@
+\begin{table}[htbp]
+\centering
+\caption{Cost ratio to the clean loop (in $10^{-3}$) under each noise channel at intensity \emph{divergent}.}
+\label{tab:ch6-noise-solver-channels-divergent}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Solver & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Pixels + PPO & $+1 \times 10^{3}$ & $+1.2 \times 10^{9} \pm 1.8 \times 10^{9}$ & $+1.8 \times 10^{8} \pm 2 \times 10^{8}$ & $+7.9 \times 10^{52} \pm 2.5 \times 10^{53}$ & $+3.2 \times 10^{7} \pm 9.2 \times 10^{7}$ & $+6 \times 10^{49} \pm 1.6 \times 10^{50}$ \\
+Bottleneck PPO & $+1 \times 10^{3}$ & $+8 \times 10^{8} \pm 1.2 \times 10^{9}$ & $+3.4 \times 10^{8} \pm 5.2 \times 10^{8}$ & $+8.7 \times 10^{52} \pm 2.8 \times 10^{53}$ & $+1.5 \times 10^{8} \pm 3.4 \times 10^{8}$ & $+2.5 \times 10^{45} \pm 3.5 \times 10^{45}$ \\
+Scalable encoder + PPO & $+1 \times 10^{3}$ & $+1.1 \times 10^{4} \pm 1.4 \times 10^{4}$ & $+1.1 \times 10^{3} \pm 76$ & $+3.4 \times 10^{44} \pm 9 \times 10^{44}$ & $+9.8 \times 10^{2} \pm 59$ & $+3.6 \times 10^{43} \pm 4.9 \times 10^{43}$ \\
+Position-Velocity Encoder + PPO & $+1 \times 10^{3}$ & $+3 \times 10^{3} \pm 4.5 \times 10^{3}$ & $+1 \times 10^{3} \pm 1.2 \times 10^{2}$ & $+5.9 \times 10^{40} \pm 1.5 \times 10^{41}$ & $+1 \times 10^{3} \pm 1.4 \times 10^{2}$ & $+4.2 \times 10^{44} \pm 1.1 \times 10^{45}$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

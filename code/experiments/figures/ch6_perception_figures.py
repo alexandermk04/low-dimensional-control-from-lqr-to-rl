@@ -65,7 +65,7 @@ def main():
                      "r2_position", "r2_velocity", "latent_dim",
                      "off_screen_rate", "null_waste_mean",
                      "policy_complexity", "iterations", "total_env_steps", "best_env_steps", "total_time"),
-            order=ORDER,
+            column_order=ORDER,
         ),
         "ch6_perception",
         EXPERIMENT,

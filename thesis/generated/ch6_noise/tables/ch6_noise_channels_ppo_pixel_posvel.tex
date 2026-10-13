@@ -1,0 +1,14 @@
+\begin{table}[htbp]
+\centering
+\caption{Position-Velocity Encoder + PPO under each noise channel at intensity \emph{strong}.}
+\label{tab:ch6-noise-channels-ppo-pixel-posvel}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Channel & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Cost ratio to the clean loop & $1$ & $2.69 \pm 3.77$ & $1.01 \pm 0.03$ & $2.58 \times 10^{36} \pm 8.14 \times 10^{36}$ & $1.01 \pm 0.0405$ & $1.58 \times 10^{35} \pm 2.3 \times 10^{35}$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
