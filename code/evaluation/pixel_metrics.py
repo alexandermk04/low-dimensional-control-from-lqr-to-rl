@@ -86,7 +86,7 @@ def env_monte_carlo_cost(env, policy, n_episodes: int, horizon: int | None = Non
                 total += info["stage_cost"]
                 energy += info["thruster_energy"]
                 waste += info["null_waste"]
-                saturated += int(np.any(np.abs(info["thrust"]) >= 1.0 - 1e-9))
+                saturated += int(info["clipped"])
                 off_screen += int(info["off_screen"])
                 steps += 1
 

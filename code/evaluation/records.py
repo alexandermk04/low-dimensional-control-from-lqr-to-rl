@@ -66,7 +66,7 @@ SUMMARY_KEYS = (
     # Chapter-6 only 
     "thruster_energy_mean",  # energy the ring burned per agent step
     "null_waste_mean",  # how much of that was wasted
-    "saturation_rate",  # fraction of steps with a command at the box edge
+    "saturation_rate",  # fraction of steps with the force at its bound
     "off_screen_rate",  # fraction of steps with the cart outside the frame
     "terminated_rate",  # fraction of episodes that diverged
     "r2_position",  # how linearly the latent encodes position

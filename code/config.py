@@ -173,6 +173,9 @@ DEFAULT_THRUSTER_PHASE = 0.0
 
 DEFAULT_THRUST_SCALE = 26 / 128
 
+# Multiple of worst case on screen for exit penalization
+EXIT_PENALTY_FACTOR = 2.0
+
 
 def thruster_lifts(
     n_thrusters: int = DEFAULT_N_THRUSTERS,

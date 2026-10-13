@@ -900,22 +900,11 @@ def _pixel_setup(spec: RunSpec):
     """
     import config as cfg
     from evaluation.pixel_metrics import agent_horizon
-    from lqr_base.thruster_ring import check_thrust_calibration, optimal_coarse_gain
+    from lqr_base.thruster_ring import check_thrust_calibration
+    from reinforcement_learning.pixel_env import coarse_gain
 
-    U_1, U_2 = cfg.thruster_lifts()
-    Q, R = cfg.default_costs(
-        U_1.shape[0], U_2.shape[1],
-        settings.STATE_COST_WEIGHT, settings.INPUT_COST_WEIGHT,
-    )
-    c = U_2[0]
-
-    R_acceleration = np.array([[1.0 / float(np.sum(c ** 2 / R))]])
-
-    K, P, rho = optimal_coarse_gain(
-        cfg.double_integrator_model(), U_1.T @ np.diag(Q) @ U_1, R_acceleration,
-        cfg.DEFAULT_DT, cfg.DEFAULT_ACTION_REPEAT,
-    )
-    check_thrust_calibration(c, K, cfg.DEFAULT_MAX_INITIAL_STATE)
+    K, P, rho = coarse_gain()
+    check_thrust_calibration(cfg.thruster_lifts()[1][0], K, cfg.DEFAULT_MAX_INITIAL_STATE)
 
     horizon = (
         settings.TRAIN_HORIZON if settings.TRAIN_HORIZON is not None
@@ -1084,7 +1073,7 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
         horizon=horizon,
     )
 
-    extra = _pixel_extra(callback.n_action_clips, diagnostics)
+    extra = _pixel_extra(train_env.n_action_clips, diagnostics)
     extra.update(latent_extra(model, score_env, policy))
 
     evaluate_test, trajectory = _pixel_protocol(score_env, policy, horizon)

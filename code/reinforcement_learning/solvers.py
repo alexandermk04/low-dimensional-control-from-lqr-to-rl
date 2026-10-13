@@ -96,6 +96,8 @@ class RLSolverSettings:
     target_kl : float or None
         Ends an update's epochs early once the approximate KL divergence to the
         old policy exceeds ``1.5 * target_kl``.
+    clip_reward : float
+        Bound on the normalized reward. Defaults to Stable-Baselines3's.
     device : str
         Torch device. ``"auto"`` follows Stable-Baselines3.
     """
@@ -129,6 +131,7 @@ class RLSolverSettings:
     clip_range: float = 0.2
     max_grad_norm: float = 0.5
     target_kl: float | None = 0.02
+    clip_reward: float = 10.0
     device: str = "auto"
 
 
@@ -261,6 +264,7 @@ def _pixel_solver(name: str, extractor, **kwargs) -> RLSolverSettings:
         n_steps=2048,
         batch_size=256,
         n_epochs=10,
+        clip_reward=np.inf,
         device="cpu",
     )
     defaults.update(kwargs)
@@ -302,7 +306,7 @@ def pixel_presets() -> dict:
         ),
         "ppo_pixel_estimator": _pixel_solver(
             "ppo_pixel_estimator", StateEncoder,
-            features_extractor_kwargs={"latent_dim": settings.ENCODER_LATENT_DIM},
+            features_extractor_kwargs={"latent_dim": settings.CH6_ENCODER_LATENT_DIM},
             freeze_extractor=True,
         ),
     }
@@ -391,7 +395,7 @@ def build_model(env, settings: RLSolverSettings, seed: int) -> BaseAlgorithm:
 
     vec_env = VecNormalize(
         DummyVecEnv([lambda: Monitor(env)]),
-        norm_obs=False, norm_reward=True, gamma=settings.gamma,
+        norm_obs=False, norm_reward=True, gamma=settings.gamma, clip_reward=settings.clip_reward,
     )
 
     total = settings.total_timesteps

@@ -303,8 +303,11 @@ PVE_LOSS_WEIGHTS = {
 # Width of the orthonormal projection, as suggested by the paper
 BOTTLENECK_DIM = 2
 
-# Used for encoder_scalable and pixel_estimator as the estimated dimension
+# Used for encoder_scalable as the estimated dimension
 ENCODER_LATENT_DIM = 2
+
+# Use the same latent dimension for the encoder as PVE
+CH6_ENCODER_LATENT_DIM = PVE_POSITION_DIM
 
 # Chapter 6: control from a camera observation
 CH6_SOLVERS = (
