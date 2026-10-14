@@ -26,21 +26,23 @@ from experiments.store import (
     store_record,
     write_manifest,
 )
-from seeding import sub_seed
 
 EXPERIMENT = "ch6_noise"
 
 SOURCE = "ch6_perception"
 
 
-def pixel_policy(record, env, K):
-    """Rebuild a ch6 controller so that it acts on ``env``.
+def pixel_policy(record, K):
+    """Rebuild a ch6 controller as ``policy_for(env)``, acting on ``env``.
     """
     if record.solver == "oracle_coarse":
         from lqr_base.thruster_ring import ThrusterOraclePolicy
 
-        oracle = ThrusterOraclePolicy(K, env.c)
-        return lambda observation, info: oracle(env.lqr.observe())
+        def oracle_for(env):
+            oracle = ThrusterOraclePolicy(K, env.c)
+            return lambda observation, info: oracle(env.lqr.observe())
+
+        return oracle_for
 
     from stable_baselines3 import PPO
 
@@ -49,7 +51,8 @@ def pixel_policy(record, env, K):
     if spec.get("kind") != "sb3" or not path.exists():
         raise MissingPolicyError(f"{record.run_id} has no policy file at {path}.")
 
-    return SB3EnvPolicy(PPO.load(path, device="cpu"))
+    policy = SB3EnvPolicy(PPO.load(path, device="cpu"))
+    return lambda _: policy
 
 
 @keep_running()
@@ -61,8 +64,6 @@ def evaluate_grid(verbose: bool = True):
     list[RunRecord]
         One record per ``(solver, seed, channel, level)``.
     """
-    from reinforcement_learning.pixel_env import build_pixel_env
-
     require_noise(settings.NOISE_CHANNELS, table="CH6_NOISE_STD")
 
     source_runs = {
@@ -107,7 +108,7 @@ def evaluate_grid(verbose: bool = True):
         )
 
     # The spec argument is unused, the setup only reads config
-    K, j_star, horizon, _ = _pixel_setup(None)
+    K, j_star, _, _ = _pixel_setup(None)
 
     total = len(source_runs) * len(conditions)
     if verbose:
@@ -129,21 +130,19 @@ def evaluate_grid(verbose: bool = True):
 
             started = time.perf_counter()
 
-            env = build_pixel_env(sub_seed(seed, "pixel-score", solver), horizon=horizon)
             noise = build_noise(
                 channels, level,
                 {channel: settings.CH6_NOISE_STD[channel][level] for channel in channels},
             )
-            env.lqr.setup_noise(noise)
 
             try:
-                policy = pixel_policy(source_record, env, K)
+                policy_for = pixel_policy(source_record, K)
             except MissingPolicyError as error:
                 if verbose:
                     print(f"  skipping {solver} seed={seed}: {error}")
                 break
 
-            evaluate_test, trajectory = _pixel_protocol(env, policy, horizon)
+            evaluate_test, trajectory = _pixel_protocol(seed, policy_for, noise)
             test = evaluate_test()
             rollout = trajectory()
 

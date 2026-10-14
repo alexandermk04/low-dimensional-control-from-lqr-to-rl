@@ -41,7 +41,7 @@ from evaluation.metrics import (
 )
 from evaluation.latent_probe import latent_extra
 from evaluation.probe import IterationRecord, Probe
-from experiments.problem import Problem, RunSpec, build_plant
+from experiments.problem import Problem, RunSpec, build_plant, make_problem
 from experiments.settings_guard import require
 from seeding import sub_seed
 from lqr_solvers.mb_policy_gradient import (
@@ -888,6 +888,35 @@ def _run_ppo_encoder(spec: RunSpec, problem: Problem) -> SolverResult:
 # --- Chapter 6 ---------------------------------------
 
 
+def _agent_steps(plant_steps: int) -> int:
+    """Agent steps that cover ``plant_steps`` plant steps, rounded up."""
+    import config as cfg
+
+    return int(np.ceil(plant_steps / cfg.DEFAULT_ACTION_REPEAT))
+
+
+def _pixel_env(seed: int, purpose: str, horizon: int, noise=None):
+    """One camera environment of a seed, as :func:`build_plant` for chapter 4.
+
+    Parameters
+    ----------
+    seed : int
+        The run's seed.
+    purpose : str
+        Seeds the stream, e.g. ``"train:ppo_pixel_fc"``. Purposes without a solver
+        name give every solver the same episodes.
+    horizon : int
+        Agent steps per episode.
+    noise : LQRNoiseSettings or None, optional
+        Noise of the plant and the camera.
+    """
+    from reinforcement_learning.pixel_env import build_pixel_env
+
+    env = build_pixel_env(sub_seed(seed, "pixel", purpose), horizon=horizon)
+    env.lqr.setup_noise(noise)
+    return env
+
+
 def _pixel_setup(spec: RunSpec):
     """Chapter 6 setup
 
@@ -895,7 +924,8 @@ def _pixel_setup(spec: RunSpec):
     -------
     tuple
         ``(K, j_star, horizon, action_repeat)``. ``K`` is the exact optimal
-        gain at the agent rate.
+        gain at the agent rate, ``horizon`` the training episode
+        in agent steps.
 
     Raises
     ------
@@ -903,17 +933,13 @@ def _pixel_setup(spec: RunSpec):
         If the configured ring cannot deliver what ``K`` demands.
     """
     import config as cfg
-    from evaluation.pixel_metrics import agent_horizon
     from lqr_base.thruster_ring import check_thrust_calibration
     from reinforcement_learning.pixel_env import coarse_gain
 
-    K, P, rho = coarse_gain()
+    K, P, _ = coarse_gain()
     check_thrust_calibration(cfg.thruster_lifts()[1][0], K, cfg.DEFAULT_MAX_INITIAL_STATE)
 
-    horizon = (
-        settings.TRAIN_HORIZON if settings.TRAIN_HORIZON is not None
-        else agent_horizon(rho)
-    )
+    horizon = _agent_steps(settings.TRAIN_HORIZON)
 
     # Exact expected infinite-horizon cost under perfect state feedback
     sigma_0 = np.diag(np.asarray(cfg.DEFAULT_MAX_INITIAL_STATE, dtype=float) ** 2 / 3.0)
@@ -922,44 +948,59 @@ def _pixel_setup(spec: RunSpec):
     return K, j_star, int(horizon), int(cfg.DEFAULT_ACTION_REPEAT)
 
 
-def _pixel_extra(action_clips: int, diagnostics: dict) -> dict:
+def _pixel_extra(action_clips: int) -> dict:
     """Additional summary entries for pixel runs"""
     import config as cfg
 
     return {
         "action_clips": int(action_clips),
-        **diagnostics,
         "action_repeat": int(cfg.DEFAULT_ACTION_REPEAT),
         "n_thrusters": int(cfg.DEFAULT_N_THRUSTERS),
         "thrust_scale": float(cfg.DEFAULT_THRUST_SCALE),
     }
 
 
-def _pixel_protocol(env, policy, horizon: int):
-    """The test protocol and the figure rollout for chapter 6"""
-    from evaluation.pixel_metrics import env_monte_carlo_cost, rollout_env
-    from experiments.evaluate import TestResult
+def _pixel_protocol(seed: int, policy_for: Callable, noise=None):
+    """The test protocol and the figure rollout for chapter 6.
 
-    def evaluate_test(episodes: int | None = None, horizon_override: int | None = None,
-                      **_ignored) -> TestResult:
+    Parameters
+    ----------
+    seed : int
+        The run's seed.
+    policy_for : callable
+        ``policy_for(env) -> policy`` acting on ``env``.
+    noise : LQRNoiseSettings or None, optional
+        As for :func:`~experiments.evaluate.evaluate_policy`.
+    """
+    from evaluation.pixel_metrics import env_monte_carlo_returns, rollout_env
+    from experiments.evaluate import TestResult, shared_initial_state
+
+    def evaluate_test(episodes: int | None = None, horizon: int | None = None) -> TestResult:
         episodes = settings.TEST_EPISODES if episodes is None else episodes
-        steps = horizon if horizon_override is None else horizon_override
+        steps = _agent_steps(settings.TEST_HORIZON if horizon is None else horizon)
 
-        mean, stderr, _ = env_monte_carlo_cost(
-            env, policy, n_episodes=episodes, horizon=steps
-        )
+        env = _pixel_env(seed, "test", steps, noise)
+        returns, diagnostics = env_monte_carlo_returns(env, policy_for(env), episodes, steps)
 
         return TestResult(
             summary={
-                "test_cost_mean": float(mean),
-                "test_cost_stderr": float(stderr),
+                "test_cost_mean": float(np.mean(returns)),
                 "test_episodes": int(episodes),
                 "test_horizon": int(steps),
+                **diagnostics,
             },
-            returns=np.full(1, float(mean)),
+            returns=returns,
         )
 
-    return evaluate_test, lambda: rollout_env(env, policy, horizon)
+    def trajectory() -> SimulationResult:
+        steps = _agent_steps(settings.FIGURE_HORIZON)
+
+        env = _pixel_env(seed, "figure", steps, noise)
+        env.lqr.resample_initial_state = False
+        env.lqr.x_0 = shared_initial_state(make_problem(seed))
+        return rollout_env(env, policy_for(env), steps)
+
+    return evaluate_test, trajectory
 
 
 def _run_oracle_coarse(spec: RunSpec, problem: Problem) -> SolverResult:
@@ -967,16 +1008,13 @@ def _run_oracle_coarse(spec: RunSpec, problem: Problem) -> SolverResult:
     """
     from evaluation.pixel_metrics import StatePolicy, env_monte_carlo_cost
     from lqr_base.thruster_ring import ThrusterOraclePolicy
-    from reinforcement_learning.pixel_env import build_pixel_env
 
-    K, j_star, horizon, repeat = _pixel_setup(spec)
+    K, _, horizon, repeat = _pixel_setup(spec)
 
-    env = build_pixel_env(sub_seed(spec.seed, "pixel", spec.solver), horizon=horizon)
+    env = _pixel_env(spec.seed, "score", horizon)
     policy = StatePolicy(ThrusterOraclePolicy(K, env.c))
 
-    mean, _, diagnostics = env_monte_carlo_cost(
-        env, policy, n_episodes=settings.PIXEL_PROBE_EPISODES, horizon=horizon
-    )
+    mean, _ = env_monte_carlo_cost(env, policy, n_episodes=settings.PROBE_EPISODES)
 
     # No training
     records = [IterationRecord(
@@ -984,7 +1022,7 @@ def _run_oracle_coarse(spec: RunSpec, problem: Problem) -> SolverResult:
         cost=float(mean), cost_estimate=None, rank=int(np.linalg.matrix_rank(K)),
     )]
 
-    evaluate_test, trajectory = _pixel_protocol(env, policy, horizon)
+    evaluate_test, trajectory = _pixel_protocol(spec.seed, lambda _: policy)
 
     return SolverResult(
         K_final=None,
@@ -993,8 +1031,8 @@ def _run_oracle_coarse(spec: RunSpec, problem: Problem) -> SolverResult:
         complexity=policy_complexity_linear(K),
         solver_settings={"solver": "oracle_coarse", "action_repeat": repeat, "K": K},
         scorer=env,
-        extra=_pixel_extra(env.n_action_clips, diagnostics),
-        j_star=j_star,
+        extra=_pixel_extra(env.n_action_clips),
+        j_star=float(mean),
         evaluate_test=evaluate_test,
         trajectory=trajectory,
     )
@@ -1007,80 +1045,76 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
     """
     import dataclasses as dc
 
-    from evaluation.pixel_metrics import SB3EnvPolicy, env_monte_carlo_cost
+    from evaluation.pixel_metrics import SB3EnvPolicy, StatePolicy, env_monte_carlo_cost
     from evaluation.latent_probe import latent_extra
+    from lqr_base.thruster_ring import ThrusterOraclePolicy
     from reinforcement_learning.callbacks import ProbeCallback
-    from reinforcement_learning.pixel_env import build_pixel_env
     from reinforcement_learning.features import fit_extractor_weights
     from reinforcement_learning.solvers import build_model, pixel_presets
 
-    K, j_star, horizon, repeat = _pixel_setup(spec)
+    K, _, horizon, _ = _pixel_setup(spec)
 
-    # Train env
-    train_env = build_pixel_env(sub_seed(spec.seed, "pixel-train", spec.solver), horizon=horizon)
+    train_env = _pixel_env(spec.seed, f"train:{spec.solver}", horizon)
+    score_env = _pixel_env(spec.seed, "score", horizon)
 
-    # Test env
-    score_env = build_pixel_env(sub_seed(spec.seed, "pixel-score", spec.solver), horizon=horizon)
+    # The oracle on the probe episodes, as probe_reference_cost
+    j_star, _ = env_monte_carlo_cost(
+        score_env, StatePolicy(ThrusterOraclePolicy(K, score_env.c)),
+        n_episodes=settings.PROBE_EPISODES,
+    )
 
     preset = pixel_presets()[spec.solver]
 
     weights = None
     if preset.freeze_extractor:
-        from lqr_base.thruster_ring import ThrusterOraclePolicy
-
-        fit_env = build_pixel_env(
-            sub_seed(spec.seed, "pixel-fit", spec.solver),
-            horizon=settings.PIXEL_PRETRAIN_EPISODE_LENGTH,
-        )
-        oracle = ThrusterOraclePolicy(K, fit_env.c)
+        stabilizing = ThrusterOraclePolicy(problem.K_0, train_env.c)
         weights = fit_extractor_weights(
-            preset, fit_env,
-            _explore(lambda observation, info: oracle(info["state"]), spec.seed, 1.0),
+            preset, _pixel_env(spec.seed, f"fit:{spec.solver}", horizon),
+            _explore(lambda observation, info: stabilizing(info["state"]), spec.seed, 1.0),
             n_steps=settings.PRETRAIN_STEPS,
             epochs=settings.PRETRAIN_EPOCHS,
         )
 
     solver_settings = dc.replace(
         preset,
-        total_timesteps=settings.PIXEL_RL_MAX_AGENT_STEPS,
+        total_timesteps=settings.RL_MAX_TIMESTEPS[settings.CH6_PIXEL_INFLATION],
         eval_freq=settings.RL_EVAL_FREQ,
         pretrained_extractor=weights,
     )
 
     def evaluate(model):
-        mean, _, _ = env_monte_carlo_cost(
-            score_env, SB3EnvPolicy(model),
-            n_episodes=settings.PIXEL_PROBE_EPISODES,
-            horizon=horizon,
+        mean, _ = env_monte_carlo_cost(
+            score_env, SB3EnvPolicy(model), n_episodes=settings.PROBE_EPISODES,
         )
         return mean, None
 
     callback = ProbeCallback(
         evaluate,
         eval_freq=solver_settings.eval_freq,
-        env_steps_scale=repeat,
-        env_steps_offset=settings.PRETRAIN_STEPS * repeat if weights is not None else 0,
+        env_steps_offset=settings.PRETRAIN_STEPS if weights is not None else 0,
     )
 
     model = build_model(train_env, solver_settings, seed=spec.seed)
-    model.learn(
-        total_timesteps=solver_settings.total_timesteps,
-        callback=callback,
-        progress_bar=False,
-    )
+
+    try:
+        model.learn(
+            total_timesteps=solver_settings.total_timesteps,
+            callback=callback,
+            progress_bar=False,
+        )
+    except ValueError as error:
+        if _policy_is_finite(model):
+            raise
+        return _training_diverged(
+            spec, problem, score_env, solver_settings, callback.records, error, j_star=j_star,
+        )
 
     policy = SB3EnvPolicy(model)
 
-    _, _, diagnostics = env_monte_carlo_cost(
-        score_env, policy,
-        n_episodes=settings.PIXEL_PROBE_EPISODES,
-        horizon=horizon,
-    )
+    extra = _pixel_extra(train_env.n_action_clips)
+    extra.update(latent_extra(model, _pixel_env(spec.seed, f"probe:{spec.solver}", horizon), policy))
 
-    extra = _pixel_extra(train_env.n_action_clips, diagnostics)
-    extra.update(latent_extra(model, score_env, policy))
-
-    evaluate_test, trajectory = _pixel_protocol(score_env, policy, horizon)
+    evaluate_test, trajectory = _pixel_protocol(spec.seed, lambda _: policy)
 
     return SolverResult(
         K_final=None,
@@ -1118,16 +1152,6 @@ def _sb3_saver(model, solver_settings, encoder=None, obs_scale: float = 1.0) -> 
         return manifest
 
     return save
-
-
-def _missing(name: str, what: str) -> Callable[[RunSpec, Problem], SolverResult]:
-    """A registry entry that explains itself instead of raising a KeyError."""
-    def raise_missing(spec: RunSpec, problem: Problem) -> SolverResult:
-        raise NotImplementedError(
-            f"Solver {name!r} is registered but not implemented yet: {what}\n"
-            f"  Add it in experiments/registry.py; nothing else has to change."
-        )
-    return raise_missing
 
 
 SOLVER_REGISTRY: dict[str, Callable[[RunSpec, Problem], SolverResult]] = {

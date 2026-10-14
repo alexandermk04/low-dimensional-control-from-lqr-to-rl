@@ -15,7 +15,6 @@ from experiments.ch6_noise import pixel_policy
 from experiments.noise_builder import build_noise
 from experiments.registry import _pixel_protocol, _pixel_setup
 from experiments.store import experiment_root, in_shard
-from seeding import sub_seed
 
 EXPERIMENT = "appendix_calibrate_pixel_noise"
 
@@ -31,17 +30,13 @@ class _Reference:
 
 def mean_cost(channel=None, std=None) -> float:
     """Test cost of the oracle pooled over all seeds."""
-    from reinforcement_learning.pixel_env import build_pixel_env
-
-    K, _, horizon, _ = _pixel_setup(None)
+    K, _, _, _ = _pixel_setup(None)
     noise = None if channel is None else build_noise(channel, "calibration", {channel: std})
 
     costs = []
     with np.errstate(all="ignore"):
         for seed in settings.SEEDS:
-            env = build_pixel_env(sub_seed(seed, "pixel-score", REFERENCE), horizon=horizon)
-            env.lqr.setup_noise(noise)
-            evaluate_test, _ = _pixel_protocol(env, pixel_policy(_Reference, env, K), horizon)
+            evaluate_test, _ = _pixel_protocol(seed, pixel_policy(_Reference, K), noise)
             costs.append(evaluate_test().summary["test_cost_mean"])
     return float(np.mean(costs))
 

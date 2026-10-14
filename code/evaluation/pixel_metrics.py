@@ -8,7 +8,7 @@ from basetypes import SimulationResult
 __all__ = [
     "StatePolicy",
     "SB3EnvPolicy",
-    "agent_horizon",
+    "env_monte_carlo_returns",
     "env_monte_carlo_cost",
     "rollout_env",
 ]
@@ -36,20 +36,9 @@ class SB3EnvPolicy:
         return action
 
 
-def agent_horizon(rho: float, tol: float = 1e-3, minimum: int = 50) -> int:
-    """Agent steps for a closed-loop transient with spectral radius ``rho`` to decay to ``tol``.
-
-    ``rho`` must be the spectral radius at the agent rate.
-    """
-    if not 0.0 < rho < 1.0:
-        raise ValueError(f"Closed loop is not contracting (rho = {rho}); no horizon exists.")
-
-    return max(minimum, int(np.ceil(np.log(tol) / np.log(rho))))
-
-
-def env_monte_carlo_cost(env, policy, n_episodes: int, horizon: int | None = None
-                         ) -> tuple[float, float, dict]:
-    """Expected undiscounted episode cost.
+def env_monte_carlo_returns(env, policy, n_episodes: int, horizon: int | None = None
+                            ) -> tuple[np.ndarray, dict]:
+    """Undiscounted cost of each individual episode.
 
     Parameters
     ----------
@@ -64,10 +53,10 @@ def env_monte_carlo_cost(env, policy, n_episodes: int, horizon: int | None = Non
 
     Returns
     -------
-    tuple[float, float, dict]
-        ``(mean, standard_error, diagnostics)`` with ``thruster_energy_mean``,
-        ``null_waste_mean``, ``saturation_rate``, ``off_screen_rate`` averaged
-        over steps and ``terminated_rate`` over episodes.
+    tuple[np.ndarray, dict]
+        ``(returns, diagnostics)``: the cost per episode, of shape ``(n_episodes,)``,
+        and ``thruster_energy_mean``, ``null_waste_mean``, ``saturation_rate``,
+        ``off_screen_rate`` averaged over steps and ``terminated_rate`` over episodes.
     """
     horizon = env.config.horizon if horizon is None else horizon
     snap = env.snapshot()
@@ -98,16 +87,30 @@ def env_monte_carlo_cost(env, policy, n_episodes: int, horizon: int | None = Non
     finally:
         env.restore(snap)
 
-    stderr = float(np.std(returns, ddof=1) / np.sqrt(n_episodes)) if n_episodes > 1 else 0.0
     steps = max(steps, 1)
 
-    return float(np.mean(returns)), stderr, {
+    return returns, {
         "thruster_energy_mean": energy / steps,
         "null_waste_mean": waste / steps,
         "saturation_rate": saturated / steps,
         "off_screen_rate": off_screen / steps,
         "terminated_rate": terminated_episodes / n_episodes,
     }
+
+
+def env_monte_carlo_cost(env, policy, n_episodes: int, horizon: int | None = None
+                         ) -> tuple[float, float]:
+    """Expected undiscounted episode cost.
+
+    Returns
+    -------
+    tuple[float, float]
+        ``(mean, standard_error)`` of :func:`env_monte_carlo_returns`.
+    """
+    returns, _ = env_monte_carlo_returns(env, policy, n_episodes, horizon)
+    stderr = float(np.std(returns, ddof=1) / np.sqrt(n_episodes)) if n_episodes > 1 else 0.0
+
+    return float(np.mean(returns)), stderr
 
 
 def rollout_env(env, policy, n_agent_steps: int) -> SimulationResult:

@@ -250,22 +250,23 @@ def _pixel_solver(name: str, extractor, **kwargs) -> RLSolverSettings:
     RLSolverSettings
         The preset.
     """
+    import settings
+
+    borrowed = settings.SIZE_HYPERPARAMS[settings.CH6_LEARNING_RATE_FROM[name]]
     defaults = dict(
         algo="ppo",
         policy="CnnPolicy",
         features_extractor_class=extractor,
-        net_arch=dict(pi=[64], vf=[64]),
+        net_arch=dict(pi=[64, 64], vf=[64, 64]),
         linear=False,
         freeze_bias=False,
         gamma=pixel_gamma(),
-        learning_rate=3e-4,
-        log_std_init=-1.0,
+        learning_rate=borrowed[settings.CH6_PIXEL_INFLATION]["learning_rate"],
         total_timesteps=150_000,
         eval_freq=10_000,
         n_steps=2048,
-        batch_size=256,
         n_epochs=10,
-        clip_reward=np.inf,
+        clip_reward=np.inf, # needed to ensure leaving the frame is not done
         device="cpu",
     )
     defaults.update(kwargs)

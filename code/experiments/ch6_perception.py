@@ -42,6 +42,7 @@ def build_specs() -> list[RunSpec]:
 def main():
     """Run the grid."""
     import config as cfg
+    from reinforcement_learning.solvers import pixel_presets
 
     run_grid(
         build_specs(),
@@ -56,13 +57,15 @@ def main():
             "n_thrusters": cfg.DEFAULT_N_THRUSTERS,
             "thrust_scale": cfg.DEFAULT_THRUST_SCALE,
             "exit_penalty_factor": cfg.EXIT_PENALTY_FACTOR,
-            "rl_timesteps": settings.PIXEL_RL_MAX_AGENT_STEPS,
+            "rl_timesteps": settings.RL_MAX_TIMESTEPS[settings.CH6_PIXEL_INFLATION],
+            "train_horizon": settings.TRAIN_HORIZON,
+            "probe_horizon": settings.PROBE_HORIZON,
+            "learning_rates": {s: p.learning_rate for s, p in pixel_presets().items()},
             "convergence": settings.CONVERGENCE,
             "rl_eval_freq": settings.RL_EVAL_FREQ,
-            "probe_episodes": settings.PIXEL_PROBE_EPISODES,
+            "probe_episodes": settings.PROBE_EPISODES,
             "pretrain_steps": settings.PRETRAIN_STEPS,
             "pretrain_epochs": settings.PRETRAIN_EPOCHS,
-            "pretrain_episode_length": settings.PIXEL_PRETRAIN_EPISODE_LENGTH,
             "pve_position_dim": settings.PVE_POSITION_DIM,
             "encoder_latent_dim": settings.CH6_ENCODER_LATENT_DIM,
             "pve_loss_weights": settings.PVE_LOSS_WEIGHTS,

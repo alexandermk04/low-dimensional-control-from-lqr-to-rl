@@ -86,9 +86,6 @@ RL_MAX_TIMESTEPS = {
     "pixel": 10_000_000,
 }
 
-# Chapter 6 cap in agent steps 
-PIXEL_RL_MAX_AGENT_STEPS = 10_000_000
-
 # Environment steps between learning-curve samples
 RL_EVAL_FREQ = 25_000
 
@@ -281,15 +278,9 @@ UNSUPPORTED_CELLS = {
 }
 
 
-# Episodes per learning-curve sample for chap 6
-PIXEL_PROBE_EPISODES = 100
-
 # Steps collected, and epochs used for pretraining
 PRETRAIN_STEPS = 20_000
 PRETRAIN_EPOCHS = 20
-
-# Chapter 6: pretraining episodes from random starts
-PIXEL_PRETRAIN_EPISODE_LENGTH = 20
 
 # Position-velocity encoder parameters from the paper
 PVE_POSITION_DIM = 5
@@ -309,6 +300,14 @@ ENCODER_LATENT_DIM = 2
 
 # Use the same latent dimension for the encoder as PVE
 CH6_ENCODER_LATENT_DIM = PVE_POSITION_DIM
+
+# Reuse pixel learning rates from before
+CH6_LEARNING_RATE_FROM = {
+    "ppo_pixel_fc": "ppo_fc_extractor",
+    "ppo_pixel_ortho": "ppo_bottleneck",
+    "ppo_pixel_estimator": "ppo_encoder_scalable",
+    "ppo_pixel_posvel": "ppo_encoder_scalable",
+}
 
 # Chapter 6: control from a camera observation
 CH6_SOLVERS = (
