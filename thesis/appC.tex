@@ -145,8 +145,29 @@ model-free approaches under \emph{large} inflation and \emph{strong} noise.
   \label{fig:app-noise-large-parametric-strong}
 \end{figure}
 
-\section{Stopping Rule of the RL Solvers}
-\label{sec:app-rl-convergence}
+\section{Parameters for the RL Solvers}
+\label{sec:app-rl-parameters}
+
+\subsection{Deviations from SB3 standard parameters}
+\label{subsec:app-rl-sb3-parameters}
+
+% TODO: Table comparing our used values to sb3 standard, only listed if deviating
+
+\subsection{Learning Rates for the RL Solvers}
+\label{subsec:app-rl-learning-rate}
+
+% TODO: table for the chosen learning rate values
+
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{appendix_rl_learning_rate}{appendix_rl_learning_rate_ppo_linear_large}
+  \caption{Training suboptimality for different learning rates for Linear PPO under \emph{large} inflation.}
+  \label{fig:app-rl-learning-rate-ppo-linear-large}
+\end{figure}
+
+
+\subsection{Stopping Rule of the RL Solvers}
+\label{subsec:app-rl-convergence}
 
 \begin{table}[htbp]
   \centering
