@@ -15,14 +15,23 @@ multiple actuators acting on our double integrator.
 \label{subsec:pixel-inflation-setting}
 
 As mentioned, we take our loop from before (\cref{subsubsec:inflated-model}) and scale it up further. The input
-dimension in this case becomes $18\,432$, while the output dimension stays at $256$. These numbers
+dimension in this case becomes $18\,432$, while we set the output dimension to $256$. These numbers
 were specifically selected to match the setup in \cref{sec:pixel-env}, such that we can
 compare both more closely. For the input dimension, this is a $96 \times 96$ image stack of two images,
 while for the output dimension it was chosen due to the specific construction.
 
 We further note that State encoder + PPO cannot be applied at this scale, as the identification
 for such large matrices is computationally impossible. Additionally, we excluded Linear PPO,
-as it was only used to compare with LQR approaches.
+as it was only used to compare with LQR approaches before.
+
+Due to computational complexity and time restrictions, we reduced the training steps to 10^7 and
+didn't run experiments to determine the optimal learning rate here. Instead, we used the optimal
+learning rate for large, and scaled it up via the formula detailed in \needcite{TODO: Formula},
+which left us with the following values \needcite{table}.
+
+% formula for scaling
+
+% table with the lr values used
 
 \subsection{Results}
 \label{subsec:pixel-inflation-results}
@@ -35,14 +44,23 @@ as it was only used to compare with LQR approaches.
 
 For our perception setup, we still use the underlying double integrator as a basis, however now
 simulate its actual movement. This simulation is observed by a monochromatic camera producing $96 \times 96$-pixel
-images of a mass with radius of z pixels moving along a horizontal line. To be able to see
+images of a with mass with radius of $2$ pixels moving horizontally in front of a black background. The visible range
+is from -12m to +12m, so a total of 24m, corresponding to 0.25m per pixel. To be able to see
 changes between the pictures, we hold any action commanded by the agent for $30$ time steps before
 capturing another frame. The agent then receives a stack of two images as the input. \Cref{fig:pixel-setup-observation} shows
 an example of such an image.
 
 But not only the input is high-dimensional compared to the actual state. We also modify the way
-our mass is actuated. We also multiply the number of actuators to $256$, distributed equally around
-a half circle, with their thrust direction acting on different angles on the mass. \Cref{fig:pixel-setup-thrusters}
+our mass is actuated. We also replace the single actuator with $256$ thrusters, distributed equally around
+a half circle, so thruster $i$ sits at an angle $\theta_i = \pi i / 256$. Each thruster can actuate in the
+range $v_i \in [-1, 1]$, however, due to the angle, only $s\cos\theta_i$ effective acceleration is produced on
+the mass, where $s$ is a scaling factor\needcite{footnote for s}. 
+% Footnote: s is chosen such that 1.5x the maximum thrust demanded by our optimal controller
+% can be reached without clipping. Here this is 26m/s^2, so s = 26/128.
+
+This leads to some thrusters being more effective than others, while all are charged for the commanded output,
+so some energy might be lost. For example, the only vertically acting thruster $\theta = \pi/2$ can not
+affect the mass in any way, and would thus only waste energy if used. \Cref{fig:pixel-setup-thrusters}
 visualizes the thrust directions for eight thrusters.
 
 % TODO: pictures side by side - left: image stack of the actual observation, right: schematic mass with thruster arrows
@@ -64,8 +82,9 @@ visualizes the thrust directions for eight thrusters.
     \label{fig:pixel-setup}
 \end{figure}
 
-We deliberately chose the action repeat and scaling of the frame, as well as other parameters such that it is possible to
-observe position changes, and thus possibly velocity, from two different frames. For a better approximation the number
+With our chosen frame and action repeat, a pixel difference between two frames can only be guaranteed at velocities
+above $0.83$ m\/s. Otherwise, motion is only visible if the mass crosses a pixel boundary, making velocity 
+generally hard to identify. For a better approximation the number
 of frames stacked could be increased, or anti-aliasing could be used to display changes better. But this will further be discussed
 in \cref{sec:perception-discussion}.
 
@@ -95,8 +114,10 @@ $\alpha$ is the inverse of the time between two agent actions. For the weighting
 prior loss terms, we use the combination suggested for similar tasks in~\cite[Tab.~I]{Jonschkowski2017PVE}, and thus
 exclude the controllability prior. For the training process we further follow the one proposed in~\cite[Sec.~III-C]{Jonschkowski2017PVE}.
 For details on how exactly the total loss function is constructed, we refer the reader to the original paper~\cite{Jonschkowski2017PVE}.
-Similar to the previous chapter, we train this extractor for a total of $20\,000$ steps, here split into $1\,000$ episodes of $20$ steps,
-before freezing its weights and using it in front of our PPO construct (\cref{sec:ppo-variants}).
+We train this extractor with data of $20\,000$ environment steps, which is split into $741$ episodes of $800$ environment steps,
+which at our action repeat corresponds to around $27$ agent actions. Similar to before, we use $K_0$ acting on the true
+state in $70\%$ and random actuation in $30\%$ of the time, before freezing the extractors' weights and using
+it in front of our PPO construct (\cref{sec:ppo-variants}). 
 
 Scalable encoder + PPO is pretrained with a similar data split for this setting.
 
@@ -106,12 +127,38 @@ Scalable encoder + PPO is pretrained with a similar data split for this setting.
 \subsection{Setting}
 \label{subsec:visual-inputs-setting}
 
-For the experiments here, we again compare the performance of the optimal controller $K^{*}$ with
-our different approaches, which here consist of Pixels + PPO, Scalable encoder + PPO, Bottleneck PPO as well as our
-Position-Velocity Encoder + PPO. The optimal controller here only gives us the cost to compare it to, as it actually
-never acts based on the perception and with the thrusters, but instead on the true loop.
+For the experiments here, we will use the optimal gain under our action repeat \needcite{pixelated environment}
+as our reference and compare it with different approaches, 
+which here consist of Pixels + PPO (equaivalent to fully-connected PPO), Scalable encoder + PPO, Bottleneck PPO as well as our
+Position-Velocity Encoder + PPO \needcite{subsec:pve}. As they reuse the alread introduced architectures,
+they will not be repeated here. The optimal controller for this setup actually does not
+act based on the perception, but instead has access to the real state, while the output
+remains our thrusters and thus gives us the actual optimal cost.
 For the other approaches, except for Position-Velocity Encoder + PPO, which takes images
 as an input, we flatten the images, such that they receive an $18\,432$-dimensional input vector.
+The learning rates we use here are identifcal to the ones extrapolated in \needcite{cref to table from first section}.
+
+However, we also modify some of our PPO parameters for this setting. Specifically, we 
+
+% TODO: list
+- set $\gamma = 0.97$, which
+gives us around $\frac{1}{(1-\gamma)}\approx 33$ effective agent steps. Multiplying this with our agent action rate
+of $0.3\mathrm{s}$ gives us rougly $10\mathrm{s}$ of effective horizon, equal to what we used before.
+
+- change clip_reward from $10$ to infinity, so never clip the reward.
+
+- while the action is clipped before being enacted, we charge the cost on action before it.
+
+- if the mass exits the observable area, it is charged a penalty and ends the episode. This is set to double
+what the cost a mass sitting at the edge of the screen until the end of the episode would be.
+
+The three last points relate a bit to each other, and were changes that were implemented after initial
+test failures. Here, we noticed, that by charging the cost only after clipping, the controller
+never learned to actually control the mass in some cases. For these, it would produce increasingly larger
+command inputs, but could never return from this instability, as every action above this threshhold had the
+same effect. Also, clipping the reward like in \needcite{cref ch4} had the side effect that leaving the 
+screen became a economically reasonable choice, so the model chose this behavior more often. Combined with
+this, we started charging the penalty, which promotes staying on screen even more.
 
 \subsection{Results}
 \label{subsec:visual-inputs-results}
@@ -141,10 +188,11 @@ so this noise does not affect it. Still, the chosen values are found in the appe
 \end{figure}
 
 We now run the trained controllers from \cref{sec:visual-inputs} on
-noise-affected trajectories under different strengths according to our test protocol.
+noise-affected trajectories under different strengths according to our test protocol \needcite{subsec:protocol}.
+Here, as we leave the rollout length the same, we observe $67$ agent steps during the $2000$ environment steps.
 To make the comparison under each noise channel equal, we exclude our optimal controller
 baseline, as it does not observe the measurement noise like the other controllers do. So
-instead we calculate the suboptimality for each controller in comparison to its clean
+instead we calculate the cost ratio for each controller in comparison to its clean
 run from \cref{sec:visual-inputs}.
 
 \subsection{Results}
