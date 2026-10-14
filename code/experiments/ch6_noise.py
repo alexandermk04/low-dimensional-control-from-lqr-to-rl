@@ -153,6 +153,9 @@ def evaluate_grid(verbose: bool = True):
             summary["policy_complexity"] = source_record.summary.get(
                 "policy_complexity"
             )
+            summary["policy_complexity_frozen"] = source_record.summary.get(
+                "policy_complexity_frozen"
+            )
 
             record = RunRecord(
                 experiment=EXPERIMENT,

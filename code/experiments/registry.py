@@ -64,6 +64,7 @@ __all__ = ["SolverResult", "SOLVER_REGISTRY", "run_solver", "known_solvers"]
 # Solvers who are trained through stable-baselines3.
 RL_SOLVERS = (
     "ppo_linear", "ppo_mlp", "ppo_encoder", "ppo_bottleneck", "ppo_encoder_scalable",
+    "ppo_fc_extractor",
 )
 
 # Chapter 6: trained through stable-baselines3 too, but on a pixel
@@ -758,7 +759,10 @@ def _run_rl(
         )
     else:
         K_final = None
-        complexity = policy_complexity_mlp(model)
+        complexity = policy_complexity_mlp(
+            model, preset.freeze_extractor,
+            n_frozen_extra=0 if encoder is None else int(np.asarray(encoder).size),
+        )
         policy = SB3Policy(model, encoder=encoder, obs_scale=obs_scale)
 
     return SolverResult(
@@ -1082,7 +1086,7 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
         K_final=None,
         policy=policy,
         records=callback.records,
-        complexity=policy_complexity_mlp(model),
+        complexity=policy_complexity_mlp(model, preset.freeze_extractor),
         solver_settings=solver_settings,
         scorer=score_env,
         extra=extra,
@@ -1140,6 +1144,7 @@ SOLVER_REGISTRY: dict[str, Callable[[RunSpec, Problem], SolverResult]] = {
     "ppo_encoder": _run_ppo_encoder,
     "ppo_bottleneck": _run_rl,
     "ppo_encoder_scalable": _run_rl,
+    "ppo_fc_extractor": _run_rl,
     "oracle_coarse": _run_oracle_coarse,
     "ppo_pixel_fc": _run_pixel_rl,
     "ppo_pixel_posvel": _run_pixel_rl,

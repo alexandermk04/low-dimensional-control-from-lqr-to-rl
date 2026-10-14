@@ -54,6 +54,7 @@ SUMMARY_KEYS = (
     "spectral_radius_final",
     "rank_final",  # rank of gain matrix
     "policy_complexity",  # complexity in number of parameters
+    "policy_complexity_frozen",  # fixed during PPO
     # RL-only stats below - None otherwise
     "action_clips",  # env steps in which the RL action box bound during training
     "bias_ratio",  # whether extracted gain describes policy accurately

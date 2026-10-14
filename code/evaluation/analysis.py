@@ -218,19 +218,24 @@ def policy_complexity_linear(K: np.ndarray, tol: float | None = None) -> dict[st
         "n_params_dense": q * p,
     }
 
-def policy_complexity_mlp(model) -> dict[str, int]:
-    """Parameter count of a Stable-Baselines3 actor.
+def policy_complexity_mlp(model, frozen_extractor: bool = False,
+                          n_frozen_extra: int = 0) -> dict[str, int]:
+    """Parameter count of a Stable-Baselines3 actor, its feature extractor included.
 
     Parameters
     ----------
     model : stable_baselines3.common.base_class.BaseAlgorithm
         A trained model.
+    frozen_extractor : bool, optional
+        Whether the extractor is frozen post training.
+    n_frozen_extra : int, optional
+        Fixed parameters outside the model.
 
     Returns
     -------
     dict[str, int]
         ``rank`` (always ``None``-like ``-1``), ``n_params`` and ``n_params_dense``, both the actor's parameter
-        count.
+        count, and ``n_params_frozen``.
 
     Raises
     ------
@@ -239,17 +244,20 @@ def policy_complexity_mlp(model) -> dict[str, int]:
     """
     policy = model.policy
 
-    if hasattr(policy, "action_net"):               # PPO
-        modules = [policy.mlp_extractor.policy_net, policy.action_net]
-    else:
+    if not hasattr(policy, "action_net"):               # PPO
         raise AttributeError(
             f"Cannot locate an actor on {type(policy).__name__} to count parameters."
         )
 
-    total = sum(
-        int(parameter.numel())
-        for module in modules
-        for parameter in module.parameters()
-    )
+    def count(*modules) -> int:
+        return sum(
+            int(parameter.numel())
+            for module in modules
+            for parameter in module.parameters()
+        )
 
-    return {"rank": -1, "n_params": total, "n_params_dense": total}
+    extractor = count(policy.pi_features_extractor)
+    frozen = (extractor if frozen_extractor else 0) + int(n_frozen_extra)
+    total = extractor + count(policy.mlp_extractor.policy_net, policy.action_net) + int(n_frozen_extra)
+
+    return {"rank": -1, "n_params": total, "n_params_dense": total, "n_params_frozen": frozen}

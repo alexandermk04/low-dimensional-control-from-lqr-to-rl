@@ -80,6 +80,7 @@ def _summarize(
         ),
         "rank_final": result.complexity.get("rank"),
         "policy_complexity": result.complexity.get("n_params"),
+        "policy_complexity_frozen": result.complexity.get("n_params_frozen"),
         **test,
         **result.extra,
     }

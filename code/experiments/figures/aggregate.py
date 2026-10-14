@@ -34,6 +34,7 @@ SOLVER_LABELS = {
     "ppo_mlp": "Fully-connected PPO",
     "ppo_encoder": "State encoder + PPO",
     "ppo_encoder_scalable": "Scalable encoder + PPO",
+    "ppo_fc_extractor": "FC-Extractor + PPO",
     # Chapter 6
     "oracle_coarse": "Oracle (true state)",
     "ppo_pixel_fc": "Pixels + PPO",

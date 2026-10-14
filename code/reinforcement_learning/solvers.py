@@ -194,7 +194,7 @@ def vector_presets() -> dict:
         Mapping solver name to :class:`RLSolverSettings`.
     """
     import settings
-    from reinforcement_learning.features import OrthoBottleneck, StateEncoder
+    from reinforcement_learning.features import FCExtractor, OrthoBottleneck, StateEncoder
 
     return {
         "ppo_linear": LINEAR_PPO,
@@ -209,6 +209,7 @@ def vector_presets() -> dict:
             features_extractor_kwargs={"latent_dim": settings.ENCODER_LATENT_DIM},
             freeze_extractor=True,
         ),
+        "ppo_fc_extractor": _extractor_solver("ppo_fc_extractor", FCExtractor),
     }
 
 

@@ -83,7 +83,7 @@ RL_MAX_TIMESTEPS = {
     "small": 10_000_000,
     "medium": 15_000_000,
     "large": 30_000_000,
-    "pixel": 30_000_000,
+    "pixel": 10_000_000,
 }
 
 # Chapter 6 cap in agent steps 
@@ -269,6 +269,7 @@ CH5_SOLVERS = (
     "ppo_encoder",
     "ppo_encoder_scalable",
     "ppo_mlp",
+    "ppo_fc_extractor",
 )
 
 # Algorithms that cannot be run at a given inflation size, and why.
@@ -361,6 +362,7 @@ CH6_COMPARISON_SOLVERS = (
     "ppo_bottleneck",
     "ppo_encoder_scalable",
     "ppo_mlp",
+    "ppo_fc_extractor",
 )
 
 
@@ -491,6 +493,9 @@ SIZE_HYPERPARAMS = {
         "medium": {"learning_rate": 1.3e-05},
         "large": {"learning_rate": 6.7e-06},
         "pixel": {"learning_rate": 7e-07},
+    },
+    "ppo_fc_extractor": {
+        "pixel": {"learning_rate": 7e-07}, # TODO: for now placeholder
     },
 }
 

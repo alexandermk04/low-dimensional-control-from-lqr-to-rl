@@ -272,8 +272,8 @@ def box_metric(
     return ax
 
 
-def _label_runs(ax, keys: list, color_by: int, box_colors: list):
-    """Coloring for x-ticks"""
+def _label_runs(ax, keys: list, color_by: int, box_colors: list, extra: tuple = ()):
+    """Coloring for x-ticks, with ``extra`` legend handles appended."""
     from matplotlib.patches import Patch
 
     rest = [key[:color_by] + key[color_by + 1:] for key in keys]
@@ -297,8 +297,9 @@ def _label_runs(ax, keys: list, color_by: int, box_colors: list):
         handles.setdefault(
             key[color_by], Patch(facecolor=color, alpha=0.45, label=label_for(key[color_by]))
         )
+    handles = list(handles.values()) + list(extra)
     ax.legend(
-        handles=list(handles.values()), frameon=False, loc="lower center",
+        handles=handles, frameon=False, loc="lower center",
         bbox_to_anchor=(0.5, 1.0), ncol=min(len(handles), 3),
     )
 
@@ -503,6 +504,7 @@ def complexity_bars(
     aspect: float = 0.5,
     log: bool = True,
     color_by: int | None = None,
+    frozen: str | None = "policy_complexity_frozen",
 ):
     """Policy complexity as a bar plot.
 
@@ -521,12 +523,15 @@ def complexity_bars(
     color_by : int or None, optional
         Position of the key part that picks the colour, e.g. ``1`` for the
         solver in ``("size", "solver")``.
+    frozen : str or None, optional
+        Column with the part of ``metric`` held fixed during training.
 
     Returns
     -------
     matplotlib.axes.Axes
     """
     stats = aggregate(rows, group_by, metric)
+    frozen_stats = aggregate(rows, group_by, frozen) if frozen else {}
     keys = _ordered_keys(stats, order)
 
     if color_by is None:
@@ -540,6 +545,7 @@ def complexity_bars(
     if ax is None:
         _, ax = new_figure(width, aspect)
 
+    frozen_bars = []
     for position, key in enumerate(keys, start=1):
         cell = stats[key]
         if not np.isfinite(cell["mean"]):
@@ -548,6 +554,10 @@ def complexity_bars(
             position, cell["mean"], width=0.6,
             color=bar_colors[position - 1], alpha=0.8,
         )
+
+        frozen_mean = frozen_stats.get(key, {}).get("mean", np.nan)
+        if np.isfinite(frozen_mean) and frozen_mean > 0:
+            frozen_bars.append((position, frozen_mean))
 
         # Only show if complexity varies across seeds
         if cell["max"] > cell["min"]:
@@ -560,14 +570,31 @@ def complexity_bars(
     if log:
         ax.set_yscale("log")
 
+    low, high = ax.get_ylim()
+    bottom = low if log else 0.0
+    for position, frozen_mean in frozen_bars:
+        ax.bar(
+            position, frozen_mean - bottom, bottom=bottom, width=0.6, fill=False,
+            hatch="///", edgecolor="white", linewidth=0,
+        )
+    ax.set_ylim(low, high)
+
+    from matplotlib.patches import Patch
+    extra = [
+        Patch(facecolor="0.6", edgecolor="white", hatch="///", linewidth=0,
+              label="Frozen during training")
+    ] if frozen_bars else []
+
     if color_by is None:
         wrap = _wrap_width(len(keys), width)
         ax.set_xticks(range(1, len(keys) + 1))
         ax.set_xticklabels([_tick_label(k, wrap) for k in keys])
         if wrap is None:
             _angle(ax)
+        if extra:
+            ax.legend(handles=extra, frameon=False, loc="best")
     else:
-        _label_runs(ax, keys, color_by, bar_colors)
+        _label_runs(ax, keys, color_by, bar_colors, extra)
 
     ax.set_ylabel(METRIC_LABELS.get(metric, metric))
     ax.set_xlim(0.4, len(keys) + 0.6)
