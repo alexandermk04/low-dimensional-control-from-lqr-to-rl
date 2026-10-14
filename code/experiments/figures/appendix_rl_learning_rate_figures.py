@@ -10,7 +10,7 @@ import numpy as np
 
 import settings
 from experiments.appendix_rl_learning_rate import EXPERIMENT, SIZES, SOLVERS
-from experiments.figures.aggregate import latest_per_experiment, tidy
+from experiments.figures.aggregate import label_for, latest_per_experiment, tidy
 from experiments.figures.panels import learning_bands
 from experiments.figures.style import figure_dir, save, table_dir
 from experiments.figures.sweeps import median, choose, print_choice, sweep_tables
@@ -41,7 +41,7 @@ def render():
                 order=[(lr,) for lr in settings.RL_LEARNING_RATES[size]],
                 logx=False,
             )
-            ax.set_title(f"{solver}, {size} inflation")
+            ax.set_title(f"{label_for(solver)}, {size} inflation")
             save(ax.figure, f"{EXPERIMENT}_{solver}_{size}", EXPERIMENT)
             plt.close(ax.figure)
 
