@@ -148,15 +148,56 @@ model-free approaches under \emph{large} inflation and \emph{strong} noise.
 \section{Parameters for the RL Solvers}
 \label{sec:app-rl-parameters}
 
-\subsection{Deviations from SB3 standard parameters}
+\subsection{Deviations from SB3 Standard Parameters}
 \label{subsec:app-rl-sb3-parameters}
 
-% TODO: Table comparing our used values to sb3 standard, only listed if deviating
+\Cref{tab:app-rl-sb3-parameters} lists the parameters of the PPO solvers in \cref{chap:inflation} that differ
+from the defaults of SB3 (version~2.9.0)~\cite{StableBaselines2026PPO,StableBaselines2026Policy,StableBaselines2026VecNormalize}.
+All other parameters keep their default values.
+\begin{table}[htbp]
+  \centering
+  \caption{Parameters of the PPO solvers that differ from the SB3 defaults.}
+  \label{tab:app-rl-sb3-parameters}
+  \begin{tabular}{@{}llp{0.36\linewidth}@{}}
+    \toprule
+    Parameter & SB3 default & Used here \\
+    \midrule
+    Discount factor $\gamma$ & $0.99$ & $0.999$ \\
+    Learning rate & $3 \cdot 10^{-4}$, constant & \cref{tab:app-rl-learning-rates}, annealed by \eqref{eq:lr-annealing} \\
+    Target KL divergence & none & $0.02$ \\
+    Initial log standard deviation & $0$ & $-2$ \\
+    Orthogonal initialization & yes & no \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 \subsection{Learning Rates for the RL Solvers}
 \label{subsec:app-rl-learning-rate}
 
-% TODO: table for the chosen learning rate values
+For each solver and inflation size, we train three seeds with each initial learning rate
+\begin{equation}
+  \label{eq:app-rl-learning-rate-grid}
+  \eta_0 \in 3 \cdot 10^{-4} \sqrt{\frac{10}{d_{\mathrm{in}}}} \cdot \left\{ 0.01,\ \tfrac{1}{30},\ 0.1,\ \tfrac{1}{3},\ 1 \right\} ,
+\end{equation}
+rounded to two digits. The final rates were then chosen based on inspection of the training curves (\cref{tab:app-rl-learning-rates}).
+For Linear PPO under \emph{large} every gain becomes unstable during training (\cref{fig:app-rl-learning-rate-ppo-linear-large}).
+
+\begin{table}[htbp]
+  \centering
+  \caption{Initial learning rate $\eta_0$ of the PPO solvers per inflation size.}
+  \label{tab:app-rl-learning-rates}
+  \begin{tabular}{@{}lrrr@{}}
+    \toprule
+    Solver & \emph{small} & \emph{medium} & \emph{large} \\
+    \midrule
+    Linear PPO & $1 \cdot 10^{-4}$ & $4.5 \cdot 10^{-6}$ & $2.2 \cdot 10^{-6}$ \\
+    Bottleneck PPO & $3 \cdot 10^{-5}$ & $4.5 \cdot 10^{-5}$ & $6.7 \cdot 10^{-6}$ \\
+    State encoder + PPO & $1 \cdot 10^{-4}$ & $4.5 \cdot 10^{-5}$ & $6.7 \cdot 10^{-6}$ \\
+    Scalable encoder + PPO & $1 \cdot 10^{-4}$ & $1.3 \cdot 10^{-5}$ & $2.2 \cdot 10^{-6}$ \\
+    Fully-connected PPO & $3 \cdot 10^{-5}$ & $1.3 \cdot 10^{-5}$ & $6.7 \cdot 10^{-6}$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 \begin{figure}[htbp]
   \centering

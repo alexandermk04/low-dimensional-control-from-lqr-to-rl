@@ -1081,7 +1081,7 @@ The number of steps the plant progressed and solver iterations until convergence
 counted and reported. An upper cap of $20\,000$ iterations is set to prevent looping.
 
 For RL-based algorithms we don't use such early-stopping logic. Following our experiments in
-\cref{sec:app-rl-convergence}, we observed that implementing such rule would lead to worse
+\cref{subsec:app-rl-convergence}, we observed that implementing such rule would lead to worse
 policies in the end. Instead, the best policy is achieved close to the end, which leads us
 to running each algorithm for as many steps as noted in \cref{tab:rl-step-caps}, and then
 taking the final policy. Every $25\,000$ environment steps throughout, we

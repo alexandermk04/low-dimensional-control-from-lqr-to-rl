@@ -1,9 +1,9 @@
 \chapter{Robustness of Reinforcement Learning Approaches}
 \label{chap:inflation}
 
-Having seen how low-dimensionality affects robustness with a simple, LQR-based controller, we
+Having seen how low dimensionality affects robustness with a simple, LQR-based controller, we
 now want to take a look at a setting which allows us to judge architectures used in more
-complex tasks as well. Still, we will stay with our introduced double integrator system,
+complex tasks as well. Still, we will stay with our introduced double-integrator system,
 but change the controllers for now.
 
 \section{PPO and Its Variants}
@@ -43,15 +43,15 @@ However, as has been noted before~\cite{Engstrom2020Implementation,Hsu2020Revisi
 and can influence the effectiveness of it in practice. For our construction, we use
 the architecture provided by Stable-Baselines3 (SB3)~\cite{StableBaselines2026PPO}.
 As the standard architecture, for our Fully-connected PPO, we use the standard two-layer multilayer perceptron (MLP) with 64 neurons
-per layer for both the actor and the critic~\cite{StableBaselines2026Policy}. In the appendix \needcite{subsec:app-rl-sb3-parameters}
-all deviations from the default parameters can be found. After evaluating different values, we settled on the learning rates found
-in the appendix\cref{tab:app-rl-learning-rates}, which differ by inflation size.
+per layer for both the actor and the critic~\cite{StableBaselines2026Policy}. \Cref{tab:app-rl-sb3-parameters} in
+\cref{sec:app-rl-parameters} lists all deviations from the default parameters. After evaluating different values, we settled on the
+learning rates in \cref{tab:app-rl-learning-rates}, which differ by inflation size.
 
 After initial runs with this basic setup, we could observe some divergence behavior, which
 led us to consider additional implementation improvements, as suggested by Huang et al.~\cite{Huang2022Implementation}.
 Specifically, we modified the discount factor to $\gamma = 0.999$ instead of $0.99$
-and  used the reward normalization implementation from SB3 \needcite{VecNormalize SB3} based 
-on a discounted moving average~\cite[Detail~7]{Huang2022Implementation}. However, the two most effective changes were:
+and used the reward normalization implementation from SB3~\cite{StableBaselines2026VecNormalize}, based
+on a discounted moving average~\cite[continuous-action Detail~8]{Huang2022Implementation}. However, the two most effective changes were:
 \begin{enumerate}
     \item Using learning-rate annealing instead of a fixed rate~\cite[Detail~4]{Huang2022Implementation}. Now the learning
     rate is decreased with every update, such that at the end of the step budget (\cref{tab:rl-step-caps}) it is equal
@@ -62,8 +62,8 @@ on a discounted moving average~\cite[Detail~7]{Huang2022Implementation}. However
     \end{equation}
     \item Separating the feature extractors for actor and critic~\cite[Detail~13]{Huang2022Implementation}. As described
     in the SB3 documentation~\cite{StableBaselines2026Policy}, to reduce computation, in the standard implementation,
-    the extractor is shared by default. For extractors that are trained together with PPO, we will seperate actor and
-    critic extractors, such that they're trained seperately. Later, when introducing pretrained extractors which are fixed
+    the extractor is shared by default. For extractors that are trained together with PPO, we separate actor and
+    critic extractors, such that they are trained separately. Later, when introducing pretrained extractors which are fixed
     post-training, those will be shared again.
 \end{enumerate}
 \Cref{alg:ppo} summarizes the resulting training loop.
@@ -127,23 +127,23 @@ to improve our controller architecture. Here, we will use the following priors~\
     \item temporal coherence: state changes are rather slow,
     \item proportionality: similar actions should show similar output magnitudes,
     \item repeatability: similar actions in similar states should show similar state changes,
-    \item causality: prevents trivial solution of mapping every observation to the same point
+    \item causality: prevents the trivial solution of mapping every observation to the same point.
 \end{itemize}
 
 We modify the loss calculations taken from the paper~\cite{Botteghi2021LowDimensional} slightly,
 by dropping the $\mathcal{L}_{\mathrm{reg}}$ term, and thus get the total loss function of
-% TODO: check implementation, use the actual weighting instead of omega
 \begin{equation}
     \label{eq:prior-loss}
     \mathcal{L} = \omega_1 \mathcal{L}_{\mathrm{temp}} + \omega_2 \mathcal{L}_{\mathrm{prop}} + \omega_3 \mathcal{L}_{\mathrm{rep}}
-        + \omega_4 \mathcal{L}_{\mathrm{caus}} .
+        + \omega_4 \mathcal{L}_{\mathrm{caus}} ,
 \end{equation}
+with $\omega_1 = \omega_2 = \omega_3 = 1$ and $\omega_4 = 2$.
 
 As this encoder must be trained first, we pretrain it for $20$ epochs on $20\,000$
-collected environments steps data, before freezing its parameters and prepending
+collected environment steps, before freezing its parameters and prepending
 it to the actor and the critic. The data is collected by running a policy using
-the initial gain $K_0$ or a randomly drawn action in a $70\%/30\%$ split on
-the environment for at most $800$ consecutive steps. 
+the initial gain $\tilde{K}_0$ or a randomly drawn action in a $70\,\%$/$30\,\%$ split on
+the environment for at most $800$ consecutive steps.
 
 An important parameter is also the dimension of the latent
 state, which we set to the actual ``2'' here. Although for later application, one might not know
@@ -175,7 +175,7 @@ here as well. \Cref{alg:encoder-pretraining} summarizes the pretraining.
 
 The second trainable extractor we used is based on the paper by Todorov and Sabatelli~\cite{Todorov2026Orthogonal},
 using orthogonal bottlenecks. It consists of a fully connected MLP, with 512 neurons in the first,
-and 256 neurons in the second and third layer, using a ReLU activation function. 
+and 256 neurons in the second and third layer, using a ReLU activation function.
 Following it is a matrix with orthonormal columns, which projects the output
 into a state of bottleneck dimension $d_{\mathrm{b}}$, which we here set to $2$. Like $U_1$ in \eqref{eq:lifts}, the matrix
 is the orthonormal factor of the QR decomposition of a random matrix with standard normal entries, so that the
@@ -186,7 +186,7 @@ feature extractor output $z_k \in \R^{d_{\mathrm{z}}}$ is mapped to
     \qquad U_{\mathrm{b}} \in \R^{d_{\mathrm{z}} \times d_{\mathrm{b}}} , \quad U_{\mathrm{b}}\T U_{\mathrm{b}} = I_{d_{\mathrm{b}}} .
 \end{equation}
 
-Unlike the previous encoder, this one is trained together with PPO, so the actor and critic train them seperately, while 
+Unlike the previous encoder, this one is trained together with PPO, so the actor and critic train them separately, while
 the projection matrix $U_{\mathrm{b}}$ stays the same for both.
 
 \Cref{fig:ppo-architectures} in \cref{sec:app-ppo-architectures} visualizes the architectures of all our solvers.
@@ -198,7 +198,7 @@ Looking at achieved suboptimality during training, we overall see a learning pro
 of our architectures (\cref{fig:rl-large-curves}). Noticeable, however, is the long stagnation in the beginning of the learning,
 before decreasing towards the end. Significant is also Linear PPO, which does not achieve an
 improvement under \emph{large}, but this was expected, given its unsuccessful learning-rate search results
-\cref{fig:app-rl-learning-rate-ppo-linear-large}.
+(\cref{fig:app-rl-learning-rate-ppo-linear-large}).
 
 \begin{figure}[htbp]
   \centering
@@ -211,7 +211,7 @@ Looking at the complexity of our trained policies, we notice that the difference
 our ``low-dimensional'' and fully connected architectures. Especially under \emph{small} and \emph{medium},
 Scalable encoder + PPO is even larger than Fully-connected PPO, while the others are
 on par. However, under \emph{large} a difference does become noticeable, with Fully-connected PPO being around
-$1.6$ times the size of Scalable encoder + PPO, and $2.2$ times the size of State encoder + PPO or Bottleneck PPO % TODO, verify calculations again
+$1.6$ times the size of Scalable encoder + PPO, and $2.2$ times the size of State encoder + PPO or Bottleneck PPO % TODO: Redo with new policy sizes
 (\cref{fig:rl-across-sizes-complexity}).
 
 \begin{figure}[htbp]
@@ -239,8 +239,8 @@ even though it has worsened in comparison to Bottleneck PPO (\cref{fig:rl-across
 \begin{figure}[htbp]
   \centering
   \generatedfigure{ch5_inflation_sizes}{ch5_inflation_across_sizes_subopt}
-  \caption{Suboptimality $S$ of the PPO variants for each inflation size. The boxes indicate the interquantile range, while 
-  the central line marks the median, and the whiskers are extended until 1.5x the interquantile range.}
+  \caption[Suboptimality $S$ of the PPO variants for each inflation size.]{Suboptimality $S$ of the PPO variants for each inflation size. The boxes indicate the interquartile range, while
+  the central line marks the median, and the whiskers span the $5$th to $95$th percentile. Points show episodes outside this range.}
   \label{fig:rl-across-sizes-subopt}
 \end{figure}
 
@@ -250,21 +250,21 @@ even though it has worsened in comparison to Bottleneck PPO (\cref{fig:rl-across
 Similar to what we have seen before in \cref{subsec:noise-large-inflation}, parametric uncertainty
 seems to affect all controllers similarly and generally increases suboptimality across all architectures.
 The median is shifted upwards, and especially apparent at \emph{divergent}, the worst-case runs get a couple of orders
-of magnitude worse:
+of magnitude worse (\cref{tab:ch5-noise-large-parametric-worst}).
 
-% TODO: table showing for each row (controller) the worst performing run (under weak, standard, strong, divergent)
+\input{generated/ch5_noise/tables/ch5_noise_large_parametric_worst.tex}
 
 However, this does not help us too much to answer the question whether low-dimensional architectures are more robust
 here.
 
 So let us take a look at external disturbance next. Here we can see that the median suboptimality of all approaches
 remains mostly stable throughout the increase in the noise, except for Bottleneck PPO, whose median improves into being even better
-than the baseline. Here, the shift of the interquantile range becomes also interesting, as with increasing noise intensity
+than the baseline. Here, the shift of the interquartile range becomes also interesting, as with increasing noise intensity
 its width becomes smaller and sits between $-0.01$ and $-0.1$.
 State encoder + PPO and Fully-connected PPO behave quite similarly, both with a spread across the $0$ line (sometimes better, sometimes worse)
-and a similar median. Fully-connected PPO only differs by maintaining a wider interquantile range even under \emph{divergent} noise. Linear
-PPO sits above baseline, similar to its noise-free testing, whereas Scalable encoder + PPO shows an increasing spread
-under stronger noise, with its interquantile range becoming smaller. Overall, it can be seen that Bottleneck PPO indeed outperforms
+and a similar median. Fully-connected PPO only differs by maintaining a wider interquartile range even under \emph{divergent} noise. Linear
+PPO sits above the baseline, similar to its noise-free testing, whereas Scalable encoder + PPO shows an increasing spread
+under stronger noise, with its interquartile range becoming smaller. Overall, it can be seen that Bottleneck PPO indeed outperforms
 the other architectures here (\cref{fig:rl-noise-large-disturbance-strong}).
 
 \begin{figure}[htbp]
@@ -286,21 +286,21 @@ the other architectures here (\cref{fig:rl-noise-large-disturbance-strong}).
 \end{figure}
 
 Similarly, the robustness of Bottleneck PPO can be observed under control noise, where its median continuously shifts downwards
-with growing noise intensity, until falling below baseline at \emph{strong} (\cref{fig:rl-noise-large-control-strong}). Otherwise, the order of performance for the other
+with growing noise intensity, until falling below the baseline at \emph{strong} (\cref{fig:rl-noise-large-control-strong}). Otherwise, the order of performance for the other
 policies stays mostly the same, with just the spread under increasing noise passing the baseline. This however can most likely
 be attributed to a less robust baseline controller than performance of the others.
 
 Lastly, let us take a look at measurement noise. Under \emph{weak} intensity, Linear PPO shows some
 wide spread, while generally the low-dimensional architectures show a mean lower than the fully connected
 ones. With the step to \emph{standard}, not much can be seen apart from an increase in the spread of
-Scalable encoder + PPO across the baseline. At \emph{strong}, all, except for Fully-connected PPO, shift their interquantile range
+Scalable encoder + PPO across the baseline. At \emph{strong}, all, except for Fully-connected PPO, shift their interquartile range
 across the baseline, in a similar spread, even though for Scalable encoder + PPO, the median also shifts towards $-0.1$, being
 the only architecture here. Still, some worst-case runs are measured at around $1000$ suboptimality. Fully-connected PPO in comparison sits
 between $0.1$ and $10$ suboptimality. Under \emph{divergent} measurement noise, we can see that the low-dimensional
 controllers outperform Linear PPO and Fully-connected PPO here. All their medians lie below the baseline
-and have a very thin spread of the interquantile range. Scalable encoder + PPO shows some runs being much
+and have a very thin spread of the interquartile range. Scalable encoder + PPO shows some runs being much
 worse than Fully-connected PPO; however, for Bottleneck PPO and State encoder + PPO, all the runs are below the median of
-Fully-connected PPO. Linear PPO's median also lies below baseline and a little short of the other controllers, but has a
+Fully-connected PPO. Linear PPO's median also lies below the baseline and a little short of the other controllers, but has a
 spread similar to Fully-connected PPO, whose median sits above the baseline between $0.1$ and $0.01$ (\cref{fig:rl-noise-large-measurement}).
 
 \begin{figure}[htbp]
