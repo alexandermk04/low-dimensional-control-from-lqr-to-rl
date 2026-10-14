@@ -1,13 +1,15 @@
 \begin{table}[htbp]
 \centering
-\caption{Linear PPO under measurement noise of increasing intensity.}
+\caption{Linear PPO under measurement noise of increasing intensity. Stable counts the seeds whose controller left the plant stable.}
 \label{tab:ch5-noise-large-levels-ppo-linear}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
 Intensity & none & weak & standard & strong & divergent \\
 \midrule
-Suboptimality $S$ & $+37 \pm 137$ & $+17 \pm 36.2$ & $+13 \pm 28.7$ & $+6.51 \pm 16.3$ & $+1.85 \pm 5.89$ \\
+Stable & $7/10$ & $7/10$ & $7/10$ & $7/10$ & $7/10$ \\
+\midrule
+Suboptimality $S$ & $+3.94 \pm 4.51$ & $+2.02 \pm 1.9$ & $+1.44 \pm 1.6$ & $+0.512 \pm 0.943$ & $-0.156 \pm 0.329$ \\
 \bottomrule
 \end{tabular}
 }

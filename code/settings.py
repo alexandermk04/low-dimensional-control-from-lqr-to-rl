@@ -428,7 +428,7 @@ SOLVER_HYPERPARAMS = {
 # `python -m experiments.figures.appendix_spi_lambda_figures`,
 # `python -m experiments.figures.appendix_spi_mf_figures`,
 # `python -m experiments.figures.appendix_learning_rate_figures` and
-# `python -m experiments.figures.appendix_rl_learning_rate_figures`.
+# selected by hand for the PPO solvers.
 SIZE_HYPERPARAMS = {
     "mb_pg": {
         "base": {"gradient_lr": 1e-05},

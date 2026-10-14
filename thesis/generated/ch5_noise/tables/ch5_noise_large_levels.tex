@@ -1,17 +1,19 @@
 \begin{table}[htbp]
 \centering
-\caption{Suboptimality $S$ under \emph{large} inflation and measurement noise of increasing intensity.}
+\caption{Suboptimality $S$ under \emph{large} inflation and measurement noise of increasing intensity. Stable counts the seeds whose controller left the plant stable.}
 \label{tab:ch5-noise-large-levels}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrrr}
 \toprule
 Intensity & Baseline & Linear PPO & Bottleneck PPO & State encoder + PPO & Scalable encoder + PPO & Fully-connected PPO \\
 \midrule
-none & $+0$ & $+37 \pm 137$ & $+0.442 \pm 7.49$ & $+0.711 \pm 4.9$ & $+32.9 \pm 705$ & $+1.57 \pm 9.43$ \\
-weak & $+0$ & $+17 \pm 36.2$ & $+0.45 \pm 0.397$ & $+0.354 \pm 0.372$ & $+3.01 \pm 42.3$ & $+3.63 \pm 3.1$ \\
-standard & $+0$ & $+13 \pm 28.7$ & $+0.425 \pm 0.278$ & $+0.313 \pm 0.286$ & $+3.48 \pm 47$ & $+2.66 \pm 1.87$ \\
-strong & $+0$ & $+6.51 \pm 16.3$ & $+0.108 \pm 0.143$ & $+0.00745 \pm 0.165$ & $+3.32 \pm 41.6$ & $+1.66 \pm 1.8$ \\
-divergent & $+0$ & $+1.85 \pm 5.89$ & $-0.404 \pm 0.16$ & $-0.512 \pm 0.0849$ & $-0.267 \pm 2.75$ & $+1.02 \pm 2.15$ \\
+Stable & $10/10$ & $7/10$ & $10/10$ & $10/10$ & $10/10$ & $10/10$ \\
+\midrule
+none & $+0$ & $+3.94 \pm 4.51$ & $+0.442 \pm 7.49$ & $+0.711 \pm 4.9$ & $+32.9 \pm 705$ & $+1.57 \pm 9.43$ \\
+weak & $+0$ & $+2.02 \pm 1.9$ & $+0.45 \pm 0.397$ & $+0.354 \pm 0.372$ & $+3.01 \pm 42.3$ & $+3.63 \pm 3.1$ \\
+standard & $+0$ & $+1.44 \pm 1.6$ & $+0.425 \pm 0.278$ & $+0.313 \pm 0.286$ & $+3.48 \pm 47$ & $+2.66 \pm 1.87$ \\
+strong & $+0$ & $+0.512 \pm 0.943$ & $+0.108 \pm 0.143$ & $+0.00745 \pm 0.165$ & $+3.32 \pm 41.6$ & $+1.66 \pm 1.8$ \\
+divergent & $+0$ & $-0.156 \pm 0.329$ & $-0.404 \pm 0.16$ & $-0.512 \pm 0.0849$ & $-0.267 \pm 2.75$ & $+1.02 \pm 2.15$ \\
 \bottomrule
 \end{tabular}
 }

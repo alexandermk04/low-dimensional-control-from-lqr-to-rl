@@ -17,6 +17,7 @@ from experiments.figures.aggregate import (
     latest_per_experiment,
 )
 from experiments.figures.style import color_for, new_figure
+from experiments.figures.tables import usable
 
 __all__ = [
     "box_metric",
@@ -167,7 +168,7 @@ def box_metric(
     -------
     matplotlib.axes.Axes
     """
-    stats = aggregate(rows, group_by, metric)
+    stats = aggregate([row for row in rows if usable(row)], group_by, metric)
     keys = _ordered_keys(stats, order)
 
     if color_by is None:

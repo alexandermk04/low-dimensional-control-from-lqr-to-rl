@@ -428,6 +428,22 @@ def setting_table(
         r"\midrule",
     ]
 
+    def seeds(source, column):
+        return {r["seed"] for r in source if r.get(column_by) == column}
+
+    census = {column: (len(seeds(kept, column)), len(seeds(rows, column))) for column in columns}
+    show_census = column_by == "solver" and any(
+        stable != total for stable, total in census.values()
+    )
+    if show_census:
+        lines += [
+            " & ".join(
+                [CENSUS_ROWS[1]]
+                + [f"${census[column][0]}/{census[column][1]}$" for column in columns] * len(metrics)
+            ) + r" \\",
+            r"\midrule",
+        ]
+
     for setting in settings:
         cells = [
             stats[m].get((setting, column)) for m in metrics for column in columns
@@ -462,7 +478,7 @@ def setting_table(
     if caption is None and label is None:
         return tabular
 
-    full_caption = caption
+    full_caption = (caption or "") + (CENSUS_NOTE_STABLE_ONLY if show_census else "")
 
     return "\n".join([
         r"\begin{table}[htbp]",

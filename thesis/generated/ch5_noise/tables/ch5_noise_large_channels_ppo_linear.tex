@@ -1,13 +1,15 @@
 \begin{table}[htbp]
 \centering
-\caption{Linear PPO under each noise channel at intensity \emph{strong}.}
+\caption{Linear PPO under each noise channel at intensity \emph{strong}. Stable counts the seeds whose controller left the plant stable.}
 \label{tab:ch5-noise-large-channels-ppo-linear}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrrr}
 \toprule
 Channel & none & measurement & control & parametric & disturbance & all channels \\
 \midrule
-Suboptimality $S$ & $+37 \pm 137$ & $+6.51 \pm 16.3$ & $+57.4 \pm 201$ & $+3.16 \times 10^{6} \pm 9.84 \times 10^{7}$ & $+8.6 \pm 20$ & $+1.36 \times 10^{4} \pm 2.68 \times 10^{5}$ \\
+Stable & $7/10$ & $7/10$ & $7/10$ & $7/10$ & $7/10$ & $7/10$ \\
+\midrule
+Suboptimality $S$ & $+3.94 \pm 4.51$ & $+0.512 \pm 0.943$ & $+6.42 \pm 6.07$ & $+1.37 \times 10^{3} \pm 1.44 \times 10^{4}$ & $+1.76 \pm 1.33$ & $+487 \pm 7.1 \times 10^{3}$ \\
 \bottomrule
 \end{tabular}
 }

@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+\centering
+\caption{Median and worst test episode of the suboptimality $S$ under \emph{large} inflation and parametric uncertainty of increasing intensity, over all episodes of all seeds.}
+\label{tab:ch5-noise-large-parametric-worst}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrrrr}
+\toprule
+ & \multicolumn{4}{c}{Median} & \multicolumn{4}{c}{Worst episode} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+Solver & \emph{weak} & \emph{standard} & \emph{strong} & \emph{divergent} & \emph{weak} & \emph{standard} & \emph{strong} & \emph{divergent} \\
+\midrule
+Linear PPO & $+2.5$ & $+2.7$ & $+3.3$ & $+4.3$ & $+1.5 \times 10^{3}$ & $+1.6 \times 10^{4}$ & $+3 \times 10^{5}$ & $+2.9 \times 10^{6}$ \\
+Bottleneck PPO & $+0.052$ & $+0.07$ & $+0.14$ & $+0.27$ & $+1.2 \times 10^{2}$ & $+2.1 \times 10^{2}$ & $+2.5 \times 10^{6}$ & $+3.4 \times 10^{7}$ \\
+State encoder + PPO & $+0.13$ & $+0.15$ & $+0.23$ & $+0.37$ & $+84$ & $+1.2 \times 10^{3}$ & $+2.2 \times 10^{6}$ & $+3.1 \times 10^{7}$ \\
+Scalable encoder + PPO & $+0.68$ & $+0.77$ & $+1.1$ & $+1.9$ & $+6 \times 10^{4}$ & $+3.1 \times 10^{5}$ & $+2.9 \times 10^{6}$ & $+1 \times 10^{8}$ \\
+Fully-connected PPO & $+0.29$ & $+0.36$ & $+0.54$ & $+0.89$ & $+2.6 \times 10^{2}$ & $+5.6 \times 10^{4}$ & $+4.9 \times 10^{6}$ & $+6.2 \times 10^{7}$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

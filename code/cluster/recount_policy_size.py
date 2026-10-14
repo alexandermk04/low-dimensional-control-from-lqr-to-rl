@@ -23,6 +23,8 @@ ROOT = Path(settings.EXPERIMENT_ROOT)
 
 KEYS = ("policy_complexity", "policy_complexity_frozen")
 
+SOURCE_KEYS = KEYS + ("J_final",)
+
 
 def recount(directory: Path, payload: dict, presets: dict) -> dict | None:
     """The new counts of one run, or ``None`` if it holds no PPO policy."""
@@ -30,7 +32,7 @@ def recount(directory: Path, payload: dict, presets: dict) -> dict | None:
     if source:
         path = ROOT / source.split("__")[0] / source / "record.json"
         summary = json.loads(path.read_text())["summary"]
-        return {key: summary.get(key) for key in KEYS}
+        return {key: summary.get(key) for key in SOURCE_KEYS}
 
     policy = payload.get("policy") or {}
     if policy.get("kind") != "sb3":
@@ -60,7 +62,7 @@ def main(experiment: str, write: bool) -> None:
         if new is None:
             continue
 
-        old = {key: payload["summary"].get(key) for key in KEYS}
+        old = {key: payload["summary"].get(key) for key in new}
         if old == new:
             continue
 
