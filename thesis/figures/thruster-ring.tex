@@ -1,0 +1,38 @@
+% Schematic of eight thrusters in the camera environment, created with Claude Code
+
+\begin{tikzpicture}[
+        x=1.25cm, y=1.25cm,
+        thruster/.style={draw, fill=blue!25, minimum width=0.34cm, minimum height=0.2cm, inner sep=0pt, line width=0.4pt},
+        idle/.style={thruster, fill=black!10, draw=black!50},
+        axis/.style={dashed, black!40, line width=0.4pt},
+        thrust/.style={-{Stealth[length=1.6mm]}, blue!70!black, line width=0.6pt},
+        effect/.style={-{Stealth[length=1.8mm]}, orange!85!black, line width=1.1pt},
+        lbl/.style={font=\footnotesize},
+    ]
+    \def\R{2.0}
+
+    % rail with the mass
+    \draw[black!60, line width=1.2pt] (-2.6,0) -- (2.6,0);
+    \node[lbl, anchor=south west] at (-2.6,0.05) {rail};
+
+    % thrust axes and thrusters at theta_i = pi i / 8
+    \foreach \i in {0,1,2,3,5,6,7} {
+        \pgfmathsetmacro{\th}{22.5*\i}
+        \draw[axis] (\th:0.95) -- (\th:\R);
+        \node[thruster, rotate=\th] at (\th:\R) {};
+    }
+    \draw[axis] (90:0.95) -- (90:\R);
+    \node[idle] at (90:\R) {};
+    \node[lbl, anchor=south, align=center] at (90:\R+0.15) {$\theta = \pi/2$: no effect on $p$};
+
+    % one thruster, its push and the part along the rail
+    \draw[thrust] (0,0) -- (45:1.1) node[lbl, anchor=south east] {$v_i$};
+    \draw[dotted, line width=0.5pt] (45:1.1) -- ({1.1*cos(45)},0);
+    \draw[effect] (0,0) -- ({1.1*cos(45)},0);
+    \draw[line width=0.4pt] (0.55,0) arc (0:45:0.55);
+    \node[lbl] at (20:0.72) {$\theta_i$};
+    \node[lbl, anchor=north] at ({0.55*cos(45)},-0.05) {$s \cos\theta_i \, v_i$};
+
+    \fill (0,0) circle (0.13);
+    \node[lbl, anchor=south east] at (-0.12,0.08) {mass};
+\end{tikzpicture}

@@ -17,7 +17,7 @@ from experiments.figures.panels import (
     learning_bands,
     trajectory_overlay,
 )
-from experiments.figures.style import figure_dir, save, table_dir
+from experiments.figures.style import figure_dir, new_figure, save, table_dir
 from experiments.figures.tables import metric_table, write_table
 from experiments.store import load_experiment
 
@@ -28,8 +28,54 @@ ORDER = tuple(settings.CH6_SOLVERS)
 # Baseline scorer
 REFERENCE = "oracle_coarse"
 
+# Rows shown above and below the dot
+PREVIEW_HALF_ROWS = 8
+
+
+def observation_preview():
+    """The two stacked frames the policy receives, cropped to the rows around the dot."""
+    import numpy as np
+
+    from experiments.registry import _pixel_setup
+    from lqr_base.thruster_ring import ThrusterOraclePolicy
+    from reinforcement_learning.pixel_env import build_pixel_env
+    from seeding import sub_seed
+
+    K, _, horizon, _ = _pixel_setup(None)
+    env = build_pixel_env(sub_seed(0, "pixel-preview"), horizon=horizon)
+    scene = env.config.scene
+
+    # Largest shift between the two frames
+    oracle = ThrusterOraclePolicy(K, env.c)
+    observation, info = env.reset()
+    shown, largest = observation, 0.0
+    for _ in range(horizon):
+        previous = info["state"][0]
+        observation, _, _, _, info = env.step(oracle(info["state"]))
+        if abs(info["state"][0] - previous) > largest:
+            shown, largest = observation, abs(info["state"][0] - previous)
+
+    middle = scene.height // 2
+    rows = slice(middle - PREVIEW_HALF_ROWS, middle + PREVIEW_HALF_ROWS + 1)
+    half_height = PREVIEW_HALF_ROWS * scene.metres_per_pixel
+
+    figure, axes = new_figure(width=0.48, aspect=0.5, nrows=2, sharex=True)
+    for ax, frame, label in zip(axes, shown, (r"$k-1$", r"$k$")):
+        ax.imshow(frame[rows], cmap="gray", vmin=0, vmax=255, interpolation="nearest",
+                  extent=(-scene.span, scene.span, -half_height, half_height))
+        ax.set_yticks([])
+        ax.grid(False)
+        ax.set_ylabel(label, rotation=0, labelpad=12, va="center")
+    axes[0].tick_params(bottom=False)
+    axes[-1].set_xticks([-scene.span, 0.0, scene.span])
+    axes[-1].set_xlabel(r"position $p$ in $\mathrm{m}$")
+
+    save(figure, "pixel_observation", EXPERIMENT)
+
 
 def main():
+    observation_preview()
+
     records = latest_per_experiment(load_experiment(EXPERIMENT))
     rows = with_suboptimality(tidy(records), reference=REFERENCE, by=("seed",))
 
