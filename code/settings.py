@@ -494,7 +494,10 @@ SIZE_HYPERPARAMS = {
         "pixel": {"learning_rate": 7e-07},
     },
     "ppo_fc_extractor": {
-        "pixel": {"learning_rate": 7e-07}, # TODO: for now placeholder
+        "small": {"learning_rate": 3e-05},
+        "medium": {"learning_rate": 1.3e-05},
+        "large": {"learning_rate": 6.7e-06},
+        "pixel": {"learning_rate": 7e-07},
     },
 }
 
