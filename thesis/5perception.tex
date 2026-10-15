@@ -26,7 +26,7 @@ as it was only used to compare with LQR approaches before.
 
 Due to computational complexity and time restrictions, we reduced the training steps to $10^{7}$ and
 did not run experiments to determine the optimal learning rate here. Instead, we used the optimal
-learning rate for \emph{large}, and scaled it up via
+learning rate for \emph{large}, and scaled it via
 \begin{equation}
     \label{eq:pixel-learning-rate}
     \eta_0^{\mathrm{pixel}}
@@ -71,11 +71,13 @@ an example of such an image.
 
 But not only the input is high-dimensional compared to the actual state. We also modify the way
 our mass is actuated. We also replace the single actuator with $256$ thrusters, distributed equally around
-a half circle, so thruster $i$ sits at an angle $\theta_i = \pi i / 256$. Each thruster can actuate in the
+a half circle, so thruster $i \in \{0, \dots, 255\}$ sits at an angle $\theta_i = \pi i / 256$. Each thruster can actuate in the
 range $v_i \in [-1, 1]$, however, due to the angle, only $s\cos\theta_i$ effective acceleration is produced on
-the mass, where $s$ is a scaling factor.
-\footnote{We choose $s$ such that $1.5$ times the maximum acceleration demanded by our optimal controller can
-be reached without clipping. Here this is $26\,\mathrm{m/s^2}$, so $s = 26/128$.}
+the mass, where $s$ is a scaling factor.%
+\footnote{The most energy-efficient and thus cheapest way to produce an acceleration $a$ is the least-norm allocation, which
+uses the thrusters based on their output effectiveness $v_i = a\cos\theta_i/(128 \cdot s)$, where $128 = \sum_i \cos^2\theta_i$.
+For the horizontal, and thus most effective thruster this is $a = 128 \cdot s$. We choose $s$ here such that $1.5$ times the maximum acceleration demanded
+by our optimal controller can be reached without clipping, which is $26\,\mathrm{m/s^2}$, so $s = 26/128$.}
 
 This leads to some thrusters being more effective than others, while all are charged for the commanded output,
 so some energy might be lost. For example, the only vertically acting thruster $\theta = \pi/2$ cannot
@@ -132,10 +134,10 @@ $\alpha$ is the inverse of the time between two agent actions. For the weighting
 prior loss terms, we use the combination suggested for similar tasks in~\cite[Tab.~I]{Jonschkowski2017PVE}, and thus
 exclude the controllability prior. For the training process we further follow the one proposed in~\cite[Sec.~III-C]{Jonschkowski2017PVE}.
 For details on how exactly the total loss function is constructed, we refer the reader to the original paper~\cite{Jonschkowski2017PVE}.
-We train this extractor with data of $20\,000$ environment steps, which is split into $741$ episodes of $800$ environment steps,
-which at our action repeat corresponds to around $27$ agent actions. Similar to before, we use $K_0$ acting on the true
-state in $70\,\%$ and random actuation in $30\,\%$ of the time, before freezing the extractor's weights and using
-it in front of our PPO construct (\cref{sec:ppo-variants}).
+We train this extractor with data of $20\,000$ agent steps, which is split into episodes of $810$ environment steps,
+which at our action repeat corresponds to $27$ agent actions. Similar to before, we use $K_0$ acting on the true
+state in $70\,\%$ with least-norm allocation through the thrusters and random, uniformly distributed actuation in $30\,\%$ of the time,
+before freezing the extractor's weights and using it in front of our PPO construct (\cref{sec:ppo-variants}).
 
 Scalable encoder + PPO is pretrained with a similar data split for this setting.
 
@@ -147,16 +149,24 @@ Scalable encoder + PPO is pretrained with a similar data split for this setting.
 
 For the experiments here, we use the optimal gain under our action repeat (\cref{subsec:pixelated-environment})
 as our reference and compare it with different approaches,
-which here consist of Pixels + PPO (equivalent to Fully-connected PPO), Scalable encoder + PPO, Bottleneck PPO as well as our
+which here consist of Pixels + PPO (equivalent to FC-Extractor + PPO), Scalable encoder + PPO, Bottleneck PPO as well as our
 Position-Velocity Encoder + PPO (\cref{subsec:pve}). As they reuse the already introduced architectures,
-they will not be repeated here. The optimal controller for this setup actually does not
+they will not be repeated here. The only difference is that we increase the latent dimension of Scalable encoder + PPO
+to $5$, which is the same as Position-Velocity Encoder + PPO, after initial results showed a weak performance with $2$.
+The optimal controller for this setup actually does not
 act based on the perception, but instead has access to the real state, while the output
-remains our thrusters and thus gives us the actual optimal cost.
+remains our thrusters, for which it uses the least-norm allocation.
+It is therefore optimal
+for this setup, and serves as our comparison. Given the knowledge it has about the true
+state, we call it ``Oracle (true state)'' in our visualizations.
 For the other approaches, except for Position-Velocity Encoder + PPO, which takes images
 as an input, we flatten the images, such that they receive an $18\,432$-dimensional input vector.
 The learning rates we use here are identical to the ones extrapolated in \cref{tab:pixel-learning-rates}.
+As we did not use Position-Velocity Encoder + PPO (\cref{subsec:pve}) before, we copy the learning rate from Scalable encoder + PPO for it, as it is the
+most similar (both use robotic priors).
 
-However, we also modify some of our PPO parameters for this setting. Specifically, we
+However, we also modify some of our PPO parameters for this setting. Not mentioned parameters
+equate to their \cref{chap:inflation} values. Specifically, we
 \begin{itemize}
     \item set $\gamma = 0.97$, which gives us around $1/(1-\gamma) \approx 33$ effective agent steps.
     Multiplying this with our agent action interval of $0.3\,\mathrm{s}$ gives us roughly $10\,\mathrm{s}$
@@ -164,7 +174,7 @@ However, we also modify some of our PPO parameters for this setting. Specificall
     \item raise the reward clipping threshold from $10$ to $\infty$, so the reward is never clipped;
     \item charge the input cost on the command before clipping, though only enact the clipped command;
     \item end the episode with a penalty if the mass exits the observable area. The penalty is set to twice the
-    cost that a mass sitting at the edge of the screen would occur until the end of the episode.
+    cost that a mass sitting at the edge of the screen would incur until the end of the episode.
 \end{itemize}
 The last three points relate a bit to each other, and were changes that were implemented after initial
 test failures. Here, we noticed that by charging the cost only after clipping, the controller
@@ -173,6 +183,11 @@ command inputs, but could never return from this instability, as every action ab
 same effect. Also, clipping the reward like in \cref{chap:inflation} had the side effect that leaving the
 screen became an economically reasonable choice, so the model chose this behavior more often. Combined with
 this, we started charging the penalty, which promotes staying on screen even more.
+
+We also need to slightly adapt our test protocol (\cref{subsec:protocol}) to this new environment.
+To maintain similarity to the previous experiments, we choose $27$ agent steps per episode during training,
+corresponding to $810$ environment steps. The overall training step budget is chosen as $10^{7}$ agent steps.
+For one test episode we use $\lceil 2000/30 \rceil = 67$ agent steps, corresponding to $2010$ environment steps.
 
 \subsection{Results}
 \label{subsec:visual-inputs-results}
@@ -202,8 +217,7 @@ so this noise does not affect it. Still, the chosen values are found in the appe
 \end{figure}
 
 We now run the trained controllers from \cref{sec:visual-inputs} on
-noise-affected trajectories under different strengths according to our test protocol (\cref{subsec:protocol}).
-Here, as we leave the rollout length the same, we observe $67$ agent steps during the $2000$ environment steps.
+noise-affected trajectories at different strengths under the test protocol introduced in \cref{subsec:visual-inputs-setting}.
 To make the comparison under each noise channel equal, we exclude our optimal controller
 baseline, as it does not observe the measurement noise like the other controllers do. So
 instead we calculate the cost ratio for each controller in comparison to its clean
