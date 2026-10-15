@@ -941,10 +941,27 @@ the same noise. Overall this yields
 where $S = 0$ means that the trained controller performed as well
 as our baseline and $S = 0.1$ that it did $10\,\%$ worse.
 
-Note that this metric can indeed be negative. $K^{*}$ is only optimal for
-the nominal problem (\cref{subsec:lqr}), which has exact state feedback on
-known matrices and no external disturbance. These conditions do not
-hold, unless no noise is applied, which is only true if $c=\varnothing$.
+\subsubsection{Robustness to Noise}
+\label{subsubsec:robustness-metric}
+
+Our second metric relates to robustness, and helps us evaluate how much a controller is influenced
+by a noise condition $c$. It is the ratio of the test cost under noise $c$ to the test cost under
+the clean loop. Formalized, this gives
+\begin{equation}
+    \label{eq:clean-ratio}
+    \kappa^{(s)}(K; c) \coloneqq \frac{\hat{J}^{(s)}_T(K; c)}{\hat{J}^{(s)}_T(K; \varnothing)} ,
+\end{equation}
+where $\hat{J}^{(s)}_T$ is \eqref{eq:empirical-cost} containing only the episodes of seed $s$.
+Thus, the closer $\kappa^{(s)}(K; c)$ is to $1$, the more robust a controller is. We can also
+compare this to the performance of the optimal gain, which we calibrated in \eqref{eq:noise-calibration}
+to specific ratios, by taking the ratio of the costs averaged over all seeds,
+\begin{equation}
+    \label{eq:clean-ratio-pooled}
+    \kappa(K; c) \coloneqq \frac{\hat{J}_T(K; c)}{\hat{J}_T(K; \varnothing)} ,
+\end{equation}
+for which $\kappa_{\ell} = \kappa(K^{*}; c_{\ell})$ holds by \eqref{eq:noise-calibration}.
+As a result, this gives us the possibility to compare whether a specific trained
+controller is more or less robust than the baseline, or any other controller.
 
 \subsubsection{The Size of a Policy}
 \label{subsubsec:policy-size}

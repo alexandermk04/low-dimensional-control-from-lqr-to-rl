@@ -220,7 +220,7 @@ We now run the trained controllers from \cref{sec:visual-inputs} on
 noise-affected trajectories at different strengths under the test protocol introduced in \cref{subsec:visual-inputs-setting}.
 To make the comparison under each noise channel equal, we exclude our optimal controller
 baseline, as it does not observe the measurement noise like the other controllers do. So
-instead we calculate the cost ratio for each controller in comparison to its clean
+instead we use the cost ratio \eqref{eq:clean-ratio} of each controller to its clean
 run from \cref{sec:visual-inputs}.
 
 \subsection{Results}
