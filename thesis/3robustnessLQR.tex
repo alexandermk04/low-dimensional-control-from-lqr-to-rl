@@ -21,7 +21,7 @@ convention as we do, we can implement the loop directly in the following way.
 % Def mb_pg
 Starting from an initial, stabilizing gain $K_0 \in \mathcal{K}$ and the second moment $\Sigma_0$ of the initial
 state distribution, every iteration $j$ first solves the discrete Lyapunov equation \eqref{eq:lyapunov}
-for $P_{K_j}$ using the implementation from SciPy~\needcite{scipy}. The state correlation matrix
+for $P_{K_j}$ using the implementation from SciPy~\cite{SciPy2026DiscLyapunov}. The state correlation matrix
 $\Sigma_{K_j}$ then follows from solving a second Lyapunov equation,
 \begin{equation}
     \label{eq:state-correlation}
@@ -258,7 +258,7 @@ onto the past and future inputs and the past outputs''~\cite[Sec.~3]{VanOversche
 ``a function of the system matrices and the input-output block Hankel matrices''~\cite[Sec.~3]{VanOverschee1994N4SID}, which
 allows us to reconstruct exactly that from the results. Important are further the assumptions that the systems are
 observable (\cref{def:observability}) and controllable (\cref{def:controllability}). For simplicity, we rely on the
-implementation of N4SID from SIPPY~\needcite{TODO}, which we integrate into our own setup. This implementation allows us
+implementation of N4SID from SIPPY~\cite{SIPPY2026N4SID}, which we integrate into our own setup. This implementation allows us
 to recover the system matrices $A$, $B$ and $C$, whereas the cost matrices $\tilde{Q}$ and $\tilde{R}$ are choices of the controller design
 (\cref{subsec:protocol}), and thus already known beforehand.
 
