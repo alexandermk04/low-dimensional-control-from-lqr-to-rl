@@ -26,23 +26,30 @@
 % It does not matter whether you use ``I'' or ``We''. It does matter, however, that you use the same pronoun consistently.
 
 % My part
-Over the recent years, the field of robotics has seen rapid advancements in the capabilities of neural-network-based implementations.
-An increase in global compute power\needcite{TODO compute}, fueled by the so-called ``AI race'' of LLMs, has allowed researchers around the world to create even more extensive model architectures for more complex use cases~\needcite{TODO llm example}.
-Transferring these structuresto physical bodies requires more space and on-device compute, often the limiting factors of embodiment. 
-To bridge this gap between powerful models and limited resources, the approach of cheap design has become more common.
-As mentioned by N.~Ay\needcite{TODO ay geometric}, the core idea is to maintain an ``embodied universal approximator'', while reducing the overall complexity of the model, which can be defined based on the specific case.
-The most straightforward approach is inducing the underlying physical dynamics of the embodiment into the architecture, which is often of lower dimensionality than the actual sensors and actuators.
-Recent papers focusing on algorithms for the LQR\needcite{TODO lqr}, apply this approach by offering implementations for enforcing low-rank controllers, leading to lower complexity in relation to parameterization.
-Still, this low-dimensional approach has yet to be extended\needcite{TODO extension} to more complex embodiments, and is missing a crucial part required for implementation: Robustness.
-This leaves us with the question: \emph{Is it possible to train a low-dimensional controller for an embodied agent, that is performant yet robust?}
+For a robot, our world is a messy place, consisting of a multitude of variables, all influencing what a correct behavior would
+be at any given moment. Rightfully, newer, larger controller models have equated to better (at least theoretical) performances \needcite{two papers introducing larger architectures}.
+However, when transferring them over from training in a digital environment to an actual embodiment, not only do limitations
+in memory space and energy usage arise \needcite{paper pointing out limitation in embodiments}, but also that the real world behaves slightly differently, which the
+controller needs to be robust against \needcite{Peng2017, Tobin2017Domain}. So ideally, we should
+remove unnecessary parameters, while still maintaining those helping us adapt to variable environments. This leaves us with the question: 
+\emph{Is it possible to train a low-dimensional controller for an embodied agent, that is performant yet robust?}
 
-As robustness is a wide topic, in our case, we use it when referring to sensor- and actuator noise, as well as parametric uncertainties of the underlying model and 
-external disturbances. When talking about performance, we mean reducing cost as much as possible in relation to an optimal controller. In the end, we want to show
-in which cases low-dimensional controllers are a viable alternative, and can thus reduce costs for hardware implementations.
+Inspired by nature, it has been shown that more complex behavior can be expressed by simple control architectures if combined with
+the right embodiment~\cite{McGeer1990Passive, Mueller2017Morphological}. However, finding this simple architecture remains difficult
+as an embodiment might offer a large number of sensors and actuators, which outnumber the dimension governing the underlying dynamics~\cite{TODO, Montufar2015CheapControl}.
+Synergizing these, like in nature~\cite{DAvella2003Combinations}, is thus the goal here.
+And while low-dimensional controllers for embodiment have been studied before \needcite{two papers},
+bringing robustness into the equations remains, to our knowledge, still an unsolved question we aim to contribute to.
 
-To answer our question, we will first explain the core concepts and collect existing approaches for the LQR setting in \cref{chap:background}.
-In \cref{chap:lqr}, we will compare these implementations using the double integrator problem for LQR with respect to general performance, as well as robustness.
-Building on that, we will artificially inflate our inputs and outputs via matrix multiplication in \cref{chap:inflation} and additionally introduce deep RL baseline models into the comparison.
-For \cref{chap:perception}, we will completely move away from LQR, and extend the setting to a perception-based implementation.
-Here we will compare different models with varying parameter complexity in regard to robustness, applying the concepts we learned from our earlier experiments.
-Finally, we will conclude by analyzing whether we indeed achieved our goal of constructing a robust controller, and stating how our approach can be applied to more complex settings.
+To be able to quantify performance and what optimal means, we rely on a very well researched example\needcite{2 paper}: the Linear Quadratic Regulator, which,
+together with some related work, we will introduce in \cref{chap:background}.
+We use the also well known Double Integrator as our environment, and artificially produce higher input and output dimensions via projection for our
+controllers to train on, to simulate overparameterization like mentioned above in \cref{chap:lqr}. Then, we will introduce noise to the environment during testing
+and compare the robustness between them. The next step consists of moving from these simpler, gain matrix based controllers 
+to Proximal Policy Optimization \needcite{Schulman2017Proximal} based Reinforcement Learning approaches (\cref{chap:inflation}), while still
+maintaining our optimal controller from before as the comparison. Robustness evaluations are a part of this again. Finally, we move to an
+example closer to reality in \cref{chap:perception}, by introducing a real simulated environment, still based on the Double Integrator,
+which however will be observed by a camera, and influenced by multiple thrusters, which differ from each other. Again introducing noise
+in a second step here, this allows us to understand the behavior of low-dimensional controllers better, as we slowly increase the complexity
+of the setup throughout. We end this thesis by discussing our finding, pointing out limitations of our work, before outlining possible
+future directions.
