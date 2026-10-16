@@ -1,4 +1,5 @@
-\chapter{Introduction}\label{chap:introduction}
+\chapter{Introduction}
+\label{chap:introduction}
 
 
 % The introduction describes the problem, why it is important, the main
@@ -27,29 +28,29 @@
 
 % My part
 For a robot, our world is a messy place, consisting of a multitude of variables, all influencing what a correct behavior would
-be at any given moment. Rightfully, newer, larger controller models have equated to better (at least theoretical) performances \needcite{two papers introducing larger architectures}.
+be at any given moment. Rightfully, newer, larger controller models have equated to better (at least theoretical) performance~\cite{Nauman2024Bigger,Lee2025SimBa,Dehghani2023Scaling}.
 However, when transferring them over from training in a digital environment to an actual embodiment, not only do limitations
-in memory space and energy usage arise \needcite{paper pointing out limitation in embodiments}, but also that the real world behaves slightly differently, which the
-controller needs to be robust against \needcite{Peng2017, Tobin2017Domain}. So ideally, we should
-remove unnecessary parameters, while still maintaining those helping us adapt to variable environments. This leaves us with the question: 
+in memory space and energy usage arise~\cite[p.~7]{Roy2021MachineLearning}, but the real world also behaves slightly differently, which the
+controller needs to be robust against~\cite{Tobin2017Domain,Peng2018SimToReal}. So ideally, we should
+remove unnecessary parameters, while still maintaining those helping us adapt to variable environments. This leaves us with the question:
 \emph{Is it possible to train a low-dimensional controller for an embodied agent, that is performant yet robust?}
 
 Inspired by nature, it has been shown that more complex behavior can be expressed by simple control architectures if combined with
-the right embodiment~\cite{McGeer1990Passive, Mueller2017Morphological}. However, finding this simple architecture remains difficult
-as an embodiment might offer a large number of sensors and actuators, which outnumber the dimension governing the underlying dynamics~\cite{TODO, Montufar2015CheapControl}.
+the right embodiment~\cite{McGeer1990Passive,Mueller2017Morphological}. However, finding this simple architecture remains difficult
+as an embodiment might offer a large number of sensors and actuators, which outnumber the dimension governing the underlying dynamics~\cite{Todorov2002Optimal,Lesort2018State}.
 Synergizing these, like in nature~\cite{DAvella2003Combinations}, is thus the goal here.
-And while low-dimensional controllers for embodiment have been studied before \needcite{two papers},
+And while low-dimensional controllers for embodiment have been studied before~\cite{Montufar2015CheapControl,Datar2025Universal},
 bringing robustness into the equations remains, to our knowledge, still an unsolved question we aim to contribute to.
 
-To be able to quantify performance and what optimal means, we rely on a very well researched example\needcite{2 paper}: the Linear Quadratic Regulator, which,
+To be able to quantify performance and what optimal means, we rely on a very well-researched example~\cite{Kalman1960Contributions,Hu2023Toward}: the linear quadratic regulator, which,
 together with some related work, we will introduce in \cref{chap:background}.
-We use the also well known Double Integrator as our environment, and artificially produce higher input and output dimensions via projection for our
+We use the also well-known double integrator as our environment, and artificially produce higher input and output dimensions via projection for our
 controllers to train on, to simulate overparameterization like mentioned above in \cref{chap:lqr}. Then, we will introduce noise to the environment during testing
-and compare the robustness between them. The next step consists of moving from these simpler, gain matrix based controllers 
-to Proximal Policy Optimization \needcite{Schulman2017Proximal} based Reinforcement Learning approaches (\cref{chap:inflation}), while still
+and compare the robustness between them. The next step consists of moving from these simpler, gain-matrix-based controllers
+to reinforcement learning (RL) approaches based on proximal policy optimization~\cite{Schulman2017Proximal} (\cref{chap:inflation}), while still
 maintaining our optimal controller from before as the comparison. Robustness evaluations are a part of this again. Finally, we move to an
-example closer to reality in \cref{chap:perception}, by introducing a real simulated environment, still based on the Double Integrator,
+example closer to reality in \cref{chap:perception}, by introducing a real simulated environment, still based on the double integrator,
 which however will be observed by a camera, and influenced by multiple thrusters, which differ from each other. Again introducing noise
 in a second step here, this allows us to understand the behavior of low-dimensional controllers better, as we slowly increase the complexity
-of the setup throughout. We end this thesis by discussing our finding, pointing out limitations of our work, before outlining possible
+of the setup throughout. We end this thesis in \cref{chap:conclusion} by discussing our findings, pointing out limitations of our work, before outlining possible
 future directions.
