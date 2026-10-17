@@ -3,21 +3,21 @@
 \caption{PPO variants under \emph{large} inflation, without noise. Identified counts the seeds a model was obtained from and stable those whose controller left the plant stable.}
 \label{tab:ch5-inflation-large}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrrrrrr}
 \toprule
-Solver & Baseline & Linear PPO & Bottleneck PPO & State encoder + PPO & Scalable encoder + PPO & Fully-connected PPO \\
+Solver & Baseline & Linear PPO & Bottleneck PPO & State encoder + PPO & Scalable encoder + PPO & Fully-connected PPO & FC-Extractor + PPO \\
 \midrule
-Identified & $10/10$ & $10/10$ & $10/10$ & $10/10$ & $10/10$ & $10/10$ \\
-Stable & $10/10$ & $7/10$ & $10/10$ & $10/10$ & $10/10$ & $10/10$ \\
+Identified & $10/10$ & $10/10$ & $10/10$ & $10/10$ & $10/10$ & $10/10$ & $10/10$ \\
+Stable & $10/10$ & $7/10$ & $10/10$ & $10/10$ & $10/10$ & $10/10$ & $10/10$ \\
 \midrule
-True cost $J$ & $5848 \pm 1.068 \times 10^{-11}$ & $3.851 \times 10^{4} \pm 3.714 \times 10^{4}$ & $6174 \pm 580.7$ & $6361 \pm 548$ & $1.023 \times 10^{4} \pm 6297$ & $6862 \pm 656.8$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0$ & $5.58 \pm 6.35$ & $0.041 \pm 0.00804$ & $0.0734 \pm 0.0205$ & $0.795 \pm 1.3$ & $0.157 \pm 0.0217$ \\
-Suboptimality $S$ & $+0$ & $+3.94 \pm 4.51$ & $+0.442 \pm 7.49$ & $+0.711 \pm 4.9$ & $+32.9 \pm 705$ & $+1.57 \pm 9.43$ \\
-Iterations & $1$ & $1202$ & $1202$ & $1201$ & $1201$ & $1202$ \\
-Env.\ steps to convergence & $0$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ \\
-Env.\ steps to best policy & $0$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ \\
-Policy parameters & $301$ & $20000$ & $10852$ & $10852$ & $14820$ & $23524$ \\
-Gain rank & $1.0$ & $100.0$ & $-1.0$ & $-1.0$ & $-1.0$ & $-1.0$ \\
+True cost $J$ & $5848 \pm 1.068 \times 10^{-11}$ & $3.851 \times 10^{4} \pm 3.714 \times 10^{4}$ & $6174 \pm 580.7$ & $6361 \pm 548$ & $1.023 \times 10^{4} \pm 6297$ & $6862 \pm 656.8$ & $6211 \pm 583.2$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0$ & $5.58 \pm 6.35$ & $0.041 \pm 0.00804$ & $0.0734 \pm 0.0205$ & $0.795 \pm 1.3$ & $0.157 \pm 0.0217$ & $0.0472 \pm 0.00926$ \\
+Suboptimality $S$ & $+0$ & $+3.94 \pm 4.51$ & $+0.442 \pm 7.49$ & $+0.711 \pm 4.9$ & $+32.9 \pm 705$ & $+1.57 \pm 9.43$ & $+0.488 \pm 6.94$ \\
+Iterations & $1$ & $1202$ & $1202$ & $1201$ & $1201$ & $1202$ & $1202$ \\
+Env.\ steps to convergence & $0$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ \\
+Env.\ steps to best policy & $0$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ \\
+Policy parameters & $301$ & $20000$ & $10852$ & $10852$ & $14820$ & $23524$ & $327140$ \\
+Gain rank & $1.0$ & $100.0$ & $-1.0$ & $-1.0$ & $-1.0$ & $-1.0$ & $-1.0$ \\
 \bottomrule
 \end{tabular}
 }

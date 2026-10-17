@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\caption{FC-Extractor + PPO under each noise channel at intensity \emph{strong}.}
+\label{tab:ch5-noise-large-channels-ppo-fc-extractor}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Channel & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Relative degradation $\kappa$ & $1$ & $2.97 \pm 0.321$ & $2.28 \pm 0.048$ & $1.21 \times 10^{5} \pm 3.04 \times 10^{5}$ & $2.78 \pm 0.189$ & $5.32 \times 10^{4} \pm 1.25 \times 10^{5}$ \\
+Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ & $0$ & $2.06 \pm 0.293$ & $1.35 \pm 0.173$ & $1.21 \times 10^{5} \pm 3 \times 10^{5}$ & $1.86 \pm 0.0686$ & $5.04 \times 10^{4} \pm 1.18 \times 10^{5}$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
