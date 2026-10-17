@@ -11,9 +11,9 @@ from experiments.figures.aggregate import (
     label_for,
     latest_per_experiment,
     tidy,
-    with_suboptimality,
+    with_degradation,
 )
-from experiments.figures.panels import trajectory_overlay, box_metric
+from experiments.figures.panels import box_metric, degradation_curves, trajectory_overlay
 from experiments.figures.style import figure_dir, save, save_variants, table_dir
 from experiments.figures.tables import METRIC_ROWS, metric_table, setting_table, write_table
 from experiments.settings_guard import require_choice
@@ -28,8 +28,9 @@ SET_BY = "python -m experiments.ch4_noise"
 
 
 def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=None,
-           dt: float = 0.01, metric: str = "subopt", scorer=with_suboptimality,
-           log: bool | str = "symlog"):
+           dt: float = 0.01, metric: str = "relative_degradation", scorer=with_degradation,
+           log: bool | str = True, calibrated=tuple(settings.NOISE_CHANNELS),
+           extra_metrics=("absolute_degradation",)):
     """Draw the noise figures and tables of one chapter.
 
     Parameters
@@ -52,6 +53,11 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
         Adds ``metric`` to the tidy rows.
     log : bool or str, optional
         Axis scaling of the box plots.
+    calibrated : sequence of str, optional
+        Channels whose intensities were calibrated on the optimal gain. Only
+        drawn as a reference when the baseline is not among ``solvers``.
+    extra_metrics : sequence of str, optional
+        Columns tabulated next to ``metric``.
     """
     level = require_choice(
         settings.CHOSEN_NOISE_LEVEL, "CHOSEN_NOISE_LEVEL",
@@ -72,7 +78,8 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
             return
 
     rows = scorer(tidy(records))
-    name = METRIC_ROWS[metric][0]
+    table_metrics = (metric, *extra_metrics)
+    name = " and ".join(METRIC_ROWS[m][0] for m in table_metrics)
 
     level_order = tuple(settings.NOISE_LEVELS)
     channel_order = ("clean",) + tuple(settings.NOISE_CHANNELS) + ("all",)
@@ -108,6 +115,27 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
 
         save_variants(draw, f"{prefix}_{metric}_{stem}", experiment)
 
+    # Degradation over the intensities
+    for cell_channel in channel_order[1:]:
+        subset = [r for r in rows if r.get("channel") in (cell_channel, "clean")]
+        if not any(r.get("channel") == cell_channel for r in subset):
+            continue
+
+        reference = (
+            settings.NOISE_COST_TARGETS
+            if "baseline" not in solvers and cell_channel in calibrated else None
+        )
+        for absolute, kind in ((False, "tradeoff_relative"), (True, "tradeoff_absolute")):
+            save_variants(
+                lambda subset=subset, reference=reference, absolute=absolute, **size:
+                degradation_curves(
+                    subset, solvers, level_order, reference=reference,
+                    absolute=absolute, **size,
+                ),
+                f"{prefix}_{kind}_{cell_channel}",
+                experiment,
+            )
+
     reference = "baseline" if "baseline" in solvers else solvers[0]
     reference_records = [r for r in records if r.solver == reference]
 
@@ -137,7 +165,7 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
         setting_table(
             [r for r in rows if r.get("channel") in (channel, "clean")],
             "level",
-            metric=metric,
+            metric=table_metrics,
             row_order=level_order,
             column_order=solvers,
             row_header="Intensity",
@@ -152,7 +180,7 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
         setting_table(
             [r for r in rows if r.get("level") in (level, "none")],
             "channel",
-            metric=metric,
+            metric=table_metrics,
             row_order=channel_order,
             column_order=solvers,
             row_header="Channel",
@@ -166,7 +194,6 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
     )
 
     # Solvers by channels, one table per intensity
-    trained = [s for s in solvers if s != "baseline"]
     for cell_level in level_order:
         if cell_level == "none":
             continue
@@ -175,18 +202,16 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
             setting_table(
                 [
                     r for r in rows
-                    if r["solver"] in trained and r.get("level") in (cell_level, "none")
+                    if r["solver"] in solvers and r.get("level") in (cell_level, "none")
                 ],
                 "solver",
-                metric=metric,
+                metric=table_metrics,
                 column_by="channel",
-                row_order=trained,
+                row_order=solvers,
                 column_order=channel_order,
                 row_header="Solver",
-                fmt="{:+.2g}",
-                scale=1e3,
                 caption=(
-                    f"{name} (in $10^{{-3}}$){inflation} each noise channel at "
+                    f"{name}{inflation} each noise channel at "
                     f"intensity \\emph{{{cell_level}}}."
                 ),
                 label=f"tab:{slug}-solver-channels-{cell_level}",
@@ -208,7 +233,7 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
             metric_table(
                 [r for r in solver_rows if r.get("channel") in (channel, "clean")],
                 "level",
-                metrics=(metric,),
+                metrics=table_metrics,
                 column_order=level_order,
                 column_header="Intensity",
                 caption=f"{label_for(solver)} under {channel} noise of increasing intensity.",
@@ -223,7 +248,7 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
             metric_table(
                 [r for r in solver_rows if r.get("level") in (level, "none")],
                 "channel",
-                metrics=(metric,),
+                metrics=table_metrics,
                 column_order=channel_order,
                 column_header="Channel",
                 caption=(
@@ -256,7 +281,7 @@ def render_sizes(experiment: str, prefix: str, solvers, sizes):
     slug = prefix.replace("_", "-")
 
     records = latest_per_experiment(load_experiment(experiment))
-    rows = with_suboptimality(tidy(records))
+    rows = with_degradation(tidy(records), by=("solver", "seed", "size"))
 
     for (cell_channel, cell_level), subset in group(rows, ("channel", "level")).items():
         stem = "clean" if cell_channel == "clean" else f"{cell_channel}-{cell_level}"
@@ -269,10 +294,14 @@ def render_sizes(experiment: str, prefix: str, solvers, sizes):
             setting_table(
                 subset,
                 "size",
+                metric=("relative_degradation", "absolute_degradation"),
                 row_order=sizes,
                 column_order=solvers,
                 row_header="Inflation",
-                caption=f"Suboptimality $S$ per inflation size {noise}.",
+                caption=(
+                    f"{METRIC_ROWS['relative_degradation'][0]} and {METRIC_ROWS['absolute_degradation'][0]} "
+                    f"per inflation size {noise}."
+                ),
                 label=f"tab:{slug}-sizes-{stem}",
             ),
             f"{prefix}_sizes_{stem}",

@@ -79,21 +79,24 @@ def main():
     records = latest_per_experiment(load_experiment(EXPERIMENT))
     rows = with_suboptimality(tidy(records), reference=REFERENCE, by=("seed",))
 
+    learned = [r for r in rows if r["solver"] != REFERENCE]
+    learned_records = [r for r in records if r.solver != REFERENCE]
+
     ax = box_metric(
-        rows, "solver", "training_subopt_final", order=ORDER, log="symlog"
+        learned, "solver", "training_subopt_final", order=ORDER, log="symlog"
     )
     save(ax.figure, "ch6_perception_training_subopt", EXPERIMENT)
 
-    ax = learning_bands(records, "solver", x="env_steps", order=ORDER)
+    ax = learning_bands(learned_records, "solver", x="env_steps", order=ORDER)
     save(ax.figure, "ch6_perception_curves_steps", EXPERIMENT)
 
     axes = trajectory_overlay(records, "solver", dt=0.01, order=ORDER)
     save(axes[0].figure, "ch6_perception_trajectories", EXPERIMENT)
 
-    ax = box_metric(rows, "solver", "subopt", order=ORDER, log="symlog")
+    ax = box_metric(learned, "solver", "subopt", order=ORDER, log="symlog")
     save(ax.figure, "ch6_perception_subopt", EXPERIMENT)
 
-    ax = complexity_bars(rows, "solver", order=ORDER)
+    ax = complexity_bars(learned, "solver", order=ORDER)
     save(ax.figure, "ch6_perception_complexity", EXPERIMENT)
 
     for metric in ("r2_position", "r2_velocity"):

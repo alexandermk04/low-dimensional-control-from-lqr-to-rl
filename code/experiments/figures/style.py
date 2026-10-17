@@ -43,6 +43,31 @@ COLORS = (
 # The optimum should read the same in every figure it appears in.
 BASELINE_COLOR = "#000000"
 
+# Fixed colour per solver
+SOLVER_COLORS = {
+    "baseline": BASELINE_COLOR,
+    "oracle_coarse": BASELINE_COLOR,
+    # Chapter 3, true and identified model
+    "mb_pg": COLORS[0],
+    "mb_est": COLORS[0],
+    "ce_dare": COLORS[1],
+    "spi": COLORS[2],
+    "spi_est": COLORS[2],
+    "mf_npg": COLORS[3],
+    "spi_mf": COLORS[4],
+    # Chapter 4 pixel versions in chapter 5
+    "ppo_linear": COLORS[0],
+    "ppo_bottleneck": COLORS[1],
+    "ppo_pixel_ortho": COLORS[1],
+    "ppo_encoder": COLORS[2],
+    "ppo_pixel_posvel": COLORS[2],
+    "ppo_encoder_scalable": COLORS[3],
+    "ppo_pixel_estimator": COLORS[3],
+    "ppo_mlp": COLORS[4],
+    "ppo_fc_extractor": COLORS[5],
+    "ppo_pixel_fc": COLORS[5],
+}
+
 plt.rcParams.update({
     "pgf.texsystem": "pdflatex",
     "pgf.rcfonts": False,
@@ -84,17 +109,19 @@ def figure_size(width: float = 1.0, aspect: float = 0.62) -> tuple[float, float]
 
 
 def color_for(index: int, name=None) -> str:
-    """Colour of the ``index``-th group, with the baseline always black.
+    """Colour of a group: a solver's own colour, otherwise the ``index``-th.
 
     Parameters
     ----------
     index : int
-        Position of the group.
+        Position of the group, used when ``name`` is not a solver.
     name : Any, optional
-        The group's key. Only used to recognise the baseline.
+        The group's key.
     """
     if name is not None and str(name).startswith("baseline"):
         return BASELINE_COLOR
+    if str(name) in SOLVER_COLORS:
+        return SOLVER_COLORS[str(name)]
     return COLORS[index % len(COLORS)]
 
 

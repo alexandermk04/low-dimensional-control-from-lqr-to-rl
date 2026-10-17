@@ -12,7 +12,7 @@ from experiments.figures.aggregate import (
     label_for,
     latest_per_experiment,
     tidy,
-    with_suboptimality,
+    with_degradation,
 )
 from experiments.figures.ch4_noise_figures import render
 from experiments.figures.tables import _fit, _math, usable, write_table
@@ -27,7 +27,7 @@ WORST_CASE_CHANNEL = "parametric"
 
 
 def worst_case_table(size: str, channel: str = WORST_CASE_CHANNEL):
-    """Median and worst test episode of :math:`S` per solver and intensity.
+    """Median and worst seed of the relative degradation per solver and intensity.
 
     Parameters
     ----------
@@ -38,15 +38,16 @@ def worst_case_table(size: str, channel: str = WORST_CASE_CHANNEL):
     """
     records = [
         r for r in latest_per_experiment(load_experiment(EXPERIMENT))
-        if r.condition.get("size") == size and r.condition.get("channel") == channel
+        if r.condition.get("size") == size
+        and r.condition.get("channel") in (channel, "clean")
     ]
-    rows = [r for r in with_suboptimality(tidy(records)) if usable(r)]
-    stats = aggregate(rows, ("solver", "level"), "subopt")
+    rows = [r for r in with_degradation(tidy(records)) if usable(r)]
+    stats = aggregate(rows, ("solver", "level"), "relative_degradation")
 
     levels = [lvl for lvl in settings.NOISE_LEVELS if lvl != "none"]
     solvers = [
         s for s in settings.CH5_SOLVERS
-        if s != "baseline" and any((s, lvl) in stats for lvl in levels)
+        if any((s, lvl) in stats for lvl in levels)
     ]
     n = len(levels)
 
@@ -54,12 +55,12 @@ def worst_case_table(size: str, channel: str = WORST_CASE_CHANNEL):
         stat = stats.get((solver, level))
         if stat is None or stat["n"] == 0:
             return r"\multicolumn{1}{c}{--}"
-        return f"${_math(stat[key], '{:+.2g}')}$"
+        return f"${_math(stat[key], '{:.3g}')}$"
 
     lines = [
         r"\begin{tabular}{l" + "r" * (2 * n) + "}",
         r"\toprule",
-        rf" & \multicolumn{{{n}}}{{c}}{{Median}} & \multicolumn{{{n}}}{{c}}{{Worst episode}} \\",
+        rf" & \multicolumn{{{n}}}{{c}}{{Median}} & \multicolumn{{{n}}}{{c}}{{Worst seed}} \\",
         rf"\cmidrule(lr){{2-{1 + n}}}\cmidrule(lr){{{2 + n}-{1 + 2 * n}}}",
         " & ".join(["Solver"] + [rf"\emph{{{lvl}}}" for lvl in levels] * 2) + r" \\",
         r"\midrule",
@@ -74,8 +75,8 @@ def worst_case_table(size: str, channel: str = WORST_CASE_CHANNEL):
 
     noise = "parametric uncertainty" if channel == "parametric" else f"{channel} noise"
     caption = (
-        rf"Median and worst test episode of the suboptimality $S$ under \emph{{{size}}} "
-        rf"inflation and {noise} of increasing intensity, over all episodes of all seeds."
+        rf"Median and worst seed of the relative degradation $\kappa$ under \emph{{{size}}} "
+        rf"inflation and {noise} of increasing intensity."
     )
     write_table(
         "\n".join([

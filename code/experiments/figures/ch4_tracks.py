@@ -39,8 +39,9 @@ def render_size(
     rows = with_suboptimality(tidy(subset), by=("seed", "size"))
     stem = f"{stem_prefix}_{size}"
 
-    # baseline is 0 for suboptimality
+    # Exclude baseline here
     learned = [r for r in rows if r["solver"] != "baseline"]
+    learned_records = [r for r in subset if r.solver != "baseline"]
     ax = box_metric(
         learned, "solver", "training_subopt_final", order=order, log="symlog"
     )
@@ -50,7 +51,7 @@ def render_size(
     if curves:
         save_variants(
             lambda **size: learning_bands(
-                subset, "solver", x=curve_x, order=order,
+                learned_records, "solver", x=curve_x, order=order,
                 logx=curve_x != "iteration", **size,
             ),
             f"{stem}_curves_{CURVE_SUFFIX.get(curve_x, curve_x)}",
@@ -65,14 +66,14 @@ def render_size(
     # Paired test suboptimality
     save_variants(
         lambda **size: box_metric(
-            rows, "solver", "subopt", order=order, log="symlog", **size
+            learned, "solver", "subopt", order=order, log="symlog", **size
         ),
         f"{stem}_subopt",
         experiment,
     )
 
     save_variants(
-        lambda **size: complexity_bars(rows, "solver", order=order, **size),
+        lambda **size: complexity_bars(learned, "solver", order=order, **size),
         f"{stem}_complexity",
         experiment,
     )
@@ -100,6 +101,7 @@ def render_across_sizes(
     """How a solver degrades as the dimension grows.
     """
     rows = with_suboptimality(tidy(records), by=("seed", "size"))
+    learned = [r for r in rows if r["solver"] != "baseline"]
 
     order = [
         (size, solver)
@@ -110,12 +112,12 @@ def render_across_sizes(
     stem = f"{stem_prefix}_across_sizes"
 
     ax = box_metric(
-        rows, ("size", "solver"), "subopt", order=order, log="symlog", color_by=1
+        learned, ("size", "solver"), "subopt", order=order, log="symlog", color_by=1
     )
     ax.set_xlabel("Inflation size")
     save(ax.figure, f"{stem}_subopt", experiment)
 
-    ax = complexity_bars(rows, ("size", "solver"), order=order, color_by=1)
+    ax = complexity_bars(learned, ("size", "solver"), order=order, color_by=1)
     ax.set_xlabel("Inflation size")
     save(ax.figure, f"{stem}_complexity", experiment)
 

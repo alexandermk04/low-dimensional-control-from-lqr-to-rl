@@ -11,6 +11,7 @@ from evaluation.records import RunRecord
 __all__ = [
     "tidy",
     "with_suboptimality",
+    "with_degradation",
     "group",
     "aggregate",
     "curve_band",
@@ -254,10 +255,24 @@ def with_suboptimality(
     return rows
 
 
-def with_clean_ratio(
+def _finite_episodes(row: dict, metric: str) -> np.ndarray:
+    """A run's finite episode costs, or its summary cost where it stores none."""
+    episodes = row.get(EPISODE_ARRAYS.get(metric, ""))
+    return _finite([row.get(metric)] if episodes is None else episodes)
+
+
+def _finite_cost(row: dict, metric: str):
+    """A run's cost averaged over its finite episodes only."""
+    finite = _finite_episodes(row, metric)
+    return float(np.mean(finite)) if finite.size else None
+
+
+def with_degradation(
     rows: list[dict],
     by=("solver", "seed"),
     metric: str = "test_cost_mean",
+    reference: str = "baseline",
+    reference_cost: float | None = None,
 ) -> list[dict]:
     """Score every controller against themselves without noise.
 
@@ -266,29 +281,51 @@ def with_clean_ratio(
     rows : list[dict]
         From :func:`tidy`.
     by : tuple of str, optional
-        What has to agree between a row and its clean counterpart.
+        What has to agree between a row and its clean counterpart. Keys other
+        than ``solver`` and ``seed`` also separate the reference costs.
     metric : str, optional
         Cost column to compare.
+    reference : str, optional
+        Solver key of the optimal gain.
+    reference_cost : float or None, optional
+        Clean cost of the optimal gain, for when its runs are not in ``rows``.
 
     Returns
     -------
     list[dict]
-        The same rows. Where no clean cost was found, ``clean_ratio`` is ``None``.
+        The same rows, with ``relative_degradation``, ``absolute_degradation`` and
+        ``reference_cost``. Where no clean cost was found, they are ``None``.
     """
     clean = {
-        group_key(row, by): float(row[metric])
+        group_key(row, by): _finite_cost(row, metric)
         for row in rows
-        if row.get("channel") == "clean" and row.get(metric) is not None
+        if row.get("channel") == "clean"
+    }
+
+    # Clean cost of the optimal gain, pooled over its seeds
+    rest = tuple(k for k in by if k not in ("solver", "seed"))
+    pooled = defaultdict(list)
+    for row in rows:
+        if row["solver"] == reference and row.get("channel") == "clean":
+            pooled[group_key(row, rest)].append(_finite_episodes(row, metric))
+    references = {
+        key: float(np.mean(np.concatenate(arrays))) for key, arrays in pooled.items()
     }
 
     for row in rows:
-        cost = row.get(metric)
+        cost = _finite_cost(row, metric)
         j_clean = clean.get(group_key(row, by))
+        j_ref = (
+            reference_cost if reference_cost is not None
+            else references.get(group_key(row, rest))
+        )
         usable = (
-            cost is not None and np.isfinite(float(cost))
+            cost is not None and np.isfinite(cost)
             and j_clean is not None and np.isfinite(j_clean) and j_clean != 0.0
         )
-        row["clean_ratio"] = float(cost) / j_clean if usable else None
+        row["relative_degradation"] = cost / j_clean if usable else None
+        row["absolute_degradation"] = (cost - j_clean) / j_ref if usable and j_ref else None
+        row["reference_cost"] = j_ref
 
     return rows
 

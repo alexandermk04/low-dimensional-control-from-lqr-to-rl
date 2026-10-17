@@ -16,11 +16,12 @@ from experiments.figures.aggregate import (
     label_for,
     latest_per_experiment,
 )
-from experiments.figures.style import color_for, new_figure
+from experiments.figures.style import BASELINE_COLOR, color_for, new_figure
 from experiments.figures.tables import usable
 
 __all__ = [
     "box_metric",
+    "degradation_curves",
     "learning_bands",
     "trajectory_overlay",
     "complexity_bars",
@@ -31,7 +32,8 @@ METRIC_LABELS = {
     "training_subopt_final": r"Training suboptimality $(J - J^*)/J^*$",
     "subopt": r"Suboptimality $S$",
     "subopt_episodes": r"Suboptimality $S$",
-    "clean_ratio": r"Cost ratio to the clean loop",
+    "relative_degradation": r"Relative degradation $\kappa$",
+    "absolute_degradation": r"Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$",
     "r2_position": r"Linear probe $R^2$, position",
     "r2_velocity": r"Linear probe $R^2$, velocity",
     "off_screen_rate": r"Fraction of steps off screen",
@@ -269,6 +271,95 @@ def box_metric(
         _label_runs(ax, keys, color_by, box_colors)
     ax.set_ylabel(METRIC_LABELS.get(metric, metric))
     ax.set_xlim(0.4, len(keys) + 0.6)
+
+    return ax
+
+
+def degradation_curves(
+    rows: list[dict],
+    order,
+    levels,
+    reference: dict | None = None,
+    absolute: bool = False,
+    ax=None,
+    width: float = 1.0,
+    aspect: float = 0.55,
+):
+    """Pooled relative degradation of every solver over the intensities of one channel.
+
+    With ``absolute``, the pooled absolute degradation instead, the difference
+    to the clean cost in units of ``reference_cost`` from
+    :func:`~experiments.figures.aggregate.with_degradation`.
+
+    Parameters
+    ----------
+    rows : list[dict]
+        From :func:`~experiments.figures.aggregate.tidy`, the clean runs and
+        the runs of one channel.
+    order : sequence of str
+        Solvers to draw, in legend order.
+    levels : sequence of str
+        Intensities along the x-axis, ``"none"`` being the clean loop.
+    reference : dict or None, optional
+        Relative degradation of the optimal gain per intensity, drawn dashed.
+    absolute : bool, optional
+        Draw the absolute rather than the relative degradation.
+    ax : matplotlib.axes.Axes or None, optional
+    width, aspect : float, optional
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
+    stats = aggregate(
+        [row for row in rows if usable(row)], ("solver", "level"), "test_cost_mean"
+    )
+    positions = np.arange(len(levels))
+
+    if ax is None:
+        _, ax = new_figure(width, aspect)
+
+    def pooled(solver, level):
+        return stats.get((solver, level), {}).get("mean", np.nan)
+
+    j_ref = next((r["reference_cost"] for r in rows if r.get("reference_cost")), np.nan)
+
+    drawn = []
+    for index, solver in enumerate(order):
+        costs = np.array([pooled(solver, level) for level in levels])
+        clean = pooled(solver, "none")
+        values = (costs - clean) / j_ref if absolute else costs / clean
+        if not np.any(np.isfinite(values)):
+            continue
+        drawn.append(values[np.isfinite(values)])
+        ax.plot(
+            positions, values, color=color_for(index, solver), marker="o",
+            markersize=3.5, linewidth=1.2, label=label_for(solver),
+        )
+
+    if reference is not None:
+        kappa = np.array([reference.get(level, 1.0) for level in levels])
+        ax.plot(
+            positions, kappa - 1.0 if absolute else kappa,
+            color=BASELINE_COLOR, linestyle="--", linewidth=1.0,
+            label=r"Calibration $\kappa_\ell - 1$" if absolute else r"Calibration $\kappa_\ell$",
+        )
+
+    if absolute:
+        _symlog_axis(ax, drawn, linscale=0.35)
+    else:
+        ax.set_yscale("log")
+    ax.set_xticks(positions)
+    ax.set_xticklabels([rf"\emph{{{level}}}" for level in levels])
+    if width < 1.0:
+        _angle(ax)
+    ax.set_xlabel("Noise intensity")
+    ax.set_ylabel(METRIC_LABELS["absolute_degradation" if absolute else "relative_degradation"])
+    handles, _ = ax.get_legend_handles_labels()
+    ax.legend(
+        frameon=False, loc="lower center", bbox_to_anchor=(0.5, 1.0),
+        ncol=min(len(handles), 3) if width >= 1.0 else 1,
+    )
 
     return ax
 
