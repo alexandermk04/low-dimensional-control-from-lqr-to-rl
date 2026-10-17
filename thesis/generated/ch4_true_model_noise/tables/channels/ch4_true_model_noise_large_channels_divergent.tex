@@ -1,14 +1,17 @@
 \begin{table}[htbp]
 \centering
-\caption{Suboptimality $S$ (in $10^{-3}$) under \emph{large} inflation and each noise channel at intensity \emph{divergent}.}
+\caption{Relative degradation $\kappa$ and Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ under \emph{large} inflation and each noise channel at intensity \emph{divergent}.}
 \label{tab:ch4-true-model-noise-large-solver-channels-divergent}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrrrrrrrrrrr}
 \toprule
-Solver & none & measurement & control & parametric & disturbance & all channels \\
+ & \multicolumn{6}{c}{Relative degradation $\kappa$} & \multicolumn{6}{c}{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$} \\
+\cmidrule(lr){2-7}\cmidrule(lr){8-13}
+Solver & none & measurement & control & parametric & disturbance & all channels & none & measurement & control & parametric & disturbance & all channels \\
 \midrule
-Model-based PG & $+0.2 \pm 0.12$ & $-1.9 \pm 2.1$ & $-16 \pm 6.5$ & $-2.7 \pm 46$ & $+14 \pm 1.2$ & $-51 \pm 2 \times 10^{2}$ \\
-S-PI & $+0.0059 \pm 0.0037$ & $-9.8 \pm 1.2$ & $-2.9 \pm 1.1$ & $-0.75 \pm 8$ & $+2.3 \pm 0.2$ & $-18 \pm 48$ \\
+Baseline & $1$ & $10 \pm 0.887$ & $6.62 \pm 0.0793$ & $9.9 \pm 7.53$ & $10 \pm 0.918$ & $3.38 \times 10^{4} \pm 2.27 \times 10^{4}$ & $0$ & $8.97 \pm 0.0334$ & $5.62 \pm 0.565$ & $9.06 \pm 7.7$ & $8.91 \pm 0.0986$ & $3.4 \times 10^{4} \pm 2.3 \times 10^{4}$ \\
+Model-based PG & $1$ & $10 \pm 0.885$ & $6.5 \pm 0.0764$ & $9.85 \pm 7.68$ & $10.1 \pm 0.931$ & $3.19 \times 10^{4} \pm 1.81 \times 10^{4}$ & $0$ & $8.95 \pm 0.0311$ & $5.5 \pm 0.554$ & $8.99 \pm 7.73$ & $9.05 \pm 0.0996$ & $3.22 \times 10^{4} \pm 1.89 \times 10^{4}$ \\
+S-PI & $1$ & $9.95 \pm 0.878$ & $6.6 \pm 0.0785$ & $9.89 \pm 7.55$ & $10 \pm 0.92$ & $3.27 \times 10^{4} \pm 2.14 \times 10^{4}$ & $0$ & $8.87 \pm 0.033$ & $5.6 \pm 0.563$ & $9.05 \pm 7.7$ & $8.94 \pm 0.0988$ & $3.29 \times 10^{4} \pm 2.18 \times 10^{4}$ \\
 \bottomrule
 \end{tabular}
 }

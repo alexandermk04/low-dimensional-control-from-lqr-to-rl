@@ -1,14 +1,17 @@
 \begin{table}[htbp]
 \centering
-\caption{Suboptimality $S$ (in $10^{-3}$) under \emph{base} inflation and each noise channel at intensity \emph{divergent}.}
+\caption{Relative degradation $\kappa$ and Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ under \emph{base} inflation and each noise channel at intensity \emph{divergent}.}
 \label{tab:ch4-true-model-noise-base-solver-channels-divergent}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrrrrrrrrrrr}
 \toprule
-Solver & none & measurement & control & parametric & disturbance & all channels \\
+ & \multicolumn{6}{c}{Relative degradation $\kappa$} & \multicolumn{6}{c}{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$} \\
+\cmidrule(lr){2-7}\cmidrule(lr){8-13}
+Solver & none & measurement & control & parametric & disturbance & all channels & none & measurement & control & parametric & disturbance & all channels \\
 \midrule
-Model-based PG & $+0.2 \pm 0.12$ & $-58 \pm 4.9$ & $-17 \pm 19$ & $-2.7 \pm 46$ & $+14 \pm 1.2$ & $+7.3 \times 10^{4} \pm 1.1 \times 10^{6}$ \\
-S-PI & $+0.0059 \pm 0.0037$ & $-10 \pm 0.87$ & $-3.1 \pm 3.4$ & $-0.75 \pm 8$ & $+2.3 \pm 0.2$ & $+6.7 \times 10^{3} \pm 1.1 \times 10^{5}$ \\
+Baseline & $1$ & $10 \pm 0.883$ & $9.9 \pm 3.51$ & $9.9 \pm 7.53$ & $10 \pm 0.918$ & $1.11 \times 10^{48} \pm 3.51 \times 10^{48}$ & $0$ & $8.96 \pm 0.0328$ & $8.97 \pm 3.9$ & $9.06 \pm 7.7$ & $8.91 \pm 0.0986$ & $10^{48} \pm 3.16 \times 10^{48}$ \\
+Model-based PG & $1$ & $9.46 \pm 0.826$ & $9.56 \pm 3.16$ & $9.85 \pm 7.68$ & $10.1 \pm 0.931$ & $1.41 \times 10^{45} \pm 4.43 \times 10^{45}$ & $0$ & $8.39 \pm 0.0306$ & $8.63 \pm 3.53$ & $8.99 \pm 7.73$ & $9.05 \pm 0.0996$ & $1.26 \times 10^{45} \pm 3.99 \times 10^{45}$ \\
+S-PI & $1$ & $9.93 \pm 0.873$ & $9.84 \pm 3.45$ & $9.89 \pm 7.55$ & $10 \pm 0.92$ & $9.76 \times 10^{47} \pm 3.08 \times 10^{48}$ & $0$ & $8.86 \pm 0.0324$ & $8.91 \pm 3.83$ & $9.05 \pm 7.7$ & $8.94 \pm 0.0988$ & $8.77 \times 10^{47} \pm 2.77 \times 10^{48}$ \\
 \bottomrule
 \end{tabular}
 }

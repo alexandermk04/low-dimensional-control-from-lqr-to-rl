@@ -1,14 +1,16 @@
 \begin{table}[htbp]
 \centering
-\caption{Suboptimality $S$ per inflation size under parametric noise at intensity \emph{strong}.}
+\caption{Relative degradation $\kappa$ and Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ per inflation size under parametric noise at intensity \emph{strong}.}
 \label{tab:ch4-noise-sizes-parametric-strong}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrrrrrrrrrrr}
 \toprule
-Inflation & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model-free NPG & S-PI (model-free) \\
+ & \multicolumn{6}{c}{Relative degradation $\kappa$} & \multicolumn{6}{c}{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$} \\
+\cmidrule(lr){2-7}\cmidrule(lr){8-13}
+Inflation & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model-free NPG & S-PI (model-free) & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model-free NPG & S-PI (model-free) \\
 \midrule
-base & $+0$ & $-2.34 \times 10^{-15} \pm 5.25 \times 10^{-14}$ & $-0.000894 \pm 0.0102$ & $-0.000459 \pm 0.0048$ & $+0.0518 \pm 0.173$ & $+0.00166 \pm 0.0572$ \\
-large & $+0$ & $+4.37 \times 10^{-7} \pm 5.97 \times 10^{-5}$ & $-0.000895 \pm 0.0102$ & $-0.00046 \pm 0.00481$ & $+0.0289 \pm 0.181$ & $+7.18 \times 10^{4} \pm 1.25 \times 10^{6}$ \\
+base & $2.98 \pm 1.06$ & $2.98 \pm 1.06$ & $2.97 \pm 1.06$ & $2.97 \pm 1.06$ & $3.15 \pm 1.15$ & $2.91 \pm 0.956$ & $2.02 \pm 1.22$ & $2.02 \pm 1.22$ & $2.01 \pm 1.21$ & $2.01 \pm 1.22$ & $2.22 \pm 1.37$ & $1.96 \pm 1.14$ \\
+large & $2.98 \pm 1.06$ & $2.98 \pm 1.06$ & $2.97 \pm 1.06$ & $2.97 \pm 1.06$ & $3.21 \pm 1.44$ & $1.48 \times 10^{4} \pm 1.88 \times 10^{4}$ & $2.02 \pm 1.22$ & $2.02 \pm 1.22$ & $2.01 \pm 1.21$ & $2.01 \pm 1.22$ & $2.25 \pm 1.52$ & $6.71 \times 10^{4} \pm 8.54 \times 10^{4}$ \\
 \bottomrule
 \end{tabular}
 }

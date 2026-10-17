@@ -1,17 +1,19 @@
 \begin{table}[htbp]
 \centering
-\caption{Suboptimality $S$ under \emph{large} inflation and measurement noise of increasing intensity.}
+\caption{Relative degradation $\kappa$ and Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ under \emph{large} inflation and measurement noise of increasing intensity.}
 \label{tab:ch4-true-model-noise-large-levels}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrr}
+\begin{tabular}{lrrrrrr}
 \toprule
-Intensity & Baseline & Model-based PG & S-PI \\
+ & \multicolumn{3}{c}{Relative degradation $\kappa$} & \multicolumn{3}{c}{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Intensity & Baseline & Model-based PG & S-PI & Baseline & Model-based PG & S-PI \\
 \midrule
-none & $+0$ & $+0.000199 \pm 0.000125$ & $+5.87 \times 10^{-6} \pm 3.67 \times 10^{-6}$ \\
-weak & $+0$ & $-0.000637 \pm 0.00127$ & $-0.00366 \pm 0.00316$ \\
-standard & $+0$ & $-0.000957 \pm 0.00145$ & $-0.00518 \pm 0.00309$ \\
-strong & $+0$ & $-0.00152 \pm 0.00177$ & $-0.00782 \pm 0.00223$ \\
-divergent & $+0$ & $-0.00195 \pm 0.00207$ & $-0.00981 \pm 0.00121$ \\
+none & $1$ & $1$ & $1$ & $0$ & $0$ & $0$ \\
+weak & $1.21 \pm 0.0202$ & $1.21 \pm 0.0201$ & $1.2 \pm 0.02$ & $0.204 \pm 0.000759$ & $0.203 \pm 0.000702$ & $0.202 \pm 0.000748$ \\
+standard & $1.5 \pm 0.0491$ & $1.5 \pm 0.049$ & $1.5 \pm 0.0486$ & $0.496 \pm 0.00185$ & $0.495 \pm 0.00171$ & $0.491 \pm 0.00182$ \\
+strong & $3.02 \pm 0.198$ & $3.02 \pm 0.198$ & $3 \pm 0.196$ & $2 \pm 0.00746$ & $2 \pm 0.00695$ & $1.98 \pm 0.00737$ \\
+divergent & $10 \pm 0.887$ & $10 \pm 0.885$ & $9.95 \pm 0.878$ & $8.97 \pm 0.0334$ & $8.95 \pm 0.0311$ & $8.87 \pm 0.033$ \\
 \bottomrule
 \end{tabular}
 }

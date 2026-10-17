@@ -1,14 +1,16 @@
 \begin{table}[htbp]
 \centering
-\caption{Suboptimality $S$ per inflation size under measurement noise at intensity \emph{strong}.}
+\caption{Relative degradation $\kappa$ and Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ per inflation size under measurement noise at intensity \emph{strong}.}
 \label{tab:ch4-noise-sizes-measurement-strong}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrrrrrrrrrrr}
 \toprule
-Inflation & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model-free NPG & S-PI (model-free) \\
+ & \multicolumn{6}{c}{Relative degradation $\kappa$} & \multicolumn{6}{c}{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$} \\
+\cmidrule(lr){2-7}\cmidrule(lr){8-13}
+Inflation & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model-free NPG & S-PI (model-free) & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model-free NPG & S-PI (model-free) \\
 \midrule
-base & $+0$ & $+0$ & $-0.0208 \pm 0.00561$ & $-0.00987 \pm 0.00265$ & $+0.405 \pm 0.107$ & $-0.0504 \pm 0.0501$ \\
-large & $+0$ & $+7.22 \times 10^{-6} \pm 4.73 \times 10^{-5}$ & $+0.0238 \pm 0.00659$ & $-0.00955 \pm 0.00266$ & $+0.209 \pm 0.0943$ & $+0.259 \pm 0.777$ \\
+base & $3.02 \pm 0.197$ & $3.02 \pm 0.197$ & $2.96 \pm 0.192$ & $2.99 \pm 0.195$ & $4.13 \pm 0.295$ & $2.87 \pm 0.174$ & $2 \pm 0.00733$ & $2 \pm 0.00733$ & $1.95 \pm 0.0071$ & $1.98 \pm 0.00722$ & $3.12 \pm 0.0329$ & $1.86 \pm 0.135$ \\
+large & $3.02 \pm 0.198$ & $3.02 \pm 0.198$ & $3.09 \pm 0.205$ & $3 \pm 0.196$ & $3.59 \pm 0.339$ & $1 \pm 0.00198$ & $2 \pm 0.00746$ & $2 \pm 0.00748$ & $2.07 \pm 0.0072$ & $1.98 \pm 0.00733$ & $2.58 \pm 0.215$ & $0.00524 \pm 0.00901$ \\
 \bottomrule
 \end{tabular}
 }

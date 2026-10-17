@@ -1,17 +1,20 @@
 \begin{table}[htbp]
 \centering
-\caption{Suboptimality $S$ (in $10^{-3}$) under \emph{large} inflation and each noise channel at intensity \emph{weak}.}
+\caption{Relative degradation $\kappa$ and Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ under \emph{large} inflation and each noise channel at intensity \emph{weak}.}
 \label{tab:ch4-noise-large-solver-channels-weak}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrrrrrrrrrrr}
 \toprule
-Solver & none & measurement & control & parametric & disturbance & all channels \\
+ & \multicolumn{6}{c}{Relative degradation $\kappa$} & \multicolumn{6}{c}{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$} \\
+\cmidrule(lr){2-7}\cmidrule(lr){8-13}
+Solver & none & measurement & control & parametric & disturbance & all channels & none & measurement & control & parametric & disturbance & all channels \\
 \midrule
-N4SID + DARE & $+0.00015 \pm 0.00028$ & $+0.0032 \pm 0.027$ & $+0.0021 \pm 0.015$ & $+0.00055 \pm 0.02$ & $+1.6 \times 10^{-5} \pm 0.023$ & $+0.0047 \pm 0.023$ \\
-N4SID + Model-based PG & $+0.039 \pm 0.024$ & $+11 \pm 9.5$ & $-1.6 \pm 0.93$ & $-0.11 \pm 2.8$ & $+2.1 \pm 2$ & $+8.5 \pm 6.8$ \\
-N4SID + S-PI & $+0.0085 \pm 0.0053$ & $-4.5 \pm 3.8$ & $-0.83 \pm 0.43$ & $-0.064 \pm 1.4$ & $+0.91 \pm 0.88$ & $-4.4 \pm 2.6$ \\
-Model-free NPG & $+7.5 \pm 6.7$ & $+1 \times 10^{2} \pm 96$ & $+0.79 \pm 14$ & $+10 \pm 30$ & $-20 \pm 27$ & $+79 \pm 60$ \\
-S-PI (model-free) & $+6 \times 10^{3} \pm 7.7 \times 10^{3}$ & $+2.2 \times 10^{3} \pm 10^{3}$ & $+4.5 \times 10^{3} \pm 5.1 \times 10^{3}$ & $+8.2 \times 10^{4} \pm 5.7 \times 10^{5}$ & $+2.6 \times 10^{3} \pm 9.3 \times 10^{2}$ & $+2.2 \times 10^{4} \pm 9.6 \times 10^{4}$ \\
+Baseline & $1$ & $1.21 \pm 0.0202$ & $1.2 \pm 0.0024$ & $1.19 \pm 0.0929$ & $1.2 \pm 0.0281$ & $2.27 \pm 0.11$ & $0$ & $0.204 \pm 0.000759$ & $0.198 \pm 0.0206$ & $0.195 \pm 0.0974$ & $0.198 \pm 0.0146$ & $1.26 \pm 0.104$ \\
+N4SID + DARE & $1$ & $1.21 \pm 0.0202$ & $1.2 \pm 0.0024$ & $1.19 \pm 0.0929$ & $1.2 \pm 0.0281$ & $2.27 \pm 0.11$ & $0$ & $0.204 \pm 0.000761$ & $0.198 \pm 0.0206$ & $0.195 \pm 0.0974$ & $0.198 \pm 0.0146$ & $1.26 \pm 0.104$ \\
+N4SID + Model-based PG & $1$ & $1.21 \pm 0.0208$ & $1.2 \pm 0.00236$ & $1.19 \pm 0.093$ & $1.2 \pm 0.0283$ & $2.28 \pm 0.111$ & $0$ & $0.211 \pm 0.00073$ & $0.196 \pm 0.0204$ & $0.195 \pm 0.0976$ & $0.199 \pm 0.0146$ & $1.27 \pm 0.104$ \\
+N4SID + S-PI & $1$ & $1.2 \pm 0.0199$ & $1.2 \pm 0.0024$ & $1.19 \pm 0.093$ & $1.2 \pm 0.0282$ & $2.26 \pm 0.11$ & $0$ & $0.201 \pm 0.000745$ & $0.197 \pm 0.0205$ & $0.195 \pm 0.0975$ & $0.198 \pm 0.0146$ & $1.25 \pm 0.104$ \\
+Model-free NPG & $1$ & $1.26 \pm 0.0345$ & $1.19 \pm 0.00418$ & $1.2 \pm 0.1$ & $1.18 \pm 0.0263$ & $2.37 \pm 0.123$ & $0$ & $0.262 \pm 0.0219$ & $0.188 \pm 0.0202$ & $0.202 \pm 0.103$ & $0.184 \pm 0.0143$ & $1.38 \pm 0.105$ \\
+S-PI (model-free) & $1$ & $1 \pm 0.000611$ & $1.01 \pm 0.00164$ & $15.7 \pm 7.71$ & $1.05 \pm 0.024$ & $14.6 \pm 5.16$ & $0$ & $-0.00058 \pm 0.00275$ & $0.0531 \pm 0.00672$ & $65.2 \pm 35.3$ & $0.227 \pm 0.0923$ & $60.3 \pm 22.4$ \\
 \bottomrule
 \end{tabular}
 }

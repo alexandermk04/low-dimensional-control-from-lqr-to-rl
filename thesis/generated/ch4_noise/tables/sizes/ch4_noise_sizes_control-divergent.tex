@@ -1,14 +1,16 @@
 \begin{table}[htbp]
 \centering
-\caption{Suboptimality $S$ per inflation size under control noise at intensity \emph{divergent}.}
+\caption{Relative degradation $\kappa$ and Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ per inflation size under control noise at intensity \emph{divergent}.}
 \label{tab:ch4-noise-sizes-control-divergent}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrrrrrrrrrrr}
 \toprule
-Inflation & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model-free NPG & S-PI (model-free) \\
+ & \multicolumn{6}{c}{Relative degradation $\kappa$} & \multicolumn{6}{c}{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$} \\
+\cmidrule(lr){2-7}\cmidrule(lr){8-13}
+Inflation & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model-free NPG & S-PI (model-free) & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model-free NPG & S-PI (model-free) \\
 \midrule
-base & $+0$ & $-1.04 \times 10^{-15} \pm 3.3 \times 10^{-14}$ & $-0.00773 \pm 0.00863$ & $-0.00412 \pm 0.00408$ & $+0.173 \pm 0.169$ & $+0.0477 \pm 0.0418$ \\
-large & $+0$ & $+1.02 \times 10^{-5} \pm 8.69 \times 10^{-5}$ & $-0.0071 \pm 0.00289$ & $-0.0038 \pm 0.0013$ & $-0.0393 \pm 0.0501$ & $+0.371 \pm 1.27$ \\
+base & $9.9 \pm 3.51$ & $9.9 \pm 3.51$ & $9.75 \pm 3.35$ & $9.83 \pm 3.43$ & $13.1 \pm 7.07$ & $10.4 \pm 3.9$ & $8.97 \pm 3.9$ & $8.97 \pm 3.9$ & $8.82 \pm 3.73$ & $8.89 \pm 3.81$ & $12.3 \pm 7.69$ & $9.44 \pm 4.31$ \\
+large & $6.62 \pm 0.0793$ & $6.62 \pm 0.0794$ & $6.57 \pm 0.078$ & $6.59 \pm 0.0789$ & $6.3 \pm 0.149$ & $1.35 \pm 0.0215$ & $5.62 \pm 0.565$ & $5.62 \pm 0.565$ & $5.57 \pm 0.56$ & $5.59 \pm 0.562$ & $5.34 \pm 0.558$ & $1.55 \pm 0.142$ \\
 \bottomrule
 \end{tabular}
 }

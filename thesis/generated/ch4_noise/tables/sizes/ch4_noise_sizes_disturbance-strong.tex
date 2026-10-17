@@ -1,14 +1,16 @@
 \begin{table}[htbp]
 \centering
-\caption{Suboptimality $S$ per inflation size under disturbance noise at intensity \emph{strong}.}
+\caption{Relative degradation $\kappa$ and Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ per inflation size under disturbance noise at intensity \emph{strong}.}
 \label{tab:ch4-noise-sizes-disturbance-strong}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrrrrrrrrrrr}
 \toprule
-Inflation & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model-free NPG & S-PI (model-free) \\
+ & \multicolumn{6}{c}{Relative degradation $\kappa$} & \multicolumn{6}{c}{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$} \\
+\cmidrule(lr){2-7}\cmidrule(lr){8-13}
+Inflation & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model-free NPG & S-PI (model-free) & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model-free NPG & S-PI (model-free) \\
 \midrule
-base & $+0$ & $+0$ & $+0.00471 \pm 0.00131$ & $+0.00206 \pm 0.000592$ & $-0.0558 \pm 0.018$ & $+0.0346 \pm 0.0194$ \\
-large & $+0$ & $+1.44 \times 10^{-7} \pm 4.18 \times 10^{-5}$ & $+0.0047 \pm 0.00131$ & $+0.00205 \pm 0.000596$ & $-0.0524 \pm 0.0263$ & $+0.927 \pm 0.859$ \\
+base & $3.03 \pm 0.219$ & $3.03 \pm 0.219$ & $3.04 \pm 0.22$ & $3.03 \pm 0.219$ & $2.85 \pm 0.202$ & $3.12 \pm 0.244$ & $2.01 \pm 0.0467$ & $2.01 \pm 0.0467$ & $2.02 \pm 0.0469$ & $2.01 \pm 0.0469$ & $1.85 \pm 0.0448$ & $2.1 \pm 0.0477$ \\
+large & $3.03 \pm 0.219$ & $3.03 \pm 0.219$ & $3.04 \pm 0.22$ & $3.03 \pm 0.219$ & $2.87 \pm 0.201$ & $1.5 \pm 0.101$ & $2.01 \pm 0.0467$ & $2.01 \pm 0.0468$ & $2.02 \pm 0.047$ & $2.01 \pm 0.0469$ & $1.86 \pm 0.0543$ & $2.18 \pm 0.293$ \\
 \bottomrule
 \end{tabular}
 }

@@ -1,14 +1,16 @@
 \begin{table}[htbp]
 \centering
-\caption{Suboptimality $S$ per inflation size under all noise at intensity \emph{standard}.}
+\caption{Relative degradation $\kappa$ and Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ per inflation size under all noise at intensity \emph{standard}.}
 \label{tab:ch4-true-model-noise-sizes-all-standard}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrr}
+\begin{tabular}{lrrrrrr}
 \toprule
-Inflation & Baseline & Model-based PG & S-PI \\
+ & \multicolumn{3}{c}{Relative degradation $\kappa$} & \multicolumn{3}{c}{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Inflation & Baseline & Model-based PG & S-PI & Baseline & Model-based PG & S-PI \\
 \midrule
-base & $+0$ & $-0.052 \pm 0.0285$ & $-0.00942 \pm 0.00529$ \\
-large & $+0$ & $-0.00906 \pm 0.0105$ & $-0.00548 \pm 0.00361$ \\
+base & $13 \pm 2.27$ & $12.2 \pm 2.15$ & $12.8 \pm 2.24$ & $12 \pm 2.46$ & $11.2 \pm 2.33$ & $11.8 \pm 2.43$ \\
+large & $6.22 \pm 0.407$ & $6.16 \pm 0.4$ & $6.19 \pm 0.404$ & $5.2 \pm 0.477$ & $5.14 \pm 0.471$ & $5.17 \pm 0.477$ \\
 \bottomrule
 \end{tabular}
 }

@@ -1,14 +1,17 @@
 \begin{table}[htbp]
 \centering
-\caption{Suboptimality $S$ (in $10^{-3}$) under \emph{base} inflation and each noise channel at intensity \emph{weak}.}
+\caption{Relative degradation $\kappa$ and Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ under \emph{base} inflation and each noise channel at intensity \emph{weak}.}
 \label{tab:ch4-true-model-noise-base-solver-channels-weak}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrrrrrrrrrrr}
 \toprule
-Solver & none & measurement & control & parametric & disturbance & all channels \\
+ & \multicolumn{6}{c}{Relative degradation $\kappa$} & \multicolumn{6}{c}{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$} \\
+\cmidrule(lr){2-7}\cmidrule(lr){8-13}
+Solver & none & measurement & control & parametric & disturbance & all channels & none & measurement & control & parametric & disturbance & all channels \\
 \midrule
-Model-based PG & $+0.2 \pm 0.12$ & $-22 \pm 18$ & $-3.5 \pm 2.4$ & $-0.078 \pm 6.4$ & $+4.9 \pm 4.4$ & $-23 \pm 12$ \\
-S-PI & $+0.0059 \pm 0.0037$ & $-3.8 \pm 3.3$ & $-0.64 \pm 0.43$ & $-0.054 \pm 1.1$ & $+0.81 \pm 0.75$ & $-4.2 \pm 2.2$ \\
+Baseline & $1$ & $1.21 \pm 0.0201$ & $1.2 \pm 0.00575$ & $1.19 \pm 0.0929$ & $1.2 \pm 0.0281$ & $2.47 \pm 0.17$ & $0$ & $0.204 \pm 0.000745$ & $0.202 \pm 0.0219$ & $0.195 \pm 0.0974$ & $0.198 \pm 0.0146$ & $1.46 \pm 0.201$ \\
+Model-based PG & $1$ & $1.19 \pm 0.0188$ & $1.2 \pm 0.00566$ & $1.19 \pm 0.0932$ & $1.2 \pm 0.0284$ & $2.42 \pm 0.169$ & $0$ & $0.191 \pm 0.000694$ & $0.198 \pm 0.0215$ & $0.195 \pm 0.0978$ & $0.201 \pm 0.0147$ & $1.42 \pm 0.199$ \\
+S-PI & $1$ & $1.2 \pm 0.0198$ & $1.2 \pm 0.00573$ & $1.19 \pm 0.0929$ & $1.2 \pm 0.0282$ & $2.46 \pm 0.17$ & $0$ & $0.201 \pm 0.000736$ & $0.201 \pm 0.0218$ & $0.195 \pm 0.0975$ & $0.198 \pm 0.0146$ & $1.46 \pm 0.201$ \\
 \bottomrule
 \end{tabular}
 }
