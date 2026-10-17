@@ -1,14 +1,16 @@
 \begin{table}[htbp]
 \centering
-\caption{Linear PPO under each noise channel at intensity \emph{strong}.}
+\caption{Linear PPO under each noise channel at intensity \emph{strong}. Stable counts the seeds whose controller left the plant stable.}
 \label{tab:ch5-noise-large-channels-ppo-linear}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrrr}
 \toprule
 Channel & none & measurement & control & parametric & disturbance & all channels \\
 \midrule
-Relative degradation $\kappa$ & $1$ & $1.3 \pm 0.341$ & $4.41 \pm 0.704$ & $9.42 \times 10^{3} \pm 2.76 \times 10^{4}$ & $2.23 \pm 0.992$ & $2.51 \times 10^{4} \pm 4.87 \times 10^{4}$ \\
-Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ & $0$ & $1 \pm 0.446$ & $92.4 \pm 197$ & $1.4 \times 10^{6} \pm 4.36 \times 10^{6}$ & $8.99 \pm 10.4$ & $2.14 \times 10^{6} \pm 6.48 \times 10^{6}$ \\
+Stable & $7/10$ & $7/10$ & $7/10$ & $7/10$ & $7/10$ & $7/10$ \\
+\midrule
+Relative degradation $\kappa$ & $1$ & $1.41 \pm 0.349$ & $4.44 \pm 0.724$ & $290 \pm 390$ & $2.61 \pm 0.937$ & $1.6 \times 10^{4} \pm 3.79 \times 10^{4}$ \\
+Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ & $0$ & $0.997 \pm 0.328$ & $13.1 \pm 6.73$ & $1.8 \times 10^{3} \pm 2.6 \times 10^{3}$ & $4.86 \pm 1.32$ & $1.01 \times 10^{5} \pm 2.45 \times 10^{5}$ \\
 \bottomrule
 \end{tabular}
 }

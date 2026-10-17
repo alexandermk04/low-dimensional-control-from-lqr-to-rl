@@ -661,6 +661,7 @@ def complexity_bars(
 
     if log:
         ax.set_yscale("log")
+        ax.set_ylim(bottom=1.0)
 
     low, high = ax.get_ylim()
     bottom = low if log else 0.0
