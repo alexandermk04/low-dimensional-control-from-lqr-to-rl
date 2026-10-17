@@ -88,6 +88,7 @@ def main():
     save(ax.figure, "ch6_perception_training_subopt", EXPERIMENT)
 
     ax = learning_bands(learned_records, "solver", x="env_steps", order=ORDER)
+    ax.set_xlabel("Agent steps")
     save(ax.figure, "ch6_perception_curves_steps", EXPERIMENT)
 
     axes = trajectory_overlay(records, "solver", dt=0.01, order=ORDER)
