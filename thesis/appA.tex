@@ -24,7 +24,7 @@ $M\T$, $M^{\dagger}$ & transpose and (truncated) pseudoinverse of $M$ & \cref{al
 $\tr$, $\rank$, $\operatorname{diag}$ & trace, rank, diagonal matrix & \\
 $\lambda_i(M)$, $\sigma_i(M)$ & $i$-th eigenvalue and $i$-th singular value of $M$ & \\
 $U \Sigma V\T$ & singular value decomposition, $\Sigma = \operatorname{diag}(\sigma_1, \dots, \sigma_r)$ & \eqref{eq:svd} \\
-$\spr(M)$ & spectral radius, $\max_i \lvert \lambda_i(M) \rvert$ & \cref{thm:asymptotic-stability} \\
+$\spr(M)$ & spectral radius, $\max_i \lvert \lambda_i(M) \rvert$ & \cref{subsec:double-integrator} \\
 $M \succeq 0$, $M \succ 0$ & $M$ symmetric positive semi-definite / positive definite & \\
 $\lVert \cdot \rVert$, $\lVert \cdot \rVert_F$, $\lVert \cdot \rVert_{*}$ & Euclidean (spectral) norm, Frobenius norm, nuclear norm & \\
 $\lvert \cdot \rvert$ & absolute value, cardinality of a set, size of a policy & \cref{def:policy-size} \\
@@ -44,9 +44,6 @@ $A_c$, $B_c$ & continuous-time system and input matrix & \eqref{eq:ss-cont} \\
 $A$, $B$ & their zero-order-hold discretizations & \eqref{eq:zoh-matrices} \\
 $C$, $D$ & output and feedthrough matrix; $D = 0$ throughout & \eqref{eq:ss-cont} \\
 $A_K$ & closed-loop matrix, $A_K = A - BK$ & \eqref{eq:lyapunov} \\
-$\mathcal{C}(A,B)$, $\mathcal{O}(C,A)$ & controllability and observability matrix & \eqref{eq:controllability-matrix}, \eqref{eq:observability-matrix} \\
-$\hat{x}_k$, $\tilde{x}_k$ & state estimate and estimation error $x_k - \hat{x}_k$ & \eqref{eq:estimation-error} \\
-$L$ & observer gain & \cref{def:detectability} \\
 \midrule
 \multicolumn{3}{@{}l}{\emph{Optimal control}} \\[2pt]
 $Q$, $R$ & state and input cost matrices, $Q \succeq 0$, $R \succ 0$ & \eqref{eq:lqr-cost-finite} \\
@@ -101,7 +98,7 @@ $K^{+}$, $\bar{r}$ & candidate gain of S-PI, number of its singular values & \eq
 $G$ & gradient mapping & \eqref{eq:spi-sufficient-decrease} \\
 $\beta$, $\varepsilon$ & step-size reduction factor and stopping tolerance of S-PI & \cref{alg:mb-spi} \\
 $\sigma_{\mathrm{e}}$, $w_k$ & excitation amplitude and excitation noise for identification & \eqref{eq:identification-input} \\
-$\hat{n}$, $\hat{C}$ & order and output matrix of the identified model & \eqref{eq:state-encoder} \\
+$\hat{n}$, $\hat{C}$, $\hat{x}_k$ & order and output matrix of the identified model, encoded state $\hat{C}\T y_k$ & \eqref{eq:state-encoder} \\
 $N_{\mathrm{traj}}$, $l$, $r$ & number of perturbation pairs, rollout length, smoothing radius & \cref{alg:mf-gradient} \\
 $\Xi_i$ & perturbation of the gain & \cref{alg:mf-gradient} \\
 $c_k^{\pm}$, $\hat{J}_i^{\pm}$ & stage cost and rollout cost of $K \pm \Xi_i$ & \cref{alg:mf-gradient} \\
