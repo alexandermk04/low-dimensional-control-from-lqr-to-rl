@@ -165,82 +165,38 @@ Overall, this looks very promising for S-PI; still, our goal is to find out whet
 \label{subsec:true-model-noise}
 
 Now, we reuse the controllers we trained in \cref{subsec:known-model-results} and evaluate them under the test protocol
-with noise (\cref{subsubsec:noise-injection}) injected.
+and \emph{large} inflation with noise (\cref{subsubsec:noise-injection}) injected.
 
-When looking at the results, one can notice that our baseline controller, which was optimal for the clean loop, mostly
-performs worse than our trained controllers, except for external disturbance. However, when only comparing Model-based PG with
-S-PI, we can see differences in their performance, depending on the type of noise that is applied, as well as whether the
-loop is inflated or not. For parametric uncertainty, no real difference can be seen between the mean performance of all controllers;
-however, Model-based PG shows a higher variance. When looking at external disturbance under \emph{large} inflation, one can notice that with increasing
-noise it becomes clearer that S-PI is more robust here compared to Model-based PG. While for \emph{weak} and \emph{standard} their total spread
-still shows some overlap, for \emph{strong} and \emph{divergent} S-PI shows a cleanly separated suboptimality below Model-based PG
-(\cref{fig:true-noise-large-disturbance}).
+Looking at or tradeoff plots, it might seem that each controller degraded the nearly same under all noise channels
+both relatively\needcite{large, tradeoff relative all} and absolutely\needcite{large, tradeoff absolute all}. However,
+when looking at the distribution of the seeds under relative degradation, while for some channels this might hold, there
+are differences noticable.
 
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_disturbance-standard}
-    \caption{Intensity \emph{standard}.}
-    \label{fig:true-noise-large-disturbance-standard}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_disturbance-divergent}
-    \caption{Intensity \emph{divergent}.}
-    \label{fig:true-noise-large-disturbance-divergent}
-  \end{subfigure}
-  \caption{Suboptimality $S$ of the solvers on the true model under \emph{large} inflation and external disturbance at different intensities.}
-  \label{fig:true-noise-large-disturbance}
-\end{figure}
+% plots from above side by side
 
-For control noise in comparison, we can see that here Model-based PG is more robust on average across settings. However, its worst-case
-performance here is worse than that of S-PI, so it has an overall wider spread of suboptimalities. Still, both mostly outperform the
-baseline controller. Measurement noise becomes an interesting case here. While both controllers outperform the baseline, under
-no inflation, Model-based PG seems to be much more robust here. However, when looking at the controllers under \emph{large} inflation with the
-same noise level applied, Model-based PG deteriorates here, with the spread now reaching suboptimality values worse than baseline. Compared to
-that, S-PI shows more robustness here with little variation and stays at a similar value, better than baseline.
-\Cref{fig:true-noise-measurement-divergent} visualizes this.
+For parametric noise the distribution is also nearly identical, so here no difference can be noticed. When looking
+at measurement noise, however, we can notice that MB-PG degrades slightly less than the baseline (median at 9.95), and
+SPI is even further below (median at 9.8).
 
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_base_subopt_measurement-divergent}
-    \caption{\emph{base} inflation.}
-    \label{fig:true-noise-base-measurement-divergent}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_subopt_measurement-divergent}
-    \caption{\emph{large} inflation.}
-    \label{fig:true-noise-large-measurement-divergent}
-  \end{subfigure}
-  \caption{Suboptimality $S$ of the solvers on the true model under measurement noise at intensity \emph{divergent}.}
-  \label{fig:true-noise-measurement-divergent}
-\end{figure}
+% Measrument large relative deg, disturbance large relative deg both divergent
 
-Overall, for the \emph{strong} level and \emph{large} inflation, this is how both controllers compare to the baseline and each other across the
-noise channels (\cref{tab:ch4-true-model-noise-large-solver-channels-strong}).
+Under \emph{divergent} external disturbance, we see that our trained controllers degrade slightly more than the
+baseline, with MB-PG being the worst here (median at 10.01 vs 9.98 for the baseline).
 
-\input{generated/ch4_true_model_noise/tables/channels/ch4_true_model_noise_large_channels_strong.tex}
+The most noticeable difference is under control noise, where MB-PG noticeably degrades less than SPI or the baseline
+(median at TODO vs baseline at TODO). SPI also stays below baseline (median TODO), however does not show as much
+robustness as MB-PG.
+
+% control large relative deg divergent
 
 \subsection{Discussion}
 \label{subsec:true-model-discussion}
 
-Generally, we note that trained controllers are mostly at an advantage compared to statically calculated controllers with regard to
-robustness. By not achieving full optimality on the nominal problem, they can endure measurement and control noise better; however,
-they are still more affected by external disturbances.
-When comparing now trained fully parameterized and structured approaches, differences definitely appear. Changes in
-the underlying model, as in parametric uncertainty, affect all controllers mostly the same, with on average no real difference
-to the baseline. Looking at the other cases, we find that low-dimensional controllers actually
-offer better robustness in strong noise related to the inputs of the controller, especially the larger the input dimension. Measurement
-noise shows this clearly, as the performance of an overparameterized controller degrades here with increasing size, while a
-regularized controller stays robust across sizes. This stems from the construction of our initial policy. As the full-rank
-component of $\tilde{K}_0$ is not affected by any inflated input on the nominal plant, Model-based PG, contrary to S-PI, does not remove it.
-These components then become costly under measurement noise, whereas S-PI stays resistant. However, related to the output dimensions, under control
-noise reduced controllers perform worse on average, but still better in the worst case than the full controller. And under \emph{large}
-size the reduction in needed parameters is two orders of magnitude, which shows the efficiency of the reduced controller.
+Judging from our results, it is difficult to draw significant conclusions in relation to robustness of the controllers.
+It seems like a trained, larger controller could be more robust to control noise, however we need to verify this in 
+the following experiments. What generally stands out is that SPI needs much less training iterations, while achieving
+slightly better suboptimality and similar robustness as MB-PG. We will verify whether this holds also for 
+an unknown model in the next chapter.
 
 \section{Unknown Model across Dimensions}
 \label{sec:unknown-model}
