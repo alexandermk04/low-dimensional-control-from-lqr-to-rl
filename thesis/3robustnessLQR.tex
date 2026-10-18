@@ -192,8 +192,8 @@ are noticeable differences.
 \end{figure}
 
 For parametric uncertainty the distribution is also nearly identical, so here no difference can be noticed. When looking
-at measurement noise, however, we can notice that Model-based PG degrades slightly less than the baseline (median at 9.95), and
-S-PI is even further below (median at 9.8, \cref{fig:true-noise-large-measurement-divergent}).
+at measurement noise, however, we can notice that Model-based PG degrades slightly less than the baseline (median at $9.96$ vs. \ $9.98$),
+and S-PI is even further below (median at $9.88$, \cref{fig:true-noise-large-measurement-divergent}).
 
 \begin{figure}[htbp]
   \centering
@@ -216,7 +216,7 @@ S-PI is even further below (median at 9.8, \cref{fig:true-noise-large-measuremen
 \end{figure}
 
 Under \emph{divergent} external disturbance, we see that our trained controllers degrade slightly more than the
-baseline, with Model-based PG being the worst here (median at 10.01 vs.\ 9.98 for the baseline,
+baseline, with Model-based PG being the worst here (median at $10.09$ vs.\ $9.96$ for the baseline,
 \cref{fig:true-noise-large-disturbance-divergent}).
 
 The most noticeable difference is under control noise, where Model-based PG noticeably degrades less than S-PI or the baseline
@@ -258,7 +258,14 @@ allows us to reconstruct exactly that from the results. Important are further th
 observable and controllable~\cite[pp.~127--128]{Werner2021Control}. For simplicity, we rely on the
 implementation of N4SID from SIPPY~\cite{SIPPY2026N4SID}, which we integrate into our own setup. This implementation allows us
 to recover the system matrices $A$, $B$ and $C$, whereas the cost matrices $\tilde{Q}$ and $\tilde{R}$ are choices of the controller design
-(\cref{subsec:protocol}), and thus already known beforehand.
+(\cref{subsec:protocol}), and thus already known beforehand. To the identified matrices
+we then apply the following change of basis
+
+% TODO: Formula for QR decomp of C, then new state space model
+
+such that $\hat{C}$ has orthonormal columns. This makes sense, as we have the knowledge that
+the output matrix $C$ of our true model is also of this contstruction, but also allows us to
+get the pseudoinverse of $\hat{C}$ as $\hat{C}\T$, such that $I_{\hat{n}} = \hat{C}\hat{C}\T$.
 
 The collection of observation and action data runs the plant for $T$ steps under the initial gain, with a randomly
 sampled excitation added on top of it,
@@ -291,8 +298,9 @@ combinations to find the optimal setting to use in our experiment. The full resu
 \end{table}
 
 The resulting identified system then serves as a surrogate for the true model
-for the model-based approaches from \cref{subsec:known-model-setting}. We use
-for N4SID + Model-based PG an $\eta = 10^{-4}$ and for N4SID + S-PI
+for the model-based approaches from \cref{subsec:known-model-setting}, in which
+we assume a latent second moment of $I_{\hat{n}}$, i.e. $\tilde{\Sigma}_0 = \hat{C}\hat{C}\T$.
+We use for N4SID + Model-based PG an $\eta = 10^{-4}$ and for N4SID + S-PI
 $\lambda = 1$ across all sizes. This thus produces results without ever having
 access to the real model.
 
@@ -534,10 +542,10 @@ seeds differently.
 Finally, we investigate measurement noise. Here, from visual inspection, it seems like S-PI (model-free) is
 completely robust against it (\cref{fig:noise-large-measurement-relative}). While the other architectures experience an
 around tenfold increase in cost (with Model-free NPG even slightly higher) similar to the baseline, it sits consistently across
-the sizes at a relative degradation of one. However, this time we cannot fully attribute this to
-its higher nominal cost. Under \emph{standard} intensity, measurement noise does not increase the cost
-for it at all, as seen in \cref{fig:noise-large-measurement-absolute}, and under \emph{weak} it even reduces
-its cost. But still, under higher intensities it remains much more robust than the other approaches.
+the intensties at a relative degradation of one. However, this time we cannot fully attribute this to
+its higher nominal cost. Under \emph{weak} and \emph{standard} intensity, measurement noise does not increase its cost
+measurably (\cref{fig:noise-large-measurement-absolute}) and under higher intensities it remains much
+more robust than the other approaches.
 
 \begin{figure}[htbp]
   \centering
