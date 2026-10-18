@@ -10,7 +10,7 @@ from dataclasses import dataclass
 import numpy as np
 
 import settings
-from evaluation.metrics import Policy, monte_carlo_returns
+from evaluation.metrics import LinearPolicy, Policy, monte_carlo_returns
 from experiments.problem import Problem, build_plant
 from seeding import sub_rng
 from lqr_base.noise import LQRNoiseSettings
@@ -20,6 +20,7 @@ __all__ = [
     "TestResult",
     "evaluate_policy",
     "figure_trajectory",
+    "runaway_episodes",
     "shared_initial_state",
 ]
 
@@ -58,6 +59,26 @@ def shared_initial_state(problem: Problem) -> np.ndarray:
     return sub_rng(settings.SHARED_SEED, "figure_x0").uniform(-bound, bound)
 
 
+def runaway_episodes(problem: Problem, final_states: np.ndarray) -> int:
+    """How many episodes ended with the mass outside the initial position range.
+    Treated as unstable.
+
+    Parameters
+    ----------
+    problem : Problem
+        Only the initial-state box is used.
+    final_states : np.ndarray
+        True states the episodes ended in, of shape ``(episodes, n)``.
+
+    Returns
+    -------
+    int
+    """
+    position = final_states[:, 0]
+    outside = ~(np.abs(position) <= problem.max_initial_state[0])
+    return int(np.sum(outside))
+
+
 def evaluate_policy(
     problem: Problem,
     policy: Policy,
@@ -81,8 +102,10 @@ def evaluate_policy(
     Returns
     -------
     TestResult
-        Its ``summary`` carries ``test_cost_mean``, ``test_episodes`` and
-        ``test_horizon``; its ``returns`` contains the per-episode costs.
+        Its ``summary`` carries ``test_cost_mean``, ``test_episodes``,
+        ``test_horizon`` and ``runaway_episodes``; its ``returns`` contains
+        the per-episode costs. ``runaway_episodes`` is ``None`` for a linear
+        gain, whose stability the spectral radius already decides.
     """
     episodes = settings.TEST_EPISODES if episodes is None else episodes
     horizon = settings.TEST_HORIZON if horizon is None else horizon
@@ -90,8 +113,8 @@ def evaluate_policy(
     scorer = build_plant(problem, "test", noise_settings=noise_settings)
     scorer.reset()
 
-    returns = monte_carlo_returns(
-        scorer, policy, n_episodes=episodes, horizon=horizon
+    returns, finals = monte_carlo_returns(
+        scorer, policy, n_episodes=episodes, horizon=horizon, return_final=True
     )
 
     return TestResult(
@@ -99,6 +122,10 @@ def evaluate_policy(
             "test_cost_mean": float(np.mean(returns)),
             "test_episodes": episodes,
             "test_horizon": horizon,
+            "runaway_episodes": (
+                None if isinstance(policy, LinearPolicy)
+                else runaway_episodes(problem, finals)
+            ),
         },
         returns=returns,
     )

@@ -23,7 +23,7 @@ ROOT = Path(settings.EXPERIMENT_ROOT)
 
 KEYS = ("policy_complexity", "policy_complexity_frozen")
 
-SOURCE_KEYS = KEYS + ("J_final",)
+SOURCE_KEYS = KEYS + ("J_final", "runaway_episodes")
 
 
 def recount(directory: Path, payload: dict, presets: dict) -> dict | None:

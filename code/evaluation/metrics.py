@@ -398,7 +398,8 @@ def monte_carlo_returns(
     n_episodes: int,
     horizon: int,
     gamma: float = 1.0,
-) -> np.ndarray:
+    return_final: bool = False,
+) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
     """Accumulated cost of each individual rollout.
 
     Parameters
@@ -415,11 +416,15 @@ def monte_carlo_returns(
         Steps per rollout.
     gamma : float, optional
         Discount. Defaults to ``1.0``.
+    return_final : bool, optional
+        Also return the true state every episode ended in.
 
     Returns
     -------
     np.ndarray
-        Accumulated cost per episode, of shape ``(n_episodes,)``.
+        Accumulated cost per episode, of shape ``(n_episodes,)``. With
+        ``return_final``, a tuple with the final states of shape
+        ``(n_episodes, n)`` second.
     """
     state_snapshot = lqr.state_rng.bit_generator.state
     noise_snapshot = lqr.noise_rng.bit_generator.state
@@ -427,6 +432,7 @@ def monte_carlo_returns(
     episodes_snapshot = lqr.episodes
 
     returns = np.empty(n_episodes)
+    finals = np.empty((n_episodes, lqr.A.shape[0]))
 
     try:
         for episode in range(n_episodes):
@@ -441,13 +447,14 @@ def monte_carlo_returns(
                 discount *= gamma
 
             returns[episode] = total
+            finals[episode] = lqr.x
     finally:
         lqr.state_rng.bit_generator.state = state_snapshot
         lqr.noise_rng.bit_generator.state = noise_snapshot
         lqr.env_steps = steps_snapshot
         lqr.episodes = episodes_snapshot
 
-    return returns
+    return (returns, finals) if return_final else returns
 
 
 def monte_carlo_cost(

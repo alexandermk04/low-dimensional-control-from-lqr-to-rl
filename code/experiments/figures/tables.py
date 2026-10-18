@@ -25,10 +25,12 @@ UNPAIRED_ROW = r"\quad no reference"
 # Appended to the caption of a table that carries the census rows.
 CENSUS_NOTE = (
     " Identified counts the seeds a model was obtained from and stable those "
-    "whose controller left the plant stable."
+    "whose controller left the plant stable and kept the mass contained in "
+    "every test episode."
 )
 CENSUS_NOTE_STABLE_ONLY = (
-    " Stable counts the seeds whose controller left the plant stable."
+    " Stable counts the seeds whose controller left the plant stable and kept "
+    "the mass contained in every test episode."
 )
 
 # Row label and formatting per metric.
@@ -66,9 +68,10 @@ def _escape(text: str) -> str:
 def usable(row: dict) -> bool:
     """Whether a run produced a usable controller.
 
-    Depends on ``J_final`` where a run has one.
+    Depends on ``J_final`` where a run has one, and on whether any clean test
+    episode ran away.
     """
-    if row.get("identification_failed"):
+    if row.get("identification_failed") or row.get("runaway_episodes"):
         return False
 
     cost = row.get("J_final")

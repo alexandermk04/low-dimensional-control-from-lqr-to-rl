@@ -178,6 +178,7 @@ def evaluate_grid(source: str, experiment: str, sizes=None, verbose: bool = True
                 "policy_complexity_frozen"
             )
             summary["J_final"] = source_record.summary.get("J_final")
+            summary["runaway_episodes"] = source_record.summary.get("runaway_episodes")
 
             trajectory = figure_trajectory(
                 problem, policy, noise_settings=noise,

@@ -64,6 +64,7 @@ SUMMARY_KEYS = (
     "test_episodes",  # contents of the pooled sample
     "test_horizon",
     "test_cost_stderr",  # None for chapter 4/5
+    "runaway_episodes",  # clean test episodes ending outside the initial position range, None for gains
     # Chapter-6 only 
     "thruster_energy_mean",  # energy the ring burned per agent step
     "null_waste_mean",  # how much of that was wasted
