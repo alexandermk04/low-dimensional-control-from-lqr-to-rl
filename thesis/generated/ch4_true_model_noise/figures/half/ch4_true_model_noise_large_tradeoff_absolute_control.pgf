@@ -612,9 +612,9 @@
 \definecolor{currentstroke}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{currentstroke}%
 \pgfsetdash{}{0pt}%
-\pgfpathmoveto{\pgfqpoint{1.093118in}{2.411467in}}%
+\pgfpathmoveto{\pgfqpoint{1.137562in}{2.411467in}}%
 \pgfpathlineto{\pgfqpoint{1.204229in}{2.411467in}}%
-\pgfpathlineto{\pgfqpoint{1.315340in}{2.411467in}}%
+\pgfpathlineto{\pgfqpoint{1.270896in}{2.411467in}}%
 \pgfusepath{stroke}%
 \end{pgfscope}%
 \begin{pgfscope}%
@@ -649,7 +649,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=1.404229in,y=2.372578in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}Baseline}}%
+\pgftext[x=1.359785in,y=2.372578in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}Baseline}}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetrectcap%
@@ -658,9 +658,9 @@
 \definecolor{currentstroke}{rgb}{0.000000,0.447059,0.698039}%
 \pgfsetstrokecolor{currentstroke}%
 \pgfsetdash{}{0pt}%
-\pgfpathmoveto{\pgfqpoint{1.093118in}{2.256534in}}%
+\pgfpathmoveto{\pgfqpoint{1.137562in}{2.256534in}}%
 \pgfpathlineto{\pgfqpoint{1.204229in}{2.256534in}}%
-\pgfpathlineto{\pgfqpoint{1.315340in}{2.256534in}}%
+\pgfpathlineto{\pgfqpoint{1.270896in}{2.256534in}}%
 \pgfusepath{stroke}%
 \end{pgfscope}%
 \begin{pgfscope}%
@@ -695,7 +695,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=1.404229in,y=2.217645in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}Model-based PG}}%
+\pgftext[x=1.359785in,y=2.217645in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}Model-based PG}}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetrectcap%
@@ -704,9 +704,9 @@
 \definecolor{currentstroke}{rgb}{0.000000,0.619608,0.450980}%
 \pgfsetstrokecolor{currentstroke}%
 \pgfsetdash{}{0pt}%
-\pgfpathmoveto{\pgfqpoint{1.093118in}{2.101601in}}%
+\pgfpathmoveto{\pgfqpoint{1.137562in}{2.101601in}}%
 \pgfpathlineto{\pgfqpoint{1.204229in}{2.101601in}}%
-\pgfpathlineto{\pgfqpoint{1.315340in}{2.101601in}}%
+\pgfpathlineto{\pgfqpoint{1.270896in}{2.101601in}}%
 \pgfusepath{stroke}%
 \end{pgfscope}%
 \begin{pgfscope}%
@@ -741,7 +741,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=1.404229in,y=2.062712in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}S-PI}}%
+\pgftext[x=1.359785in,y=2.062712in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}S-PI}}%
 \end{pgfscope}%
 \end{pgfpicture}%
 \makeatother%
