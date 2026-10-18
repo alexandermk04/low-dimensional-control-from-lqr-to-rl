@@ -368,8 +368,8 @@ this, it is noticeable that Model-free NPG takes longer to converge the larger t
 S-PI and N4SID + Model-based PG, where N4SID + S-PI again is still much faster than N4SID + Model-based PG. The fastest approach here is the DARE solution, as it only
 requires the identification step, and no iteration.
 
-Looking at the policy sizes, we can see that N4SID + S-PI indeed reduces its size to that of the optimal policy, with the DARE policy
-also being smaller than the iterative versions, but still slightly larger (\cref{fig:identified-across-sizes-complexity}).
+Looking at the policy sizes, we can see that N4SID + S-PI indeed produces the smallest policy, with the DARE policy
+also being smaller than the iterative versions, but still slightly larger in some cases (\cref{fig:identified-across-sizes-complexity}).
 
 \begin{figure}[htbp]
   \centering
@@ -394,94 +394,63 @@ cases even achieves optimal performance (\cref{fig:identified-across-sizes-subop
 \subsection{Noise Experiments on Large Inflation}
 \label{subsec:noise-large-inflation}
 
-We first start by analyzing the effects we can observe on the uninflated system under noise. For parametric uncertainty, the spread
-of suboptimality again ranges from $+0.1$ to $-0.1$ for all the iteratively trained approaches, with the DARE solution having a much
-smaller spread, centered around the baseline. Still, it is observable that the N4SID-based solvers perform on average much better
-than the direct approaches. For control noise a similar structure can be noticed; here, however, the spreads separate much more clearly
-into worse for direct approaches and better for indirect approaches.
-For both external disturbance and measurement noise, the DARE solution remains closely spread around $0$. For external disturbance, all
-the other solvers except for Model-free NPG perform worse than the baseline, while Model-free NPG sits at a suboptimality of $-0.1$ for \emph{divergent}. For
-measurement noise, the image suddenly flips, with Model-free NPG performing worse, while all the other approaches sit at a suboptimality of around $-0.01$.
+Again, we investigate our system inflated to \emph{large} size and repeat our experiments from the 
+true model section (\needcite{cref to above}).
 
-Now inflating the system to \emph{large} size and repeating our experiments, we see similar observations for parametric uncertainty, except for
-S-PI (model-free), which performs worse than the others by multiple orders of magnitude.
-Looking at control noise, on average Model-free NPG performs best here, even though the spread under \emph{strong} or \emph{divergent} control noise
-admits episodes worse than the baseline. Iterative N4SID solvers in comparison here do also outperform the baseline, but are slightly worse than
-Model-free NPG. However, they remain consistently below baseline across all intensities and runs.
-The most interesting observation here is that, even though S-PI (model-free) performs much worse on the clean plant, its median is
-on par with Model-free NPG under \emph{divergent} control noise (\cref{fig:noise-large-disturbance-control}), even though its mean lies
-above the baseline.
+We first start by taking a look at parametric uncertainty. As it is a multiplicative noise type, already
+worse performance is magnified even more. For MF SPI, this clearly can be seen, as even the least 
+relative degradation amounts to 10^4, with the majority being above 10^5. So for the following analysis
+of the other models, we will exclude it here.
 
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_noise}{ch4_noise_large_subopt_disturbance-strong}
-    \caption{External disturbance at intensity \emph{strong}.}
-    \label{fig:noise-large-disturbance-strong}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_noise}{ch4_noise_large_subopt_control-divergent}
-    \caption{Control noise at intensity \emph{divergent}.}
-    \label{fig:noise-large-control-divergent}
-  \end{subfigure}
-  \caption{Suboptimality $S$ of the solvers without the model under \emph{large} inflation.}
-  \label{fig:noise-large-disturbance-control}
-\end{figure}
+% Plot of relative deg parametric divergent, absolute tradeoff curve, both with SPI-MF excluded
 
-For external disturbance, the indirect solvers perform worse here, while Model-free NPG is clearly the robust choice here, under any strength. Again,
-it is noticeable that the stronger the noise gets, the more runs of S-PI (model-free) achieve a negative suboptimality. While on average still worse,
-under \emph{divergent} intensity, some do indeed perform the same as Model-free NPG. This phenomenon can also be observed with measurement noise:
-here, S-PI (model-free) is on average at a suboptimality of $10$, $1$ and $0.1$ for \emph{weak}, \emph{standard} and \emph{strong}, but for \emph{divergent} it then clearly sits at $-1$.
-With increasing intensity, the spread can be seen shifting more and more downwards. Between indirect solvers, N4SID + S-PI is the only one that
-stays below baseline at every intensity, performing better than N4SID + Model-based PG, which differs from it only by its full-rank gain. Overall, it can be
-seen that the reduction-based solvers do perform better here than their fully parameterized counterparts under \emph{divergent} intensity (\cref{fig:noise-large-measurement}).
+TODO - explanation based on that plot.
 
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_noise}{ch4_noise_large_subopt_measurement-standard}
-    \caption{Intensity \emph{standard}.}
-    \label{fig:noise-large-measurement-standard}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch4_noise}{ch4_noise_large_subopt_measurement-divergent}
-    \caption{Intensity \emph{divergent}.}
-    \label{fig:noise-large-measurement-divergent}
-  \end{subfigure}
-  \caption{Suboptimality $S$ of the solvers without the model under \emph{large} inflation and measurement noise.}
-  \label{fig:noise-large-measurement}
-\end{figure}
+Next, we analyze robustness against external disturbances. Here, all controllers relying on N4SID
+estimation, are affected nearly identically to the baseline, while the directly trained controllers
+degrade in relative terms slightly less (in the case of MF NPG) or a lot less (SPI-MF). This is also visible
+across any intensity. However, when looking at the absolute degradtion, one can see that the low value for
+SPI-MF stems from the fact that his nominal performance was poor, and its actual absolute increase is similar
+to all the other controllers, or even slightly above. For MF-NPG however, it also lies below there, hinting
+at an even so slightly improved robustnes.
+
+% relative degradation disturbance diver, large tradeoff absolute disturbance
+
+Looking at control noise next, we can again see the issue from before, where in relative terms SPI-MF barely
+degrades, while the other architectures show values much closer to the pinpointed baseline increase. Still, 
+here as also less absolute degradation is shown by SPI-MF, it seems to be more robust to control noise than
+other architectures. Again, we can also notice that MF-NPG is slightly better than all the indirect approaches
+or the baseline, however not by much.
+
+% relative degradation control diver and tradeoff curve absolute for control noise
+
+Noticeable from the spread however is, that control noise seems to have mostly the same effect
+across all seeds, compared to the previous noise channels, where relative degradation affected
+seed diffently.
+
+Finally, we investigate measurement noise. Here, from visual inspection, it seems like SPI-MF is
+completely robust against it. While the other architectures experience an around tenfold increase
+in cost (with MF-NPG even slightly higher) similar to the baseline, it sits consistently across
+the sizes at a relative degradtation of one. However, this time we can't fully attribute this to
+its higher nominal cost. Under standard intensity, measurement noise does not increase the cost
+for it at all, as seen in \needcite{cref absolute tradeoff figure}, and under weak it even reduces
+its cost. But still under higher intensities it remains much more robust than the other approaches.
+
+% relative and absolute tradeoff curves for measurement noise
+
+When now taking a look at the other architectures more in detail, we notice that the larger
+controllers are indeed more affected by the noise. MF-NPG sits above all the model-based appraoches,
+and also MB-PG degrades slightly more than MB-SPI, with the baseline sitting between both. This
+was also a pattern we already noticed in the previous experiment, indicating that less parameters
+might make a controller more robust against measurement noise, if we also take the performance
+of SPI-MF into account.
 
 \subsection{Discussion}
 \label{subsec:id-model-discussion}
 
-Overall, we notice that for a clean plant, identifying the system and solving the DARE based on these observations is the fastest
-solution, and even under noise it achieves a performance similar to the baseline solution. A good alternative is offered by approaches
-that use the same identified system and combine it with model-based approaches. They offer, in the case of S-PI, a much shorter training
-than direct approaches, and, due to their suboptimality on the nominal loop, they are more robust to control noise. Compared to them, direct approaches
-require much more training, and perform worse on the clean system. The only exception is external disturbance, where
-Model-free NPG, as a fully parameterized, iteratively trained policy, outperforms all other approaches.
-
-This distinction between fully parameterized and dimensionally reduced must also be made. While the direct S-PI (model-free) approach varies
-quite a lot in its performance, under measurement noise on inflated systems, it improves in comparison to its counterpart, and even outperforms
-it under \emph{divergent} noise. N4SID + S-PI compared with N4SID + Model-based PG does so across all measurement noise intensities.
-
-Combining both of these distinctions, in most cases, except for external disturbance, an N4SID + S-PI-based
-controller is the best choice. It offers the advantages of fast training of N4SID, better performance than baseline
-under control noise, together with the robustness under measurement noise from the reduced dimensionality, while also being orders of magnitude
-smaller. Solving the DARE directly also offers a good solution, being stable across all experiments, but it is often
-outperformed by the reduced controller.
+%TODO
 
 \section{Discussion}
 \label{sec:lqr-discussion}
 
-We take from this chapter that direct approaches are mostly outperformed by indirect approaches, which try to identify the
-model first. They require around four orders of magnitude of training steps less, and achieve performances close to optimal
-on the clean plant. By not reaching full optimality, they are less affected by control noise than
-the DARE solution on the clean plant. Regarding noise, it is also noticeable that the strength of low-dimensional
-controllers is their resistance to measurement noise, which becomes much clearer under increasingly larger dimensions as full-rank
-parameterizations do not remove components in the null space. With these learnings in mind, we will now progress to our RL approaches next.
+% TODO
