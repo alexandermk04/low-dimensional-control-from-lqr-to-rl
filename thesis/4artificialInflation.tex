@@ -115,8 +115,8 @@ a latent state:
 \end{equation}
 We achieve orthonormality in the columns of $\hat{C}$ by QR-decomposing it, and then using its $R$ component
 to apply a change of basis to the system. With this, only the orthonormal part remains as $\hat{C}$, and
-the transpose becomes its inverse. The input dimension for both the actor and the critic thus are
-projected to dimensoin $\hat{n}$, which is the order of the identified model.
+the transpose becomes its inverse. The inputs of both the actor and the critic are thus
+projected to dimension $\hat{n}$, which is the order of the identified model.
 
 However, as we will later scale our inputs to larger dimensions (\cref{chap:perception}), N4SID will become infeasible for such dimensions.
 Still, we want to stay in line with the idea of encoding our observations into a latent state, as this exactly introduces the bow-tie structure

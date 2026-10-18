@@ -40,17 +40,17 @@ the right embodiment~\cite{McGeer1990Passive,Mueller2017Morphological}. However,
 as an embodiment might offer a large number of sensors and actuators, which outnumber the dimension governing the underlying dynamics~\cite{Todorov2002Optimal,Lesort2018State}.
 Synergizing these, like in nature~\cite{DAvella2003Combinations}, is thus the goal here.
 And while low-dimensional controllers for embodied agents have been studied before~\cite{Montufar2015CheapControl,Datar2025Universal},
-robustness of such has, to our knowledge, not yet been investigated systematically starting from 
-simple linear controllers and transitioning over more complex reinforcement learning based ones
-towards perception-based agents acting in simulated environments.
-This is where we aim to contribute to.
+the robustness of such controllers has, to our knowledge, not yet been investigated systematically, starting from
+simple linear controllers, moving on to more complex ones based on reinforcement learning (RL),
+and ending with perception-based agents acting in simulated environments.
+This is where we aim to contribute.
 
 To be able to quantify performance and what optimal means, we rely on a very well-researched example~\cite{Kalman1960Contributions,Hu2023Toward}: the linear quadratic regulator, which,
 together with some related work, we will introduce in \cref{chap:background}.
 We use the also well-known double integrator as our environment, and artificially produce higher input and output dimensions via projection for our
 controllers to train on, to simulate overparameterization like mentioned above in \cref{chap:lqr}. Then, we will introduce noise to the environment during testing
 and compare the robustness between them. The next step consists of moving from these simpler, gain-matrix-based controllers
-to reinforcement learning (RL) approaches based on proximal policy optimization~\cite{Schulman2017Proximal} (\cref{chap:inflation}), while still
+to RL approaches based on proximal policy optimization~\cite{Schulman2017Proximal} (\cref{chap:inflation}), while still
 maintaining our optimal controller from before as the comparison. Robustness evaluations are a part of this again. Finally, we move to an
 example closer to reality in \cref{chap:perception}, by introducing a real simulated environment, still based on the double integrator,
 which however will be observed by a camera, and influenced by multiple thrusters, which differ from each other. Again introducing noise

@@ -74,7 +74,7 @@ where $e^{A_c t}$ denotes the matrix exponential.
 Until \cref{subsubsec:inflated-model}, we assume that the state is fully
 measurable and therefore set $C = I_n$, which reduces
 \eqref{eq:ss-cont-output} to $y(t) = x(t)$. Later,
-we will replace $C$ by a lift matrix $U_1$, and
+we replace $C$ by a lift matrix $U_1$ and
 inject measurement noise (\cref{subsubsec:noise-injection}),
 such that the previous simplification no longer holds.
  
@@ -249,15 +249,14 @@ incurred from any state $x$ onwards with
 
 Whether \eqref{eq:dare} has such a solution at all depends on two structural
 properties of the system, stabilizability and
-detectability~\needcite{discrete-time source, Kucera?}:
+detectability~\cite[p.~442, Thm.~8]{Kucera1972Discrete}:
 
 \begin{theorem}[Existence and uniqueness]
 \label{thm:dare-existence}
 Let $(A, B)$ be stabilizable and let $(A, Q^{1/2})$ be detectable. Then the DARE
 \eqref{eq:dare} has a unique symmetric positive semi-definite solution $P$, which
 is the only stabilizing one, and the resulting closed loop satisfies
-$\spr(A - B K^{*}) < 1$. If $(A, Q^{1/2})$ is observable, $P$ is positive
-definite.
+$\spr(A - B K^{*}) < 1$.
 \end{theorem}
 
 For the double integrator, both conditions hold: $(A, B)$ is controllable and thus
@@ -721,20 +720,16 @@ for which $\kappa_{\ell} = \kappa(K^{*}; c_{\ell})$ holds by \eqref{eq:noise-cal
 As a result, this gives us the possibility to compare whether a specific trained
 controller is more or less robust than the baseline, or any other controller.
 
-However, this metric is a bit flawed, if comparing a controller which has performed
-very badly on the nominal loop with one that performed well. 
+However, this metric is a bit flawed when comparing a controller which has performed
+very badly on the nominal loop with one that performed well.
 If we assume that both achieve the same $\kappa(K; c)$, this would equate
 to a much larger absolute increase in the test cost for the former, compared
-to the latter. To put this into perspective, we introduce the following metric
-
-% TODO - verify against the code
-
+to the latter. To put this into perspective, we introduce the following metric,
 \begin{equation}
     \label{eq:absolute-degradation}
-    \frac{\Delta \hat{J}}{\hat{J}^{}}(K; c) \coloneqq \frac{\hat{J}_T(K; c) - \hat{J}_T(K; \varnothing)}{\hat{J}_T(K^{*}; \varnothing)} ,
+    \frac{\Delta \hat{J}}{\hat{J}^{*}}(K; c) \coloneqq \frac{\hat{J}_T(K; c) - \hat{J}_T(K; \varnothing)}{\hat{J}_T(K^{*}; \varnothing)} ,
 \end{equation}
-
-and call it "absolute degradation", indicating the increase in cost by noise,
+and call it \emph{absolute degradation}, indicating the increase in cost caused by noise,
 in units of the optimal clean cost.
 
 \subsubsection{The Size of a Policy}
@@ -847,7 +842,7 @@ restarts, such that we never compare with a window across an infinite iteration.
 The signal is something the solver itself observes and optimizes for,
 like the cost \eqref{eq:cost-of-gain}, an estimate, or a regularized
 version of it for solvers introducing structure. Some also have
-additional early-stopping criterions. They will be introduced
+additional early-stopping criteria. They will be introduced
 in detail in \cref{chap:lqr}.
 
 For all of them, we use the best iterate by
@@ -908,14 +903,13 @@ Under the stronger conditions, individual seeds might have divergent episodes an
 blow up their costs. To keep our mean finite and comparable, we exclude them
 from the mean calculation, and report them separately as the divergence rate.
 We differentiate two cases:
-
 \begin{enumerate}
-    \item Linear Gain: The controller becomes unstable i.e. % TODO formula for spectral radius
-    \item Neural Network: The controller is not able to control the mass,
-    i.e. contain it in the range of initial positions at the end of any of 
-    its episodes, formally once % TODO formula position of final x larger than 10
+    \item Linear gain: the controller becomes unstable, i.e.\
+    $\spr(A - B U_2 K U_1) \geq 1$.
+    \item Neural network: the controller in seed $s$ is not able to control the mass,
+    i.e.\ contain it in the range of initial positions at the end of any of
+    its episodes, formally once $\lvert p^{(i,s)}_T \rvert > 10$ for some episode $i$.
 \end{enumerate}
-
 \begin{equation}
     \label{eq:divergence-rate}
     D(K; c) \coloneqq \frac{1}{M N}
@@ -967,7 +961,7 @@ it as a gain matrix that we can closely compare with our LQR approaches (Linear 
 Fully-connected PPO (\emph{MLP}), and will also be evaluated. Additionally, we will introduce structures that force the observations through a low-dimensional latent
 space. Here, we will reuse the N4SID system identifier from before to identify the output matrix $\hat{C}$, before applying a change of
 basis to it, to achieve orthonormality in its columns. We project
-the high-dimensional observation through $\hat{C}^T$ into a lower dimension, and then train PPO with this as the input. Therefore, the name for it is State encoder + PPO (\emph{StE}).
+the high-dimensional observation through $\hat{C}\T$ into a lower dimension, and then train PPO with this as the input. Therefore, the name for it is State encoder + PPO (\emph{StE}).
 A similar approach is used for Scalable encoder + PPO (\emph{ScE}), which is based on Jonschkowski and Brock~\cite{Jonschkowski2015Learning} and
 Botteghi et al.~\cite{Botteghi2021LowDimensional}, and uses
 robotic priors to derive a low-dimensional latent state via a trainable encoder. Again, the construction following this encoder is PPO. Lastly, we
