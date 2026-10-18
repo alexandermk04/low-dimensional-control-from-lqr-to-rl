@@ -194,11 +194,12 @@ the projection matrix $U_{\mathrm{b}}$ stays the same for both.
 \section{Comparison across Dimensions}
 \label{sec:rl-comparison}
 
-Looking at achieved suboptimality during training, we overall see a learning process in all
+Looking at achieved suboptimality during training, we overall see a learning process in almost all
 of our architectures (\cref{fig:rl-large-curves}). Noticeable, however, is the long stagnation in the beginning of the learning,
 before decreasing towards the end. Significant is also Linear PPO, which does not achieve an
 improvement under \emph{large}, but this was expected, given its unsuccessful learning-rate search results
-(\cref{fig:app-rl-learning-rate-ppo-linear-large}).
+(\cref{fig:app-rl-learning-rate-ppo-linear-large}). Also, when looking at the spread, we seed that in some seeds
+Scalable Encoder + PPO also rather increases in cost.
 
 \begin{figure}[htbp]
   \centering
@@ -207,12 +208,18 @@ improvement under \emph{large}, but this was expected, given its unsuccessful le
   \label{fig:rl-large-curves}
 \end{figure}
 
-Looking at the complexity of our trained policies, we notice that the difference between
-our ``low-dimensional'' and fully connected architectures. Especially under \emph{small} and \emph{medium},
-Scalable encoder + PPO is even larger than Fully-connected PPO, while the others are
-on par. However, under \emph{large} a difference does become noticeable, with Fully-connected PPO being around
-$1.6$ times the size of Scalable encoder + PPO, and $2.2$ times the size of State encoder + PPO or Bottleneck PPO % TODO: Redo with new policy sizes
-(\cref{fig:rl-across-sizes-complexity}).
+This can also be seen from the amount of episodes that diverge:
+
+% table with runaway / divergence episodes
+
+Looking at the complexity of our trained policies, we can see that the State encoder + PPO
+has the smallest parameter count, is however of a similar size as Linear PPO or Fully-connected PPO.
+The group of larger policies consists of Bottleneck PPO, the non-dimensionally reduced FC-extractor
++ PPO and Scalable encoder + PPO. For the latter, most of its parameters are already frozen after
+pretraining, differentiating it from the rest.
+
+% TODO: Instead replace with a table, this plot doesn't tell anything
+% Should be split into trainable, frozen and total parameters
 
 \begin{figure}[htbp]
   \centering
@@ -221,18 +228,25 @@ $1.6$ times the size of Scalable encoder + PPO, and $2.2$ times the size of Stat
   \label{fig:rl-across-sizes-complexity}
 \end{figure}
 
-Regarding the performance, we can see that under \emph{small} inflation all controllers achieve
-a similar median, with Scalable encoder + PPO being the worst of them all. However, when looking at the spreads,
-State encoder + PPO also has some runs in the $10$ to $1000$ suboptimality range. The best one here,
-and also in \emph{medium}, is Linear PPO, which shows little spread.
+Regarding the performance, we can see that under \emph{small} inflation Linear PPO, Bottleneck PPO
+and achieve FC-Extractor + PPO achieve a similar median,
+while State Encoder + PPO and Fully connected PPO have a slightly worse performance
+with Scalable encoder + PPO being the worst of them all. However, when looking at the spreads,
+State encoder + PPO has some runs in the $100$ to $1000$ suboptimality range which are the largest ones, while
+Fully-connected PPOs worst case is similar to FC-Extractor + PPO. The best one here,
+is Linear PPO, which shows little spread.
 
 Looking at \emph{medium}, here Fully-connected PPO becomes worse regarding its median, followed by Scalable encoder + PPO, even though
-the spread of Scalable encoder + PPO still has worse runs. The other low-dimensional controllers show a good median
-similar to Linear PPO, however have a wider spread, with some runs worse than $100$ suboptimality.
+the spread of Scalable encoder + PPO still has worse runs. FC-Extractor maintains its median from
+\emph{small}, only increasing its spread a bit, making it the best of them all. The other low-dimensional
+controllers show a good median similar to Linear PPO, however have a wider spread,
+with some runs worse than $100$ suboptimality.
 
 Now under \emph{large} it becomes interesting, as Linear PPO's performance has deteriorated, becoming the
-worst controller of them all. Scalable encoder + PPO is still second, now again worse than the fully connected
-version. However, Bottleneck PPO shows a similar performance as under \emph{medium}, while most others
+worst controller of them all, judging from the median. Under worst case evaluating, its still the best.
+Scalable encoder + PPO is still second, now again worse than the fully connected version.
+However the other large parameter architectures,
+Bottleneck PPO and FC-Extractor + PPO show a similar performance as under \emph{medium}, while most others
 (except for Fully-connected PPO) have shifted upwards. The simple State encoder + PPO also remains in a good spot
 even though it has worsened in comparison to Bottleneck PPO (\cref{fig:rl-across-sizes-subopt}).
 
@@ -247,102 +261,59 @@ even though it has worsened in comparison to Bottleneck PPO (\cref{fig:rl-across
 \section{Noise on Large Inflation}
 \label{sec:rl-noise-large}
 
+% ---- Parametric Uncertainty --------
+
 Similar to what we have seen before in \cref{subsec:noise-large-inflation}, parametric uncertainty
-seems to affect all controllers similarly and generally increases suboptimality across all architectures.
-The median is shifted upwards, and especially apparent at \emph{divergent}, the worst-case runs get a couple of orders
-of magnitude worse (\cref{tab:ch5-noise-large-parametric-worst}).
+seems to affect most trained controllers similarly and generally increases suboptimality by multiple orders
+of magnitude. Here, the baseline remains the most robust one, with only its calibrated increase of 10x
+under divergent, while for the majority it is one between 10^5 or 10^6 in the median case. However, Linear
+PPO seems to be more robust than the other trained policies, "only" increasing by 10^3. When only looking 
+at \needcite{relative degradation parametric divergent}, one might question whether Linear PPO is actually
+more robust than the others, given its worse performance on the nominal plant. A small relative increase could
+then still mean a large absolute one. However, checking \needcite{absolute tradeoff parametric},
+we notice that indeed it also degrades less than the other controllers absolutely.
 
-\input{generated/ch5_noise/tables/ch5_noise_large_parametric_worst.tex}
+% side by side the figures from above
 
-However, this does not help us too much to answer the question whether low-dimensional architectures are more robust
-here.
+% ------- External Disturbance --------
 
-So let us take a look at external disturbance next. Here we can see that the median suboptimality of all approaches
-remains mostly stable throughout the increase in the noise, except for Bottleneck PPO, whose median improves into being even better
-than the baseline. Here, the shift of the interquartile range becomes also interesting, as with increasing noise intensity
-its width becomes smaller and sits between $-0.01$ and $-0.1$.
-State encoder + PPO and Fully-connected PPO behave quite similarly, both with a spread across the $0$ line (sometimes better, sometimes worse)
-and a similar median. Fully-connected PPO only differs by maintaining a wider interquartile range even under \emph{divergent} noise. Linear
-PPO sits above the baseline, similar to its noise-free testing, whereas Scalable encoder + PPO shows an increasing spread
-under stronger noise, with its interquartile range becoming smaller. Overall, it can be seen that Bottleneck PPO indeed outperforms
-the other architectures here (\cref{fig:rl-noise-large-disturbance-strong}).
+For external disturbance, not much can be said, as here all controllers are affected relatively and absolutely in a similar
+fashion. The only noticable difference is a wider range in values for Linear PPO with two noticably worse seeds, pushing
+its absolute degradtion above the others. However, for Linear PPO and Scalable Encoder + PPO, there also exists one seed
+each which experiences only a 4x relative cost increase, compared to the 10x increase measured at the baseline.
 
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch5_noise}{ch5_noise_large_subopt_disturbance-strong}
-    \caption{External disturbance at intensity \emph{strong}.}
-    \label{fig:rl-noise-large-disturbance-strong}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch5_noise}{ch5_noise_large_subopt_control-strong}
-    \caption{Control noise at intensity \emph{strong}.}
-    \label{fig:rl-noise-large-control-strong}
-  \end{subfigure}
-  \caption{Suboptimality $S$ of the PPO variants under \emph{large} inflation and different noise types.}
-  \label{fig:rl-noise-large-disturbance-control}
-\end{figure}
 
-Similarly, the robustness of Bottleneck PPO can be observed under control noise, where its median continuously shifts downwards
-with growing noise intensity, until falling below the baseline at \emph{strong} (\cref{fig:rl-noise-large-control-strong}). Otherwise, the order of performance for the other
-policies stays mostly the same, with just the spread under increasing noise passing the baseline. This however can most likely
-be attributed to a less robust baseline controller than performance of the others.
+% -------- Control noise ---------
 
-Lastly, let us take a look at measurement noise. Under \emph{weak} intensity, Linear PPO shows some
-wide spread, while generally the low-dimensional architectures show a mean lower than the fully connected
-ones. With the step to \emph{standard}, not much can be seen apart from an increase in the spread of
-Scalable encoder + PPO across the baseline. At \emph{strong}, all, except for Fully-connected PPO, shift their interquartile range
-across the baseline, in a similar spread, even though for Scalable encoder + PPO, the median also shifts towards $-0.1$, being
-the only architecture here. Still, some worst-case runs are measured at around $1000$ suboptimality. Fully-connected PPO in comparison sits
-between $0.1$ and $10$ suboptimality. Under \emph{divergent} measurement noise, we can see that the low-dimensional
-controllers outperform Linear PPO and Fully-connected PPO here. All their medians lie below the baseline
-and have a very thin spread of the interquartile range. Scalable encoder + PPO shows some runs being much
-worse than Fully-connected PPO; however, for Bottleneck PPO and State encoder + PPO, all the runs are below the median of
-Fully-connected PPO. Linear PPO's median also lies below the baseline and a little short of the other controllers, but has a
-spread similar to Fully-connected PPO, whose median sits above the baseline between $0.1$ and $0.01$ (\cref{fig:rl-noise-large-measurement}).
+Under control noise, we can observe that trained controllers, degrade in relation to how well they performed on the nominal
+loop. This can be seen from the fact that the order of relative degradation in \needcite{relative deg control dive} is the same as for the clean plant.
+Generally, however, we can see that all trained controllers except Linear PPO are generally more robust on average than the baseline in relative terms \needcite{tradeoff relative}.
+In absolute terms, Scalable encoder + PPO shows a worse degradation, which mainly stems from its wide spread of degradation in relation
+to its seeds. Actually, in three out of the ten seeds, it degrades less than the other controllers (excluding linear PPO), but then 
+in three others it shows more degradation, making it overall worse on average. More robust are
+State Encoder + PPO and Fully Connected PPO, as well as Bottleneck PPO and FC Extractor + PPO, showing a slightly better 
+robustness properties for the larger controllers.
 
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch5_noise}{ch5_noise_large_subopt_measurement-standard}
-    \caption{Intensity \emph{standard}.}
-    \label{fig:rl-noise-large-measurement-standard}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch5_noise}{ch5_noise_large_subopt_measurement-strong}
-    \caption{Intensity \emph{strong}.}
-    \label{fig:rl-noise-large-measurement-strong}
-  \end{subfigure}
+% two plots from above again
 
-  \medskip
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \generatedhalffigure{ch5_noise}{ch5_noise_large_subopt_measurement-divergent}
-    \caption{Intensity \emph{divergent}.}
-    \label{fig:rl-noise-large-measurement-divergent}
-  \end{subfigure}
-  \caption{Suboptimality $S$ of the PPO variants under \emph{large} inflation and measurement noise.}
-  \label{fig:rl-noise-large-measurement}
-\end{figure}
+
+% ------- Measurement Noise -----------
+
+For measurement noise, we can see that the smaller controller Linear PPO remains largely more robust in comparison to the baseline across
+intensities, both relatively and absolutely \needcite{cref trade off relative, absolute}. Scalable Encoder + PPO is slightly worse, however far
+below the baseline in relative degradation, and even beating Linear PPO under divergent noise. While Scalable Encoder indeed has a good
+performance here, its curve is heavily influenced by one outlier seed, which seems to not be affected by noise at all.
+We can further notice that Fully connected PPO
+shows the worst degradation here. Also interesting is that Bottleneck, FC-Extractor and State Encoder + PPO all show slightly worse
+degradation than the baseline under \emph{weak} and \emph{standard} intensities, however, with increasing strength continue degrade
+less than the baseline. Under divergent noise, in absolute degradation they even reach levels better than Linear PPO, which grows the
+same as the baseline. It is still very interesting to see that State Encoder + PPO performs at the same levels as FC-Extractor + PPO,
+and better than Bottleneck PPO, as it uses much less parameters than both.
+
+% plots metioned above
+
+% ------------------------------
 
 \section{Discussion}
 \label{sec:rl-discussion}
 
-Throughout our experiments we can see that Bottleneck PPO outperforms all the other controllers, be it on the clean plant
-or under noise. While for some it might only be on par with other constructions, under \emph{divergent} noise it exhibits very promising
-robustness properties. State encoder + PPO and Fully-connected PPO perform quite similarly, except under measurement noise, where
-State encoder + PPO is more reliable. Scalable encoder + PPO sadly is not as promising throughout, with worse performances than the rest,
-and much more variability. However, the effectiveness of its low-dimensional construction against measurement noise can still be
-seen here. Interesting to see is that Linear PPO, even though its training was ineffective, and it thus performed worse throughout
-most experiments, outclassed Fully-connected PPO under \emph{divergent} measurement noise.
-
-Again, we have seen that low-dimensional approaches are more robust than fully parameterized ones under increasing measurement noise especially.
-Still, it depends on how exactly the policy is constructed, as we also have observed differences between the approaches. And while Bottleneck PPO
-of course already displayed a better suboptimality post-training than Fully-connected PPO, as it has continuously, and even
-with greater leads outperformed its fully connected counterpart while also containing only half the parameters, we can
-more and more support our thesis that low-dimensional controllers can perform at least as well as fully connected ones if
-the design is cleverly chosen.
