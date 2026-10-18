@@ -9,7 +9,7 @@
         io/.style={layer, dashed, fill=white},
         link/.style={-{Stealth[length=1.6mm]}, line width=0.4pt},
         size/.style={font=\scriptsize, anchor=north},
-        row/.style={font=\small, anchor=east},
+        row/.style={font=\small, anchor=east, align=right},
     ]
     % columns: input, trunk 1-3, latent, head, actor 1-2, output
     \def\xin{0}\def\xa{1.25}\def\xb{2.35}\def\xc{3.45}\def\xz{4.75}\def\xh{6.0}
@@ -19,14 +19,14 @@
 
     % Linear PPO
     \def\y{0}
-    \node[row] at (-0.5,\y) {Linear PPO};
+    \node[row] at (-0.5,\y) {Linear PPO\\(\emph{Lin})};
     \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
     \node[io, minimum height=\hout cm] (out) at (\xout,\y) {};
     \draw[link] (in) -- node[above, font=\scriptsize] {$W = -K$} (out);
 
     % Fully-connected PPO
     \def\y{-2.4}\def\lb{0.55}
-    \node[row] at (-0.5,\y) {Fully-connected PPO};
+    \node[row] at (-0.5,\y) {Fully-connected PPO\\(\emph{MLP})};
     \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
     \node[trained, minimum height=\hsf cm] (p) at (\xp,\y) {};
     \node[trained, minimum height=\hsf cm] (q) at (\xq,\y) {};
@@ -39,7 +39,7 @@
 
     % State encoder + PPO
     \def\y{-4.8}\def\lb{0.55}
-    \node[row] at (-0.5,\y) {State encoder + PPO};
+    \node[row] at (-0.5,\y) {State encoder + PPO\\(\emph{StE})};
     \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
     \node[frozen, minimum height=\hz cm] (z) at (\xz,\y) {};
     \node[trained, minimum height=\hsf cm] (p) at (\xp,\y) {};
@@ -55,7 +55,7 @@
 
     % Scalable encoder + PPO
     \def\y{-7.2}\def\lb{1.0}
-    \node[row] at (-0.5,\y) {Scalable encoder + PPO};
+    \node[row] at (-0.5,\y) {Scalable encoder + PPO\\(\emph{ScE})};
     \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
     \node[frozen, minimum height=\hfh cm] (a) at (\xa,\y) {};
     \node[frozen, minimum height=\htf cm] (b) at (\xb,\y) {};
@@ -80,7 +80,7 @@
 
     % Bottleneck PPO
     \def\y{-9.6}\def\lb{1.0}
-    \node[row] at (-0.5,\y) {Bottleneck PPO};
+    \node[row] at (-0.5,\y) {Bottleneck PPO\\(\emph{OrB})};
     \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
     \node[trained, minimum height=\hfh cm] (a) at (\xa,\y) {};
     \node[trained, minimum height=\htf cm] (b) at (\xb,\y) {};

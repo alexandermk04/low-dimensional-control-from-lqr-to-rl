@@ -180,7 +180,7 @@ For each solver and inflation size, we train three seeds with each initial learn
   \eta_0 \in 3 \cdot 10^{-4} \sqrt{\frac{10}{d_{\mathrm{in}}}} \cdot \left\{ 0.01,\ \tfrac{1}{30},\ 0.1,\ \tfrac{1}{3},\ 1 \right\} ,
 \end{equation}
 rounded to two digits. The final rates were then chosen based on inspection of the training curves (\cref{tab:app-rl-learning-rates}).
-For Linear PPO under \emph{large} every gain becomes unstable during training (\cref{fig:app-rl-learning-rate-ppo-linear-large}).
+For \emph{Lin} under \emph{large} every gain becomes unstable during training (\cref{fig:app-rl-learning-rate-ppo-linear-large}).
 
 \begin{table}[htbp]
   \centering
@@ -190,11 +190,11 @@ For Linear PPO under \emph{large} every gain becomes unstable during training (\
     \toprule
     Solver & \emph{small} & \emph{medium} & \emph{large} \\
     \midrule
-    Linear PPO & $1 \cdot 10^{-4}$ & $4.5 \cdot 10^{-6}$ & $2.2 \cdot 10^{-6}$ \\
-    Bottleneck PPO & $3 \cdot 10^{-5}$ & $4.5 \cdot 10^{-5}$ & $6.7 \cdot 10^{-6}$ \\
-    State encoder + PPO & $1 \cdot 10^{-4}$ & $4.5 \cdot 10^{-5}$ & $6.7 \cdot 10^{-6}$ \\
-    Scalable encoder + PPO & $1 \cdot 10^{-4}$ & $1.3 \cdot 10^{-5}$ & $2.2 \cdot 10^{-6}$ \\
-    Fully-connected PPO & $3 \cdot 10^{-5}$ & $1.3 \cdot 10^{-5}$ & $6.7 \cdot 10^{-6}$ \\
+    Lin & $1 \cdot 10^{-4}$ & $4.5 \cdot 10^{-6}$ & $2.2 \cdot 10^{-6}$ \\
+    OrB & $3 \cdot 10^{-5}$ & $4.5 \cdot 10^{-5}$ & $6.7 \cdot 10^{-6}$ \\
+    StE & $1 \cdot 10^{-4}$ & $4.5 \cdot 10^{-5}$ & $6.7 \cdot 10^{-6}$ \\
+    ScE & $1 \cdot 10^{-4}$ & $1.3 \cdot 10^{-5}$ & $2.2 \cdot 10^{-6}$ \\
+    MLP & $3 \cdot 10^{-5}$ & $1.3 \cdot 10^{-5}$ & $6.7 \cdot 10^{-6}$ \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -202,7 +202,7 @@ For Linear PPO under \emph{large} every gain becomes unstable during training (\
 \begin{figure}[htbp]
   \centering
   \generatedfigure{appendix_rl_learning_rate}{appendix_rl_learning_rate_ppo_linear_large}
-  \caption{Training suboptimality for different learning rates for Linear PPO under \emph{large} inflation.}
+  \caption{Training suboptimality for different learning rates for \emph{Lin} under \emph{large} inflation.}
   \label{fig:app-rl-learning-rate-ppo-linear-large}
 \end{figure}
 
