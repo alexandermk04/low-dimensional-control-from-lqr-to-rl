@@ -934,16 +934,18 @@ In \cref{chap:inflation}, we will then first introduce RL-based approaches. With
 the most used architecture variants in robotics~\cite{Rudin2022Learning,Andrychowicz2020Learning,Kaufmann2023Champion}, we choose this as our main architecture,
 and apply different variations of it. First, by using only one layer and dropping the activation function and the biases,
 we force the trained controller to be linear, which allows us to extract
-it as a gain matrix that we can closely compare with our LQR approaches (Linear PPO). The fully connected, standard version is named
-Fully-connected PPO, and will also be evaluated. Additionally, we will introduce structures that force the observations through a low-dimensional latent
+it as a gain matrix that we can closely compare with our LQR approaches (Linear PPO, \emph{Lin}). The fully connected, standard version is named
+Fully-connected PPO (\emph{MLP}), and will also be evaluated. Additionally, we will introduce structures that force the observations through a low-dimensional latent
 space. Here, we will reuse the N4SID system identifier from before, by using the transpose of its identified observation matrix $\hat{C}$, we project
-the high-dimensional observation into a lower dimension, and then train PPO with this as the input. Therefore, the name for it is State encoder + PPO.
-A similar approach is used for Scalable encoder + PPO, which is based on Jonschkowski and Brock~\cite{Jonschkowski2015Learning} and
+the high-dimensional observation into a lower dimension, and then train PPO with this as the input. Therefore, the name for it is State encoder + PPO (\emph{StE}).
+A similar approach is used for Scalable encoder + PPO (\emph{ScE}), which is based on Jonschkowski and Brock~\cite{Jonschkowski2015Learning} and
 Botteghi et al.~\cite{Botteghi2021LowDimensional}, and uses
 robotic priors to derive a low-dimensional latent state via a trainable encoder. Again, the construction following this encoder is PPO. Lastly, we
-implement the orthonormal bottlenecks introduced by Todorov and Sabatelli~\cite{Todorov2026Orthogonal} (Bottleneck PPO). It consists of sampling a fixed matrix
+implement the orthonormal bottlenecks introduced by Todorov and Sabatelli~\cite{Todorov2026Orthogonal} (Bottleneck PPO, \emph{OrB}). It consists of sampling a fixed matrix
 $U_{\mathrm{b}}$ with $d_{\mathrm{b}}$ orthonormal columns, which is added at the end of a trainable feature extractor, and used to project the output into a $d_{\mathrm{b}}$-dimensional space. Like with the other
-encoders, we follow it with our PPO architecture.
+encoders, we follow it with our PPO architecture. The same feature extractor, but without the projection matrix $U_{\mathrm{b}}$,
+followed by PPO, gives us FC-Extractor + PPO (\emph{FcE}).
+From now on, we refer to all PPO variants by their short names.
 
 All these low-dimensional approaches, if visualized, exhibit a ``bow-tie'' shape, which in nature can actually
 improve robustness~\cite{Kitano2004Biological}. So this is indeed interesting to investigate. However,
@@ -958,12 +960,12 @@ output, that is in reality governed by low-dimensional dynamics.
 
 By inputting images into our existing solvers, the dimensionality increases drastically. To be able to cleanly separate effects caused
 by the nonlinearity of the image construction from architecture-related effects, we will first artificially inflate our inputs and outputs 
-to exactly the sizes that will later be used by the pixelated environment. This evaluation will only be done on Scalable encoder + PPO,
-Fully-connected PPO and Bottleneck PPO, as the other approaches either do not scale well or are not relevant to the comparison.
+to exactly the sizes that will later be used by the pixelated environment. This evaluation will only be done on \emph{ScE},
+\emph{MLP} and \emph{OrB}, as the other approaches either do not scale well or are not relevant to the comparison.
 
 Then, using the same architectural constructions for these solvers, but applied to our new environment,
 we compare them with the additionally introduced position-velocity encoder~\cite{Jonschkowski2017PVE} (Position-Velocity Encoder + PPO),
-which uses similar robotic priors to Scalable encoder + PPO, but focuses
+which uses similar robotic priors to \emph{ScE}, but focuses
 more on position, velocity and acceleration. It learns positional encodings from the observations, and then calculates the velocity state based
 on finite differences. Here, it is quite clear that we use knowledge of the limitations of the embodiment to construct more optimal controllers,
 again in a bow-tie shape. Finally, we will introduce this environment to noise as well, and observe the effects of it.

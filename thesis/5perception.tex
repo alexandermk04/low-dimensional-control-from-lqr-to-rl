@@ -20,8 +20,8 @@ were specifically selected to match the setup in \cref{sec:pixel-env}, such that
 compare both more closely. For the input dimension, this is a $96 \times 96$ image stack of two images,
 while for the output dimension it was chosen due to the specific construction.
 
-We further note that State encoder + PPO cannot be applied at this scale, as the identification
-for such large matrices is computationally impossible. Additionally, we excluded Linear PPO,
+We further note that \emph{StE} cannot be applied at this scale, as the identification
+for such large matrices is computationally impossible. Additionally, we excluded \emph{Lin},
 as it was only used to compare with LQR approaches before.
 
 Due to computational complexity and time restrictions, we reduced the training steps to $10^{7}$ and
@@ -44,10 +44,10 @@ rounded to two digits as in \eqref{eq:app-rl-learning-rate-grid}, which leaves u
         \toprule
         Solver & \emph{large} & \emph{pixel} \\
         \midrule
-        Bottleneck PPO & $6.7 \cdot 10^{-6}$ & $7 \cdot 10^{-7}$ \\
-        Scalable encoder + PPO & $2.2 \cdot 10^{-6}$ & $2.3 \cdot 10^{-7}$ \\
-        Fully-connected PPO & $6.7 \cdot 10^{-6}$ & $7 \cdot 10^{-7}$ \\
-        FC-Extractor + PPO & --- & $7 \cdot 10^{-7}$ \\
+        OrB & $6.7 \cdot 10^{-6}$ & $7 \cdot 10^{-7}$ \\
+        ScE & $2.2 \cdot 10^{-6}$ & $2.3 \cdot 10^{-7}$ \\
+        MLP & $6.7 \cdot 10^{-6}$ & $7 \cdot 10^{-7}$ \\
+        FcE & $6.7 \cdot 10^{-6}$ & $7 \cdot 10^{-7}$ \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -112,7 +112,7 @@ in \cref{sec:perception-discussion}.
 \label{subsec:pve}
 
 For this new environment, we introduce another feature extractor, which is based on robotic priors used
-in Scalable encoder + PPO~\cite{Jonschkowski2015Learning}. Called Position-Velocity Encoders~\cite{Jonschkowski2017PVE},
+in \emph{ScE}~\cite{Jonschkowski2015Learning}. Called Position-Velocity Encoders~\cite{Jonschkowski2017PVE},
 it tries to encode a position and velocity state from an observation, by learning a latent position state, and then
 reconstructing the velocity state using temporal differences. As we specifically look for position and velocity in our
 states, we can construct even more specific priors, again in line with our reasoning that knowledge about the embodiment
@@ -139,7 +139,7 @@ which at our action repeat corresponds to $27$ agent actions. Similar to before,
 state in $70\,\%$ with least-norm allocation through the thrusters and random, uniformly distributed actuation in $30\,\%$ of the time,
 before freezing the extractor's weights and using it in front of our PPO construct (\cref{sec:ppo-variants}).
 
-Scalable encoder + PPO is pretrained with a similar data split for this setting.
+\emph{ScE} is pretrained with a similar data split for this setting.
 
 \section{Effect of Visual Inputs on the Solvers}
 \label{sec:visual-inputs}
@@ -149,9 +149,9 @@ Scalable encoder + PPO is pretrained with a similar data split for this setting.
 
 For the experiments here, we use the optimal gain under our action repeat (\cref{subsec:pixelated-environment})
 as our reference and compare it with different approaches,
-which here consist of Pixels + PPO (equivalent to FC-Extractor + PPO), Scalable encoder + PPO, Bottleneck PPO as well as our
+which here consist of Pixels + PPO (equivalent to \emph{FcE}), \emph{ScE}, \emph{OrB} as well as our
 Position-Velocity Encoder + PPO (\cref{subsec:pve}). As they reuse the already introduced architectures,
-they will not be repeated here. The only difference is that we increase the latent dimension of Scalable encoder + PPO
+they will not be repeated here. The only difference is that we increase the latent dimension of \emph{ScE}
 to $5$, which is the same as Position-Velocity Encoder + PPO, after initial results showed a weak performance with $2$.
 The optimal controller for this setup actually does not
 act based on the perception, but instead has access to the real state, while the output
@@ -162,7 +162,7 @@ state, we call it ``Oracle (true state)'' in our visualizations.
 For the other approaches, except for Position-Velocity Encoder + PPO, which takes images
 as an input, we flatten the images, such that they receive an $18\,432$-dimensional input vector.
 The learning rates we use here are identical to the ones extrapolated in \cref{tab:pixel-learning-rates}.
-As we did not use Position-Velocity Encoder + PPO (\cref{subsec:pve}) before, we copy the learning rate from Scalable encoder + PPO for it, as it is the
+As we did not use Position-Velocity Encoder + PPO (\cref{subsec:pve}) before, we copy the learning rate from \emph{ScE} for it, as it is the
 most similar (both use robotic priors).
 
 However, we also modify some of our PPO parameters for this setting. Not mentioned parameters

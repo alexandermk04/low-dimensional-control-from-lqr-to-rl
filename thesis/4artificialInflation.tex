@@ -42,7 +42,7 @@ $\pi_{\theta_{\mathrm{old}}}$ that collected the data, the clipped objective bec
 However, as has been noted before~\cite{Engstrom2020Implementation,Hsu2020Revisiting}, the actual implementation of PPO matters,
 and can influence the effectiveness of it in practice. For our construction, we use
 the architecture provided by Stable-Baselines3 (SB3)~\cite{StableBaselines2026PPO}.
-As the standard architecture, for our Fully-connected PPO, we use the standard two-layer multilayer perceptron (MLP) with 64 neurons
+As the standard architecture, for our Fully-connected PPO (\emph{MLP}), we use the standard two-layer multilayer perceptron (MLP) with 64 neurons
 per layer for both the actor and the critic~\cite{StableBaselines2026Policy}. \Cref{tab:app-rl-sb3-parameters} in
 \cref{sec:app-rl-parameters} lists all deviations from the default parameters. After evaluating different values, we settled on the
 learning rates in \cref{tab:app-rl-learning-rates}, which differ by inflation size.
@@ -100,14 +100,14 @@ on a discounted moving average~\cite[continuous-action Detail~8]{Huang2022Implem
 \label{subsec:rl-architectures}
 
 Now that we have introduced the base construction, it is easier for us to describe variations of it. We start with
-Linear PPO, which allows us to compare the performance of PPO to the previous chapter. Here, our actor becomes a single layer,
+Linear PPO (\emph{Lin}), which allows us to compare the performance of PPO to the previous chapter. Here, our actor becomes a single layer,
 with the bias removed, such that we can rewrite this network as
 \begin{equation}
     \label{eq:linear-ppo}
     \mu(y_k) = W y_k = -K y_k , \qquad K \coloneqq -W \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}} ,
 \end{equation}
 which allows us to extract a gain matrix $K$ that is comparable to the previous chapter. A second, already known, component is
-used for State encoder + PPO. Here, we reuse an identified system from N4SID (\cref{sec:unknown-model}) to encode an observation into
+used for State encoder + PPO (\emph{StE}). Here, we reuse an identified system from N4SID (\cref{sec:unknown-model}) to encode an observation into
 a latent state:
 \begin{equation}
     \label{eq:state-encoder}
@@ -117,7 +117,7 @@ The input dimension for both the actor and the critic thus becomes $\hat{n}$, wh
 
 However, as we will later scale our inputs to larger dimensions (\cref{chap:perception}), N4SID will become infeasible for such dimensions.
 Still, we want to stay in line with the idea of encoding our observations into a latent state, as this exactly introduces the bow-tie structure
-we want. So, we introduce another encoder, which offers this scalability, and call the combination Scalable encoder + PPO. This feature extractor
+we want. So, we introduce another encoder, which offers this scalability, and call the combination Scalable encoder + PPO (\emph{ScE}). This feature extractor
 is based on the results of Jonschkowski and Brock~\cite{Jonschkowski2015Learning} and Botteghi et al.~\cite{Botteghi2021LowDimensional}, which use robotic priors. Robotic priors, simply described,
 are prior knowledge, like physical laws, from which we define loss functions. By adding them to the training process, and optimizing for them, we can
 ensure that the learned representation is in line with these laws. As mentioned in \cref{sec:approach}, this allows us to make use of the embodiment
@@ -173,7 +173,7 @@ here as well. \Cref{alg:encoder-pretraining} summarizes the pretraining.
     \end{algorithmic}
 \end{algorithm}
 
-The second trainable extractor we used is based on the paper by Todorov and Sabatelli~\cite{Todorov2026Orthogonal},
+The second trainable extractor we used, in Bottleneck PPO (\emph{OrB}), is based on the paper by Todorov and Sabatelli~\cite{Todorov2026Orthogonal},
 using orthogonal bottlenecks. It consists of a fully connected MLP, with 512 neurons in the first,
 and 256 neurons in the second and third layer, using a ReLU activation function.
 Following it is a matrix with orthonormal columns, which projects the output
@@ -189,6 +189,9 @@ feature extractor output $z_k \in \R^{d_{\mathrm{z}}}$ is mapped to
 Unlike the previous encoder, this one is trained together with PPO, so the actor and critic train them separately, while
 the projection matrix $U_{\mathrm{b}}$ stays the same for both.
 
+Lastly, we introduce FC-Extractor + PPO (\emph{FcE}), which uses the same three layer extractor, but passes its $256$-dimensional
+output to the actor and the critic directly, without projecting it via $U_{\mathrm{b}}$.
+
 \Cref{fig:ppo-architectures} in \cref{sec:app-ppo-architectures} visualizes the architectures of all our solvers.
 
 \section{Comparison across Dimensions}
@@ -196,10 +199,10 @@ the projection matrix $U_{\mathrm{b}}$ stays the same for both.
 
 Looking at achieved suboptimality during training, we overall see a learning process in almost all
 of our architectures (\cref{fig:rl-large-curves}). Noticeable, however, is the long stagnation in the beginning of the learning,
-before decreasing towards the end. Significant is also Linear PPO, which does not achieve an
+before decreasing towards the end. Significant is also \emph{Lin}, which does not achieve an
 improvement under \emph{large}, but this was expected, given its unsuccessful learning-rate search results
-(\cref{fig:app-rl-learning-rate-ppo-linear-large}). Also, when looking at the spread, we seed that in some seeds
-Scalable Encoder + PPO also rather increases in cost.
+(\cref{fig:app-rl-learning-rate-ppo-linear-large}). Also, when looking at the spread, we see that in some seeds
+\emph{ScE} also rather increases in cost.
 
 \begin{figure}[htbp]
   \centering
@@ -208,47 +211,41 @@ Scalable Encoder + PPO also rather increases in cost.
   \label{fig:rl-large-curves}
 \end{figure}
 
-This can also be seen from the amount of episodes that diverge:
+This then leads to some episodes in which the mass can not be contained by this policy during
+testing, which we can see in \cref{tab:ch5-inflation-stability}. The instability of the policies
+trained by \emph{Lin} in three out of the ten seeds is also noted there.
 
-% table with runaway / divergence episodes
+\input{generated/ch5_inflation_sizes/tables/ch5_inflation_stability.tex}
 
-Looking at the complexity of our trained policies, we can see that the State encoder + PPO
-has the smallest parameter count, is however of a similar size as Linear PPO or Fully-connected PPO.
-The group of larger policies consists of Bottleneck PPO, the non-dimensionally reduced FC-extractor
-+ PPO and Scalable encoder + PPO. For the latter, most of its parameters are already frozen after
-pretraining, differentiating it from the rest.
+Looking at the complexity of our trained policies, we can see that \emph{StE}
+has the smallest parameter count, but is of a similar size as \emph{Lin} or \emph{MLP}.
+The group of larger policies consists of \emph{OrB}, the non-dimensionally reduced \emph{FcE}
+and \emph{ScE}. For the latter, most of its parameters are already frozen after
+pretraining, differentiating it from the rest (\cref{tab:ch5-inflation-parameters}).
 
-% TODO: Instead replace with a table, this plot doesn't tell anything
-% Should be split into trainable, frozen and total parameters
+\input{generated/ch5_inflation_sizes/tables/ch5_inflation_parameters.tex}
 
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{ch5_inflation_sizes}{ch5_inflation_across_sizes_complexity}
-  \caption{Policy size (\cref{def:policy-size}) of the PPO variants for each inflation size.}
-  \label{fig:rl-across-sizes-complexity}
-\end{figure}
+Regarding the performance, we can see that under \emph{small} inflation \emph{Lin}, \emph{OrB}
+and \emph{FcE} achieve a similar median,
+while \emph{StE} and \emph{MLP} have a slightly worse performance,
+with \emph{ScE} being the worst of them all. However, when looking at the spreads,
+\emph{StE} has some runs in the $100$ to $1000$ suboptimality range, which are the largest ones, while
+the worst case of \emph{MLP} is similar to that of \emph{FcE}. The best one here
+is \emph{Lin}, which shows little spread.
 
-Regarding the performance, we can see that under \emph{small} inflation Linear PPO, Bottleneck PPO
-and achieve FC-Extractor + PPO achieve a similar median,
-while State Encoder + PPO and Fully connected PPO have a slightly worse performance
-with Scalable encoder + PPO being the worst of them all. However, when looking at the spreads,
-State encoder + PPO has some runs in the $100$ to $1000$ suboptimality range which are the largest ones, while
-Fully-connected PPOs worst case is similar to FC-Extractor + PPO. The best one here,
-is Linear PPO, which shows little spread.
-
-Looking at \emph{medium}, here Fully-connected PPO becomes worse regarding its median, followed by Scalable encoder + PPO, even though
-the spread of Scalable encoder + PPO still has worse runs. FC-Extractor maintains its median from
+Looking at \emph{medium}, here \emph{MLP} becomes worse regarding its median, followed by \emph{ScE}, even though
+the spread of \emph{ScE} still has worse runs. \emph{FcE} maintains its median from
 \emph{small}, only increasing its spread a bit, making it the best of them all. The other low-dimensional
-controllers show a good median similar to Linear PPO, however have a wider spread,
+controllers show a good median similar to \emph{Lin}, however have a wider spread,
 with some runs worse than $100$ suboptimality.
 
-Now under \emph{large} it becomes interesting, as Linear PPO's performance has deteriorated, becoming the
-worst controller of them all, judging from the median. Under worst case evaluating, its still the best.
-Scalable encoder + PPO is still second, now again worse than the fully connected version.
-However the other large parameter architectures,
-Bottleneck PPO and FC-Extractor + PPO show a similar performance as under \emph{medium}, while most others
-(except for Fully-connected PPO) have shifted upwards. The simple State encoder + PPO also remains in a good spot
-even though it has worsened in comparison to Bottleneck PPO (\cref{fig:rl-across-sizes-subopt}).
+Now under \emph{large} it becomes interesting, as the performance of \emph{Lin} has deteriorated, becoming the
+worst controller of them all, judging from the median. Under worst-case evaluation, it is still the best.
+\emph{ScE} is still second, now again worse than the fully connected version.
+However, the other large-parameter architectures,
+\emph{OrB} and \emph{FcE}, show a similar performance as under \emph{medium}, while most others
+(except for \emph{MLP}) have shifted upwards. The simple \emph{StE} also remains in a good spot,
+even though it has worsened in comparison to \emph{OrB} (\cref{fig:rl-across-sizes-subopt}).
 
 \begin{figure}[htbp]
   \centering
@@ -265,54 +262,98 @@ even though it has worsened in comparison to Bottleneck PPO (\cref{fig:rl-across
 
 Similar to what we have seen before in \cref{subsec:noise-large-inflation}, parametric uncertainty
 seems to affect most trained controllers similarly and generally increases suboptimality by multiple orders
-of magnitude. Here, the baseline remains the most robust one, with only its calibrated increase of 10x
-under divergent, while for the majority it is one between 10^5 or 10^6 in the median case. However, Linear
-PPO seems to be more robust than the other trained policies, "only" increasing by 10^3. When only looking 
-at \needcite{relative degradation parametric divergent}, one might question whether Linear PPO is actually
+of magnitude. Here, the baseline remains the most robust one, with only its calibrated increase by a factor of $10$
+under \emph{divergent}, while for the majority it is one between $10^5$ and $10^6$ in the median case. However,
+\emph{Lin} seems to be more robust than the other trained policies, ``only'' increasing by $10^3$. When only looking
+at \cref{fig:rl-noise-large-parametric-divergent}, one might question whether \emph{Lin} is actually
 more robust than the others, given its worse performance on the nominal plant. A small relative increase could
-then still mean a large absolute one. However, checking \needcite{absolute tradeoff parametric},
+then still mean a large absolute one. However, checking \cref{fig:rl-noise-large-parametric-absolute},
 we notice that indeed it also degrades less than the other controllers absolutely.
 
-% side by side the figures from above
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch5_noise}{ch5_noise_large_relative_degradation_parametric-divergent}
+    \caption{Relative degradation $\kappa$ at intensity \emph{divergent}.}
+    \label{fig:rl-noise-large-parametric-divergent}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch5_noise}{ch5_noise_large_tradeoff_absolute_parametric}
+    \caption{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ over the intensities.}
+    \label{fig:rl-noise-large-parametric-absolute}
+  \end{subfigure}
+  \caption{Degradation of the PPO variants under \emph{large} inflation and parametric uncertainty.}
+  \label{fig:rl-noise-large-parametric}
+\end{figure}
 
 % ------- External Disturbance --------
 
 For external disturbance, not much can be said, as here all controllers are affected relatively and absolutely in a similar
-fashion. The only noticable difference is a wider range in values for Linear PPO with two noticably worse seeds, pushing
-its absolute degradtion above the others. However, for Linear PPO and Scalable Encoder + PPO, there also exists one seed
-each which experiences only a 4x relative cost increase, compared to the 10x increase measured at the baseline.
-
+fashion. The only noticeable difference is a wider range of values for \emph{Lin}, with two noticeably worse seeds pushing
+its absolute degradation above the others. However, for \emph{Lin} and \emph{ScE}, there also exists one seed
+each which experiences only a fourfold relative cost increase, compared to the tenfold increase measured at the baseline.
 
 % -------- Control noise ---------
 
-Under control noise, we can observe that trained controllers, degrade in relation to how well they performed on the nominal
-loop. This can be seen from the fact that the order of relative degradation in \needcite{relative deg control dive} is the same as for the clean plant.
-Generally, however, we can see that all trained controllers except Linear PPO are generally more robust on average than the baseline in relative terms \needcite{tradeoff relative}.
-In absolute terms, Scalable encoder + PPO shows a worse degradation, which mainly stems from its wide spread of degradation in relation
-to its seeds. Actually, in three out of the ten seeds, it degrades less than the other controllers (excluding linear PPO), but then 
+Under control noise, we can observe that trained controllers degrade in relation to how well they performed on the nominal
+loop. This can be seen from the fact that the order of relative degradation in \cref{fig:rl-noise-large-control-divergent} is the same as for the clean plant.
+Generally, however, we can see that all trained controllers except \emph{Lin} are more robust on average than the baseline in relative terms (\cref{fig:rl-noise-large-control-relative}).
+In absolute terms, \emph{ScE} shows a worse degradation, which mainly stems from its wide spread of degradation in relation
+to its seeds. Actually, in three out of the ten seeds, it degrades less than the other controllers (excluding \emph{Lin}), but then
 in three others it shows more degradation, making it overall worse on average. More robust are
-State Encoder + PPO and Fully Connected PPO, as well as Bottleneck PPO and FC Extractor + PPO, showing a slightly better 
+\emph{StE} and \emph{MLP}, as well as \emph{OrB} and \emph{FcE}, showing slightly better
 robustness properties for the larger controllers.
 
-% two plots from above again
-
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch5_noise}{ch5_noise_large_relative_degradation_control-divergent}
+    \caption{Relative degradation $\kappa$ at intensity \emph{divergent}.}
+    \label{fig:rl-noise-large-control-divergent}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch5_noise}{ch5_noise_large_tradeoff_relative_control}
+    \caption{Relative degradation $\kappa$ over the intensities.}
+    \label{fig:rl-noise-large-control-relative}
+  \end{subfigure}
+  \caption{Degradation of the PPO variants under \emph{large} inflation and control noise.}
+  \label{fig:rl-noise-large-control}
+\end{figure}
 
 % ------- Measurement Noise -----------
 
-For measurement noise, we can see that the smaller controller Linear PPO remains largely more robust in comparison to the baseline across
-intensities, both relatively and absolutely \needcite{cref trade off relative, absolute}. Scalable Encoder + PPO is slightly worse, however far
-below the baseline in relative degradation, and even beating Linear PPO under divergent noise. While Scalable Encoder indeed has a good
+For measurement noise, we can see that the smaller controller \emph{Lin} remains largely more robust in comparison to the baseline across
+intensities, both relatively and absolutely (\cref{fig:rl-noise-large-measurement-relative,fig:rl-noise-large-measurement-absolute}). \emph{ScE} is slightly worse, however far
+below the baseline in relative degradation, and even beating \emph{Lin} under \emph{divergent} noise. While \emph{ScE} indeed has a good
 performance here, its curve is heavily influenced by one outlier seed, which seems to not be affected by noise at all.
-We can further notice that Fully connected PPO
-shows the worst degradation here. Also interesting is that Bottleneck, FC-Extractor and State Encoder + PPO all show slightly worse
-degradation than the baseline under \emph{weak} and \emph{standard} intensities, however, with increasing strength continue degrade
-less than the baseline. Under divergent noise, in absolute degradation they even reach levels better than Linear PPO, which grows the
-same as the baseline. It is still very interesting to see that State Encoder + PPO performs at the same levels as FC-Extractor + PPO,
-and better than Bottleneck PPO, as it uses much less parameters than both.
+We can further notice that \emph{MLP}
+shows the worst degradation here. Also interesting is that \emph{OrB}, \emph{FcE} and \emph{StE} all show slightly worse
+degradation than the baseline under \emph{weak} and \emph{standard} intensities; however, with increasing strength, they continue to degrade
+less than the baseline. Under \emph{divergent} noise, in absolute degradation they even reach levels better than \emph{Lin}, which grows the
+same as the baseline. It is still very interesting to see that \emph{StE} performs at the same level as \emph{FcE},
+and better than \emph{OrB}, as it uses far fewer parameters than both.
 
-% plots metioned above
-
-% ------------------------------
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch5_noise}{ch5_noise_large_tradeoff_relative_measurement}
+    \caption{Relative degradation $\kappa$.}
+    \label{fig:rl-noise-large-measurement-relative}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch5_noise}{ch5_noise_large_tradeoff_absolute_measurement}
+    \caption{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$.}
+    \label{fig:rl-noise-large-measurement-absolute}
+  \end{subfigure}
+  \caption{Degradation of the PPO variants under \emph{large} inflation and measurement noise of increasing intensity.}
+  \label{fig:rl-noise-large-measurement}
+\end{figure}
 
 \section{Discussion}
 \label{sec:rl-discussion}
