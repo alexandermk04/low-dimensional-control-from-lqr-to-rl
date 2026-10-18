@@ -1807,10 +1807,6 @@
 \pgfsys@transformshift{3.854334in}{1.662064in}%
 \pgfsys@useobject{currentmarker}{}%
 \end{pgfscope}%
-\begin{pgfscope}%
-\pgfsys@transformshift{3.771968in}{1.662064in}%
-\pgfsys@useobject{currentmarker}{}%
-\end{pgfscope}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfpathrectangle{\pgfqpoint{0.631606in}{0.522205in}}{\pgfqpoint{4.968394in}{2.279719in}}%
@@ -1839,6 +1835,10 @@
 \pgfpathclose%
 \pgfusepath{fill}%
 }%
+\begin{pgfscope}%
+\pgfsys@transformshift{4.462023in}{1.662064in}%
+\pgfsys@useobject{currentmarker}{}%
+\end{pgfscope}%
 \begin{pgfscope}%
 \pgfsys@transformshift{4.511213in}{1.662064in}%
 \pgfsys@useobject{currentmarker}{}%
@@ -1875,10 +1875,6 @@
 \pgfsys@transformshift{4.452474in}{1.662064in}%
 \pgfsys@useobject{currentmarker}{}%
 \end{pgfscope}%
-\begin{pgfscope}%
-\pgfsys@transformshift{4.489744in}{1.662064in}%
-\pgfsys@useobject{currentmarker}{}%
-\end{pgfscope}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfpathrectangle{\pgfqpoint{0.631606in}{0.522205in}}{\pgfqpoint{4.968394in}{2.279719in}}%
@@ -1907,6 +1903,10 @@
 \pgfpathclose%
 \pgfusepath{fill}%
 }%
+\begin{pgfscope}%
+\pgfsys@transformshift{5.179799in}{1.662064in}%
+\pgfsys@useobject{currentmarker}{}%
+\end{pgfscope}%
 \begin{pgfscope}%
 \pgfsys@transformshift{5.222774in}{1.662064in}%
 \pgfsys@useobject{currentmarker}{}%
@@ -1941,10 +1941,6 @@
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsys@transformshift{5.207331in}{1.662064in}%
-\pgfsys@useobject{currentmarker}{}%
-\end{pgfscope}%
-\begin{pgfscope}%
-\pgfsys@transformshift{5.148644in}{1.662064in}%
 \pgfsys@useobject{currentmarker}{}%
 \end{pgfscope}%
 \end{pgfscope}%

@@ -1,15 +1,18 @@
 \begin{table}[htbp]
 \centering
-\caption{PPO variants under \emph{small} inflation, without noise.}
+\caption{PPO variants under \emph{small} inflation, without noise. Identified counts the seeds a model was obtained from and stable those whose controller left the plant stable and kept the mass contained in every test episode.}
 \label{tab:ch5-inflation-small}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrrrr}
 \toprule
 Solver & Baseline & Linear PPO & Bottleneck PPO & State encoder + PPO & Scalable encoder + PPO & Fully-connected PPO & FC-Extractor + PPO \\
 \midrule
-True cost $J$ & $5848 \pm 5.136 \times 10^{-12}$ & $6028 \pm 70.94$ & $6135 \pm 584.3$ & $6524 \pm 1258$ & $7462 \pm 3122$ & $6275 \pm 569.2$ & $6161 \pm 609$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0$ & $0.0308 \pm 0.0121$ & $0.0343 \pm 0.00685$ & $0.1 \pm 0.188$ & $0.257 \pm 0.512$ & $0.0585 \pm 0.0167$ & $0.0384 \pm 0.00832$ \\
-Suboptimality $S$ & $+0$ & $+0.0357 \pm 0.025$ & $+0.097 \pm 0.751$ & $+1.36 \pm 22$ & $+378 \pm 9.78 \times 10^{3}$ & $+0.188 \pm 0.888$ & $+0.085 \pm 0.659$ \\
+Identified & $10/10$ & $10/10$ & $10/10$ & $10/10$ & $10/10$ & $10/10$ & $10/10$ \\
+Stable & $10/10$ & $10/10$ & $10/10$ & $10/10$ & $9/10$ & $10/10$ & $10/10$ \\
+\midrule
+True cost $J$ & $5848 \pm 5.136 \times 10^{-12}$ & $6028 \pm 70.94$ & $6135 \pm 584.3$ & $6524 \pm 1258$ & $6499 \pm 734.9$ & $6275 \pm 569.2$ & $6161 \pm 609$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0$ & $0.0308 \pm 0.0121$ & $0.0343 \pm 0.00685$ & $0.1 \pm 0.188$ & $0.0951 \pm 0.0265$ & $0.0585 \pm 0.0167$ & $0.0384 \pm 0.00832$ \\
+Suboptimality $S$ & $+0$ & $+0.0357 \pm 0.025$ & $+0.097 \pm 0.751$ & $+1.36 \pm 22$ & $+0.665 \pm 3.7$ & $+0.188 \pm 0.888$ & $+0.085 \pm 0.659$ \\
 Iterations & $1$ & $402$ & $402$ & $401$ & $401$ & $402$ & $402$ \\
 Env.\ steps to convergence & $0$ & $10^{7}$ & $10^{7}$ & $10^{7}$ & $10^{7}$ & $10^{7}$ & $10^{7}$ \\
 Env.\ steps to best policy & $0$ & $10^{7}$ & $10^{7}$ & $10^{7}$ & $10^{7}$ & $10^{7}$ & $10^{7}$ \\

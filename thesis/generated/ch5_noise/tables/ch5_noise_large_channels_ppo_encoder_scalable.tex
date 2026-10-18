@@ -1,14 +1,16 @@
 \begin{table}[htbp]
 \centering
-\caption{Scalable encoder + PPO under each noise channel at intensity \emph{strong}.}
+\caption{Scalable encoder + PPO under each noise channel at intensity \emph{strong}. Stable counts the seeds whose controller left the plant stable and kept the mass contained in every test episode.}
 \label{tab:ch5-noise-large-channels-ppo-encoder-scalable}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrrr}
 \toprule
 Channel & none & measurement & control & parametric & disturbance & all channels \\
 \midrule
-Relative degradation $\kappa$ & $1$ & $1.93 \pm 0.725$ & $2.47 \pm 0.536$ & $4.45 \times 10^{4} \pm 1.08 \times 10^{5}$ & $4.76 \pm 7.44$ & $7.73 \times 10^{4} \pm 1.77 \times 10^{5}$ \\
-Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ & $0$ & $0.442 \pm 2.89$ & $9.93 \pm 21.7$ & $6.16 \times 10^{4} \pm 1.25 \times 10^{5}$ & $403 \pm 1.27 \times 10^{3}$ & $3.12 \times 10^{5} \pm 6.23 \times 10^{5}$ \\
+Stable & $9/10$ & $9/10$ & $9/10$ & $9/10$ & $9/10$ & $9/10$ \\
+\midrule
+Relative degradation $\kappa$ & $1$ & $2.04 \pm 0.677$ & $2.58 \pm 0.42$ & $4.94 \times 10^{4} \pm 1.13 \times 10^{5}$ & $2.41 \pm 0.463$ & $8.46 \times 10^{4} \pm 1.86 \times 10^{5}$ \\
+Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ & $0$ & $1.33 \pm 0.797$ & $3.14 \pm 3.37$ & $6.24 \times 10^{4} \pm 1.32 \times 10^{5}$ & $2.19 \pm 0.691$ & $1.26 \times 10^{5} \pm 2.13 \times 10^{5}$ \\
 \bottomrule
 \end{tabular}
 }

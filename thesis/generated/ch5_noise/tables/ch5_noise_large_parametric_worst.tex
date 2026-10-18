@@ -1,0 +1,22 @@
+\begin{table}[htbp]
+\centering
+\caption{Median and worst seed of the relative degradation $\kappa$ under \emph{large} inflation and parametric uncertainty of increasing intensity.}
+\label{tab:ch5-noise-large-parametric-worst}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrrrr}
+\toprule
+ & \multicolumn{4}{c}{Median} & \multicolumn{4}{c}{Worst seed} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+Solver & \emph{weak} & \emph{standard} & \emph{strong} & \emph{divergent} & \emph{weak} & \emph{standard} & \emph{strong} & \emph{divergent} \\
+\midrule
+Baseline & $1.19$ & $1.45$ & $2.42$ & $5.75$ & $1.37$ & $1.83$ & $4.55$ & $25.7$ \\
+Linear PPO & $2.28$ & $8.83$ & $164$ & $1.53 \times 10^{3}$ & $5.66$ & $27.4$ & $1.07 \times 10^{3}$ & $1.07 \times 10^{4}$ \\
+Bottleneck PPO & $1.19$ & $1.58$ & $7.86 \times 10^{3}$ & $2.39 \times 10^{5}$ & $1.45$ & $55.6$ & $4.53 \times 10^{5}$ & $2.28 \times 10^{7}$ \\
+State encoder + PPO & $1.19$ & $1.6$ & $2.37 \times 10^{3}$ & $2.82 \times 10^{5}$ & $1.49$ & $97.3$ & $8.88 \times 10^{5}$ & $2.91 \times 10^{7}$ \\
+Scalable encoder + PPO & $1.21$ & $1.55$ & $4.21 \times 10^{3}$ & $5.43 \times 10^{5}$ & $26.5$ & $135$ & $3.47 \times 10^{5}$ & $2.03 \times 10^{7}$ \\
+Fully-connected PPO & $1.23$ & $17.9$ & $1.95 \times 10^{4}$ & $8.39 \times 10^{5}$ & $1.73$ & $2.46 \times 10^{3}$ & $1.27 \times 10^{6}$ & $3.23 \times 10^{7}$ \\
+FC-Extractor + PPO & $1.19$ & $1.59$ & $3.28 \times 10^{3}$ & $2.82 \times 10^{5}$ & $1.53$ & $167$ & $9.7 \times 10^{5}$ & $3.05 \times 10^{7}$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
