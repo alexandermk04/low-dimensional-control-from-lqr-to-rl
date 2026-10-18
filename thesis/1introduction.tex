@@ -33,14 +33,17 @@ However, when transferring them over from training in a digital environment to a
 in memory space and energy usage arise~\cite[p.~7]{Roy2021MachineLearning}, but the real world also behaves slightly differently, which the
 controller needs to be robust against~\cite{Tobin2017Domain,Peng2018SimToReal}. So ideally, we should
 remove unnecessary parameters, while still maintaining those helping us adapt to variable environments. This leaves us with the question:
-\emph{Is it possible to train a low-dimensional controller for an embodied agent, that is performant yet robust?}
+\emph{How does enforcing low-dimensional structures in controllers for embodied agents affect their performance and robustness to noise?}
 
 Inspired by nature, it has been shown that more complex behavior can be expressed by simple control architectures if combined with
 the right embodiment~\cite{McGeer1990Passive,Mueller2017Morphological}. However, finding this simple architecture remains difficult
 as an embodiment might offer a large number of sensors and actuators, which outnumber the dimension governing the underlying dynamics~\cite{Todorov2002Optimal,Lesort2018State}.
 Synergizing these, like in nature~\cite{DAvella2003Combinations}, is thus the goal here.
-And while low-dimensional controllers for embodiment have been studied before~\cite{Montufar2015CheapControl,Datar2025Universal},
-bringing robustness into the equations remains, to our knowledge, still an unsolved question we aim to contribute to.
+And while low-dimensional controllers for embodied agents have been studied before~\cite{Montufar2015CheapControl,Datar2025Universal},
+robustness of such has, to our knowledge, not yet been investigated systematically starting from 
+simple linear controllers and transitioning over more complex reinforcement learning based ones
+towards perception-based agents acting in simulated environments.
+This is where we aim to contribute to.
 
 To be able to quantify performance and what optimal means, we rely on a very well-researched example~\cite{Kalman1960Contributions,Hu2023Toward}: the linear quadratic regulator, which,
 together with some related work, we will introduce in \cref{chap:background}.
