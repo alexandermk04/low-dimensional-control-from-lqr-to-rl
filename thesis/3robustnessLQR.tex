@@ -167,36 +167,78 @@ Overall, this looks very promising for S-PI; still, our goal is to find out whet
 Now, we reuse the controllers we trained in \cref{subsec:known-model-results} and evaluate them under the test protocol
 and \emph{large} inflation with noise (\cref{subsubsec:noise-injection}) injected.
 
-Looking at or tradeoff plots, it might seem that each controller degraded the nearly same under all noise channels
-both relatively\needcite{large, tradeoff relative all} and absolutely\needcite{large, tradeoff absolute all}. However,
+Looking at our trade-off plots, it might seem that each controller degrades nearly the same under all noise channels,
+both relatively (\cref{fig:true-noise-large-all-relative}) and absolutely (\cref{fig:true-noise-large-all-absolute}). However,
 when looking at the distribution of the seeds under relative degradation, while for some channels this might hold, there
-are differences noticable.
+are noticeable differences.
 
-% plots from above side by side
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_tradeoff_relative_all}
+    \caption{Relative degradation $\kappa$.}
+    \label{fig:true-noise-large-all-relative}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_tradeoff_absolute_all}
+    \caption{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$.}
+    \label{fig:true-noise-large-all-absolute}
+  \end{subfigure}
+  \caption{Degradation of the solvers on the true model under \emph{large} inflation and all noise channels at once,
+  over the intensities.}
+  \label{fig:true-noise-large-all}
+\end{figure}
 
-For parametric noise the distribution is also nearly identical, so here no difference can be noticed. When looking
-at measurement noise, however, we can notice that MB-PG degrades slightly less than the baseline (median at 9.95), and
-SPI is even further below (median at 9.8).
+For parametric uncertainty the distribution is also nearly identical, so here no difference can be noticed. When looking
+at measurement noise, however, we can notice that Model-based PG degrades slightly less than the baseline (median at 9.95), and
+S-PI is even further below (median at 9.8, \cref{fig:true-noise-large-measurement-divergent}).
 
-% Measrument large relative deg, disturbance large relative deg both divergent
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_relative_degradation_measurement-divergent}
+    \caption{Measurement noise.}
+    \label{fig:true-noise-large-measurement-divergent}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_relative_degradation_disturbance-divergent}
+    \caption{External disturbance.}
+    \label{fig:true-noise-large-disturbance-divergent}
+  \end{subfigure}
+  \caption{Relative degradation $\kappa$ of the solvers on the true model under \emph{large} inflation at intensity
+  \emph{divergent}. The boxes indicate the interquartile range over the ten seeds, the line marks the
+  median, and the whiskers span the $5$th to $95$th percentile.}
+  \label{fig:true-noise-large-divergent}
+\end{figure}
 
 Under \emph{divergent} external disturbance, we see that our trained controllers degrade slightly more than the
-baseline, with MB-PG being the worst here (median at 10.01 vs 9.98 for the baseline).
+baseline, with Model-based PG being the worst here (median at 10.01 vs.\ 9.98 for the baseline,
+\cref{fig:true-noise-large-disturbance-divergent}).
 
-The most noticeable difference is under control noise, where MB-PG noticeably degrades less than SPI or the baseline
-(median at TODO vs baseline at TODO). SPI also stays below baseline (median TODO), however does not show as much
-robustness as MB-PG.
+The most noticeable difference is under control noise, where Model-based PG noticeably degrades less than S-PI or the baseline
+(median at $6.49$ vs.\ baseline at $6.61$, \cref{fig:true-noise-large-control-divergent}). S-PI also stays below the baseline
+(median $6.59$), but does not show as much robustness as Model-based PG.
 
-% control large relative deg divergent
+\begin{figure}[htbp]
+  \centering
+  \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_relative_degradation_control-divergent}
+  \caption{Relative degradation $\kappa$ of the solvers on the true model under \emph{large} inflation and control noise
+  at intensity \emph{divergent}.}
+  \label{fig:true-noise-large-control-divergent}
+\end{figure}
 
 \subsection{Discussion}
 \label{subsec:true-model-discussion}
 
 Judging from our results, it is difficult to draw significant conclusions in relation to robustness of the controllers.
-It seems like a trained, larger controller could be more robust to control noise, however we need to verify this in 
-the following experiments. What generally stands out is that SPI needs much less training iterations, while achieving
-slightly better suboptimality and similar robustness as MB-PG. We will verify whether this holds also for 
-an unknown model in the next chapter.
+It seems like a trained, larger controller could be more robust to control noise; however, we need to verify this in
+the following experiments. What generally stands out is that S-PI needs far fewer training iterations, while achieving
+slightly better suboptimality and similar robustness as Model-based PG. We verify whether this also holds for
+an unknown model in \cref{sec:unknown-model}.
 
 \section{Unknown Model across Dimensions}
 \label{sec:unknown-model}
@@ -394,56 +436,134 @@ cases even achieves optimal performance (\cref{fig:identified-across-sizes-subop
 \subsection{Noise Experiments on Large Inflation}
 \label{subsec:noise-large-inflation}
 
-Again, we investigate our system inflated to \emph{large} size and repeat our experiments from the 
-true model section (\needcite{cref to above}).
+Again, we investigate our system inflated to \emph{large} size and repeat our experiments from the
+true model section (\cref{subsec:true-model-noise}).
 
 We first start by taking a look at parametric uncertainty. As it is a multiplicative noise type, already
-worse performance is magnified even more. For MF SPI, this clearly can be seen, as even the least 
-relative degradation amounts to 10^4, with the majority being above 10^5. So for the following analysis
-of the other models, we will exclude it here.
+worse performance is magnified even more. For S-PI (model-free), this can clearly be seen, as even the least
+relative degradation amounts to $10^4$, with the majority being above $10^5$ (\cref{tab:noise-large-parametric}).
 
-% Plot of relative deg parametric divergent, absolute tradeoff curve, both with SPI-MF excluded
+\begin{table}[htbp]
+  \centering
+  \caption{Median relative degradation $\kappa$ over the ten seeds under \emph{large} inflation and parametric
+  uncertainty, and the range over the seeds at intensity \emph{divergent}.}
+  \label{tab:noise-large-parametric}
+  \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+  \begin{tabular}{@{}lrrrrrr@{}}
+    \toprule
+    Intensity & Baseline & \begin{tabular}[b]{@{}r@{}}N4SID +\\ DARE\end{tabular}
+      & \begin{tabular}[b]{@{}r@{}}N4SID +\\ Model-based PG\end{tabular}
+      & \begin{tabular}[b]{@{}r@{}}N4SID +\\ S-PI\end{tabular}
+      & \begin{tabular}[b]{@{}r@{}}Model-free\\ NPG\end{tabular}
+      & \begin{tabular}[b]{@{}r@{}}S-PI\\ (model-free)\end{tabular} \\
+    \midrule
+    \emph{weak}      & $1.195$ & $1.195$ & $1.194$ & $1.194$ & $1.197$ & $13.66$ \\
+    \emph{standard}  & $1.451$ & $1.451$ & $1.450$ & $1.450$ & $1.455$ & $134.5$ \\
+    \emph{strong}    & $2.422$ & $2.422$ & $2.418$ & $2.420$ & $2.435$ & $7033$ \\
+    \emph{divergent} & $5.747$ & $5.747$ & $5.735$ & $5.740$ & $6.297$ & $1.654 \times 10^{5}$ \\
+    \midrule
+    \emph{divergent}, minimum & $4.673$ & $4.673$ & $4.623$ & $4.649$ & $5.028$ & $7714$ \\
+    \emph{divergent}, maximum & $25.69$ & $25.69$ & $26.13$ & $25.94$ & $41.91$ & $9.147 \times 10^{5}$ \\
+    \bottomrule
+  \end{tabular}
+  }
+\end{table}
 
-TODO - explanation based on that plot.
+Looking at the other architectures, we can see that all controllers relying on N4SID
+estimation achieve almost identical relative degradation compared to the baseline. However,
+the iterative trained ones (MB-PG and S-PI) achieve slightly better scores. Taking the direct
+approach of MF-NPG into account as well, we can see that for divergent noise it degrades relatively
+around $0.55\times$ more than the other approaches.
 
-Next, we analyze robustness against external disturbances. Here, all controllers relying on N4SID
-estimation, are affected nearly identically to the baseline, while the directly trained controllers
-degrade in relative terms slightly less (in the case of MF NPG) or a lot less (SPI-MF). This is also visible
-across any intensity. However, when looking at the absolute degradtion, one can see that the low value for
-SPI-MF stems from the fact that his nominal performance was poor, and its actual absolute increase is similar
-to all the other controllers, or even slightly above. For MF-NPG however, it also lies below there, hinting
-at an even so slightly improved robustnes.
+Next, we analyze robustness against external disturbances. Here, we again notice that indirect
+approaches are affected similarly as the baseline, while the directly trained controllers
+degrade in relative terms slightly less (in the case of Model-free NPG) or a lot less (S-PI (model-free),
+\cref{fig:noise-large-disturbance-divergent}). This is also visible
+across all intensities. However, when looking at the absolute degradation, one can see that the low value for
+S-PI (model-free) stems from the fact that its nominal performance was poor, and its actual absolute increase is similar
+to all the other controllers, or even slightly above (\cref{fig:noise-large-disturbance-absolute}). For Model-free NPG,
+however, it also lies below the others, hinting at an ever so slightly improved robustness.
 
-% relative degradation disturbance diver, large tradeoff absolute disturbance
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_noise}{ch4_noise_large_relative_degradation_disturbance-divergent}
+    \caption{Relative degradation $\kappa$ at intensity \emph{divergent}.}
+    \label{fig:noise-large-disturbance-divergent}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_noise}{ch4_noise_large_tradeoff_absolute_disturbance}
+    \caption{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ over the intensities.}
+    \label{fig:noise-large-disturbance-absolute}
+  \end{subfigure}
+  \caption{Degradation of the solvers without the model under \emph{large} inflation and external disturbance.}
+  \label{fig:noise-large-disturbance}
+\end{figure}
 
-Looking at control noise next, we can again see the issue from before, where in relative terms SPI-MF barely
-degrades, while the other architectures show values much closer to the pinpointed baseline increase. Still, 
-here as also less absolute degradation is shown by SPI-MF, it seems to be more robust to control noise than
-other architectures. Again, we can also notice that MF-NPG is slightly better than all the indirect approaches
+Looking at control noise next, we can again see the issue from before, where in relative terms S-PI (model-free) barely
+degrades, while the other architectures show values much closer to the pinpointed baseline increase
+(\cref{fig:noise-large-control-divergent}). Still, as S-PI (model-free) also shows less absolute degradation here
+(\cref{fig:noise-large-control-absolute}), it seems to be more robust to control noise than the
+other architectures. Again, we can also notice that Model-free NPG is slightly better than all the indirect approaches
 or the baseline, however not by much.
 
-% relative degradation control diver and tradeoff curve absolute for control noise
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_noise}{ch4_noise_large_relative_degradation_control-divergent}
+    \caption{Relative degradation $\kappa$ at intensity \emph{divergent}.}
+    \label{fig:noise-large-control-divergent}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_noise}{ch4_noise_large_tradeoff_absolute_control}
+    \caption{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ over the intensities.}
+    \label{fig:noise-large-control-absolute}
+  \end{subfigure}
+  \caption{Degradation of the solvers without the model under \emph{large} inflation and control noise.}
+  \label{fig:noise-large-control}
+\end{figure}
 
-Noticeable from the spread however is, that control noise seems to have mostly the same effect
+Noticeable from the spread, however, is that control noise seems to have mostly the same effect
 across all seeds, compared to the previous noise channels, where relative degradation affected
-seed diffently.
+seeds differently.
 
-Finally, we investigate measurement noise. Here, from visual inspection, it seems like SPI-MF is
-completely robust against it. While the other architectures experience an around tenfold increase
-in cost (with MF-NPG even slightly higher) similar to the baseline, it sits consistently across
-the sizes at a relative degradtation of one. However, this time we can't fully attribute this to
-its higher nominal cost. Under standard intensity, measurement noise does not increase the cost
-for it at all, as seen in \needcite{cref absolute tradeoff figure}, and under weak it even reduces
-its cost. But still under higher intensities it remains much more robust than the other approaches.
+Finally, we investigate measurement noise. Here, from visual inspection, it seems like S-PI (model-free) is
+completely robust against it (\cref{fig:noise-large-measurement-relative}). While the other architectures experience an
+around tenfold increase in cost (with Model-free NPG even slightly higher) similar to the baseline, it sits consistently across
+the sizes at a relative degradation of one. However, this time we cannot fully attribute this to
+its higher nominal cost. Under \emph{standard} intensity, measurement noise does not increase the cost
+for it at all, as seen in \cref{fig:noise-large-measurement-absolute}, and under \emph{weak} it even reduces
+its cost. But still, under higher intensities it remains much more robust than the other approaches.
 
-% relative and absolute tradeoff curves for measurement noise
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_noise}{ch4_noise_large_tradeoff_relative_measurement}
+    \caption{Relative degradation $\kappa$.}
+    \label{fig:noise-large-measurement-relative}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_noise}{ch4_noise_large_tradeoff_absolute_measurement}
+    \caption{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$.}
+    \label{fig:noise-large-measurement-absolute}
+  \end{subfigure}
+  \caption{Degradation of the solvers without the model under \emph{large} inflation and measurement noise of
+  increasing intensity.}
+  \label{fig:noise-large-measurement}
+\end{figure}
 
-When now taking a look at the other architectures more in detail, we notice that the larger
-controllers are indeed more affected by the noise. MF-NPG sits above all the model-based appraoches,
-and also MB-PG degrades slightly more than MB-SPI, with the baseline sitting between both. This
-was also a pattern we already noticed in the previous experiment, indicating that less parameters
+When now taking a look at the other architectures in more detail, we notice that the larger
+controllers are indeed more affected by the noise. Model-free NPG sits above all the model-based approaches,
+and N4SID + Model-based PG also degrades slightly more than N4SID + S-PI, with the baseline sitting between both. This
+was also a pattern we already noticed in the previous experiment, indicating that fewer parameters
 might make a controller more robust against measurement noise, if we also take the performance
-of SPI-MF into account.
+of S-PI (model-free) into account.
 
 \subsection{Discussion}
 \label{subsec:id-model-discussion}
