@@ -218,10 +218,12 @@ trained by \emph{Lin} in three out of the ten seeds is also noted there.
 \input{generated/ch5_inflation_sizes/tables/ch5_inflation_stability.tex}
 
 Looking at the complexity of our trained policies, we can see that \emph{StE}
-has the smallest parameter count, but is of a similar size as \emph{Lin} or \emph{MLP}.
-The group of larger policies consists of \emph{OrB}, the non-dimensionally reduced \emph{FcE}
-and \emph{ScE}. For the latter, most of its parameters are already frozen after
-pretraining, differentiating it from the rest (\cref{tab:ch5-inflation-parameters}).
+has the smallest parameter count, but is of a similar magnitude as \emph{Lin} or \emph{MLP}, who a roughly
+double its size.
+The group of much larger policies (10x to 15x) consists of \emph{OrB}, the non-dimensionally reduced \emph{FcE}
+and \emph{ScE}. For the latter, most of its parameters (around 93.7 percent) are already frozen after
+pretraining, differentiating it from the rest who are almost all trained via PPO, and making its trainable parameters
+comparable to State Encoder (\cref{tab:ch5-inflation-parameters}).
 
 \input{generated/ch5_inflation_sizes/tables/ch5_inflation_parameters.tex}
 
