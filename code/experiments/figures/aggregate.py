@@ -30,18 +30,18 @@ SOLVER_LABELS = {
     "spi_mf": "S-PI (model-free)",
     "ce_dare": "N4SID + DARE",
     "spi_est": "N4SID + S-PI",
-    "ppo_linear": "Linear PPO",
-    "ppo_bottleneck": "Bottleneck PPO",
-    "ppo_mlp": "Fully-connected PPO",
-    "ppo_encoder": "State encoder + PPO",
-    "ppo_encoder_scalable": "Scalable encoder + PPO",
-    "ppo_fc_extractor": "FC-Extractor + PPO",
+    "ppo_linear": "Lin",
+    "ppo_bottleneck": "OrB",
+    "ppo_mlp": "MLP",
+    "ppo_encoder": "StE",
+    "ppo_encoder_scalable": "ScE",
+    "ppo_fc_extractor": "FcE",
     # Chapter 6
     "oracle_coarse": "Oracle (true state)",
     "ppo_pixel_fc": "Pixels + PPO",
     "ppo_pixel_posvel": "Position-Velocity Encoder + PPO",
-    "ppo_pixel_ortho": "Bottleneck PPO",
-    "ppo_pixel_estimator": "Scalable encoder + PPO",
+    "ppo_pixel_ortho": "OrB",
+    "ppo_pixel_estimator": "ScE",
 }
 
 # Summary metrics whose per-episode array is stored with the run

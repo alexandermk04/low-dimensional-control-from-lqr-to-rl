@@ -355,10 +355,12 @@ def degradation_curves(
         _angle(ax)
     ax.set_xlabel("Noise intensity")
     ax.set_ylabel(METRIC_LABELS["absolute_degradation" if absolute else "relative_degradation"])
-    handles, _ = ax.get_legend_handles_labels()
+    handles, labels = ax.get_legend_handles_labels()
+    short = max((len(label) for label in labels), default=0) <= 10
     ax.legend(
         frameon=False, loc="lower center", bbox_to_anchor=(0.5, 1.0),
-        ncol=min(len(handles), 3) if width >= 1.0 else 1,
+        ncol=min(len(handles), (7 if short else 3) if width >= 1.0 else (4 if short else 1)),
+        columnspacing=0.6, handlelength=1.2,
     )
 
     return ax
