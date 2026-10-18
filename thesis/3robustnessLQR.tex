@@ -269,7 +269,7 @@ $\hat{C} \in \R^{d_{\mathrm{in}} \times \hat{n}}$ and $\Theta \in \R^{\hat{n} \t
 \end{equation}
 such that $\hat{C}$ has orthonormal columns. This makes sense, as we have the knowledge that
 the output matrix $C$ of our true model is also of this construction, but also allows us to
-get the pseudoinverse of $\hat{C}$ as $\hat{C}\T$, such that $I_{\hat{n}} = \hat{C}\hat{C}\T$.
+get the pseudoinverse of $\hat{C}$ as $\hat{C}\T$, since $\hat{C}\T \hat{C} = I_{\hat{n}}$.
 
 The collection of observation and action data runs the plant for $T$ steps under the initial gain, with a randomly
 sampled excitation added on top of it,
@@ -452,8 +452,9 @@ Again, we investigate our system inflated to \emph{large} size and repeat our ex
 true model section (\cref{subsec:true-model-noise}).
 
 We first start by taking a look at parametric uncertainty. As it is a multiplicative noise type, already
-worse performance is magnified even more. For S-PI (model-free), this can clearly be seen, as even the least
-relative degradation amounts to $10^4$, with the majority being above $10^5$ (\cref{tab:noise-large-parametric}).
+worse performance is magnified even more. For S-PI (model-free), this can clearly be seen, as
+under \emph{divergent} even the least relative degradation amounts to $7714$,
+with the majority being above $10^5$ (\cref{tab:noise-large-parametric}).
 
 \begin{table}[htbp]
   \centering
@@ -484,8 +485,9 @@ relative degradation amounts to $10^4$, with the majority being above $10^5$ (\c
 Looking at the other architectures, we can see that all controllers relying on N4SID
 estimation achieve almost identical relative degradation compared to the baseline. However,
 the iteratively trained ones (N4SID + Model-based PG and N4SID + S-PI) achieve slightly better scores. Taking the direct
-approach of Model-free NPG into account as well, we can see that for \emph{divergent} noise it degrades relatively
-around $0.55\times$ more than the other approaches.
+approach of Model-free NPG into account as well, we can see that at \emph{divergent} intensity its median relative degradation
+is around $10\%$ higher than the other approaches ($6.3$ vs.\ the others at $5.74$). Looking at
+the worst degradation, the gap is even wider ($41.9$ vs.\ $26.1$).
 
 Next, we analyze robustness against external disturbances. Here, we again notice that indirect
 approaches are affected similarly to the baseline, while the directly trained controllers

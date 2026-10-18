@@ -899,10 +899,9 @@ The inflated size is always the same between training and evaluation. For noise
 experiments, however, the controller is trained on a clean system, and then exposed to one with noise
 activated during testing.
 
-Under the stronger conditions, individual seeds might have divergent episodes and thus
-blow up their costs. To keep our mean finite and comparable, we exclude them
-from the mean calculation, and report them separately as the divergence rate.
-We differentiate two cases:
+On the clean system, some trained controllers might not be able to stabilize the system,
+and are therefore not functional. Those are therefore removed from the metric calculations
+and instead reported seperately. Defining diverging controlles, we differentiate two cases:
 \begin{enumerate}
     \item Linear gain: the controller becomes unstable, i.e.\
     $\spr(A - B U_2 K U_1) \geq 1$.
@@ -910,6 +909,10 @@ We differentiate two cases:
     i.e.\ contain it in the range of initial positions at the end of any of
     its episodes, formally once $\lvert p^{(i,s)}_T \rvert > 10$ for some episode $i$.
 \end{enumerate}
+
+Under the stronger noise conditions, individual episodes might still diverge, even
+though their controller was stable before. To keep our mean finite, we exclude them
+from the calculation, and report them separately as the divergence rate.
 \begin{equation}
     \label{eq:divergence-rate}
     D(K; c) \coloneqq \frac{1}{M N}
