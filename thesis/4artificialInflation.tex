@@ -113,7 +113,10 @@ a latent state:
     \label{eq:state-encoder}
     \hat{x}_k = \hat{C}\T y_k , \qquad \hat{C} \in \R^{d_{\mathrm{in}} \times \hat{n}} , \quad \hat{C}\T \hat{C} = I_{\hat{n}} .
 \end{equation}
-The input dimension for both the actor and the critic thus becomes $\hat{n}$, which is the order of the identified model.
+We achieve orthonormality in the columns of $\hat{C}$ by QR-decomposing it, and then using its $R$ component
+to apply a change of basis to the system. With this, only the orthonormal part remains as $\hat{C}$, and
+the transpose becomes its inverse. The input dimension for both the actor and the critic thus are
+projected to dimensoin $\hat{n}$, which is the order of the identified model.
 
 However, as we will later scale our inputs to larger dimensions (\cref{chap:perception}), N4SID will become infeasible for such dimensions.
 Still, we want to stay in line with the idea of encoding our observations into a latent state, as this exactly introduces the bow-tie structure

@@ -71,11 +71,12 @@ formula~\cite[p.~13, Eq.~(2.20)]{Werner2021Control}
 where $e^{A_c t}$ denotes the matrix exponential.
  
 \paragraph{Full-state measurement.}
-Generally, we assume that the state is fully
+Until \cref{subsubsec:inflated-model}, we assume that the state is fully
 measurable and therefore set $C = I_n$, which reduces
-\eqref{eq:ss-cont-output} to $y(t) = x(t)$. However, when we introduce disturbances
-through noise, this is no longer the case. More details on this are
-given in \cref{subsubsec:noise-injection}.
+\eqref{eq:ss-cont-output} to $y(t) = x(t)$. Later,
+we will replace $C$ by a lift matrix $U_1$, and
+inject measurement noise (\cref{subsubsec:noise-injection}),
+such that the previous simplification no longer holds.
  
 % -----------------------------------------------------------------------------
 \subsubsection{Discretization}
@@ -248,7 +249,7 @@ incurred from any state $x$ onwards with
 
 Whether \eqref{eq:dare} has such a solution at all depends on two structural
 properties of the system, stabilizability and
-detectability~\needcite{discrete-time source}:
+detectability~\needcite{discrete-time source, Kucera?}:
 
 \begin{theorem}[Existence and uniqueness]
 \label{thm:dare-existence}
@@ -633,10 +634,11 @@ our results.
 \label{subsubsec:suboptimality}
 
 By \cref{subsubsec:lqr-optimal} no gain achieves a
-lower cost \eqref{eq:cost-of-gain} than $K^{*}$, and every controller we
-train is therefore in the best case only as good as it. This serves as our
-baseline, and we evaluate the cost produced by our controllers in relation to
-it.
+lower cost \eqref{eq:cost-of-gain} than $K^{*}$ on the nominal loop,
+and every controller we train is therefore in the best case only as good as it
+unless noise is involved.
+This serves as our baseline, and we evaluate the cost produced by our controllers
+in relation to it.
 
 While we can easily calculate the infinite-horizon cost of a gain
 via the Lyapunov equation \eqref{eq:lyapunov}, we cannot effectively
@@ -719,6 +721,22 @@ for which $\kappa_{\ell} = \kappa(K^{*}; c_{\ell})$ holds by \eqref{eq:noise-cal
 As a result, this gives us the possibility to compare whether a specific trained
 controller is more or less robust than the baseline, or any other controller.
 
+However, this metric is a bit flawed, if comparing a controller which has performed
+very badly on the nominal loop with one that performed well. 
+If we assume that both achieve the same $\kappa(K; c)$, this would equate
+to a much larger absolute increase in the test cost for the former, compared
+to the latter. To put this into perspective, we introduce the following metric
+
+% TODO - verify against the code
+
+\begin{equation}
+    \label{eq:absolute-degradation}
+    \frac{\Delta \hat{J}}{\hat{J}^{}}(K; c) \coloneqq \frac{\hat{J}_T(K; c) - \hat{J}_T(K; \varnothing)}{\hat{J}_T(K^{*}; \varnothing)} ,
+\end{equation}
+
+and call it "absolute degradation", indicating the increase in cost by noise,
+in units of the optimal clean cost.
+
 \subsubsection{The Size of a Policy}
 \label{subsubsec:policy-size}
 
@@ -755,8 +773,8 @@ $r = \rank(K)$ is
     \lvert K \rvert \coloneqq \min \left\{ m n, \; r \, (m + n + 1) \right\} ,
 \end{equation*}
 the number of real numbers required to store it.
-The size of a neural policy is its total number of trainable parameters in the
-actor.
+The size of a neural policy is its total number of parameters in the
+actor, counting both fixed and trainable ones.
 \end{definition}
 
 \subsubsection{Noise Intensity}
@@ -825,12 +843,14 @@ i.e.\ once the average has not decreased by the relative tolerance $\varepsilon_
 within the last $N_{\mathrm{p}}$ iterations. After an iteration with an infinite signal, the comparison
 restarts, such that we never compare with a window across an infinite iteration.
 \end{definition}
-The signal is something the solver itself observes and optimizes for.
-For Model-based PG and N4SID + Model-based PG it is the cost \eqref{eq:cost-of-gain} on the true or identified model, 
-for S-PI and N4SID + S-PI the regularized objective of S-PI
-(\cref{sec:known-model}), and for Model-free NPG and S-PI (model-free) the rollout estimate of the cost.
-All variants of S-PI additionally stop once
-$\lVert K_{j+1} - K_j \rVert_F < 10^{-8}$. For all of them, we use the best iterate by
+
+The signal is something the solver itself observes and optimizes for,
+like the cost \eqref{eq:cost-of-gain}, an estimate, or a regularized
+version of it for solvers introducing structure. Some also have
+additional early-stopping criterions. They will be introduced
+in detail in \cref{chap:lqr}.
+
+For all of them, we use the best iterate by
 $\bar{g}_j$ to identify the policy we want to use.
 
 The parameters of \cref{def:convergence} for the model-based and the model-free solvers are
@@ -884,9 +904,18 @@ The inflated size is always the same between training and evaluation. For noise
 experiments, however, the controller is trained on a clean system, and then exposed to one with noise
 activated during testing.
 
-Under the stronger conditions, individual rollouts might diverge.
-To keep our mean finite, we remove them from the mean calculation,
-and report them separately as the divergence rate
+Under the stronger conditions, individual seeds might have divergent episodes and thus
+blow up their costs. To keep our mean finite and comparable, we exclude them
+from the mean calculation, and report them separately as the divergence rate.
+We differentiate two cases:
+
+\begin{enumerate}
+    \item Linear Gain: The controller becomes unstable i.e. % TODO formula for spectral radius
+    \item Neural Network: The controller is not able to control the mass,
+    i.e. contain it in the range of initial positions at the end of any of 
+    its episodes, formally once % TODO formula position of final x larger than 10
+\end{enumerate}
+
 \begin{equation}
     \label{eq:divergence-rate}
     D(K; c) \coloneqq \frac{1}{M N}
@@ -936,8 +965,9 @@ and apply different variations of it. First, by using only one layer and droppin
 we force the trained controller to be linear, which allows us to extract
 it as a gain matrix that we can closely compare with our LQR approaches (Linear PPO, \emph{Lin}). The fully connected, standard version is named
 Fully-connected PPO (\emph{MLP}), and will also be evaluated. Additionally, we will introduce structures that force the observations through a low-dimensional latent
-space. Here, we will reuse the N4SID system identifier from before, by using the transpose of its identified observation matrix $\hat{C}$, we project
-the high-dimensional observation into a lower dimension, and then train PPO with this as the input. Therefore, the name for it is State encoder + PPO (\emph{StE}).
+space. Here, we will reuse the N4SID system identifier from before to identify the output matrix $\hat{C}$, before applying a change of
+basis to it, to achieve orthonormality in its columns. We project
+the high-dimensional observation through $\hat{C}^T$ into a lower dimension, and then train PPO with this as the input. Therefore, the name for it is State encoder + PPO (\emph{StE}).
 A similar approach is used for Scalable encoder + PPO (\emph{ScE}), which is based on Jonschkowski and Brock~\cite{Jonschkowski2015Learning} and
 Botteghi et al.~\cite{Botteghi2021LowDimensional}, and uses
 robotic priors to derive a low-dimensional latent state via a trainable encoder. Again, the construction following this encoder is PPO. Lastly, we
