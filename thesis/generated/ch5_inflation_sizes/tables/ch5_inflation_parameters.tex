@@ -1,0 +1,21 @@
+\begin{table}[htbp]
+\centering
+\caption{Actor parameters of the PPO variants for each inflation size, split into those trained by PPO and those fixed before PPO starts.}
+\label{tab:ch5-inflation-parameters}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+ & \multicolumn{3}{c}{\emph{small}} & \multicolumn{3}{c}{\emph{medium}} & \multicolumn{3}{c}{\emph{large}} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+Solver & Trainable & Frozen & Total & Trainable & Frozen & Total & Trainable & Frozen & Total \\
+\midrule
+Lin & $50$ & $0$ & $50$ & $1\,250$ & $0$ & $1\,250$ & $20\,000$ & $0$ & $20\,000$ \\
+OrB & $207\,429$ & $0$ & $207\,429$ & $229\,209$ & $0$ & $229\,209$ & $310\,884$ & $0$ & $310\,884$ \\
+StE & $4\,677$ & $20$ & $4\,697$ & $5\,977$ & $100$ & $6\,077$ & $10\,852$ & $400$ & $11\,252$ \\
+ScE & $8\,645$ & $137\,666$ & $146\,311$ & $9\,945$ & $158\,146$ & $168\,091$ & $14\,820$ & $234\,946$ & $249\,766$ \\
+MLP & $5\,189$ & $0$ & $5\,189$ & $9\,049$ & $0$ & $9\,049$ & $23\,524$ & $0$ & $23\,524$ \\
+FcE & $223\,685$ & $0$ & $223\,685$ & $245\,465$ & $0$ & $245\,465$ & $327\,140$ & $0$ & $327\,140$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

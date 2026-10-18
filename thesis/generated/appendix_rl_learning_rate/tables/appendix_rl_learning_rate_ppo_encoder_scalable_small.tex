@@ -1,16 +1,18 @@
 \begin{table}[htbp]
 \centering
-\caption{Scalable encoder + PPO under \emph{small} inflation, over the seeds.}
+\caption{ScE under \emph{small} inflation, over the seeds. Stable counts the seeds whose controller left the plant stable and kept the mass contained in every test episode.}
 \label{tab:appendix-rl-learning-rate-ppo-encoder-scalable-small}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
 Learning rate & 0.0003 & 0.0001 & 3e-05 & 1e-05 & 3e-06 \\
 \midrule
-True cost $J$ & $8436 \pm 3568$ & $6113 \pm 843.1$ & $7256 \pm 2192$ & $7685 \pm 3927$ & $9394 \pm 4086$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.446 \pm 0.401$ & $0.0749 \pm 0.0214$ & $0.293 \pm 0.457$ & $0.305 \pm 0.462$ & $0.692 \pm 0.87$ \\
-Test cost & $9146 \pm 8313$ & $6564 \pm 5701$ & $7947 \pm 6853$ & $8423 \pm 7861$ & $2.136 \times 10^{4} \pm 3.043 \times 10^{4}$ \\
-Env.\ steps to best policy & $7.64 \times 10^{6} \pm 1.96 \times 10^{6}$ & $6.74 \times 10^{6} \pm 1.35 \times 10^{6}$ & $7.54 \times 10^{6} \pm 1.58 \times 10^{6}$ & $8.5 \times 10^{6} \pm 9.89 \times 10^{5}$ & $6.41 \times 10^{6} \pm 4.61 \times 10^{6}$ \\
+Stable & $3/3$ & $3/3$ & $3/3$ & $3/3$ & $2/3$ \\
+\midrule
+True cost $J$ & $8436 \pm 3568$ & $6113 \pm 843.1$ & $7256 \pm 2192$ & $7685 \pm 3927$ & $7152 \pm 1800$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.446 \pm 0.401$ & $0.0749 \pm 0.0214$ & $0.293 \pm 0.457$ & $0.305 \pm 0.462$ & $0.191 \pm 0.108$ \\
+Test cost & $9146 \pm 8313$ & $6564 \pm 5701$ & $7947 \pm 6853$ & $8423 \pm 7861$ & $7178 \pm 6256$ \\
+Env.\ steps to best policy & $7.64 \times 10^{6} \pm 1.96 \times 10^{6}$ & $6.74 \times 10^{6} \pm 1.35 \times 10^{6}$ & $7.54 \times 10^{6} \pm 1.58 \times 10^{6}$ & $8.5 \times 10^{6} \pm 9.89 \times 10^{5}$ & $9.07 \times 10^{6} \pm 1.77 \times 10^{5}$ \\
 Env.\ steps to convergence & $10^{7}$ & $10^{7}$ & $10^{7}$ & $10^{7}$ & $10^{7}$ \\
 \bottomrule
 \end{tabular}

@@ -5,7 +5,7 @@
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrrrr}
 \toprule
-Solver & Baseline & Linear PPO & Bottleneck PPO & State encoder + PPO & Scalable encoder + PPO & Fully-connected PPO & FC-Extractor + PPO \\
+Solver & Baseline & Lin & OrB & StE & ScE & MLP & FcE \\
 \midrule
 True cost $J$ & $5848 \pm 9.383 \times 10^{-12}$ & $6174 \pm 75.74$ & $6202 \pm 585.3$ & $6208 \pm 565.7$ & $8809 \pm 7996$ & $6736 \pm 734.5$ & $6195 \pm 570.4$ \\
 Training suboptimality $(J-J^*)/J^*$ & $0$ & $0.0557 \pm 0.013$ & $0.0457 \pm 0.00731$ & $0.047 \pm 0.0108$ & $0.485 \pm 1.34$ & $0.135 \pm 0.0378$ & $0.0447 \pm 0.0104$ \\

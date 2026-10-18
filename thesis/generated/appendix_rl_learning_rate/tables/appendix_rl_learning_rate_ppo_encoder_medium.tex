@@ -1,16 +1,19 @@
 \begin{table}[htbp]
 \centering
-\caption{State encoder + PPO under \emph{medium} inflation, over the seeds.}
+\caption{StE under \emph{medium} inflation, over the seeds. Identified counts the seeds a model was obtained from and stable those whose controller left the plant stable and kept the mass contained in every test episode.}
 \label{tab:appendix-rl-learning-rate-ppo-encoder-medium}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
 Learning rate & 0.00013 & 4.5e-05 & 1.3e-05 & 1.3e-06 & 4.5e-06 \\
 \midrule
-True cost $J$ & $3.998 \times 10^{4} \pm 5.846 \times 10^{4}$ & $6103 \pm 858.2$ & $6125 \pm 897.5$ & $9971 \pm 3106$ & $7469 \pm 1547$ \\
-Training suboptimality $(J-J^*)/J^*$ & $6.5 \pm 11.2$ & $0.0728 \pm 0.0199$ & $0.076 \pm 0.0172$ & $0.784 \pm 0.664$ & $0.329 \pm 0.338$ \\
-Test cost & $1.423 \times 10^{6} \pm 2.608 \times 10^{6}$ & $6408 \pm 5649$ & $6474 \pm 5676$ & $1.237 \times 10^{4} \pm 1.073 \times 10^{4}$ & $1.02 \times 10^{4} \pm 7762$ \\
-Env.\ steps to best policy & $8.82 \times 10^{6} \pm 7.59 \times 10^{6}$ & $1.34 \times 10^{7} \pm 5.85 \times 10^{5}$ & $1.34 \times 10^{7} \pm 5.85 \times 10^{5}$ & $1.33 \times 10^{7} \pm 5.71 \times 10^{5}$ & $1.31 \times 10^{7} \pm 9.89 \times 10^{5}$ \\
+Identified & $3/3$ & $3/3$ & $3/3$ & $3/3$ & $3/3$ \\
+Stable & $2/3$ & $3/3$ & $3/3$ & $3/3$ & $3/3$ \\
+\midrule
+True cost $J$ & $6234 \pm 1094$ & $6103 \pm 858.2$ & $6125 \pm 897.5$ & $9971 \pm 3106$ & $7469 \pm 1547$ \\
+Training suboptimality $(J-J^*)/J^*$ & $0.0569 \pm 0.00363$ & $0.0728 \pm 0.0199$ & $0.076 \pm 0.0172$ & $0.784 \pm 0.664$ & $0.329 \pm 0.338$ \\
+Test cost & $6349 \pm 5603$ & $6408 \pm 5649$ & $6474 \pm 5676$ & $1.237 \times 10^{4} \pm 1.073 \times 10^{4}$ & $1.02 \times 10^{4} \pm 7762$ \\
+Env.\ steps to best policy & $1.32 \times 10^{7} \pm 7.25 \times 10^{5}$ & $1.34 \times 10^{7} \pm 5.85 \times 10^{5}$ & $1.34 \times 10^{7} \pm 5.85 \times 10^{5}$ & $1.33 \times 10^{7} \pm 5.71 \times 10^{5}$ & $1.31 \times 10^{7} \pm 9.89 \times 10^{5}$ \\
 Env.\ steps to convergence & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ \\
 \bottomrule
 \end{tabular}

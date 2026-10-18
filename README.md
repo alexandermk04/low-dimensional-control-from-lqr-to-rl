@@ -1,6 +1,6 @@
 # Low-dimensional Control under Embodiment Constraints: From LQR to Reinforcement Learning
 
-Code for the Bachelor Thesis written by Alexander Kranz in 2026 at TUHH.
+Code for the Bachelor Thesis written by Alexander Michael Kranz in 2026 at TUHH.
 All the code is either adapted from the indicated sources, or the own work of the author. This README has been restructured with the help of Claude Code.
 
 The repository studies how a controller behaves when its **embodiment** does not match its
@@ -30,8 +30,7 @@ analytic LQR solution:
 │   ├── config.py                     the shared plant, costs and inflation lifts
 │   ├── visualization.py              plotting from live objects
 │   ├── lqr_base/                     the systems being controlled
-│   │   ├── simple_lqr.py             discrete LQR, exact solution, simulator
-│   │   ├── inflated_lqr.py           LQR seen through lifted observation/action spaces
+│   │   ├── simple_lqr.py             discrete LQR (optionally inflated), exact solution, simulator
 │   │   └── noise.py                  the four noise channels
 │   ├── lqr_solvers/                  methods for finding a policy
 │   │   ├── mb_policy_gradient.py     model-based gradient descent
@@ -43,18 +42,11 @@ analytic LQR solution:
 │   │   ├── convergence.py            time-to-threshold, policy complexity
 │   │   ├── records.py                one run, saved as JSON + NPZ
 │   │   ├── serialization.py          config -> JSON
-│   │   ├── plots.py                  figures rebuilt from saved runs
-│   │   ├── comparison.py             LQR vs. RL, the chapter-5 experiment
-│   │   ├── policy_gradient_evaluation.py    solver comparison
-│   │   ├── noise_evaluation.py       one noise channel at a time
-│   │   ├── inflate_evaluation.py     full-rank vs. low-rank under inflation
-│   │   └── spi_evaluation.py         does S-PI actually reduce the rank?
+│   │   └── plots.py                  figures rebuilt from saved runs
 │   ├── reinforcement_learning/       the RL
 │   │   ├── lqr_env.py                Gymnasium view of an LQRBase
 │   │   ├── solvers.py                   the linear and neural PPO/SAC solvers
-│   │   ├── callbacks.py              the RL counterpart of Probe
-│   │   ├── double_integrator_environment.py   DEPRECATED prototype
-│   │   └── inflated_rl.py            DEPRECATED, see evaluation/comparison.py
+│   │   └── callbacks.py              the RL counterpart of Probe
 │   └── results/                      saved runs and figures (git-ignored)
 │   └── notes/                        working notes, not documentation
 ├── thesis/                           LaTeX source of the thesis itself
@@ -65,8 +57,7 @@ analytic LQR solution:
 | --- | --- |
 | [`code/basetypes.py`](code/basetypes.py) | `StateSpaceModel`, `StepResult`, `SimulationResult`, and the `SEED` constant. No logic. |
 | [`code/visualization.py`](code/visualization.py) | Functions for visualizing outputs of experiments |
-| [`code/lqr_base/simple_lqr.py`](code/lqr_base/simple_lqr.py) | `LQRDiscrete`, the exact solution `get_optimal_K_and_cost_discrete`, `true_cost`, `simulate`. |
-| [`code/lqr_base/inflated_lqr.py`](code/lqr_base/inflated_lqr.py) | `LQRInflated` - the model behind two lift matrices for increasing dimensions. |
+| [`code/lqr_base/simple_lqr.py`](code/lqr_base/simple_lqr.py) | `LQRDiscrete` (inflated when its settings carry the lifts `U_1`, `U_2`), the exact solution `get_optimal_K_and_cost_discrete`, `true_cost`, `simulate`. |
 | [`code/lqr_base/noise.py`](code/lqr_base/noise.py) | Parametric, control, measurement and disturbance noise. |
 | [`code/lqr_solvers/mb_policy_gradient.py`](code/lqr_solvers/mb_policy_gradient.py) | `gradient_descent_discrete` - exact gradient. |
 | [`code/lqr_solvers/mf_policy_gradient.py`](code/lqr_solvers/mf_policy_gradient.py) | `model_free_policy_gradient`, `model_free_natural_policy_gradient`, and the shared `estimate_gradient`. |
@@ -104,7 +95,7 @@ not a package while its subfolders are. So run them **as modules, from `code/`**
 
 ```bash
 cd code
-python -m evaluation.inflate_evaluation
+python -m experiments.ch4_true_model
 ```
 
 ### A note on figure output
@@ -134,7 +125,7 @@ carries it. Comments marked `SHOW:` flag the places where the papers' minus was 
 constructor discretizes with a zero-order hold via `continuous_to_discrete`. Discrete was
 chosen because it is what an actual embodied controller runs in.
 
-**3. Inflation means two lift matrices.** `LQRInflated` observes `y = U_1 x` and actuates
+**3. Inflation means two lift matrices.** With `U_1`, `U_2` in its settings, `LQRDiscrete` observes `y = U_1 x` and actuates
 `u = U_2 v`:
 
 ```
@@ -191,8 +182,8 @@ experiments lean on:
 | `true_cost(lqr, K)` | Exact infinite-horizon cost of a gain, or `inf` if the closed loop is unstable. Used for every cost curve. |
 | `simulate(lqr, K, n_steps)` | Rolls the closed loop out **with noise activated** and records the trajectory. |
 
-[`inflated_lqr.py`](code/lqr_base/inflated_lqr.py) subclasses `LQRDiscrete` and overrides
-only what the lifts change: `effective_gain`, `project_gradient` and `next_state`.
+Inflation needs no subclass: the lifts are optional settings fields (identity when omitted), the cost is charged in
+the controller's space (`Q`: p×p, `R`: q×q), and `controller_model()` gives the problem in those dimensions.
 
 [`noise.py`](code/lqr_base/noise.py) holds the four channels. They are plain classes that
 know how to sample themselves, bundled into an `LQRNoiseSettings`:
@@ -256,12 +247,9 @@ steps and renders the result.
 
 All from `code/`, after activating the virtual environment.
 
-| Command | Question it answers | Figure |
-| --- | --- | --- |
-| `python -m evaluation.policy_gradient_evaluation` | How close do the model-free solvers get to the model-based one, and to the optimum, on a clean full-feedback problem? | 6-panel: trajectories, cost, metadata |
-| `python -m evaluation.noise_evaluation` | How does each noise channel, in isolation, degrade the natural policy gradient? | one 6-panel figure per channel |
-| `python -m evaluation.inflate_evaluation` | Under inflation, does the low-rank solver beat the unstructured one — and does that hold under noise? | one 6-panel figure per condition, incl. rank |
-| `python -m evaluation.spi_evaluation` | Does S-PI actually reduce the rank of the gain, and what does that cost? | 4-panel: rank, cost, trajectories |
+Every experiment is a module under `code/experiments/` (`python -m experiments.<name>`), and its figures are
+rendered by `python -m experiments.figures.<name>_figures`. The order they have to run in, and how to run them
+on the cluster, is in [`code/cluster/WORKFLOW.md`](code/cluster/WORKFLOW.md).
 
 Model-free runs are not fast: `m=100` trajectories of `l=200` steps means 40 000 simulation
 steps per iteration, and S-PI draws two gradient estimates per iteration.

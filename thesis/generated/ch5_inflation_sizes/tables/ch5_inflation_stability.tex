@@ -1,0 +1,21 @@
+\begin{table}[htbp]
+\centering
+\caption{Stability of the PPO variants for each inflation size, without noise. Stable counts the seeds whose controller left the plant stable and kept the mass contained in every test episode, runaway the test episodes (out of $1000$) that end with the mass outside the range of initial positions. A linear gain is judged by its spectral radius only.}
+\label{tab:ch5-inflation-stability}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{2}{c}{\emph{small}} & \multicolumn{2}{c}{\emph{medium}} & \multicolumn{2}{c}{\emph{large}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+Solver & Stable & Runaway & Stable & Runaway & Stable & Runaway \\
+\midrule
+Lin & $10/10$ & \multicolumn{1}{c}{--} & $10/10$ & \multicolumn{1}{c}{--} & $7/10$ & \multicolumn{1}{c}{--} \\
+OrB & $10/10$ & $0$ & $10/10$ & $0$ & $10/10$ & $0$ \\
+StE & $10/10$ & $0$ & $10/10$ & $0$ & $10/10$ & $0$ \\
+ScE & $9/10$ & $2$ & $10/10$ & $0$ & $9/10$ & $4$ \\
+MLP & $10/10$ & $0$ & $10/10$ & $0$ & $10/10$ & $0$ \\
+FcE & $10/10$ & $0$ & $10/10$ & $0$ & $10/10$ & $0$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

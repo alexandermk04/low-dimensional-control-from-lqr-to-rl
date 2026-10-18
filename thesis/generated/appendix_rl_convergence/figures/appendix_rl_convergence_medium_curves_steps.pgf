@@ -4501,16 +4501,16 @@
 \definecolor{currentstroke}{rgb}{0.000000,0.447059,0.698039}%
 \pgfsetstrokecolor{currentstroke}%
 \pgfsetdash{}{0pt}%
-\pgfpathmoveto{\pgfqpoint{0.839662in}{2.129911in}}%
-\pgfpathlineto{\pgfqpoint{0.950773in}{2.129911in}}%
-\pgfpathlineto{\pgfqpoint{1.061884in}{2.129911in}}%
+\pgfpathmoveto{\pgfqpoint{0.839662in}{1.408711in}}%
+\pgfpathlineto{\pgfqpoint{0.950773in}{1.408711in}}%
+\pgfpathlineto{\pgfqpoint{1.061884in}{1.408711in}}%
 \pgfusepath{stroke}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=1.150773in,y=2.091022in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}Linear PPO}}%
+\pgftext[x=1.150773in,y=1.369822in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}Lin}}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetrectcap%
@@ -4519,16 +4519,16 @@
 \definecolor{currentstroke}{rgb}{0.835294,0.368627,0.000000}%
 \pgfsetstrokecolor{currentstroke}%
 \pgfsetdash{}{0pt}%
-\pgfpathmoveto{\pgfqpoint{0.839662in}{1.974978in}}%
-\pgfpathlineto{\pgfqpoint{0.950773in}{1.974978in}}%
-\pgfpathlineto{\pgfqpoint{1.061884in}{1.974978in}}%
+\pgfpathmoveto{\pgfqpoint{0.839662in}{1.253778in}}%
+\pgfpathlineto{\pgfqpoint{0.950773in}{1.253778in}}%
+\pgfpathlineto{\pgfqpoint{1.061884in}{1.253778in}}%
 \pgfusepath{stroke}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=1.150773in,y=1.936089in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}Bottleneck PPO}}%
+\pgftext[x=1.150773in,y=1.214889in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}OrB}}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetrectcap%
@@ -4537,16 +4537,16 @@
 \definecolor{currentstroke}{rgb}{0.000000,0.619608,0.450980}%
 \pgfsetstrokecolor{currentstroke}%
 \pgfsetdash{}{0pt}%
-\pgfpathmoveto{\pgfqpoint{0.839662in}{1.820045in}}%
-\pgfpathlineto{\pgfqpoint{0.950773in}{1.820045in}}%
-\pgfpathlineto{\pgfqpoint{1.061884in}{1.820045in}}%
+\pgfpathmoveto{\pgfqpoint{0.839662in}{1.098845in}}%
+\pgfpathlineto{\pgfqpoint{0.950773in}{1.098845in}}%
+\pgfpathlineto{\pgfqpoint{1.061884in}{1.098845in}}%
 \pgfusepath{stroke}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=1.150773in,y=1.781156in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}State encoder + PPO}}%
+\pgftext[x=1.150773in,y=1.059956in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}StE}}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetrectcap%
@@ -4555,16 +4555,16 @@
 \definecolor{currentstroke}{rgb}{0.800000,0.474510,0.654902}%
 \pgfsetstrokecolor{currentstroke}%
 \pgfsetdash{}{0pt}%
-\pgfpathmoveto{\pgfqpoint{0.839662in}{1.665112in}}%
-\pgfpathlineto{\pgfqpoint{0.950773in}{1.665112in}}%
-\pgfpathlineto{\pgfqpoint{1.061884in}{1.665112in}}%
+\pgfpathmoveto{\pgfqpoint{0.839662in}{0.943912in}}%
+\pgfpathlineto{\pgfqpoint{0.950773in}{0.943912in}}%
+\pgfpathlineto{\pgfqpoint{1.061884in}{0.943912in}}%
 \pgfusepath{stroke}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=1.150773in,y=1.626223in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}Scalable encoder + PPO}}%
+\pgftext[x=1.150773in,y=0.905023in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}ScE}}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetrectcap%
@@ -4573,16 +4573,16 @@
 \definecolor{currentstroke}{rgb}{0.901961,0.623529,0.000000}%
 \pgfsetstrokecolor{currentstroke}%
 \pgfsetdash{}{0pt}%
-\pgfpathmoveto{\pgfqpoint{0.839662in}{1.510179in}}%
-\pgfpathlineto{\pgfqpoint{0.950773in}{1.510179in}}%
-\pgfpathlineto{\pgfqpoint{1.061884in}{1.510179in}}%
+\pgfpathmoveto{\pgfqpoint{0.839662in}{0.788979in}}%
+\pgfpathlineto{\pgfqpoint{0.950773in}{0.788979in}}%
+\pgfpathlineto{\pgfqpoint{1.061884in}{0.788979in}}%
 \pgfusepath{stroke}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=1.150773in,y=1.471290in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}Fully-connected PPO}}%
+\pgftext[x=1.150773in,y=0.750090in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}MLP}}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetrectcap%
@@ -4591,16 +4591,16 @@
 \definecolor{currentstroke}{rgb}{0.337255,0.705882,0.913725}%
 \pgfsetstrokecolor{currentstroke}%
 \pgfsetdash{}{0pt}%
-\pgfpathmoveto{\pgfqpoint{0.839662in}{1.355246in}}%
-\pgfpathlineto{\pgfqpoint{0.950773in}{1.355246in}}%
-\pgfpathlineto{\pgfqpoint{1.061884in}{1.355246in}}%
+\pgfpathmoveto{\pgfqpoint{0.839662in}{0.634046in}}%
+\pgfpathlineto{\pgfqpoint{0.950773in}{0.634046in}}%
+\pgfpathlineto{\pgfqpoint{1.061884in}{0.634046in}}%
 \pgfusepath{stroke}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=1.150773in,y=1.316357in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}FC-Extractor + PPO}}%
+\pgftext[x=1.150773in,y=0.595157in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}FcE}}%
 \end{pgfscope}%
 \end{pgfpicture}%
 \makeatother%
