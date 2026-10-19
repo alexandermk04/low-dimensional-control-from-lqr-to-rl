@@ -198,7 +198,7 @@ semi-definite, meaning that deviating from the origin never reduces the cost,
 and $R$ must be positive definite, such that every control input results in a cost.
 
 As the original formula relates to a continuous problem with a fixed end time $T$,
-it does not fit our goal well of optimizing over an infinite discrete horizon.
+it does not fit well with our goal of optimizing over an infinite discrete horizon.
 The following formula offers exactly that~\cite[p.~137, Eq.~(7.30)]{Werner2021Control}:
 \begin{equation}
     \label{eq:lqr-cost-infinite}
@@ -299,9 +299,9 @@ the objective becomes
     = \tr \left( P_K \Sigma_0 \right) ,
 \end{equation}
 using the cyclic property of the trace. \Cref{eq:cost-of-gain} is the objective
-that the algorithms in \cref{chap:lqr} minimize, and differ
+that the algorithms in \cref{chap:lqr} minimize and they differ
 only in how much of the model is known to them. Later, in \cref{chap:inflation,chap:perception},
-the RL approaches rely on a rollout based estimate of it to optimize over.
+the RL approaches rely on a rollout-based estimate of it to optimize over.
 
 % ------------------------------------------
 
@@ -342,7 +342,7 @@ low-dimensionality of the controller~\cite{Montufar2015CheapControl}.
 That this is indeed true for certain examples has been shown both in theory and practice
 before~\cite{Datar2025Universal,Montufar2015Geometry,Li2018Measuring}. Li et
 al.~\cite{Li2018Measuring} call this lower dimension ``intrinsic dimension'', 
-which is the smallest dimension of a parameter subspace, in which the model
+which is the smallest dimension of a parameter subspace in which the model
 still achieves comparable metrics. They show, for example, that
 for achieving $90\,\%$ of the performance of a fully connected network on MNIST,
 the dimensionality can be reduced by $99.6\,\%$. For a convolutional neural
@@ -390,7 +390,7 @@ networks~\cite{Mania2018Simple,Rajeswaran2017Towards}. This, together with the
 fact that parameters in neural networks are highly dependent, and thus redundant~\cite{Denil2013Predicting}, allows us to assume that
 low-dimensionality can improve efficiency here. Examples of this exist, for example by factorizing a discretized low-rank
 policy into a thin and wide matrix~\cite{Rozada2024Matrix} or by introducing an orthogonal projection inside the layer
-structure~\cite{Todorov2026Orthogonal}. As result, the dimensionality of the policy is reduced. A different approach uses ``information bottlenecks'',
+structure~\cite{Todorov2026Orthogonal}. As a result, the dimensionality of the policy is reduced. A different approach uses ``information bottlenecks'',
 which exhibit better generalization behavior in unseen environments~\cite[Sec.~4.2]{Igl2019Generalization},
 which again could help us with robustness.
 
@@ -629,9 +629,9 @@ with the inflated loop, a single step becomes
 \subsection{Metrics and Robustness}
 \label{subsec:robustness}
 
-In this thesis we try to answer two main questions. First, how well a
-does trained controller perform generally, as well as under influences
-unknown to it during training. Secondly, what influence does its size
+In this thesis we try to answer two main questions. First, how well
+does a trained controller perform generally, as well as under influences
+unknown to it during training? Secondly, what influence does its size
 have on its performance, and what defines sizes? Thus we aim to introduce
 the metrics here to quantify these questions and our results.
 
@@ -647,7 +647,7 @@ in relation to it.
 
 While we can easily calculate the infinite-horizon cost of a gain
 via the Lyapunov equation \eqref{eq:lyapunov}, we can only apply it
-to a closed loop system. However, when adding noise to it,
+to a closed-loop system. However, when adding noise to it,
 this is not the case anymore. Additionally, the neural
 networks we train in later chapters do not admit a gain-matrix-based
 policy $K$, which would not allow cross-chapter comparison.
@@ -673,11 +673,12 @@ in \eqref{eq:lifted-state-cost}. For $\tilde{R}$, we handle it differently. Here
 every actuation energy adds to the cost, irrespective of its origin (so whether the
 controller commanded it or it is noise).
 
-We first define 
-% definition
-$\mathcal{F}_{S}$ % TODO, C2-08
-as the pairs $(s,i)$ whose episode stayed finite under the controller and the baseline.
- 
+We first define the set of pairs $(s,i)$ whose episode stayed finite under both the
+trained controller and the baseline,
+\begin{equation}
+    \label{eq:finite-pairs}
+    \mathcal{F}_{S} \coloneqq \left\{ (s,i) \;:\; J^{(i,s)}_T(K; c) < \infty ,\ J^{(i,s)}_T(K^{*}; c) < \infty \right\} .
+\end{equation}
 Now we can state our first main metric, which
 is the relative excess of the cost produced by a
 trained controller over the cost of the optimal controller $K^{*}$
@@ -692,8 +693,8 @@ the same noise. Overall this yields
                 {J^{(i,s)}_T(K^{*}; c)} ,
     \qquad
     \hat{S}(K; c)
-        = \frac{1}{\lvert \mathcal{F} \rvert}
-          \sum_{(s,i) \in \mathcal{F}} S^{(i,s)}(K; c) ,
+        = \frac{1}{\lvert \mathcal{F}_{S} \rvert}
+          \sum_{(s,i) \in \mathcal{F}_{S}} S^{(i,s)}(K; c) ,
 \end{equation}
 where $S = 0$ means that the trained controller performed as well
 as our baseline and $S = 0.1$ that it did $10\,\%$ worse.
@@ -743,7 +744,7 @@ to the latter. To quantify this, we introduce the following metric,
     \frac{\Delta \hat{J}}{\hat{J}^{*}}(K; c) \coloneqq \frac{\hat{J}_T(K; c) - \hat{J}_T(K; \varnothing)}{\hat{J}_T(K^{*}; \varnothing)} ,
 \end{equation}
 and call it \emph{absolute degradation}, indicating the increase in cost caused by noise,
-in units of the optimal clean cost. For $K^{*}$, it equals $\kappa_{\ell} - 1$, i.e. $0$ on the
+in units of the optimal clean cost. For $K^{*}$, it equals $\kappa_{\ell} - 1$, i.e.\ $0$ on the
 clean loop.
 
 \subsubsection{The Size of a Policy}
@@ -756,30 +757,30 @@ So it is indeed a question of size. For a neural network we can
 simply count the number of weights and biases of the actor. For a gain matrix, however,
 we need to find a definition that is comparable to it.
 
-The simplest approach for a $K \in \R^{d_{out} \times d_{in}}$ is the number of its entries,
-$d_{out} \cdot d_{in}$. In \cref{chap:lqr}, however, we reduce the rank of $K$.
+The simplest approach for a $K \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$ is the number of its entries,
+$d_{\mathrm{out}} \cdot d_{\mathrm{in}}$. In \cref{chap:lqr}, however, we reduce the rank of $K$.
 Optimizing the storage size for $K$ of rank $r$, the singular value decomposition~\cite[p.~85, Thm.~13.1]{Werner2021Optimal}
 separates it into
 \begin{equation}
     \label{eq:svd}
     K = U \Sigma V\T ,
     \qquad
-    U \in \R^{d_{out} \times r}, \quad
+    U \in \R^{d_{\mathrm{out}} \times r}, \quad
     \Sigma = \operatorname{diag}(\sigma_1, \dots, \sigma_r), \quad
-    V \in \R^{d_{in} \times r} ,
+    V \in \R^{d_{\mathrm{in}} \times r} ,
 \end{equation}
 with $U$ and $V$ having orthonormal columns and $\sigma_1 \geq \dots \geq
 \sigma_r > 0$ being the non-zero singular values. Hence, we only need to
-store $d_{out} \cdot r$ entries for $U$, $r$ for the diagonal of $\Sigma$ and
-$r \cdot d_{in}$ for $V$, which in total yields $r(d_{out} + d_{in} + 1)$.
+store $d_{\mathrm{out}} \cdot r$ entries for $U$, $r$ for the diagonal of $\Sigma$ and
+$r \cdot d_{\mathrm{in}}$ for $V$, which in total yields $r(d_{\mathrm{out}} + d_{\mathrm{in}} + 1)$.
 For a small enough $r$ this is less, so we take the minimum of both:
 
 \begin{definition}[Policy size]
 \label{def:policy-size}
-The size of a linear policy $K \in \R^{d_{out} \times d_{in}}$ of rank
+The size of a linear policy $K \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$ of rank
 $r = \rank(K)$ is
 \begin{equation*}
-    \lvert K \rvert \coloneqq \min \left\{ d_{out} \cdot d_{in}, \; r \, (d_{out} + d_{in} + 1) \right\} ,
+    \lvert K \rvert \coloneqq \min \left\{ d_{\mathrm{out}} \cdot d_{\mathrm{in}}, \; r \, (d_{\mathrm{out}} + d_{\mathrm{in}} + 1) \right\} ,
 \end{equation*}
 the number of real numbers required to store it.
 The size of a neural policy is its total number of parameters in the
@@ -893,13 +894,17 @@ evaluate the current policy's performance, to track its training process.
     \centering
     \caption{Environment step budget of the RL solvers per inflation size.}
     \label{tab:rl-step-caps}
-    \begin{tabular}{@{}lrrr@{}}
+    \begin{tabular}{@{}lrrrr@{}}
         \toprule
-        & \emph{small} & \emph{medium} & \emph{large} \\
+        & \emph{small} & \emph{medium} & \emph{large} & \emph{pixel} \\
         \midrule
-        Budget (environment steps) & $10^{7}$ & $1.5 \cdot 10^{7}$ & $3 \cdot 10^{7}$ \\
+        Budget (environment steps) & $10^{7}$ & $1.5 \cdot 10^{7}$ & $3 \cdot 10^{7}$ & $3 \cdot 10^{8}$\textsuperscript{$*$} \\
         \bottomrule
     \end{tabular}
+
+    \smallskip
+    {\footnotesize \textsuperscript{$*$}In the camera environment of \cref{sec:pixel-env}, one step corresponds to one decision
+    of the agent, which is then held for $30$ environment steps. In agent steps, the above named value gives $3 \cdot 10^{7}$.\par}
 \end{table}
 
 After our controllers have been trained, we evaluate them per seed for \emph{100 episodes}
@@ -958,7 +963,7 @@ trajectory. A more detailed description, as well as the exact parameters selecte
 will be provided in the sections discussing the setup. With this estimated model as
 the basis, we employ three different approaches, called N4SID + DARE, N4SID + Model-based PG and N4SID + S-PI.
 They will be complemented by Model-free NPG and S-PI (model-free), which are
-direct solvers and estimate the gradient from episode rollouts~\cite{Fazel2018Global}
+direct solvers and estimate the gradient from episode rollouts~\cite{Fazel2018Global}.
 All these will also be discussed in \cref{chap:lqr}.
 
 In \cref{chap:inflation}, we will then first introduce RL-based approaches. With proximal policy optimization
