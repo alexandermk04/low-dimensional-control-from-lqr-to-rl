@@ -55,6 +55,41 @@ rounded to two digits as in \eqref{eq:app-rl-learning-rate-grid}, which leaves u
 \subsection{Results}
 \label{subsec:pixel-inflation-results}
 
+When we now take a look at the training results, we can see that only for OrB and FcE
+we can actually notice a learning process. Here it is interesting to see that FcE performs
+in the median noticably better than OrB, even though they share nearly the same architecture.
+ScE in comparison mostly flattens out, while 
+MLP shows a slight decrease towards the end, before then rising again in suboptimality.
+Potentially, the shorter training length could be at fault here, as the original learning
+rates were calibrated for triple the amount. 
+
+% ch6 solvers curve steps, trajectories
+
+If we now take a look at an example trajectory, and analyze how each controller acts on the
+mass, we notice that, compared to the baseline, they barely apply any control input, or are
+generally more careful with it. This observation could possibly indicate that it is difficult
+for them to propagate any directed actuation through the projection, so that in turn it is cheaper
+to just accept the position penalty, without wasting additional energy.
+
+Finally, we want to take a look at how the test suboptimality here, compares to that of the
+previous chapter. Generally we notice that it has increased across all architectures, which
+makes sense given the much larger input dimension. However, it becomes clearer that policies
+which are larger, perform in the median better. ScE, which had been worse than MLP under large
+inflation, now has improved and sits below it (TODO vs. TODO for MLP).
+
+% left ch5 inflation large subopt, right ch6 solvers subopt
+
+Another noticable thing is the large spread across all architectures, where the worst episode
+is multiple times larger than the best one. In the context of the controllers applying little
+force, this makes sense, as then the initial states have a much larger influence on the incurred
+cost. However, there is indeed still a difference noticable, as OrB and ScE have a similar spread,
+however OrB has a better median and core quantile region. Both are however beat by FcE, showing
+us that the projection in OrB is not much of help here
+
+% table with median and minima maxima for the solvers (solvers as columns)
+
+We will take a look at these results again in the context of the new environment (\cref{subsec:pixelated-environment}).
+
 \section{The New Environment and the Position-Velocity Encoder}
 \label{sec:pixel-env}
 
