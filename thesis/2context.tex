@@ -30,8 +30,8 @@ In control theory, the evolution of an agent together with its environment is
 described by a \emph{state-space model}: a rule that assigns to every point of
 a state space the instantaneous rate at which the system moves through it.
 Throughout this thesis we restrict attention to the class of
-\emph{linear} systems, for which this rule is linear in
-both the state and the input~\cite[pp.~3--4]{Werner2021Control}.
+\emph{linear time-invariant} systems, for which this rule is linear in
+both the state and the input and does not change over time~\cite[pp.~3--4]{Werner2021Control}.
 
 Such a continuous-time system is given by
 \begin{subequations}
@@ -183,9 +183,8 @@ study, it is time to introduce our controller, which is based on the
 
 Here, the setting is that our system starts at an arbitrary initial state in its
 state space, and the goal of our controller is to return to the zero state as
-fast as possible. At the same time, the control input should be limited to a realistic
-quantity, such that it could actually be produced by an actuator.
-Both requirements can be combined into a single cost function, where $Q$
+cheaply as possible. Both distance to the origin, as well as applied control
+input yield certain costs, which can be combined into a single cost function, where $Q$
 describes the former, while $R$
 associates costs to control input. Over a finite horizon $T$, this gives the
 cost~\cite[pp.~5--6, Eqs.~(1.3) and (1.5)]{Werner2021Optimal}
@@ -199,7 +198,7 @@ semi-definite, meaning that deviating from the origin never reduces the cost,
 and $R$ must be positive definite, such that every control input results in a cost.
 
 As the original formula relates to a continuous problem with a fixed end time $T$,
-it does not fit our goal well of evaluating over an infinite discrete horizon.
+it does not fit our goal well of optimizing over an infinite discrete horizon.
 The following formula offers exactly that~\cite[p.~137, Eq.~(7.30)]{Werner2021Control}:
 \begin{equation}
     \label{eq:lqr-cost-infinite}
@@ -254,14 +253,13 @@ detectability~\cite[p.~442, Thm.~8]{Kucera1972Discrete}:
 \begin{theorem}[Existence and uniqueness]
 \label{thm:dare-existence}
 Let $(A, B)$ be stabilizable and let $(A, Q^{1/2})$ be detectable. Then the DARE
-\eqref{eq:dare} has a unique symmetric positive semi-definite solution $P$, which
-is the only stabilizing one, and the resulting closed loop satisfies
-$\spr(A - B K^{*}) < 1$.
+\eqref{eq:dare} has a unique symmetric positive semi-definite solution $P$
+and the resulting closed loop satisfies $\spr(A - B K^{*}) < 1$.
 \end{theorem}
 
 For the double integrator, both conditions hold: $(A, B)$ is controllable and thus
 stabilizable, and with $Q = I_n$ (\cref{subsec:protocol}) the pair $(A, Q^{1/2}) = (A, I_n)$
-is also observable. Thus $P \succ 0$, and $K^{*}$ is well defined in all our experiments.
+is also observable. Thus $K^{*}$ is well defined in all our experiments.
 
 \subsubsection{The Cost as a Function of the Gain}
 \label{subsubsec:lqr-cost-of-gain}
@@ -300,9 +298,10 @@ the objective becomes
     f(K) \coloneqq \E_{x_0 \sim \mathcal{D}} \left[ x_0\T P_K x_0 \right]
     = \tr \left( P_K \Sigma_0 \right) ,
 \end{equation}
-using the cyclic property of the trace. \Cref{eq:cost-of-gain} is the object
-that every remaining chapter of this thesis minimizes, and the algorithms differ
-only in how much of the model is known to them.
+using the cyclic property of the trace. \Cref{eq:cost-of-gain} is the objective
+that the algorithms in \cref{chap:lqr} minimize, and differ
+only in how much of the model is known to them. Later, in \cref{chap:inflation,chap:perception},
+the RL approaches rely on a rollout based estimate of it to optimize over.
 
 % ------------------------------------------
 
@@ -317,10 +316,10 @@ are known to be universal approximators~\cite{Cybenko1989Approximation,Hornik198
 hence able to approximate any function, in the case of an embodied agent, different constraints need to
 be taken into account. Ay~\cite{Ay2015Geometric} names additionally to external embodiment constraints
 possible intrinsic constraints, and argues that such can even be ``beneficial'' for the control
-structure. Additionally, fewer parameters for deployment are helpful due to energy usage and storage
-capacity, the core of the notion of cheap design~\needcite{TODO}.
-So, for such embodied agents, the goal is to find an ``embodied universal
-approximator''~\cite[p.~3]{Montufar2015CheapControl}, which restricts the neural network
+structure. By the core notion of cheap design, embodiment can help produce complex
+behaviors while only needing smaller controllers~\cite{Pfeifer2006HowBody}, which
+inherently requires constraints. So, for such embodied agents, the goal is to find an ``embodied universal
+approximator''~\cite[Sec.~1]{Montufar2015CheapControl}, which restricts the neural network
 architecture to an intrinsic, unknown dimension, encoding physical properties belonging to the agent
 and the environment, while disallowing impossible movements~\cite[Sec.~3]{Montufar2015CheapControl}.
 
@@ -342,8 +341,9 @@ low-dimensionality of the controller~\cite{Montufar2015CheapControl}.
 
 That this is indeed true for certain examples has been shown both in theory and practice
 before~\cite{Datar2025Universal,Montufar2015Geometry,Li2018Measuring}. Li et
-al.~\cite{Li2018Measuring} call this lower dimension ``intrinsic dimension'', which is the
-dimensionality required for the model to be able to find policies. They show, for example, that
+al.~\cite{Li2018Measuring} call this lower dimension ``intrinsic dimension'', 
+which is the smallest dimension of a parameter subspace, in which the model
+still achieves comparable metrics. They show, for example, that
 for achieving $90\,\%$ of the performance of a fully connected network on MNIST,
 the dimensionality can be reduced by $99.6\,\%$. For a convolutional neural
 network, it is still a $99.3\,\%$ reduction.
@@ -351,8 +351,8 @@ Others show that the ``least complex model which is able to learn
 an optimal policy does learn faster''~\cite{Montufar2015Geometry}. For a neural network, being
 more parameter-efficient can be done in different ways, some of which we look at in
 \cref{chap:inflation}. In comparison, for LQR, where the controller is a gain matrix, the
-corresponding approach is reducing its rank~\cite{Recht2010Guaranteed}. However, while these
-approaches are more parameter-efficient while achieving similar or slightly worse performance, it
+corresponding approach is reducing its rank, for example via a nuclear-norm regularization~\cite{Recht2010Guaranteed}.
+However, while these approaches are more parameter-efficient at achieving similar or slightly worse performances, it
 was also observed that they tend to perform even worse when encountering
 noise~\cite{Datar2025Universal}.
 
@@ -366,7 +366,7 @@ Approaches to training robust controllers typically introduce noise already duri
 by using a linear quadratic Gaussian (LQG) controller or by including variations to the
 dynamics~\cite{Rao2001Naive,Peng2018SimToReal}.
 These approaches, however, do not look at low-dimensionality, which makes sense as
-Kitano~\cite[p.~833]{Kitano2004Biological} poses that robustness cannot be increased
+Kitano~\cite[p.~833]{Kitano2004Biological} proposes that robustness cannot be increased
 without sacrificing performance or accepting ``increased resource
 demands''.
 
@@ -390,7 +390,7 @@ networks~\cite{Mania2018Simple,Rajeswaran2017Towards}. This, together with the
 fact that parameters in neural networks are highly dependent, and thus redundant~\cite{Denil2013Predicting}, allows us to assume that
 low-dimensionality can improve efficiency here. Examples of this exist, for example by factorizing a discretized low-rank
 policy into a thin and wide matrix~\cite{Rozada2024Matrix} or by introducing an orthogonal projection inside the layer
-structure~\cite{Todorov2026Orthogonal}. While they produce lower dimensionality, a different approach uses ``information bottlenecks'',
+structure~\cite{Todorov2026Orthogonal}. As result, the dimensionality of the policy is reduced. A different approach uses ``information bottlenecks'',
 which exhibit better generalization behavior in unseen environments~\cite[Sec.~4.2]{Igl2019Generalization},
 which again could help us with robustness.
 
@@ -401,15 +401,14 @@ state representation learning (SRL), exist, which use different variants to crea
 used as a state~\cite{Lesort2018State}. The most interesting approach, especially for us looking at embodied agents, is
 the usage of so-called ``priors'', which restrict the latent space by using knowledge about the
 environment~\cite{Lesort2018State}.
-This brings us back to Ay's argument that the embodiment actively defines the action space~\cite{Ay2015Geometric}.
+This is similar to Ay's argument that the embodiment actively defines the action space~\cite{Ay2015Geometric}.
 Robotic priors were introduced by Jonschkowski and Brock~\cite{Jonschkowski2015Learning} in 2015, and then further
 refined by Botteghi et al.~\cite{Botteghi2021LowDimensional} for continuous action spaces. A more specific version
 restricted to position and velocity also exists here, training a model to encode an image into a low-dimensional
 position state, from which the velocity is calculated by finite differences~\cite{Jonschkowski2017PVE}.
-While all that sounds promising, in contrast stand findings hinting that the problems of robust control
-also apply to perception-based control, as noise induced through perception directly affects
-the performance~\cite{Xu2021Perception} and thus needs approaches for improving
-it~\cite{Dean2020Robust}.
+However, perception-based control is also affected by the problems of robust control,
+as noise induced through perception directly affects the performance~\cite{Xu2021Perception}
+and therefore requires approaches for mitigating them~\cite{Dean2020Robust}.
 
 Our goal for this thesis is therefore to look a bit deeper at the combination of low-dimensionality
 and robustness in an empirical way, motivated by the findings of Datar and Ay~\cite{Datar2025Universal}. LQR
@@ -419,7 +418,7 @@ investigated policies for LQR under noise in comparison did not look at low-dime
 specifically~\cite{Zhang2021Policy}.
 For RL, low-dimensionality has been explored
 previously~\cite{Agarwal2020FLAMBE,Stojanovic2024ModelFree}, and also
-in comparison with robustness~\cite{Li2025AdaRL}, but does not take into account the embodiment we are interested in.
+in comparison with robustness~\cite{Li2025AdaRL}, but this research does not take into account the embodiment we are interested in.
 Closing this gap, our main interest is to compare robustness properties for low-dimensional policies for embodied
 agents under increasingly more complex and noisier environments.
 
@@ -427,6 +426,11 @@ agents under increasingly more complex and noisier environments.
 
 \section{Experimental Setup}
 \label{sec:setup}
+
+We now introduce with \cref{subsec:modified-loop} the modifications we apply to the
+double integrator loop for our experiments, followed by the metrics in \cref{subsec:robustness}
+we evaluate it on. The section is concluded with \cref{subsec:protocol}, where we state
+our evaluation procedure.
 
 \subsection{The Modified Loop}
 \label{subsec:modified-loop}
@@ -436,8 +440,8 @@ agents under increasingly more complex and noisier environments.
 
 To allow us to investigate a controller that has many redundant inputs and outputs, acting on a
 system with low-dimensional dynamics, we first need to create such a setup for our previously introduced
-double integrator. We do this by keeping the dynamics, so the state progression, like the loop above,
-but projecting the observation into a higher dimension, as well as projecting actuation down from such a higher dimension.
+double integrator. We do this by keeping the dynamics, so the state progression, like the loop in \cref{subsec:double-integrator},
+but projecting the observation into a higher dimension, as well as projecting actuation down from such.
 
 More specifically, we show the modification to our loop with two random orthonormal matrices $U_1$
 and $U_2$. For an inflated input dimension $d_{\mathrm{in}}$ and output dimension $d_{\mathrm{out}}$,
@@ -450,7 +454,8 @@ the two lifts are constructed the following way:
 \end{equation}
 where $U_1$ is the orthonormal factor of the QR decomposition of a random matrix, whose
 entries are sampled from the standard normal distribution. $U_2$ is the transpose of such a factor
-sampled from a separately drawn matrix. A single step of the loop then becomes
+sampled from a separately drawn matrix. Both are drawn once per seed, and then kept fixed throughout.
+A single step of the loop then becomes
 \begin{subequations}
 \label{eq:inflated-loop}
 \begin{align}
@@ -521,8 +526,8 @@ what its output actually \emph{does} (control noise), what the plant
 \emph{is} (parametric uncertainty), and what else \emph{acts} on it
 (external disturbance). Each of them can be activated separately, so that we
 can clearly isolate the cause of an effect. Throughout this section
-$k$ indexes the sampling instants, and $\sigma$ denotes the standard deviation
-of the respective noise.
+$k$ indexes the sampling instants, and $\sigma$ denotes the standard deviation,
+or amplitude of the respective noise channel.
 
 \subsubsection{Measurement Noise}
 \label{subsubsec:measurement-noise}
@@ -625,27 +630,27 @@ with the inflated loop, a single step becomes
 \label{subsec:robustness}
 
 In this thesis we try to answer two main questions. First, how well a
-trained low-dimensional controller performs generally, as well as under influences
-unknown to it during training. Thus we aim to define here the metrics to quantify
-our results.
+does trained controller perform generally, as well as under influences
+unknown to it during training. Secondly, what influence does its size
+have on its performance, and what defines sizes? Thus we aim to introduce
+the metrics here to quantify these questions and our results.
 
 \subsubsection{Cost and Suboptimality}
 \label{subsubsec:suboptimality}
 
 By \cref{subsubsec:lqr-optimal} no gain achieves a
-lower cost \eqref{eq:cost-of-gain} than $K^{*}$ on the nominal loop,
+lower cost \eqref{eq:cost-of-gain} than $K^{*}$ on the clean loop,
 and every controller we train is therefore in the best case only as good as it
 unless noise is involved.
 This serves as our baseline, and we evaluate the cost produced by our controllers
 in relation to it.
 
 While we can easily calculate the infinite-horizon cost of a gain
-via the Lyapunov equation \eqref{eq:lyapunov}, we cannot effectively
-use it. The reason for that is that \eqref{eq:lyapunov} can only
-be applied to the closed loop; however, when adding noise to our
-evaluation, this is not the case anymore. Additionally, the neural
+via the Lyapunov equation \eqref{eq:lyapunov}, we can only apply it
+to a closed loop system. However, when adding noise to it,
+this is not the case anymore. Additionally, the neural
 networks we train in later chapters do not admit a gain-matrix-based
-policy $K$, which would need a different approach anyway.
+policy $K$, which would not allow cross-chapter comparison.
 
 So, we instead evaluate them over a fixed horizon via rollout. Hence for
 a given controller, a noise condition $c$, which is a subset of channels and an
@@ -668,17 +673,12 @@ in \eqref{eq:lifted-state-cost}. For $\tilde{R}$, we handle it differently. Here
 every actuation energy adds to the cost, irrespective of its origin (so whether the
 controller commanded it or it is noise).
 
-Writing $\mathcal{F}$ for the pairs $(s,i)$ whose episode stayed finite,
-the cost estimate becomes
-\begin{equation}
-    \label{eq:empirical-cost}
-    \hat{J}_T(K; c)
-    = \frac{1}{\lvert \mathcal{F} \rvert}
-      \sum_{(s,i) \in \mathcal{F}} J^{(i,s)}_T(K; c) ,
-    \qquad
-    \mathcal{F} = \left\{ (s,i) \;:\; J^{(i,s)}_T(K; c) < \infty \right\} .
-\end{equation}
-Given this information, we can state our main metric, which
+We first define 
+% definition
+$\mathcal{F}_{S}$ % TODO, C2-08
+as the pairs $(s,i)$ whose episode stayed finite under the controller and the baseline.
+ 
+Now we can state our first main metric, which
 is the relative excess of the cost produced by a
 trained controller over the cost of the optimal controller $K^{*}$
 under the same condition. It is taken \emph{per episode}, meaning
@@ -701,16 +701,29 @@ as our baseline and $S = 0.1$ that it did $10\,\%$ worse.
 \subsubsection{Robustness to Noise}
 \label{subsubsec:robustness-metric}
 
+Before introducing our second main metric, we need to define 
+\begin{equation}
+    \label{eq:empirical-cost}
+    \hat{J}_T(K; c)
+    = \frac{1}{\lvert \mathcal{F} \rvert}
+      \sum_{(s,i) \in \mathcal{F}} J^{(i,s)}_T(K; c) ,
+    \qquad
+    \mathcal{F} = \left\{ (s,i) \;:\; J^{(i,s)}_T(K; c) < \infty \right\} ,
+\end{equation}
+which is the cost averaged over all episodes. In the following we will also
+use its variation $\hat{J}^{(s)}_T(K; c)$, where we pool over all episodes
+of a seed $s$.
+
 Our second metric relates to robustness, and helps us evaluate how much a controller is influenced
 by a noise condition $c$. It is the ratio of the test cost under noise $c$ to the test cost under
-the clean loop. Formalized, this gives
+the clean loop, which we from now on will call \emph{relative degradation}. Formalized, this gives
 \begin{equation}
     \label{eq:clean-ratio}
     \kappa^{(s)}(K; c) \coloneqq \frac{\hat{J}^{(s)}_T(K; c)}{\hat{J}^{(s)}_T(K; \varnothing)} ,
 \end{equation}
 where $\hat{J}^{(s)}_T$ is \eqref{eq:empirical-cost} containing only the episodes of seed $s$.
-Thus, the closer $\kappa^{(s)}(K; c)$ is to $1$, the more robust a controller is. We can also
-compare this to the performance of the optimal gain, which we calibrated in \eqref{eq:noise-calibration}
+Thus, the closer $\kappa^{(s)}(K; c)$ is to $1$, the more robust a controller is. 
+We can also compare the relative degradation to the performance of the optimal gain, which we calibrated in \eqref{eq:noise-calibration}
 to specific ratios, by taking the ratio of the costs averaged over all seeds,
 \begin{equation}
     \label{eq:clean-ratio-pooled}
@@ -720,17 +733,18 @@ for which $\kappa_{\ell} = \kappa(K^{*}; c_{\ell})$ holds by \eqref{eq:noise-cal
 As a result, this gives us the possibility to compare whether a specific trained
 controller is more or less robust than the baseline, or any other controller.
 
-However, this metric is a bit flawed when comparing a controller which has performed
-very badly on the nominal loop with one that performed well.
+However, this metric is misleading when comparing a controller which has performed
+very badly on the clean loop with one that performed well.
 If we assume that both achieve the same $\kappa(K; c)$, this would equate
 to a much larger absolute increase in the test cost for the former, compared
-to the latter. To put this into perspective, we introduce the following metric,
+to the latter. To quantify this, we introduce the following metric,
 \begin{equation}
     \label{eq:absolute-degradation}
     \frac{\Delta \hat{J}}{\hat{J}^{*}}(K; c) \coloneqq \frac{\hat{J}_T(K; c) - \hat{J}_T(K; \varnothing)}{\hat{J}_T(K^{*}; \varnothing)} ,
 \end{equation}
 and call it \emph{absolute degradation}, indicating the increase in cost caused by noise,
-in units of the optimal clean cost.
+in units of the optimal clean cost. For $K^{*}$, it equals $\kappa_{\ell} - 1$, i.e. $0$ on the
+clean loop.
 
 \subsubsection{The Size of a Policy}
 \label{subsubsec:policy-size}
@@ -742,30 +756,30 @@ So it is indeed a question of size. For a neural network we can
 simply count the number of weights and biases of the actor. For a gain matrix, however,
 we need to find a definition that is comparable to it.
 
-The simplest approach for a $K \in \R^{m \times n}$ is the number of its entries,
-$m n$. In \cref{chap:lqr}, however, we reduce the rank of $K$.
+The simplest approach for a $K \in \R^{d_{out} \times d_{in}}$ is the number of its entries,
+$d_{out} \cdot d_{in}$. In \cref{chap:lqr}, however, we reduce the rank of $K$.
 Optimizing the storage size for $K$ of rank $r$, the singular value decomposition~\cite[p.~85, Thm.~13.1]{Werner2021Optimal}
 separates it into
 \begin{equation}
     \label{eq:svd}
     K = U \Sigma V\T ,
     \qquad
-    U \in \R^{m \times r}, \quad
+    U \in \R^{d_{out} \times r}, \quad
     \Sigma = \operatorname{diag}(\sigma_1, \dots, \sigma_r), \quad
-    V \in \R^{n \times r} ,
+    V \in \R^{d_{in} \times r} ,
 \end{equation}
 with $U$ and $V$ having orthonormal columns and $\sigma_1 \geq \dots \geq
 \sigma_r > 0$ being the non-zero singular values. Hence, we only need to
-store $mr$ entries for $U$, $r$ for the diagonal of $\Sigma$ and
-$rn$ for $V$, which in total yields $r(m + n + 1)$.
+store $d_{out} \cdot r$ entries for $U$, $r$ for the diagonal of $\Sigma$ and
+$r \cdot d_{in}$ for $V$, which in total yields $r(d_{out} + d_{in} + 1)$.
 For a small enough $r$ this is less, so we take the minimum of both:
 
 \begin{definition}[Policy size]
 \label{def:policy-size}
-The size of a linear policy $K \in \R^{m \times n}$ of rank
+The size of a linear policy $K \in \R^{d_{out} \times d_{in}}$ of rank
 $r = \rank(K)$ is
 \begin{equation*}
-    \lvert K \rvert \coloneqq \min \left\{ m n, \; r \, (m + n + 1) \right\} ,
+    \lvert K \rvert \coloneqq \min \left\{ d_{out} \cdot d_{in}, \; r \, (d_{out} + d_{in} + 1) \right\} ,
 \end{equation*}
 the number of real numbers required to store it.
 The size of a neural policy is its total number of parameters in the
@@ -785,8 +799,8 @@ into five intensities,
 where \emph{none} leaves the system as it is and thus serves as our
 control condition. All the other intensities are calibrated by how much
 they increase the cost of the optimal gain $K^{*}$ on the uninflated system.
-For each channel $c$ and intensity $\ell$, we choose the standard deviation
-in a way such that with the test protocol of \cref{subsec:protocol}
+For each channel and intensity $\ell$, we choose the standard deviation
+in a way such that for the condition $c_{\ell}$ under the test protocol of \cref{subsec:protocol}
 \begin{equation}
     \label{eq:noise-calibration}
     \hat{J}_T(K^{*}; c_{\ell}) = \kappa_{\ell}\, \hat{J}_T(K^{*}; \varnothing),
@@ -824,7 +838,7 @@ We create the random matrix $N$ such that $U_2 N U_1 = 0$, and thus adding it do
 the stability property of the matrix. This way, the effective gain remains $U_2 \tilde{K}_0 U_1 = K_0$,
 while $\tilde{K}_0$ is full rank, which offers the possibility of rank reduction.
 
-We train for each algorithm ten different solvers, starting from ten different fixed seeds,
+For each algorithm, we train ten different controllers, each under a different fixed seed,
 until convergence. We define convergence for LQR solvers as follows:
 \begin{definition}[Convergence]
 \label{def:convergence}
@@ -835,7 +849,8 @@ iteration $j$ for which
     \bar{g}_j \ge \left( 1 - \varepsilon_{\mathrm{rel}} \right) \bar{g}_{j - N_{\mathrm{p}}} ,
 \end{equation*}
 i.e.\ once the average has not decreased by the relative tolerance $\varepsilon_{\mathrm{rel}}$
-within the last $N_{\mathrm{p}}$ iterations. After an iteration with an infinite signal, the comparison
+within the last $N_{\mathrm{p}}$ iterations. After an iteration with an
+infinite signal (caused by $K \notin \mathcal{K}$, \eqref{eq:stabilizing-set}), the comparison
 restarts, such that we never compare with a window across an infinite iteration.
 \end{definition}
 
@@ -888,12 +903,11 @@ evaluate the current policy's performance, to track its training process.
 \end{table}
 
 After our controllers have been trained, we evaluate them per seed for \emph{100 episodes}
-each, running for \emph{2000 steps} per episode with a sampling period of $h = 0.01\,\mathrm{s}$.
-Each episode calculates its empirical cost \eqref{eq:empirical-return}, and thus its
-suboptimality \eqref{eq:suboptimality} in
-comparison to the optimal gain on the same exact trajectory, with the same sampled $x_0 \sim \mathcal{D}$.
-In the end, for each solver architecture, we get a distribution of suboptimalities over a total
-of 1000 trajectories.
+each, running for \emph{$T = 2000$ steps} per episode with a sampling period of $h = 0.01\,\mathrm{s}$.
+For each episode we calculate the empirical cost \eqref{eq:empirical-return} and its
+suboptimality \eqref{eq:suboptimality} in comparison to the optimal gain run with the same initial state
+$x_0 \sim \mathcal{D}$ and sampled noise. In the end, for each solver architecture,
+we get a distribution of suboptimalities over a total of 1000 trajectories.
 
 The inflated size is always the same between training and evaluation. For noise
 experiments, however, the controller is trained on a clean system, and then exposed to one with noise
@@ -919,10 +933,6 @@ from the calculation, and report them separately as the divergence rate.
     \left\lvert \left\{ (s, i) \;:\; J^{(i,s)}_T(K; c) = \infty \right\} \right\rvert ,
 \end{equation}
 where $M = 10$ is the number of seeds and $N = 100$ the number of episodes per seed.
-An individual episode can be missing from the result for another reason.
-Where the \emph{baseline} evaluation of episode $(s,i)$ diverged,
-$S^{(i,s)}$ has no value at all, since \eqref{eq:suboptimality} would divide
-by an infinity. Those episodes are excluded from $\hat{S}$ and noted separately.
 
 % ------------------------------------------
 
@@ -945,15 +955,11 @@ the optimal controller calculated via the DARE \eqref{eq:dare} on the true model
 approaches, we will use numerical algorithms for subspace state-space system identification
 (N4SID)~\cite{VanOverschee1994N4SID} to estimate the underlying model from one
 trajectory. A more detailed description, as well as the exact parameters selected,
-will be provided in the sections discussing the results. With this estimated model as
-the basis, we employ three different approaches on how to learn our policy, called
-N4SID + DARE, N4SID + Model-based PG and N4SID + S-PI. All these will also be discussed in \cref{chap:lqr}.
-
-Our first approach for \cref{chap:lqr} is to compare our selected methods across the inflation sizes, and see how increasing
-the dimension affects the performance of each. As the next step, we will apply the different noise channels
-named in \cref{subsubsec:noise-injection} first to the base double integrator, where no overparameterization exists. The results
-we observe here will then be compared with evaluations of the controllers for a system with \emph{large} inflation
-under different noise channels and strengths.
+will be provided in the sections discussing the setup. With this estimated model as
+the basis, we employ three different approaches, called N4SID + DARE, N4SID + Model-based PG and N4SID + S-PI.
+They will be complemented by Model-free NPG and S-PI (model-free), which are
+direct solvers and estimate the gradient from episode rollouts~\cite{Fazel2018Global}
+All these will also be discussed in \cref{chap:lqr}.
 
 In \cref{chap:inflation}, we will then first introduce RL-based approaches. With proximal policy optimization
 (PPO)~\cite{Schulman2017Proximal} being one of
@@ -980,7 +986,7 @@ first, like in \cref{chap:lqr}, we start by comparing these different approaches
 sizes, without any noise applied, to see how they generally behave. Then, we introduce noise, and compare
 our approaches under \emph{large} inflation dimensions.
 
-Taking our results from the experiments on the artificially inflated dimensions, we create a new setup, still using the double
+Taking our results from the experiments on the artificially inflated dimensions, in \cref{chap:perception}, we create a new setup, still using the double
 integrator as our underlying structure. Here, we will observe the mass via a simulated camera, and place a number of actuators
 evenly distributed among angles on a half-circle. This will give us an actual high-dimensional input, as well as a high-dimensional
 output, that is in reality governed by low-dimensional dynamics.
