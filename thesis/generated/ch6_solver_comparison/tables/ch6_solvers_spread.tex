@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\caption{Median, best and worst test episode of the suboptimality $S$ of the PPO variants under \emph{pixel} inflation, without noise, pooled over the stable seeds.}
+\label{tab:ch6-solvers-spread}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Solver & OrB & ScE & MLP & FcE \\
+\midrule
+Median & $6.73$ & $17.5$ & $35.4$ & $2.45$ \\
+Best episode & $1.25$ & $1.53$ & $2.48$ & $0.738$ \\
+Worst episode & $4.78 \times 10^{4}$ & $4.8 \times 10^{4}$ & $2.65 \times 10^{5}$ & $1.41 \times 10^{4}$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
