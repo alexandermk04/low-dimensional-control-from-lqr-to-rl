@@ -103,6 +103,28 @@
     \node[size] at (\xp,\y-\lb) {64};
     \node[size] at (\xq,\y-\lb) {64};
 
+    % FC-Extractor + PPO
+    \def\y{-12.0}\def\lb{1.0}
+    \node[row] at (-0.5,\y) {FC-Extractor + PPO\\(\emph{FcE})};
+    \node[io, minimum height=\hin cm] (in) at (\xin,\y) {};
+    \node[trained, minimum height=\hfh cm] (a) at (\xa,\y) {};
+    \node[trained, minimum height=\htf cm] (b) at (\xb,\y) {};
+    \node[trained, minimum height=\htf cm] (c) at (\xc,\y) {};
+    \node[trained, minimum height=\hsf cm] (p) at (\xp,\y) {};
+    \node[trained, minimum height=\hsf cm] (q) at (\xq,\y) {};
+    \node[io, minimum height=\hout cm] (out) at (\xout,\y) {};
+    \draw[link] (in) -- (a);
+    \draw[link] (a) -- (b);
+    \draw[link] (b) -- (c);
+    \draw[link] (c) -- (p);
+    \draw[link] (p) -- (q);
+    \draw[link] (q) -- (out);
+    \node[size] at (\xa,\y-\lb) {512};
+    \node[size] at (\xb,\y-\lb) {256};
+    \node[size] at (\xc,\y-\lb) {256};
+    \node[size] at (\xp,\y-\lb) {64};
+    \node[size] at (\xq,\y-\lb) {64};
+
     % column captions
     \node[font=\scriptsize, align=center] at (\xin,1.3) {observation\\$y_k \in \R^{d_{\mathrm{in}}}$};
     \node[font=\scriptsize, align=center] at (\xb,1.3) {encoder\\(ReLU)};
@@ -111,7 +133,7 @@
     \node[font=\scriptsize, align=center] at (\xout,1.3) {action\\$v_k \in \R^{d_{\mathrm{out}}}$};
 
     % legend
-    \def\y{-11.3}
+    \def\y{-13.9}
     \node[trained, minimum height=0.3cm] (l1) at (-3.6,\y) {};
     \node[right=2pt of l1, font=\scriptsize] (t1) {trained by PPO};
     \node[frozen, minimum height=0.3cm, right=12pt of t1] (l2) {};

@@ -453,7 +453,7 @@ true model section (\cref{subsec:true-model-noise}).
 
 We first start by taking a look at parametric uncertainty. As it is a multiplicative noise type, already
 worse performance is magnified even more. For S-PI (model-free), this can clearly be seen, as
-under \emph{divergent} even the least relative degradation amounts to $7714$,
+under \emph{divergent} intensity, even the least relative degradation amounts to $7714$,
 with the majority being above $10^5$ (\cref{tab:noise-large-parametric}).
 
 \begin{table}[htbp]
@@ -486,7 +486,7 @@ Looking at the other architectures, we can see that all controllers relying on N
 estimation achieve almost identical relative degradation compared to the baseline. However,
 the iteratively trained ones (N4SID + Model-based PG and N4SID + S-PI) achieve slightly better scores. Taking the direct
 approach of Model-free NPG into account as well, we can see that at \emph{divergent} intensity its median relative degradation
-is around $10\%$ higher than the other approaches ($6.3$ vs.\ the others at $5.74$). Looking at
+is around $10\,\%$ higher than that of the other approaches ($6.3$ vs.\ the others at $5.74$). Looking at
 the worst degradation, the gap is even wider ($41.9$ vs.\ $26.1$).
 
 Next, we analyze robustness against external disturbances. Here, we again notice that indirect

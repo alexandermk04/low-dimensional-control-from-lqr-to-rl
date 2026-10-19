@@ -113,8 +113,9 @@ a latent state:
     \label{eq:state-encoder}
     \hat{x}_k = \hat{C}\T y_k , \qquad \hat{C} \in \R^{d_{\mathrm{in}} \times \hat{n}} , \quad \hat{C}\T \hat{C} = I_{\hat{n}} .
 \end{equation}
-The orthonormality in the columns of $\hat{C}\T$ is here equal to its pseudoinverse, due to the construction in \cref{subsec:unknown-model-setting}. 
-The inputs of both the actor and the critic are thus projected to dimension $\hat{n}$,
+Due to the construction of $\hat{C}$ in \cref{subsec:unknown-model-setting}, its transpose
+$\hat{C}\T$ is thus equal to its pseudoinverse, projecting an observation back to the identified
+latent state dimension. The inputs of both the actor and the critic are thus projected to dimension $\hat{n}$,
 which is the order of the identified model.
 
 However, as we will later scale our inputs to larger dimensions (\cref{chap:perception}), N4SID will become infeasible for such dimensions.
@@ -191,9 +192,9 @@ feature extractor output $z_k \in \R^{d_{\mathrm{z}}}$ is mapped to
 Unlike the previous encoder, this one is trained together with PPO, so the actor and critic train them separately, while
 the projection matrix $U_{\mathrm{b}}$ stays the same for both.
 
-Lastly, we introduce FC-Extractor + PPO (\emph{FcE}), which uses the same three layer extractor, but passes its $256$-dimensional
+Lastly, we introduce FC-Extractor + PPO (\emph{FcE}), which uses the same three-layer extractor, but passes its $256$-dimensional
 output to the actor and the critic directly, without projecting it via $U_{\mathrm{b}}$. The goal here is to differentiate
-whether the projection of \cref{eq:ortho-bottleneck} has any positive effect, or just the size of its policy.
+whether the projection of \eqref{eq:ortho-bottleneck} has any positive effect, or just the size of its policy.
 
 \Cref{fig:ppo-architectures} in \cref{sec:app-ppo-architectures} visualizes the architectures of all our solvers.
 
@@ -214,22 +215,22 @@ improvement under \emph{large}, but this was expected, given its unsuccessful le
   \label{fig:rl-large-curves}
 \end{figure}
 
-This then leads to some episodes in which the mass can not be contained by this policy during
-testing, which we can see in \cref{tab:ch5-inflation-stability}. We will exclude the affected
-seeds in the upcoming analysis. The instability of the policies trained by \emph{Lin} in
+This then leads to some episodes in which the mass cannot be contained by this policy during
+testing, which we can see in \cref{tab:ch5-inflation-stability}. We exclude the affected
+seeds from the following analysis. The instability of the policies trained by \emph{Lin} in
 three out of the ten seeds is also noted there.
 
 \input{generated/ch5_inflation_sizes/tables/ch5_inflation_stability.tex}
 
 Looking at the complexity of our trained policies, \emph{Lin} is significantly
-the smallest under \emph{small} and \emph{medium} inflation,
-however under \emph{large}, we can see that \emph{StE}
-has the smallest parameter count, but is of a similar magnitude as \emph{Lin} or \emph{MLP}, who are roughly
+the smallest under \emph{small} and \emph{medium} inflation.
+Under \emph{large}, however, we can see that \emph{StE}
+has the smallest parameter count, but is of a similar magnitude as \emph{Lin} or \emph{MLP}, which are roughly
 double its size.
-The group of much larger policies (10x to 15x) consists of \emph{OrB}, the non-dimensionally reduced \emph{FcE}
-and \emph{ScE}. For the latter, most of its parameters (around 93.7 percent) are already frozen after
-pretraining, differentiating it from the rest who are almost all trained via PPO, and making its trainable parameters
-comparable to State Encoder (\cref{tab:ch5-inflation-parameters}).
+The group of much larger policies (ten- to fifteenfold) consists of \emph{OrB}, the non-dimensionally reduced \emph{FcE}
+and \emph{ScE}. For the latter, most of its parameters (around $94\,\%$) are already frozen after
+pretraining, differentiating it from the rest, which are almost all trained via PPO, and making its trainable parameters
+comparable to \emph{StE} (\cref{tab:ch5-inflation-parameters}).
 
 \input{generated/ch5_inflation_sizes/tables/ch5_inflation_parameters.tex}
 
@@ -249,7 +250,7 @@ with some runs worse than $100$ suboptimality.
 
 Now under \emph{large} it becomes interesting, as the performance of \emph{Lin} has deteriorated, becoming the
 worst controller of them all, judging from the median. Under worst-case evaluation of its stable seeds,
-it is still the best, however three of the ten seeds already diverged.
+it is still the best; however, three of the ten seeds already diverged.
 \emph{ScE} is still second, now again worse than the fully connected version.
 However, the other large-parameter architectures,
 \emph{OrB} and \emph{FcE}, show a similar performance as under \emph{medium}, while most others
@@ -310,7 +311,7 @@ Under control noise, we can observe that trained controllers degrade in relation
 loop. This can be seen from the fact that the order of relative degradation in \cref{fig:rl-noise-large-control-divergent} is the same as for the clean plant.
 Generally, however, we can see that all trained controllers except \emph{Lin} are more robust on average than the baseline in relative terms (\cref{fig:rl-noise-large-control-relative}).
 In absolute terms, \emph{ScE} shows a worse degradation, which mainly stems from one seed. Also, in relative degradation, its seeds are
-spread further apart than those of the other controllers. There, in three out of the ten seeds,
+spread further apart than those of the other controllers. There, in three out of the nine stable seeds,
 \emph{ScE} degrades less than the other controllers (excluding \emph{Lin}), but then
 in three others it shows more degradation, making it overall worse on average. More robust are
 \emph{StE} and \emph{MLP}, as well as \emph{OrB} and \emph{FcE}, showing slightly better
@@ -338,14 +339,14 @@ robustness properties for the larger controllers.
 
 For measurement noise, we can see that the smaller controller \emph{Lin} remains largely more robust in comparison to the baseline across
 intensities, both relatively and absolutely (\cref{fig:rl-noise-large-measurement-relative,fig:rl-noise-large-measurement-absolute}). \emph{ScE} is slightly worse, however far
-below the baseline in relative degradation, and even beating \emph{Lin} in absolute degradation under \emph{divergent} noise. 
+below the baseline in relative degradation, and even beating \emph{Lin} in absolute degradation under \emph{divergent} noise.
 While \emph{ScE} indeed has a good performance here, its curve is heavily influenced by one outlier seed, which
 seems to not be affected by noise at all. We can further notice that \emph{MLP}
 shows the worst degradation here. Also interesting is that \emph{OrB}, \emph{FcE} and \emph{StE} all show slightly worse
 degradation than the baseline under \emph{weak} and \emph{standard} intensities; however, with increasing strength, they continue to degrade
-less than the baseline. Under \emph{divergent} noise, in absolute degradation \emph{FcE} and \emph{StE} even reach levels better than \emph{Lin}, 
+less than the baseline. Under \emph{divergent} noise, in absolute degradation \emph{FcE} and \emph{StE} even reach levels better than \emph{Lin},
 which grows similarly to the baseline from \emph{strong} onwards. \emph{OrB} is positioned slightly above ($4.93$ vs.\ \emph{Lin} at $4.55$).
-same as the baseline. It is still very interesting to see that \emph{StE} performs at the same level as \emph{FcE},
+It is still very interesting to see that \emph{StE} performs at the same level as \emph{FcE},
 and better than \emph{OrB}, as it uses far fewer parameters than both.
 
 \begin{figure}[htbp]
