@@ -33,7 +33,7 @@ $\Sigma_0 = \operatorname{diag}\left( 10^2/3, \, 1^2/3 \right)$. The policy grad
     \label{eq:pg-gradient}
     \nabla f(K_j) = 2 \left( \left( R + B\T P_{K_j} B \right) K_j - B\T P_{K_j} A \right) \Sigma_{K_j}
 \end{equation}
-is then used for a gradient step on the gain matrix. \Cref{alg:mb-pg} summarizes the loop.
+is then used for a gradient step on the gain matrix. \Cref{alg:mb-pg} summarizes the loop. We refer to it as \emph{TrP}.
 \begin{algorithm}[htbp]
     \caption{Model-based PG}
     \label{alg:mb-pg}
@@ -99,7 +99,7 @@ satisfies the sufficient decrease condition
 \end{equation}
 Otherwise, the step size is reduced to $\beta \eta$ and the proximal step is repeated. The learning loop further can be
 stopped earlier if the criterion $\lVert K_{j+1} - K_j \rVert_F \leq \varepsilon$ is satisfied.
-\Cref{alg:mb-spi} summarizes the loop.
+\Cref{alg:mb-spi} summarizes the loop, which, run on the true model, we refer to as \emph{TrS}.
 \begin{algorithm}[htbp]
     \caption{S-PI}
     \label{alg:mb-spi}
@@ -144,10 +144,10 @@ We apply our solvers to the \emph{base} and inflated versions of the true model,
 Specifically, as in \cref{subsec:protocol}, we train ten controllers per solver, before evaluating them on the test episodes.
 The results are then pooled.
 
-The most interesting finding is how much faster S-PI converges compared to Model-based PG. While it achieves its best training
-suboptimality within around 50 iterations, Model-based PG still falls drastically short of it after 450 iterations. We can also see in
-\cref{tab:ch4-true-across-sizes} that the reduction in complexity for all inflation sizes has worked well with S-PI.
-For our test suboptimality, S-PI also outperforms Model-based PG here by at least one order of magnitude. \Cref{fig:true-across-sizes-subopt}
+The most interesting finding is how much faster \emph{TrS} converges compared to \emph{TrP}. While it achieves its best training
+suboptimality within around 50 iterations, \emph{TrP} still falls drastically short of it after 450 iterations. We can also see in
+\cref{tab:ch4-true-across-sizes} that the reduction in complexity for all inflation sizes has worked well with \emph{TrS}.
+For our test suboptimality, \emph{TrS} also outperforms \emph{TrP} here by at least one order of magnitude. \Cref{fig:true-across-sizes-subopt}
 visualizes this.
 
 \input{generated/ch4_true_model/tables/ch4_true_across_sizes.tex}
@@ -159,7 +159,7 @@ visualizes this.
   \label{fig:true-across-sizes-subopt}
 \end{figure}
 
-Overall, this looks very promising for S-PI; still, our goal is to find out whether it is also a robust controller.
+Overall, this looks very promising for \emph{TrS}; still, our goal is to find out whether it is also a robust controller.
 
 \subsection{Noise Experiments}
 \label{subsec:true-model-noise}
@@ -192,8 +192,8 @@ are noticeable differences.
 \end{figure}
 
 For parametric uncertainty the distribution is also nearly identical, so here no difference can be noticed. When looking
-at measurement noise, however, we can notice that Model-based PG degrades slightly less than the baseline (median at $9.96$ vs.\ $9.98$),
-and S-PI is even further below (median at $9.88$, \cref{fig:true-noise-large-measurement-divergent}).
+at measurement noise, however, we can notice that \emph{TrP} degrades slightly less than the baseline (median at $9.96$ vs.\ $9.98$),
+and \emph{TrS} is even further below (median at $9.88$, \cref{fig:true-noise-large-measurement-divergent}).
 
 \begin{figure}[htbp]
   \centering
@@ -216,12 +216,12 @@ and S-PI is even further below (median at $9.88$, \cref{fig:true-noise-large-mea
 \end{figure}
 
 Under \emph{divergent} external disturbance, we see that our trained controllers degrade slightly more than the
-baseline, with Model-based PG being the worst here (median at $10.09$ vs.\ $9.96$ for the baseline,
+baseline, with \emph{TrP} being the worst here (median at $10.09$ vs.\ $9.96$ for the baseline,
 \cref{fig:true-noise-large-disturbance-divergent}).
 
-The most noticeable difference is under control noise, where Model-based PG noticeably degrades less than S-PI or the baseline
-(median at $6.49$ vs.\ baseline at $6.61$, \cref{fig:true-noise-large-control-divergent}). S-PI also stays below the baseline
-(median $6.59$), but does not show as much robustness as Model-based PG.
+The most noticeable difference is under control noise, where \emph{TrP} noticeably degrades less than \emph{TrS} or the baseline
+(median at $6.49$ vs.\ baseline at $6.61$, \cref{fig:true-noise-large-control-divergent}). \emph{TrS} also stays below the baseline
+(median $6.59$), but does not show as much robustness as \emph{TrP}.
 
 \begin{figure}[htbp]
   \centering
@@ -236,8 +236,8 @@ The most noticeable difference is under control noise, where Model-based PG noti
 
 Judging from our results, it is difficult to draw significant conclusions in relation to robustness of the controllers.
 It seems like a trained, larger controller could be more robust to control noise; however, we need to verify this in
-the following experiments. What generally stands out is that S-PI needs far fewer training iterations, while achieving
-slightly better suboptimality and similar robustness as Model-based PG. We verify whether this also holds for
+the following experiments. What generally stands out is that \emph{TrS} needs far fewer training iterations, while achieving
+slightly better suboptimality and similar robustness as \emph{TrP}. We verify whether this also holds for
 an unknown model in \cref{sec:unknown-model}.
 
 \section{Unknown Model across Dimensions}
@@ -304,13 +304,14 @@ combinations to find the optimal setting to use in our experiment. The full resu
 The resulting identified system then serves as a surrogate for the true model
 for the model-based approaches from \cref{subsec:known-model-setting}, in which
 we assume a latent second moment of $I_{\hat{n}}$, i.e.\ $\tilde{\Sigma}_0 = \hat{C}\hat{C}\T$.
-We use for N4SID + Model-based PG an $\eta = 10^{-4}$ and for N4SID + S-PI
+We refer to these as N4SID + Model-based PG (\emph{IdP}) and N4SID + S-PI (\emph{IdS}),
+and use for \emph{IdP} an $\eta = 10^{-4}$ and for \emph{IdS}
 $\lambda = 1$ across all sizes. This thus produces results without ever having
 access to the real model.
 
 An attentive reader might now ask why we would even want to use these iterative approaches, if we could just
 solve the DARE \eqref{eq:dare} directly on this estimation. And indeed we include this N4SID + DARE
-controller as an indicator for how well N4SID identifies the system in our following comparisons.
+controller (\emph{IdD}) as an indicator for how well N4SID identifies the system in our following comparisons.
 
 Additionally, we also use direct model-free approaches, which are variations of the model-based approaches
 from \cref{sec:known-model}. Unlike before, they do not calculate the gradient directly, but estimate
@@ -356,7 +357,7 @@ we count as diverged. It is therefore ended early and charged a penalty cost of 
 Additionally, for inflated dimensions, $\hat{\Sigma}_K$ is singular, so we precondition with its
 truncated pseudoinverse $\hat{\Sigma}_K^{\dagger}$ instead, which discards singular values below $10^{-6}$ times the largest one.
 
-Our full learning algorithm is then given in \cref{alg:mf-npg}.
+Our full learning algorithm, which we refer to as Model-free NPG (\emph{MfN}), is then given in \cref{alg:mf-npg}.
 \begin{algorithm}[htbp]
     \caption{Model-free NPG}
     \label{alg:mf-npg}
@@ -374,8 +375,8 @@ $\eta_{\mathrm{small}} = 0.03$, $\eta_{\mathrm{medium}} = 0.01$ and $\eta_{\math
 on the results in \cref{sec:app-learning-rate-mf-npg}.
 
 % spi mf
-Next, we implement a model-free version of S-PI that relies on the same gradient
-estimation (\cref{alg:mf-gradient}) as Model-free NPG. Another crucial difference,
+Next, we implement a model-free version of S-PI (\emph{MfS}) that relies on the same gradient
+estimation (\cref{alg:mf-gradient}) as \emph{MfN}. Another crucial difference,
 apart from the estimation of the gradient compared to the calculation, is the ``usage of a fixed stepsize
 $\eta$, rather than an adaptive stepsize from a backtracking linesearch''~\cite[Sec.~3.1]{Park2020Structured}, as that
 would require access to the function value $f(K) = \tr(P_K \Sigma_0)$. Before we look at how we select this step size
@@ -415,14 +416,14 @@ $\lambda_{\mathrm{medium}} = 400$ and $\eta_{\mathrm{medium}} = 3.5 \times 10^{-
 \subsection{Results}
 \label{subsec:unknown-model-results}
 
-Looking at the time until convergence, as well as the achieved training suboptimality, we notice that S-PI (model-free)
+Looking at the time until convergence, as well as the achieved training suboptimality, we notice that \emph{MfS}
 produced under \emph{large} inflation a very expensive gain, while still not achieving a strong reduction in rank. As this was the same problem
 we observed during our parameter search (\cref{sec:app-spi-mf}), we accept it as an unsuccessful attempt and difficult to implement. Apart from
-this, it is noticeable that Model-free NPG takes longer to converge the larger the inflation gets, with it being much slower than N4SID +
-S-PI and N4SID + Model-based PG, where N4SID + S-PI again is still much faster than N4SID + Model-based PG. The fastest approach here is the DARE solution, as it only
+this, it is noticeable that \emph{MfN} takes longer to converge the larger the inflation gets, with it being much slower than \emph{IdS}
+and \emph{IdP}, where \emph{IdS} again is still much faster than \emph{IdP}. The fastest approach here is \emph{IdD}, as it only
 requires the identification step, and no iteration.
 
-Looking at the policy sizes, we can see that N4SID + S-PI indeed produces the smallest policy, with the DARE policy
+Looking at the policy sizes, we can see that \emph{IdS} indeed produces the smallest policy, with \emph{IdD}
 also being smaller than the iterative versions, but still slightly larger in some cases (\cref{fig:identified-across-sizes-complexity}).
 
 \begin{figure}[htbp]
@@ -432,10 +433,10 @@ also being smaller than the iterative versions, but still slightly larger in som
   \label{fig:identified-across-sizes-complexity}
 \end{figure}
 
-Analyzing the resulting test suboptimality, we see the expected worse performance of S-PI (model-free), but also that the direct approaches
+Analyzing the resulting test suboptimality, we see the expected worse performance of \emph{MfS}, but also that the direct approaches
 underperform the indirect (identification) approaches. Here, we can also notice a difference: with increasing inflation size,
-the Model-free NPG trains for more iterations, with an increase from $167$ at \emph{base} to $610$ at \emph{large},
-while for the identification-based policies it stays similar. What also jumps out is that N4SID + DARE in some
+\emph{MfN} trains for more iterations, with an increase from $167$ at \emph{base} to $610$ at \emph{large},
+while for the identification-based policies it stays similar. What also jumps out is that \emph{IdD} in some
 cases even achieves optimal performance (\cref{fig:identified-across-sizes-subopt}).
 
 \begin{figure}[htbp]
@@ -452,7 +453,7 @@ Again, we investigate our system inflated to \emph{large} size and repeat our ex
 true model section (\cref{subsec:true-model-noise}).
 
 We first start by taking a look at parametric uncertainty. As it is a multiplicative noise type, already
-worse performance is magnified even more. For S-PI (model-free), this can clearly be seen, as
+worse performance is magnified even more. For \emph{MfS}, this can clearly be seen, as
 under \emph{divergent} intensity, even the least relative degradation amounts to $7714$,
 with the majority being above $10^5$ (\cref{tab:noise-large-parametric}).
 
@@ -464,11 +465,7 @@ with the majority being above $10^5$ (\cref{tab:noise-large-parametric}).
   \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
   \begin{tabular}{@{}lrrrrrr@{}}
     \toprule
-    Intensity & Baseline & \begin{tabular}[b]{@{}r@{}}N4SID +\\ DARE\end{tabular}
-      & \begin{tabular}[b]{@{}r@{}}N4SID +\\ Model-based PG\end{tabular}
-      & \begin{tabular}[b]{@{}r@{}}N4SID +\\ S-PI\end{tabular}
-      & \begin{tabular}[b]{@{}r@{}}Model-free\\ NPG\end{tabular}
-      & \begin{tabular}[b]{@{}r@{}}S-PI\\ (model-free)\end{tabular} \\
+    Intensity & Baseline & IdD & IdP & IdS & MfN & MfS \\
     \midrule
     \emph{weak}      & $1.195$ & $1.195$ & $1.194$ & $1.194$ & $1.197$ & $13.66$ \\
     \emph{standard}  & $1.451$ & $1.451$ & $1.450$ & $1.450$ & $1.455$ & $134.5$ \\
@@ -484,18 +481,18 @@ with the majority being above $10^5$ (\cref{tab:noise-large-parametric}).
 
 Looking at the other architectures, we can see that all controllers relying on N4SID
 estimation achieve almost identical relative degradation compared to the baseline. However,
-the iteratively trained ones (N4SID + Model-based PG and N4SID + S-PI) achieve slightly better scores. Taking the direct
-approach of Model-free NPG into account as well, we can see that at \emph{divergent} intensity its median relative degradation
+the iteratively trained ones (\emph{IdP} and \emph{IdS}) achieve slightly better scores. Taking the direct
+approach of \emph{MfN} into account as well, we can see that at \emph{divergent} intensity its median relative degradation
 is around $10\,\%$ higher than that of the other approaches ($6.3$ vs.\ the others at $5.74$). Looking at
 the worst degradation, the gap is even wider ($41.9$ vs.\ $26.1$).
 
 Next, we analyze robustness against external disturbances. Here, we again notice that indirect
 approaches are affected similarly to the baseline, while the directly trained controllers
-degrade in relative terms slightly less (in the case of Model-free NPG) or a lot less (S-PI (model-free),
+degrade in relative terms slightly less (in the case of \emph{MfN}) or a lot less (\emph{MfS},
 \cref{fig:noise-large-disturbance-divergent}). This is also visible
 across all intensities. However, when looking at the absolute degradation, one can see that the low value for
-S-PI (model-free) stems from the fact that its nominal performance was poor, and its actual absolute increase is similar
-to all the other controllers, or even slightly above (\cref{fig:noise-large-disturbance-absolute}). For Model-free NPG,
+\emph{MfS} stems from the fact that its nominal performance was poor, and its actual absolute increase is similar
+to all the other controllers, or even slightly above (\cref{fig:noise-large-disturbance-absolute}). For \emph{MfN},
 however, it also lies below the others, hinting at an ever so slightly improved robustness.
 
 \begin{figure}[htbp]
@@ -516,11 +513,11 @@ however, it also lies below the others, hinting at an ever so slightly improved 
   \label{fig:noise-large-disturbance}
 \end{figure}
 
-Looking at control noise next, we can again see the issue from before, where in relative terms S-PI (model-free) barely
+Looking at control noise next, we can again see the issue from before, where in relative terms \emph{MfS} barely
 degrades, while the other architectures show values much closer to the pinpointed baseline increase
-(\cref{fig:noise-large-control-divergent}). Still, as S-PI (model-free) also shows less absolute degradation here
+(\cref{fig:noise-large-control-divergent}). Still, as \emph{MfS} also shows less absolute degradation here
 (\cref{fig:noise-large-control-absolute}), it seems to be more robust to control noise than the
-other architectures. Again, we can also notice that Model-free NPG is slightly better than all the indirect approaches
+other architectures. Again, we can also notice that \emph{MfN} is slightly better than all the indirect approaches
 or the baseline, however not by much.
 
 \begin{figure}[htbp]
@@ -545,9 +542,9 @@ Noticeable from the spread, however, is that control noise seems to have mostly 
 across all seeds, compared to the previous noise channels, where relative degradation affected
 seeds differently.
 
-Finally, we investigate measurement noise. Here, from visual inspection, it seems like S-PI (model-free) is
+Finally, we investigate measurement noise. Here, from visual inspection, it seems like \emph{MfS} is
 completely robust against it (\cref{fig:noise-large-measurement-relative}). While the other architectures experience an
-around tenfold increase in cost (with Model-free NPG even slightly higher) similar to the baseline, it sits consistently across
+around tenfold increase in cost (with \emph{MfN} even slightly higher) similar to the baseline, it sits consistently across
 the intensities at a relative degradation of one. However, this time we cannot fully attribute this to
 its higher nominal cost. Under \emph{weak} and \emph{standard} intensity, measurement noise does not increase its cost
 measurably (\cref{fig:noise-large-measurement-absolute}) and under higher intensities it remains much
@@ -573,11 +570,11 @@ more robust than the other approaches.
 \end{figure}
 
 When now taking a look at the other architectures in more detail, we notice that the larger
-controllers are indeed more affected by the noise. Model-free NPG sits above all the model-based approaches,
-and N4SID + Model-based PG also degrades slightly more than N4SID + S-PI, with the baseline sitting between both. This
+controllers are indeed more affected by the noise. \emph{MfN} sits above all the model-based approaches,
+and \emph{IdP} also degrades slightly more than \emph{IdS}, with the baseline sitting between both. This
 was also a pattern we already noticed in the previous experiment, indicating that fewer parameters
 might make a controller more robust against measurement noise, if we also take the performance
-of S-PI (model-free) into account.
+of \emph{MfS} into account.
 
 \subsection{Discussion}
 \label{subsec:id-model-discussion}

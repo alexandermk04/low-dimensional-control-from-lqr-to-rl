@@ -950,7 +950,7 @@ use the double integrator, as mentioned in \cref{subsec:double-integrator}.
 
 First, as a basis, we will start by comparing
 the standard policy gradient (PG) approach~\cite{Fazel2018Global} with S-PI~\cite{Park2020Structured}
-on the true model. Their relative performance to the baseline will be evaluated under the different
+on the true model (\emph{TrP} and \emph{TrS}). Their relative performance to the baseline will be evaluated under the different
 inflation sizes introduced in \cref{tab:inflation-sizes}. Then, the same controllers will be exposed
 to the different noise channels and intensities we introduced.
 
@@ -961,8 +961,8 @@ approaches, we will use numerical algorithms for subspace state-space system ide
 (N4SID)~\cite{VanOverschee1994N4SID} to estimate the underlying model from one
 trajectory. A more detailed description, as well as the exact parameters selected,
 will be provided in the sections discussing the setup. With this estimated model as
-the basis, we employ three different approaches, called N4SID + DARE, N4SID + Model-based PG and N4SID + S-PI.
-They will be complemented by Model-free NPG and S-PI (model-free), which are
+the basis, we employ three different approaches, called N4SID + DARE (\emph{IdD}), N4SID + Model-based PG (\emph{IdP}) and N4SID + S-PI (\emph{IdS}).
+They will be complemented by Model-free NPG (\emph{MfN}) and model-free S-PI (\emph{MfS}), which are
 direct solvers and estimate the gradient from episode rollouts~\cite{Fazel2018Global}.
 All these will also be discussed in \cref{chap:lqr}.
 
