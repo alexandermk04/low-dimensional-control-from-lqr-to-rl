@@ -27,8 +27,8 @@ $\Sigma_{K_j}$ then follows from solving a second Lyapunov equation,
     \label{eq:state-correlation}
     \Sigma_{K_j} = (A - B K_j) \Sigma_{K_j} (A - B K_j)\T + \Sigma_0 ,
 \end{equation}
-where, for initial states drawn uniformly from $[-10, 10] \times [-1, 1]$ as described in \cref{subsubsec:lqr-cost-of-gain},
-$\Sigma_0 = \operatorname{diag}\left( 10^2/3, \, 1^2/3 \right)$. The policy gradient
+where, for initial states drawn uniformly from $[-10, 10] \times [-1, 1]$ as described in \cref{subsec:protocol},
+the second moment is $\Sigma_0 = \operatorname{diag}\left( 10^2/3, \, 1^2/3 \right)$. The policy gradient
 \begin{equation}
     \label{eq:pg-gradient}
     \nabla f(K_j) = 2 \left( \left( R + B\T P_{K_j} B \right) K_j - B\T P_{K_j} A \right) \Sigma_{K_j}
@@ -67,8 +67,8 @@ gain matrix. However, to make this comparable later to RL approaches that rely o
 we measure the complexity of a gain by its policy size $\lvert K \rvert$ from \cref{def:policy-size}, which uses
 the more efficient version between the full and the factored parameterization.
 
-Recht et al.~\cite{Recht2010Guaranteed} have already shown that nuclear norm minimization introduces
-low-rank solutions for convex matrix problems. However, as we are dealing with a non-convex optimization
+Recht et al.~\cite{Recht2010Guaranteed} have shown that, given suitable conditions, nuclear norm minimization recovers
+low-rank solutions for affine constraints. However, as we are dealing with a non-convex optimization
 problem~\cite{Fazel2018Global}, we cannot transfer the results over directly. Here, Park et al.~\cite{Park2020Structured}
 offer us an approach to impose different structures on our policy during learning via regularizers
 based on norms, one of them being the nuclear norm. We implement the model-based approach introduced there
@@ -98,7 +98,7 @@ satisfies the sufficient decrease condition
     \qquad G \coloneqq \frac{1}{\eta} \left( K_j - K^{+} \right) .
 \end{equation}
 Otherwise, the step size is reduced to $\beta \eta$ and the proximal step is repeated. The learning loop further can be
-stopped earlier if the criterion $\lVert K_{j+1} - K_j \rVert_F \leq \varepsilon$ is satisfied.
+stopped earlier if the criterion $\lVert K_{j+1} - K_j \rVert_F < \varepsilon$ is satisfied.
 \Cref{alg:mb-spi} summarizes the loop, which, run on the true model, we refer to as \emph{TrS}.
 \begin{algorithm}[htbp]
     \caption{S-PI}
@@ -117,7 +117,7 @@ stopped earlier if the criterion $\lVert K_{j+1} - K_j \rVert_F \leq \varepsilon
                 \STATE reduce the step size, $\eta \leftarrow \beta \eta$
             \ENDFOR
             \STATE update the gain, $K_{j+1} = K^{+}$
-            \IF{$\lVert K_{j+1} - K_j \rVert_F \leq \varepsilon$}
+            \IF{$\lVert K_{j+1} - K_j \rVert_F < \varepsilon$}
                 \STATE \textbf{stop}
             \ENDIF
         \ENDFOR
@@ -167,10 +167,10 @@ Overall, this looks very promising for \emph{TrS}; still, our goal is to find ou
 Now, we reuse the controllers we trained in \cref{subsec:known-model-results} and evaluate them under the test protocol
 and \emph{large} inflation with noise (\cref{subsubsec:noise-injection}) injected.
 
-Looking at our trade-off plots, it might seem that each controller degrades nearly the same under all noise channels,
+Looking at our trade-off plots, it might seem that each controller degrades nearly the same when all noise channels are activated at the same time,
 both relatively (\cref{fig:true-noise-large-all-relative}) and absolutely (\cref{fig:true-noise-large-all-absolute}). However,
 when looking at the distribution of the seeds under relative degradation, while for some channels this might hold, there
-are noticeable differences.
+are noticeable differences for the others.
 
 \begin{figure}[htbp]
   \centering
@@ -251,10 +251,10 @@ set up.
 \subsection{Setting}
 \label{subsec:unknown-model-setting}
 
-First, we introduce our basis for the indirect model-free approach, which is based on system identification. N4SID,
+First, we introduce our basis for the indirect approaches, which is based on system identification. N4SID,
 introduced by Van Overschee and De Moor~\cite{VanOverschee1994N4SID}, uses ``the projection of the future outputs [of the system]
-onto the past and future inputs and the past outputs''~\cite[Sec.~3]{VanOverschee1994N4SID}. These projections are then called
-``a function of the system matrices and the input-output block Hankel matrices''~\cite[Sec.~3]{VanOverschee1994N4SID}, which
+onto the past and future inputs and the past outputs''~\cite[Sec.~3]{VanOverschee1994N4SID}. These projections can then be
+described as ``a function of the system matrices and the input-output block Hankel matrices''~\cite[Sec.~3]{VanOverschee1994N4SID}, which
 allows us to reconstruct exactly that from the results. Important are further the assumptions that the systems are
 observable and controllable~\cite[pp.~127--128]{Werner2021Control}. For simplicity, we rely on the
 implementation of N4SID from SIPPY~\cite{SIPPY2026N4SID}, which we integrate into our own setup. This implementation allows us
@@ -371,9 +371,13 @@ Our full learning algorithm, which we refer to as Model-free NPG (\emph{MfN}), i
     \end{algorithmic}
 \end{algorithm}
 
-After some evaluations, we have decided on a smoothing parameter of $r = 0.5$, and a learning rate of $\eta_{\mathrm{base}} = 0.1$,
-$\eta_{\mathrm{small}} = 0.03$, $\eta_{\mathrm{medium}} = 0.01$ and $\eta_{\mathrm{large}} = 0.01$ based
-on the results in \cref{sec:app-learning-rate-mf-npg}.
+We use the natural gradient $\widehat{\nabla f} \, \hat{\Sigma}^{\dagger}$ here, as it
+preconditions the update with the pseudoinverse of the state correlation instead of applying
+the update directly like the standard model-free version~\cite{Fazel2018Global}. In initial
+experiments it consequently showed better stability, which is why we selected it.
+In the same process we decided on a smoothing parameter of $r = 0.5$, and, based
+on separate results in \cref{sec:app-learning-rate-mf-npg}, have chosen a learning rate of $\eta_{\mathrm{base}} = 0.1$,
+$\eta_{\mathrm{small}} = 0.03$, $\eta_{\mathrm{medium}} = 0.01$ and $\eta_{\mathrm{large}} = 0.01$.
 
 % spi mf
 Next, we implement a model-free version of S-PI (\emph{MfS}) that relies on the same gradient
@@ -417,15 +421,19 @@ $\lambda_{\mathrm{medium}} = 400$ and $\eta_{\mathrm{medium}} = 3.5 \times 10^{-
 \subsection{Results}
 \label{subsec:unknown-model-results}
 
+% TODO - check values again
 Looking at the time until convergence, as well as the achieved training suboptimality, we notice that \emph{MfS}
 produced under \emph{large} inflation a very expensive gain, while still not achieving a strong reduction in rank. As this was the same problem
 we observed during our parameter search (\cref{sec:app-spi-mf}), we accept it as an unsuccessful attempt and difficult to implement. Apart from
-this, it is noticeable that \emph{MfN} takes longer to converge the larger the inflation gets, with it being much slower than \emph{IdS}
-and \emph{IdP}, where \emph{IdS} again is still much faster than \emph{IdP}. The fastest approach here is \emph{IdD}, as it only
+this, it is noticeable that \emph{MfN} takes longer to converge the larger the inflation gets, with an increase from $167$ at \emph{base} to $390$ at \emph{large}.
+This makes it slower than \emph{IdS} (around $25$) and \emph{IdP} (around $350$), where \emph{IdS} again is still much faster than \emph{IdP}. The fastest approach here is \emph{IdD}, as it only
 requires the identification step, and no iteration.
 
+% here table?
+
 Looking at the policy sizes, we can see that \emph{IdS} indeed produces the smallest policy, with \emph{IdD}
-also being smaller than the iterative versions, but still slightly larger in some cases (\cref{fig:identified-across-sizes-complexity}).
+being slightly larger in some cases (\cref{fig:identified-across-sizes-complexity}), but still a lot smaller
+than the full rank gains.
 
 \begin{figure}[htbp]
   \centering
@@ -437,8 +445,9 @@ also being smaller than the iterative versions, but still slightly larger in som
 Analyzing the resulting test suboptimality, we see the expected worse performance of \emph{MfS}, but also that the direct approaches
 underperform the indirect (identification) approaches. Here, we can also notice a difference: with increasing inflation size,
 \emph{MfN} trains for more iterations, with an increase from $167$ at \emph{base} to $610$ at \emph{large},
-while for the identification-based policies it stays similar. What also jumps out is that \emph{IdD} in some
-cases even achieves optimal performance (\cref{fig:identified-across-sizes-subopt}).
+while for the identification-based policies it stays similar. What also jumps out is that \emph{IdD} matches
+the optimal performance within $2 \cdot 10^{-7}$ across every size (\cref{fig:identified-across-sizes-subopt}),
+indicating that N4SID is able to almost perfectly identify the underlying system..
 
 \begin{figure}[htbp]
   \centering
@@ -481,8 +490,8 @@ with the majority being above $10^5$ (\cref{tab:noise-large-parametric}).
 \end{table}
 
 Looking at the other architectures, we can see that all controllers relying on N4SID
-estimation achieve almost identical relative degradation compared to the baseline. However,
-the iteratively trained ones (\emph{IdP} and \emph{IdS}) achieve slightly better scores. Taking the direct
+estimation achieve almost identical relative degradation compared to the baseline, with their
+medians only differing by at most $0.3\%$. Taking the direct
 approach of \emph{MfN} into account as well, we can see that at \emph{divergent} intensity its median relative degradation
 is around $10\,\%$ higher than that of the other approaches ($6.3$ vs.\ the others at $5.74$). Looking at
 the worst degradation, the gap is even wider ($41.9$ vs.\ $26.1$).
@@ -515,7 +524,7 @@ however, it also lies below the others, hinting at an ever so slightly improved 
 \end{figure}
 
 Looking at control noise next, we can again see the issue from before, where in relative terms \emph{MfS} barely
-degrades, while the other architectures show values much closer to the pinpointed baseline increase
+degrades, while the other solvers show values much closer to the calibrated increase $\kappa_{\ell}$ of the baseline
 (\cref{fig:noise-large-control-divergent}). Still, as \emph{MfS} also shows less absolute degradation here
 (\cref{fig:noise-large-control-absolute}), it seems to be more robust to control noise than the
 other architectures. Again, we can also notice that \emph{MfN} is slightly better than all the indirect approaches
@@ -572,10 +581,9 @@ more robust than the other approaches.
 
 When now taking a look at the other architectures in more detail, we notice that the larger
 controllers are indeed more affected by the noise. \emph{MfN} sits above all the model-based approaches,
-and \emph{IdP} also degrades slightly more than \emph{IdS}, with the baseline sitting between both. This
-was also a pattern we already noticed in the previous experiment, indicating that fewer parameters
-might make a controller more robust against measurement noise, if we also take the performance
-of \emph{MfS} into account.
+and \emph{IdP} also degrades slightly more than \emph{IdS}, with the baseline sitting between both. We
+already noticed a similar pattern in the previous experiment, where \emph{TrS} performed slightly better
+than \emph{TrP} indicating that fewer parameters might make a controller more robust against measurement noise.
 
 \subsection{Discussion}
 \label{subsec:id-model-discussion}
@@ -626,5 +634,5 @@ requires just the system identification step, and performs on par with the optim
 
 As this system is a very simple case, and system identification is not scalable to larger inflation as we
 will see in \cref{chap:perception}, we cannot rely on these approaches for real world application. We
-therefore take these learnings and indications with us, and try to use them in choosing RL-based algorithms
+therefore take these learnings and indications with us, and try to use them for choosing RL-based algorithms
 in \cref{chap:inflation}.
