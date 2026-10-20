@@ -4575,11 +4575,11 @@
 \pgfsetstrokecolor{currentstroke}%
 \pgfsetstrokeopacity{0.450000}%
 \pgfsetdash{}{0pt}%
-\pgfpathmoveto{\pgfqpoint{2.148797in}{2.867778in}}%
-\pgfpathlineto{\pgfqpoint{2.371019in}{2.867778in}}%
-\pgfpathlineto{\pgfqpoint{2.371019in}{2.945556in}}%
-\pgfpathlineto{\pgfqpoint{2.148797in}{2.945556in}}%
-\pgfpathlineto{\pgfqpoint{2.148797in}{2.867778in}}%
+\pgfpathmoveto{\pgfqpoint{2.499261in}{2.867778in}}%
+\pgfpathlineto{\pgfqpoint{2.721483in}{2.867778in}}%
+\pgfpathlineto{\pgfqpoint{2.721483in}{2.945556in}}%
+\pgfpathlineto{\pgfqpoint{2.499261in}{2.945556in}}%
+\pgfpathlineto{\pgfqpoint{2.499261in}{2.867778in}}%
 \pgfpathclose%
 \pgfusepath{fill}%
 \end{pgfscope}%
@@ -4587,7 +4587,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=2.459908in,y=2.867778in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}Model-based PG}}%
+\pgftext[x=2.810372in,y=2.867778in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}TrP}}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetbuttcap%
@@ -4600,11 +4600,11 @@
 \pgfsetstrokecolor{currentstroke}%
 \pgfsetstrokeopacity{0.450000}%
 \pgfsetdash{}{0pt}%
-\pgfpathmoveto{\pgfqpoint{3.544015in}{2.867778in}}%
-\pgfpathlineto{\pgfqpoint{3.766237in}{2.867778in}}%
-\pgfpathlineto{\pgfqpoint{3.766237in}{2.945556in}}%
-\pgfpathlineto{\pgfqpoint{3.544015in}{2.945556in}}%
-\pgfpathlineto{\pgfqpoint{3.544015in}{2.867778in}}%
+\pgfpathmoveto{\pgfqpoint{3.234262in}{2.867778in}}%
+\pgfpathlineto{\pgfqpoint{3.456484in}{2.867778in}}%
+\pgfpathlineto{\pgfqpoint{3.456484in}{2.945556in}}%
+\pgfpathlineto{\pgfqpoint{3.234262in}{2.945556in}}%
+\pgfpathlineto{\pgfqpoint{3.234262in}{2.867778in}}%
 \pgfpathclose%
 \pgfusepath{fill}%
 \end{pgfscope}%
@@ -4612,7 +4612,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=3.855126in,y=2.867778in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}S-PI}}%
+\pgftext[x=3.545373in,y=2.867778in,left,base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}TrS}}%
 \end{pgfscope}%
 \end{pgfpicture}%
 \makeatother%

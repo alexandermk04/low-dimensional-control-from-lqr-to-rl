@@ -1,6 +1,6 @@
 \begin{table}[htbp]
 \centering
-\caption{N4SID + Model-based PG on a system with \emph{large} inflation with a Hankel horizon of 20. Identified counts the seeds a model was obtained from and stable those whose controller left the plant stable.}
+\caption{IdP on a system with \emph{large} inflation with a Hankel horizon of 20. Identified counts the seeds a model was obtained from and stable those whose controller left the plant stable and kept the mass contained in every test episode.}
 \label{tab:appendix-identification-mb-est-large-h20}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrr}
@@ -11,9 +11,9 @@ Identified & $0/10$ & $0/10$ & $0/10$ & $10/10$ & $10/10$ \\
 Stable & $0/10$ & $0/10$ & $0/10$ & $10/10$ & $10/10$ \\
 \midrule
 Training suboptimality $(J-J^*)/J^*$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & $0.000666 \pm 0.000257$ & $3.19 \times 10^{-5} \pm 1.64 \times 10^{-7}$ \\
-Iterations & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & $349 \pm 3$ & $346 \pm 0$ \\
-Env.\ steps to convergence & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & $4 \times 10^{3} \pm 0$ & $8 \times 10^{3} \pm 0$ \\
-Env.\ steps to best policy & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & $4 \times 10^{3} \pm 0$ & $8 \times 10^{3} \pm 0$ \\
+Iterations & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & $349 \pm 3$ & $346$ \\
+Env.\ steps to convergence & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & $4 \times 10^{3}$ & $8 \times 10^{3}$ \\
+Env.\ steps to best policy & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & $4 \times 10^{3}$ & $8 \times 10^{3}$ \\
 Wall time (s) & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} & $226.8 \pm 20.8$ & $489.3 \pm 43.9$ \\
 \bottomrule
 \end{tabular}

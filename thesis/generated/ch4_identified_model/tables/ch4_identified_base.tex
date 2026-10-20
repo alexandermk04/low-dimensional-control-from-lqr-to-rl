@@ -5,7 +5,7 @@
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrrr}
 \toprule
-Solver & Baseline & N4SID + DARE & N4SID + Model-based PG & N4SID + S-PI & Model-free NPG & S-PI (model-free) \\
+Solver & Baseline & IdD & IdP & IdS & MfN & MfS \\
 \midrule
 True cost $J$ & $5848 \pm 9.054 \times 10^{-12}$ & $5848 \pm 7.414 \times 10^{-12}$ & $5848 \pm 7.116 \times 10^{-12}$ & $5848 \pm 5.83 \times 10^{-7}$ & $5891 \pm 1.541$ & $5858 \pm 4.374$ \\
 Training suboptimality $(J-J^*)/J^*$ & $0$ & $0$ & $3.18 \times 10^{-5} \pm 2.24 \times 10^{-15}$ & $7.05 \times 10^{-6} \pm 9.97 \times 10^{-11}$ & $0.00728 \pm 0.000264$ & $0.00162 \pm 0.000748$ \\
