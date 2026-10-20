@@ -428,7 +428,7 @@ def pretrain_state_encoder(extractor: StateEncoder, observations: np.ndarray,
         Weights the action difference in the three pairwise priors.
     weights : tuple, optional
         ``(temporal, proportionality, repeatability, causality)``. The
-        ``omega`` of [3]_, whose L2 term is left to the optimizer instead.
+        ``omega`` of [3]_ without its L2 regularization term.
 
     Returns
     -------

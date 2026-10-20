@@ -98,22 +98,15 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
         if not subset:
             continue
 
-        if cell_channel == "clean":
-            title = short_title = "No noise"
-            stem = "clean"
-        else:
-            title = f"Channel: {cell_channel}, intensity: {cell_level}"
-            short_title = f"{cell_channel}, {cell_level}"
-            stem = f"{cell_channel}-{cell_level}"
+        stem = "clean" if cell_channel == "clean" else f"{cell_channel}-{cell_level}"
 
-        def draw(subset=subset, title=title, short_title=short_title, **size):
-            ax = box_metric(
+        save_variants(
+            lambda subset=subset, **size: box_metric(
                 subset, "solver", metric, order=solvers, log=log, split=True, **size
-            )
-            ax.set_title(short_title if size else title)
-            return ax
-
-        save_variants(draw, f"{prefix}_{metric}_{stem}", experiment)
+            ),
+            f"{prefix}_{metric}_{stem}",
+            experiment,
+        )
 
     # Degradation over the intensities
     for cell_channel in channel_order[1:]:

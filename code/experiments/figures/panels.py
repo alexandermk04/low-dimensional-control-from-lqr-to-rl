@@ -149,6 +149,16 @@ def _symlog_axis(ax, cells: list[np.ndarray], linscale: float, floor: float = 0.
     lowest = min((float(np.min(values)) for values in cells if np.size(values)), default=0.0)
     if lowest > -linthresh:
         ax.set_ylim(bottom=min(-0.5 * linthresh, 1.2 * lowest))
+    else:
+        # default margin
+        ax.set_ylim(bottom=2.0 * lowest)
+
+    if linscale < 1.0:
+        # less labels here
+        default = ax.yaxis.get_major_formatter()
+        ax.yaxis.set_major_formatter(FuncFormatter(
+            lambda y, pos: "" if np.isclose(abs(y), linthresh) else default(y, pos)
+        ))
 
 
 class _PlainLogFormatter(LogFormatterSciNotation):

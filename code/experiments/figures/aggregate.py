@@ -119,6 +119,10 @@ def tidy(records: list[RunRecord]) -> list[dict]:
             **record.summary,
         }
 
+        # Set rank to none for RL architectures
+        if (row.get("rank_final") or 0) < 0:
+            row["rank_final"] = None
+
         if row.get("training_subopt_final") is not None:
             row["training_subopt_final"] = float(
                 clip_roundoff(row["training_subopt_final"])

@@ -2068,12 +2068,6 @@
 \end{pgfscope}%
 \end{pgfscope}%
 \begin{pgfscope}%
-\definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
-\pgfsetstrokecolor{textcolor}%
-\pgfsetfillcolor{textcolor}%
-\pgftext[x=0.344444in, y=0.611549in, left, base]{\color{textcolor}{\rmfamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}$\mathdefault{10^{-7}}$}}%
-\end{pgfscope}%
-\begin{pgfscope}%
 \pgfpathrectangle{\pgfqpoint{0.697840in}{0.523557in}}{\pgfqpoint{1.936160in}{1.971243in}}%
 \pgfusepath{clip}%
 \pgfsetrectcap%

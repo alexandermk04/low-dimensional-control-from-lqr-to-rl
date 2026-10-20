@@ -51,7 +51,8 @@ After initial runs with this basic setup, we could observe some divergence behav
 led us to consider additional implementation improvements, as suggested by Huang et al.~\cite{Huang2022Implementation}.
 Specifically, we modified the discount factor to $\gamma = 0.999$ instead of $0.99$
 and used the reward normalization implementation from SB3~\cite{StableBaselines2026VecNormalize}, based
-on a discounted moving average~\cite[continuous-action Detail~8]{Huang2022Implementation}. However, the two most effective changes were:
+on a discounted moving average~\cite[continuous-action Detail~8]{Huang2022Implementation}. Two additional
+helpful changes were:
 \begin{enumerate}
     \item Using learning-rate annealing instead of a fixed rate~\cite[Detail~4]{Huang2022Implementation}. Now the learning
     rate is decreased with every update, such that at the end of the step budget (\cref{tab:rl-step-caps}) it is equal
@@ -101,20 +102,23 @@ on a discounted moving average~\cite[continuous-action Detail~8]{Huang2022Implem
 
 Now that we have introduced the base construction, it is easier for us to describe variations of it. We start with
 Linear PPO (\emph{Lin}), which allows us to compare the performance of PPO to the previous chapter. Here, our actor becomes a single layer,
-with the bias removed, such that we can rewrite this network as
+with the bias set to and kept at $0$, such that we can rewrite this network as
 \begin{equation}
     \label{eq:linear-ppo}
     \mu(y_k) = W y_k = -K y_k , \qquad K \coloneqq -W \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}} ,
 \end{equation}
-which allows us to extract a gain matrix $K$ that is comparable to the previous chapter. A second, already known, component is
-used for State encoder + PPO (\emph{StE}). Here, we reuse an identified system from N4SID (\cref{sec:unknown-model}) to encode an observation into
-a latent state:
+which allows us to extract a gain matrix $K$ that is comparable to the previous chapter. The critic remains as described in \cref{subsec:rl-training}.
+We further initialize our actor with the weights taken from the stable $\tilde{K}_0$ of \cref{subsec:protocol}.
+
+A second, already known, component is used for State encoder + PPO (\emph{StE}).
+Here, we reuse N4SID (\cref{sec:unknown-model}) to identify the system with the same settings as before (\cref{tab:identification-settings})
+and then encode an observation into a latent state:
 \begin{equation}
     \label{eq:state-encoder}
     \hat{x}_k = \hat{C}\T y_k , \qquad \hat{C} \in \R^{d_{\mathrm{in}} \times \hat{n}} , \quad \hat{C}\T \hat{C} = I_{\hat{n}} .
 \end{equation}
 Due to the construction of $\hat{C}$ in \cref{subsec:unknown-model-setting}, its transpose
-$\hat{C}\T$ is thus equal to its pseudoinverse, projecting an observation back to the identified
+$\hat{C}\T$ is equal to its pseudoinverse, projecting an observation back to the identified
 latent state dimension. The inputs of both the actor and the critic are thus projected to dimension $\hat{n}$,
 which is the order of the identified model.
 
@@ -133,8 +137,9 @@ to improve our controller architecture. Here, we will use the following priors~\
     \item causality: prevents the trivial solution of mapping every observation to the same point.
 \end{itemize}
 
-We modify the loss calculations taken from the paper~\cite{Botteghi2021LowDimensional} slightly,
-by dropping the $\mathcal{L}_{\mathrm{reg}}$ term, and thus get the total loss function of
+The translation of these principles into loss calculations can be found in detail in the
+paper~\cite{Botteghi2021LowDimensional}. We modify their total loss calculation slightly,
+by dropping the $\mathcal{L}_{\mathrm{reg}}$ term, and thus obtain
 \begin{equation}
     \label{eq:prior-loss}
     \mathcal{L} = \omega_1 \mathcal{L}_{\mathrm{temp}} + \omega_2 \mathcal{L}_{\mathrm{prop}} + \omega_3 \mathcal{L}_{\mathrm{rep}}
@@ -148,11 +153,11 @@ it to the actor and the critic. The data is collected by running a policy using
 the initial gain $\tilde{K}_0$ or a randomly drawn action in a $70\,\%$/$30\,\%$ split on
 the environment for at most $800$ consecutive steps.
 
-An important parameter is also the dimension of the latent
-state, which we set to the actual ``2'' here. Although for later application, one might not know
-the real, underlying dimension of the dynamics, we want to make it comparable across the solvers by
-using the same low dimension. And as N4SID mostly correctly identifies the true dimension, we use it
-here as well. \Cref{alg:encoder-pretraining} summarizes the pretraining.
+An important parameter is the dimension of the latent state, which we set to the true state dimension $n = 2$ here.
+In practice, one might not know the underlying dimension of the dynamics, but as N4SID correctly identifies
+the true dimension in most runs, we use the same dimension here to keep the solvers comparable.
+
+\Cref{alg:encoder-pretraining} summarizes the pretraining.
 \begin{algorithm}[htbp]
     \caption{Pretraining of the scalable encoder}
     \label{alg:encoder-pretraining}
@@ -176,7 +181,7 @@ here as well. \Cref{alg:encoder-pretraining} summarizes the pretraining.
     \end{algorithmic}
 \end{algorithm}
 
-The second trainable extractor we used, in Bottleneck PPO (\emph{OrB}), is based on the paper by Todorov and Sabatelli~\cite{Todorov2026Orthogonal},
+The second trainable extractor, which we use in Bottleneck PPO (\emph{OrB}), is based on the paper by Todorov and Sabatelli~\cite{Todorov2026Orthogonal},
 using orthogonal bottlenecks. It consists of a fully connected MLP, with 512 neurons in the first,
 and 256 neurons in the second and third layer, using a ReLU activation function.
 Following it is a matrix with orthonormal columns, which projects the output
@@ -190,7 +195,7 @@ feature extractor output $z_k \in \R^{d_{\mathrm{z}}}$ is mapped to
 \end{equation}
 
 Unlike the previous encoder, this one is trained together with PPO, so the actor and critic train them separately, while
-the projection matrix $U_{\mathrm{b}}$ stays the same for both.
+the projection matrix $U_{\mathrm{b}}$ stays the same for both, and across seeds to ensure comparability.
 
 Lastly, we introduce FC-Extractor + PPO (\emph{FcE}), which uses the same three-layer extractor, but passes its $256$-dimensional
 output to the actor and the critic directly, without projecting it via $U_{\mathrm{b}}$. The goal here is to differentiate
@@ -211,14 +216,16 @@ improvement under \emph{large}, but this was expected, given its unsuccessful le
 \begin{figure}[htbp]
   \centering
   \generatedfigure{ch5_inflation_sizes}{ch5_inflation_large_curves_steps}
-  \caption{Training suboptimality $(J - J^{*})/J^{*}$ of the PPO variants under \emph{large} inflation.}
+  \caption{Training suboptimality $(J - J^{*})/J^{*}$ of the PPO variants under \emph{large} inflation.
+  Values below $0$ can occur as the cost $J$ is only estimated from rollouts.}
   \label{fig:rl-large-curves}
 \end{figure}
 
 This then leads to some episodes in which the mass cannot be contained by this policy during
 testing, which we can see in \cref{tab:ch5-inflation-stability}. We exclude the affected
-seeds from the following analysis. The instability of the policies trained by \emph{Lin} in
-three out of the ten seeds is also noted there.
+seeds from the following analysis. The instability of the policies trained by \emph{Lin}, where
+six out of the ten seeds experience an unstable gain during training, out of which three remain unstable in the
+end, is also noted there.
 
 \input{generated/ch5_inflation_sizes/tables/ch5_inflation_stability.tex}
 
@@ -244,14 +251,13 @@ is \emph{Lin}, which shows little spread.
 
 Looking at \emph{medium}, here \emph{MLP} becomes worse regarding its median, followed by \emph{ScE}, even though
 the spread of \emph{ScE} still has worse runs. \emph{FcE} maintains its median from
-\emph{small}, only increasing its spread a bit, making it the best of them all. The other low-dimensional
-controllers show a good median similar to \emph{Lin}, however have a wider spread,
-with some runs worse than $100$ suboptimality.
+\emph{small}, only increasing its spread a bit, and, together with \emph{OrB}, achieves the best median overall. \emph{StE}
+in comparison shows a good median similar to \emph{Lin}, however has a wider spread.
 
 Now under \emph{large} it becomes interesting, as the performance of \emph{Lin} has deteriorated, becoming the
 worst controller of them all, judging from the median. Under worst-case evaluation of its stable seeds,
 it is still the best; however, three of the ten seeds already diverged.
-\emph{ScE} is still second, now again worse than the fully connected version.
+\emph{ScE} is still the second worst, now again worse than the fully connected version.
 However, the other large-parameter architectures,
 \emph{OrB} and \emph{FcE}, show a similar performance as under \emph{medium}, while most others
 (except for \emph{MLP}) have shifted upwards. The simple \emph{StE} also remains in a good spot,
@@ -271,7 +277,7 @@ even though it has worsened in comparison to \emph{OrB} (\cref{fig:rl-across-siz
 % ---- Parametric Uncertainty --------
 
 Similar to what we have seen before in \cref{subsec:noise-large-inflation}, parametric uncertainty
-seems to affect most trained controllers similarly and generally increases suboptimality by multiple orders
+seems to affect most trained controllers similarly and generally increases the cost by multiple orders
 of magnitude. Here, the baseline remains the most robust one, with only its calibrated increase by a factor of $10$
 under \emph{divergent}, while for the majority it is one between $10^5$ and $10^6$ in the median case. However,
 \emph{Lin} seems to be more robust than the other trained policies, ``only'' increasing by $10^3$. When only looking
@@ -301,14 +307,33 @@ we notice that indeed it also degrades less than the other controllers absolutel
 % ------- External Disturbance --------
 
 For external disturbance, not much can be said, as here all controllers are affected relatively and absolutely in a similar
-fashion. The only noticeable difference is a wider range of values for \emph{Lin}, with two noticeably worse seeds pushing
+fashion (\cref{fig:rl-noise-large-disturbance}). The only noticeable difference is a wider range of values for \emph{Lin}, with two noticeably worse seeds pushing
 its absolute degradation above the others. However, for \emph{Lin} and \emph{ScE}, there also exists one seed
 each which experiences only a fourfold relative cost increase, compared to the tenfold increase measured at the baseline.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch5_noise}{ch5_noise_large_relative_degradation_disturbance-divergent}
+    \caption{Relative degradation $\kappa$ at intensity \emph{divergent}.}
+    \label{fig:rl-noise-large-disturbance-divergent}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch5_noise}{ch5_noise_large_tradeoff_absolute_disturbance}
+    \caption{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ over the intensities.}
+    \label{fig:rl-noise-large-disturbance-absolute}
+  \end{subfigure}
+  \caption{Degradation of the PPO variants under \emph{large} inflation and external disturbance.}
+  \label{fig:rl-noise-large-disturbance}
+\end{figure}
 
 % -------- Control noise ---------
 
 Under control noise, we can observe that trained controllers degrade in relation to how well they performed on the nominal
-loop. This can be seen from the fact that the order of relative degradation in \cref{fig:rl-noise-large-control-divergent} is the same as for the clean plant.
+loop. This can be seen from the fact that the order of relative degradation in \cref{fig:rl-noise-large-control-divergent} is roughly the same as for the clean plant, which
+is the exact opposite of what we found in \cref{chap:lqr}.
 Generally, however, we can see that all trained controllers except \emph{Lin} are more robust on average than the baseline in relative terms (\cref{fig:rl-noise-large-control-relative}).
 In absolute terms, \emph{ScE} shows a worse degradation, which mainly stems from one seed. Also, in relative degradation, its seeds are
 spread further apart than those of the other controllers. There, in three out of the nine stable seeds,

@@ -43,7 +43,7 @@ METRIC_ROWS = {
     "policy_complexity": (r"Policy parameters", "{:.0f}"),
     "rank_final": (r"Gain rank", "{:.1f}"),
     "iterations": (r"Iterations", "{:.0f}"),
-    "total_env_steps": (r"Env.\ steps to convergence", "{:.3g}"),
+    "total_env_steps": (r"Env.\ steps", "{:.3g}"),
     "best_env_steps": (r"Env.\ steps to best policy", "{:.3g}"),
     "total_time": (r"Wall time (s)", "{:.1f}"),
     "spectral_radius_final": (r"Spectral radius", "{:.4f}"),
@@ -280,9 +280,14 @@ def metric_table(
     if show_census:
         identified_label, stable_label = CENSUS_ROWS
         if with_identification:
+            buckets = group(rows, column_by)
             lines.append(" & ".join(
                 [identified_label]
-                + [f"${counts[key][0]}/{counts[key][2]}$" for key in keys]
+                + [
+                    f"${counts[key][0]}/{counts[key][2]}$" if identifies(buckets[key])
+                    else r"\multicolumn{1}{c}{--}"
+                    for key in keys
+                ]
             ) + r" \\")
         lines.append(" & ".join(
             [stable_label]

@@ -78,7 +78,7 @@ CHOSEN_IDENTIFICATION = {
 # Rollout length for training
 TRAIN_HORIZON = 800
 
-# Safety cap on environment steps for the RL solvers
+# Environment-step budget of the RL solvers
 RL_MAX_TIMESTEPS = {
     "small": 10_000_000,
     "medium": 15_000_000,
