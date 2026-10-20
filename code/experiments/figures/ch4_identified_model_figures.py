@@ -23,7 +23,6 @@ def main():
             "Size of the policies learned without the model, across every inflation size."
         ),
         curve_x="iteration",
-        trajectories=False,
     )
 
 

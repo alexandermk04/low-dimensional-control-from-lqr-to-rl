@@ -145,7 +145,7 @@ Specifically, as in \cref{subsec:protocol}, we train ten controllers per solver,
 The results are then pooled.
 
 The most interesting finding is how much faster \emph{TrS} converges compared to \emph{TrP}. While it achieves its best training
-suboptimality within around 50 iterations, \emph{TrP} still falls drastically short of it after 450 iterations. We can also see in
+suboptimality within around 50 iterations, \emph{TrP} still falls short of it after 450 iterations. We can also see in
 \cref{tab:ch4-true-across-sizes} that the reduction in complexity for all inflation sizes has worked well with \emph{TrS}.
 For our test suboptimality, \emph{TrS} also outperforms \emph{TrP} here by at least one order of magnitude. \Cref{fig:true-across-sizes-subopt}
 visualizes this.
@@ -236,7 +236,8 @@ The most noticeable difference is under control noise, where \emph{TrP} noticeab
 
 Judging from our results, it is difficult to draw significant conclusions in relation to robustness of the controllers.
 It seems like a trained, larger controller could be more robust to control noise; however, we need to verify this in
-the following experiments. What generally stands out is that \emph{TrS} needs far fewer training iterations, while achieving
+the following experiments. What generally stands out is that \emph{TrS} needs far fewer training iterations, and
+is up to a factor of 66x smaller under \emph{large} inflation, while achieving
 slightly better suboptimality and similar robustness as \emph{TrP}. We verify whether this also holds for
 an unknown model in \cref{sec:unknown-model}.
 
@@ -579,9 +580,51 @@ of \emph{MfS} into account.
 \subsection{Discussion}
 \label{subsec:id-model-discussion}
 
-%TODO
+By our results, we can see that on the clean loop system-identifaction approaches perform much better
+than direct approaches, achieving similar performances as the optimal controller. Here, IdD seems to
+be the best solution, as it does not require any training iterations, achieves the lowest suboptimality,
+and is of a similar size as IdS. When looking at our model-free approaches, nothing speaks in favor of them -
+they require more iterations, in the case of MfS perform horrible on the clean loop and do not even reduce
+achieve a rank reduction. 
+
+This worse performance is then amplified under parametric uncertainty, penalizing them even
+more, while IdD, IdP and IdS degrade the same as the baseline. External disturbance, affects
+all controllers the same, so this is not something where direct appraoches show more robustness.
+
+When looking control noise, it might seem like this is where MfS is much more robust than the
+others, and MfN slightly as well. But when taking a look at \needcite{trajectories large}, we
+can see that MfN slightly applies less acceleration than the others, and MfS applies it at a
+much smaller amplitude. As control noise is in our case multiplicative, a lower value is affected
+by much less noise. Therefore, the savings in cost, come from the fact that MfS is not functioning
+well, and does not achieve the goal of steering the mass towards the origin.
+
+% trajectory ch4 identified large
+
+If we extend the same reasoning to measurement noise, it also seems logical that MfS is showing less
+degradation here. If the gain matrix was not able to control the mass without noise well, hence not
+mapping inputs to effective outputs, then a change to these named inputs could have any effect on
+the cost. In this case, it seems to help reduce its degradation. 
+
+One interesting thing however remains. Again, for measurement noise, IdS seems to sit slightly
+below IdP, hinting again at a better resistance of smaller policies to measurment noise,
+like we hypothesized in the previous chapter. One might say that MfS also shows this, however,
+this is incorrect. Based on the nearly non-existent size reduction, and the difficulties controlling
+the mass under the clean loop, it would be an inconsistent comparison. But, comparing IdS to
+IdP and MfN, we can indeed see that IdS is slightly more robust to measurement noise, while
+being much smaller than those other two.
+
 
 \section{Discussion}
 \label{sec:lqr-discussion}
 
-% TODO
+This chapter has shown us, that smaller sized policies can indeed achieve performances similar to
+fully parameterized controllers, while maintaining similar or partially better robustness properties.
+The main sidenote here is though, that it depends on the choice of the algorithm to create such policy.
+As we have noticed, direct approaches perform generally worse, and require more training time, compared
+with a mixed approach of system identification and policy iteration. Unbeat is clearly IdD, which
+requires just the system identification step, and performs on par with the optimal controller throughout.
+
+As this system is a very simple case, and system identification is not scalable to larger inflation as we
+will see in \cref{chap:perception}, we cannot rely on these approaches for real world application. We
+therefore take these learnings and indications with us, and try to use them in choosing RL-based algorithms
+in \cref{chap:inflation}.
