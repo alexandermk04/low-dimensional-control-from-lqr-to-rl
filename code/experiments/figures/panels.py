@@ -6,6 +6,7 @@ Functions are reusable for different experiments.
 import textwrap
 
 import numpy as np
+from matplotlib.ticker import FuncFormatter, LogFormatterSciNotation, MaxNLocator, NullLocator
 
 from evaluation.records import RunRecord
 from experiments.figures.aggregate import (
@@ -44,6 +45,11 @@ METRIC_LABELS = {
     "total_env_steps": r"Environment steps",
     "total_time": r"Run time (s)",
 }
+
+ABSOLUTE_LINTHRESH = 1e-2
+
+# Gap from when on we split the y axis
+SPLIT_GAP = 1.0
 
 
 def _ordered_keys(buckets: dict, order=None) -> list:
@@ -124,13 +130,116 @@ def _linthresh_for(cells: list[np.ndarray]) -> float:
     return float(10.0 ** np.floor(np.log10(min(smallest))))
 
 
-def _symlog_axis(ax, cells: list[np.ndarray], linscale: float):
-    """Symlog y-axis fitted to the shown values."""
-    linthresh = _linthresh_for(cells)
+def _symlog_axis(ax, cells: list[np.ndarray], linscale: float, floor: float = 0.0):
+    """Symlog y-axis fitted to the shown values.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+    cells : list of np.ndarray
+        The values of each box or curve.
+    linscale : float
+        Height of the linear part, in decades.
+    floor : float, optional
+        Smallest threshold of the linear part.
+    """
+    linthresh = max(_linthresh_for(cells), floor)
     ax.set_yscale("symlog", linthresh=linthresh, linscale=linscale)
 
-    if not any(np.any(np.asarray(values) < 0) for values in cells):
-        ax.set_ylim(bottom=-0.5 * linthresh)
+    lowest = min((float(np.min(values)) for values in cells if np.size(values)), default=0.0)
+    if lowest > -linthresh:
+        ax.set_ylim(bottom=min(-0.5 * linthresh, 1.2 * lowest))
+
+
+class _PlainLogFormatter(LogFormatterSciNotation):
+    """Labels the same ticks as the default log formatter, as plain numbers."""
+
+    def __call__(self, x, pos=None):
+        if not super().__call__(x, pos):
+            return ""
+        return rf"$\mathdefault{{{x:.3g}}}$"
+
+
+def _plain_log_ticks(ax):
+    """Plain numbers instead of powers of ten on a log y-axis of at most two decades."""
+    low, high = ax.get_ylim()
+    if low <= 0 or high / low > 100:
+        return
+
+    if high / low < 2:
+        # Rather space evenly
+        inches = ax.get_position().height * ax.figure.get_figheight()
+        ax.yaxis.set_major_locator(MaxNLocator(nbins=max(2, round(inches / 0.3))))
+        ax.yaxis.set_minor_locator(NullLocator())
+        ax.yaxis.set_major_formatter(FuncFormatter(lambda x, _: rf"$\mathdefault{{{x:g}}}$"))
+        return
+
+    ax.yaxis.set_major_formatter(_PlainLogFormatter())
+    ax.yaxis.set_minor_formatter(_PlainLogFormatter(labelOnlyBase=False))
+
+
+def _split_ranges(data: list[np.ndarray], log: bool):
+    """Value ranges of two far apart groups of boxes.
+
+    Parameters
+    ----------
+    data : list of np.ndarray
+        The values of each box.
+    log : bool
+        Whether distances are measured in decades.
+
+    Returns
+    -------
+    tuple or None
+        ``((low, high), (low, high))`` of the lower and the upper group, or
+        ``None`` if no gap is larger than ``SPLIT_GAP`` times both groups.
+    """
+    scale = np.log10 if log else (lambda value: value)
+    spans = sorted((scale(np.min(values)), scale(np.max(values))) for values in data)
+    best = None
+
+    for cut in range(1, len(spans)):
+        lower_top = max(span[1] for span in spans[:cut])
+        upper_bottom = spans[cut][0]
+        upper_top = max(span[1] for span in spans[cut:])
+        gap = upper_bottom - lower_top
+        extent = (lower_top - spans[0][0]) + (upper_top - upper_bottom)
+        if gap > SPLIT_GAP * extent and (best is None or gap > best[0]):
+            best = (gap, (spans[0][0], lower_top), (upper_bottom, upper_top))
+
+    if best is None:
+        return None
+
+    unscale = (lambda value: 10.0 ** value) if log else (lambda value: value)
+    ranges = []
+    for low, high in best[1:]:
+        pad = max(0.1 * (high - low), 0.01 if log else 0.05 * max(abs(low), abs(high), 1e-12))
+        ranges.append((unscale(low - pad), unscale(high + pad)))
+    return tuple(ranges)
+
+
+def _broken_axes(width: float, aspect: float, n_upper: int, n_lower: int):
+    """Two stacked axes with break marks, the upper one for the upper group of boxes."""
+
+    ratio = min(max(n_upper, n_lower) / max(min(n_upper, n_lower), 1), 3.0)
+    shares = (ratio, 1.0) if n_upper >= n_lower else (1.0, ratio)
+    figure, (upper, lower) = new_figure(
+        width, aspect, nrows=2, sharex=True,
+        gridspec_kw={"height_ratios": shares},
+    )
+    figure.get_layout_engine().set(h_pad=0.3)
+
+    upper.spines["bottom"].set_visible(False)
+    upper.tick_params(axis="x", which="both", bottom=False, labelbottom=False)
+
+    marks = dict(
+        marker=[(-1, -0.5), (1, 0.5)], markersize=6, linestyle="none",
+        color="black", mec="black", mew=0.8, clip_on=False,
+    )
+    upper.plot([0], [0], transform=upper.transAxes, **marks)
+    lower.plot([0], [1], transform=lower.transAxes, **marks)
+
+    return figure, upper, lower
 
 
 def box_metric(
@@ -143,6 +252,7 @@ def box_metric(
     width: float = 1.0,
     aspect: float = 0.55,
     color_by: int | None = None,
+    split: bool = False,
 ):
     """Box plot for a specific metric, one box per setting combination.
 
@@ -165,10 +275,14 @@ def box_metric(
     color_by : int or None, optional
         Position of the key part that picks the colour, e.g. ``1`` for the
         solver in ``("size", "solver")``.
+    split : bool, optional
+        Break the y-axis into two panels when the boxes form two far apart
+        groups. Only without ``ax``, ``color_by`` and a symlog axis.
 
     Returns
     -------
     matplotlib.axes.Axes
+        The upper panel if the axis is broken.
     """
     stats = aggregate([row for row in rows if usable(row)], group_by, metric)
     keys = _ordered_keys(stats, order)
@@ -180,9 +294,6 @@ def box_metric(
         box_colors = [
             color_for(hues.index(key[color_by]), key[color_by]) for key in keys
         ]
-
-    if ax is None:
-        _, ax = new_figure(width, aspect)
 
     positions, data, labels, notes = [], [], [], []
     per_episode = any(stats[key]["episodes"] for key in keys)
@@ -221,52 +332,74 @@ def box_metric(
         positions.append(position)
         data.append(values)
 
-    if data:
-        artists = ax.boxplot(
-            data, positions=positions, widths=0.6,
-            patch_artist=True, showfliers=True, whis=(5, 95),
-            medianprops=dict(color="black", linewidth=1.2),
-            flierprops=dict(
-                marker=".", markersize=2, markerfacecolor="black",
-                markeredgecolor="none", alpha=0.35,
-            ),
-            capprops=dict(linewidth=0.8),
-            whiskerprops=dict(linewidth=0.8),
-        )
-        for box, position in zip(artists["boxes"], positions):
-            box.set_facecolor(box_colors[position - 1])
-            box.set_alpha(0.45)
-            box.set_linewidth(0.8)
+    ranges = (
+        _split_ranges(data, log=bool(log))
+        if split and ax is None and color_by is None and not symlog and len(data) > 1
+        else None
+    )
+    if ranges is not None:
+        lower_range, upper_range = ranges
+        n_upper = sum(np.min(values) >= upper_range[0] for values in data)
+        _, ax, bottom = _broken_axes(width, aspect, n_upper, len(data) - n_upper)
+        panels = ((ax, upper_range), (bottom, lower_range))
+    else:
+        if ax is None:
+            _, ax = new_figure(width, aspect)
+        bottom = ax
+        panels = ((ax, None),)
 
-        if not per_episode:
-            jitter_rng = np.random.default_rng(0)
-            for position, values in zip(positions, data):
-                jitter = (jitter_rng.random(values.size) - 0.5) * 0.18
-                ax.scatter(
-                    position + jitter, values, s=6, color="black", alpha=0.5,
-                    zorder=3, linewidths=0,
-                )
+    for panel, limits in panels:
+        if data:
+            artists = panel.boxplot(
+                data, positions=positions, widths=0.6,
+                patch_artist=True, showfliers=True, whis=(5, 95),
+                medianprops=dict(color="black", linewidth=1.2),
+                flierprops=dict(
+                    marker=".", markersize=2, markerfacecolor="black",
+                    markeredgecolor="none", alpha=0.35,
+                ),
+                capprops=dict(linewidth=0.8),
+                whiskerprops=dict(linewidth=0.8),
+            )
+            for box, position in zip(artists["boxes"], positions):
+                box.set_facecolor(box_colors[position - 1])
+                box.set_alpha(0.45)
+                box.set_linewidth(0.8)
+
+            if not per_episode:
+                jitter_rng = np.random.default_rng(0)
+                for position, values in zip(positions, data):
+                    jitter = (jitter_rng.random(values.size) - 0.5) * 0.18
+                    panel.scatter(
+                        position + jitter, values, s=6, color="black", alpha=0.5,
+                        zorder=3, linewidths=0,
+                    )
+
+        if symlog:
+            if width < 1.0:
+                _symlog_axis(panel, data, linscale=1.0)
+                panel.yaxis.get_major_locator().set_params(numticks=8)
+            else:
+                _symlog_axis(panel, data, linscale=0.35)
+        elif log:
+            panel.set_yscale("log")
+
+        if limits is not None:
+            panel.set_ylim(*limits)
+        if log and not symlog:
+            _plain_log_ticks(panel)
 
     for position, note in notes:
-        ax.annotate(
+        bottom.annotate(
             note, xy=(position, 0.04), xycoords=("data", "axes fraction"),
             ha="center", va="bottom", fontsize=6,
         )
 
-    if symlog:
-        if width < 1.0:
-            _symlog_axis(ax, data, linscale=1.0)
-            ax.yaxis.get_major_locator().set_params(numticks=8)
-        else:
-            _symlog_axis(ax, data, linscale=0.35)
-    elif log:
-        ax.set_yscale("log")
-
     if color_by is None:
-        ax.set_xticks(range(1, len(keys) + 1))
-        ax.set_xticklabels(labels)
+        bottom.set_xticks(range(1, len(keys) + 1))
+        bottom.set_xticklabels(labels)
         if wrap is None:
-            _angle(ax)
+            _angle(bottom)
     else:
         _label_runs(ax, keys, color_by, box_colors)
     ax.set_ylabel(METRIC_LABELS.get(metric, metric))
@@ -346,9 +479,10 @@ def degradation_curves(
         )
 
     if absolute:
-        _symlog_axis(ax, drawn, linscale=0.35)
+        _symlog_axis(ax, drawn, linscale=0.35, floor=ABSOLUTE_LINTHRESH)
     else:
         ax.set_yscale("log")
+        _plain_log_ticks(ax)
     ax.set_xticks(positions)
     ax.set_xticklabels([rf"\emph{{{level}}}" for level in levels])
     if width < 1.0:

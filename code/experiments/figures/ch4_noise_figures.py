@@ -108,7 +108,7 @@ def render(experiment: str, prefix: str, solvers, set_by: str = SET_BY, size=Non
 
         def draw(subset=subset, title=title, short_title=short_title, **size):
             ax = box_metric(
-                subset, "solver", metric, order=solvers, log=log, **size
+                subset, "solver", metric, order=solvers, log=log, split=True, **size
             )
             ax.set_title(short_title if size else title)
             return ax

@@ -99,7 +99,10 @@ $K^{+}$, $\bar{r}$ & candidate gain of S-PI, number of its singular values & \eq
 $G$ & gradient mapping & \eqref{eq:spi-sufficient-decrease} \\
 $\beta$, $\varepsilon$ & step-size reduction factor and stopping tolerance of S-PI & \cref{alg:mb-spi} \\
 $\sigma_{\mathrm{e}}$, $w_k$ & excitation amplitude and excitation noise for identification & \eqref{eq:identification-input} \\
-$\hat{n}$, $\hat{C}$, $\hat{x}_k$ & order and output matrix of the identified model, encoded state $\hat{C}\T y_k$ & \eqref{eq:state-encoder} \\
+$A_{\mathrm{id}}$, $B_{\mathrm{id}}$, $C_{\mathrm{id}}$ & system matrices returned by N4SID & \eqref{eq:identified-basis} \\
+$\hat{A}$, $\hat{B}$, $\hat{C}$, $\hat{n}$ & identified model in the basis with orthonormal $\hat{C}$, and its order & \eqref{eq:identified-basis} \\
+$\Theta$ & upper triangular factor of the QR decomposition $C_{\mathrm{id}} = \hat{C} \Theta$ & \eqref{eq:identified-basis} \\
+$\hat{x}_k$ & encoded state $\hat{C}\T y_k$ & \eqref{eq:state-encoder} \\
 $N_{\mathrm{traj}}$, $l$, $r$ & number of perturbation pairs, rollout length, smoothing radius & \cref{alg:mf-gradient} \\
 $\Xi_i$ & perturbation of the gain & \cref{alg:mf-gradient} \\
 $c_k^{\pm}$, $\hat{J}_i^{\pm}$ & stage cost and rollout cost of $K \pm \Xi_i$ & \cref{alg:mf-gradient} \\
