@@ -49,6 +49,9 @@ METRIC_ROWS = {
     "spectral_radius_final": (r"Spectral radius", "{:.4f}"),
     "test_cost_mean": (r"Test cost", "{:.4g}"),
     "steps_to_thresh_1pct": (r"Env.\ steps to 1\,\%", "{:.3g}"),
+    "r2_position": (r"Probe $R^2$, position", "{:.3f}"),
+    "r2_velocity": (r"Probe $R^2$, velocity", "{:.3f}"),
+    "r2_control": (r"Probe $R^2$, optimal control", "{:.3f}"),
     "iters_to_thresh_1pct": (r"Iterations to 1\,\%", "{:.0f}"),
 }
 

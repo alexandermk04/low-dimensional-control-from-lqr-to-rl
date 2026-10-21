@@ -62,16 +62,24 @@ def collect_latents(env, extractor, policy, n_episodes: int, horizon: int | None
 
 
 def linear_probe_r2(Z: np.ndarray, S: np.ndarray, episodes: np.ndarray,
+                    U: np.ndarray | None = None,
                     ridge: float = 1e-3, test_fraction: float = 0.3) -> dict:
     """Held-out R2 of a ridge regression from latents ``Z`` to states ``S``.
 
     The last ``test_fraction`` of episodes is held out. Scores are not clipped,
     so a latent that carries nothing can score below zero.
 
+    Parameters
+    ----------
+    U : np.ndarray or None, optional
+        Optimal control ``(T,)`` in the visited states, probed as one more target.
+        Each target has its own regression, so the state scores do not change.
+
     Returns
     -------
     dict
-        ``r2_position``, ``r2_velocity`` and ``latent_dim``.
+        ``r2_position``, ``r2_velocity`` and ``latent_dim``, plus ``r2_control``
+        if ``U`` is given.
     """
     unique = np.unique(episodes)
     n_test = max(1, int(round(len(unique) * test_fraction)))
@@ -79,6 +87,9 @@ def linear_probe_r2(Z: np.ndarray, S: np.ndarray, episodes: np.ndarray,
 
     if is_test.all() or not is_test.any():
         raise ValueError("The episode split left one side empty; collect more episodes.")
+
+    if U is not None:
+        S = np.column_stack([S, U])
 
     Z_train, S_train = Z[~is_test], S[~is_test]
 
@@ -97,15 +108,22 @@ def linear_probe_r2(Z: np.ndarray, S: np.ndarray, episodes: np.ndarray,
     total = ((S_test - S_train.mean(axis=0)) ** 2).sum(axis=0)
     r2 = 1.0 - residual / np.maximum(total, 1e-30)
 
-    return {
+    scores = {
         "r2_position": float(r2[0]),
         "r2_velocity": float(r2[1]),
         "latent_dim": int(Z.shape[1]),
     }
+    if U is not None:
+        scores["r2_control"] = float(r2[-1])
+    return scores
 
-def latent_extra(model, env, policy, horizon: int | None = None) -> dict:
-    """How well a policy encodes the true state."""
+def latent_extra(model, env, policy, horizon: int | None = None, control=None) -> dict:
+    """How well a policy encodes the true state.
+
+    ``control(state) -> float``, the optimal control, is probed as well if given.
+    """
     Z, S, episodes = collect_latents(
         env, model.policy.features_extractor, policy, n_episodes=20, horizon=horizon
     )
-    return linear_probe_r2(Z, S, episodes)
+    U = None if control is None else np.array([control(s) for s in S])
+    return linear_probe_r2(Z, S, episodes, U)

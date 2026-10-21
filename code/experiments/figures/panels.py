@@ -37,6 +37,7 @@ METRIC_LABELS = {
     "absolute_degradation": r"Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$",
     "r2_position": r"Linear probe $R^2$, position",
     "r2_velocity": r"Linear probe $R^2$, velocity",
+    "r2_control": r"Linear probe $R^2$, optimal control",
     "off_screen_rate": r"Fraction of steps off screen",
     "null_waste_mean": r"Thrust wasted in the null space",
     "thruster_energy_mean": r"Thruster energy per step",

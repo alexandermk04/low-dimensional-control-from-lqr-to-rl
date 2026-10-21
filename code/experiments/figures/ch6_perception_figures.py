@@ -5,6 +5,7 @@ Run with::
     python -m experiments.figures.ch6_perception_figures
 """
 
+import config as cfg
 import settings
 from experiments.figures.aggregate import (
     latest_per_experiment,
@@ -91,7 +92,10 @@ def main():
     ax.set_xlabel("Agent steps")
     save(ax.figure, "ch6_perception_curves_steps", EXPERIMENT)
 
-    axes = trajectory_overlay(records, "solver", dt=0.01, order=ORDER)
+    # Trajectories are sampled at the agent rate
+    axes = trajectory_overlay(
+        records, "solver", dt=cfg.DEFAULT_DT * cfg.DEFAULT_ACTION_REPEAT, order=ORDER,
+    )
     save(axes[0].figure, "ch6_perception_trajectories", EXPERIMENT)
 
     ax = box_metric(learned, "solver", "subopt", order=ORDER, log="symlog")
@@ -100,8 +104,8 @@ def main():
     ax = complexity_bars(learned, "solver", order=ORDER)
     save(ax.figure, "ch6_perception_complexity", EXPERIMENT)
 
-    for metric in ("r2_position", "r2_velocity"):
-        ax = box_metric(rows, "solver", metric, order=ORDER, log=False)
+    for metric in ("r2_position", "r2_velocity", "r2_control"):
+        ax = box_metric(learned, "solver", metric, order=ORDER, log=False)
         save(ax.figure, f"ch6_perception_{metric}", EXPERIMENT)
 
     for metric in ("off_screen_rate", "null_waste_mean"):
@@ -112,12 +116,22 @@ def main():
         metric_table(
             rows, "solver",
             metrics=("J_final", "training_subopt_final", "subopt",
-                     "r2_position", "r2_velocity", "latent_dim",
+                     "r2_position", "r2_velocity", "r2_control", "latent_dim",
                      "off_screen_rate", "null_waste_mean",
                      "policy_complexity", "iterations", "total_env_steps", "best_env_steps", "total_time"),
             column_order=ORDER,
         ),
         "ch6_perception",
+        EXPERIMENT,
+    )
+
+    write_table(
+        metric_table(
+            learned, "solver",
+            metrics=("r2_position", "r2_velocity", "r2_control", "training_subopt_final"),
+            column_order=ORDER,
+        ),
+        "ch6_perception_probe",
         EXPERIMENT,
     )
 

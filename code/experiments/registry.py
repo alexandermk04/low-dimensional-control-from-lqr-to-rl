@@ -960,6 +960,14 @@ def _pixel_extra(action_clips: int) -> dict:
     }
 
 
+def oracle_force(K: np.ndarray, c: np.ndarray) -> Callable:
+    """The force ``c @ v`` the oracle's thrusters apply in a state, saturation included."""
+    from lqr_base.thruster_ring import ThrusterOraclePolicy
+
+    oracle = ThrusterOraclePolicy(K, c)
+    return lambda state: float(c @ oracle(state))
+
+
 def _pixel_protocol(seed: int, policy_for: Callable, noise=None):
     """The test protocol and the figure rollout for chapter 6.
 
@@ -1112,7 +1120,8 @@ def _run_pixel_rl(spec: RunSpec, problem: Problem) -> SolverResult:
     policy = SB3EnvPolicy(model)
 
     extra = _pixel_extra(train_env.n_action_clips)
-    extra.update(latent_extra(model, _pixel_env(spec.seed, f"probe:{spec.solver}", horizon), policy))
+    probe_env = _pixel_env(spec.seed, f"probe:{spec.solver}", horizon)
+    extra.update(latent_extra(model, probe_env, policy, control=oracle_force(K, probe_env.c)))
 
     evaluate_test, trajectory = _pixel_protocol(spec.seed, lambda _: policy)
 

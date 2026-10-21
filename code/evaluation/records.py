@@ -73,6 +73,7 @@ SUMMARY_KEYS = (
     "terminated_rate",  # fraction of episodes that diverged
     "r2_position",  # how linearly the latent encodes position
     "r2_velocity",
+    "r2_control",  # how linearly the latent encodes the oracle's control
     "latent_dim",
     "action_repeat",
     "n_thrusters",
