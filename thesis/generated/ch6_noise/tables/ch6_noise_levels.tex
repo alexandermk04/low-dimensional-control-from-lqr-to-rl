@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+\centering
+\caption{Relative degradation $\kappa$ and Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ under measurement noise of increasing intensity.}
+\label{tab:ch6-noise-levels}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrrrr}
+\toprule
+ & \multicolumn{4}{c}{Relative degradation $\kappa$} & \multicolumn{4}{c}{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+Intensity & Pixels + PPO & OrB & ScE & Position-Velocity Encoder + PPO & Pixels + PPO & OrB & ScE & Position-Velocity Encoder + PPO \\
+\midrule
+none & $1$ & $1$ & $1$ & $1$ & $0$ & $0$ & $0$ & $0$ \\
+weak & $1.46 \pm 0.72$ & $1.21 \pm 0.336$ & $1.09 \pm 0.121$ & $2.49 \pm 1.71$ & $0.739 \pm 1.23$ & $0.405 \pm 0.6$ & $1.65 \pm 2.56$ & $23.3 \pm 28.9$ \\
+standard & $4.13 \pm 1.99$ & $4.2 \pm 6.02$ & $1.24 \pm 0.27$ & $7.72 \pm 10.3$ & $4.89 \pm 3.36$ & $6.1 \pm 10.8$ & $4.86 \pm 5.47$ & $60.7 \pm 56.8$ \\
+strong & $16.8 \pm 9.88$ & $17.7 \pm 22$ & $1.68 \pm 0.67$ & $12.8 \pm 10.2$ & $25.1 \pm 18$ & $32.9 \pm 39.2$ & $13.9 \pm 12.8$ & $104 \pm 50.4$ \\
+divergent & $67.7 \pm 23$ & $50.6 \pm 18.7$ & $3.43 \pm 2.22$ & $13.6 \pm 10$ & $102 \pm 37.4$ & $102 \pm 33.5$ & $50.5 \pm 42.4$ & $111 \pm 41.2$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

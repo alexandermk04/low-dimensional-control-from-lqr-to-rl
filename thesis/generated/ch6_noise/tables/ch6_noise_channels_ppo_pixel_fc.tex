@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\caption{Pixels + PPO under each noise channel at intensity \emph{strong}.}
+\label{tab:ch6-noise-channels-ppo-pixel-fc}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Channel & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Relative degradation $\kappa$ & $1$ & $16.8 \pm 9.88$ & $6.24 \pm 0.295$ & $16.5 \pm 1.83$ & $4.61 \pm 0.66$ & $80.9 \pm 3.3$ \\
+Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ & $0$ & $25.1 \pm 18$ & $8.01 \pm 0.566$ & $23.6 \pm 3.09$ & $5.55 \pm 1.27$ & $122 \pm 10.2$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

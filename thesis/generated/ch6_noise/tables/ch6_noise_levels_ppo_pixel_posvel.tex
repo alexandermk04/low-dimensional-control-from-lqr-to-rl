@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\caption{Position-Velocity Encoder + PPO under measurement noise of increasing intensity.}
+\label{tab:ch6-noise-levels-ppo-pixel-posvel}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Intensity & none & weak & standard & strong & divergent \\
+\midrule
+Relative degradation $\kappa$ & $1$ & $2.49 \pm 1.71$ & $7.72 \pm 10.3$ & $12.8 \pm 10.2$ & $13.6 \pm 10$ \\
+Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ & $0$ & $23.3 \pm 28.9$ & $60.7 \pm 56.8$ & $104 \pm 50.4$ & $111 \pm 41.2$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

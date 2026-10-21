@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\caption{ScE under each noise channel at intensity \emph{strong}.}
+\label{tab:ch6-noise-channels-ppo-pixel-estimator}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Channel & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Relative degradation $\kappa$ & $1$ & $1.68 \pm 0.67$ & $2.49 \pm 0.398$ & $4.64 \pm 0.978$ & $1.83 \pm 0.429$ & $6.35 \pm 1.36$ \\
+Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ & $0$ & $13.9 \pm 12.8$ & $30.7 \pm 4.39$ & $74.8 \pm 6.74$ & $16.8 \pm 7.13$ & $110 \pm 8.86$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

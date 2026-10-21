@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\caption{Relative degradation $\kappa$ and Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ under each noise channel at intensity \emph{standard}.}
+\label{tab:ch6-noise-solver-channels-standard}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrrrrrrrr}
+\toprule
+ & \multicolumn{6}{c}{Relative degradation $\kappa$} & \multicolumn{6}{c}{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$} \\
+\cmidrule(lr){2-7}\cmidrule(lr){8-13}
+Solver & none & measurement & control & parametric & disturbance & all channels & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Pixels + PPO & $1$ & $4.13 \pm 1.99$ & $2.32 \pm 0.075$ & $8.75 \pm 3.18$ & $1.8 \pm 0.0672$ & $24.3 \pm 2.69$ & $0$ & $4.89 \pm 3.36$ & $2.01 \pm 0.143$ & $11.8 \pm 4.72$ & $1.22 \pm 0.0713$ & $35.6 \pm 4.28$ \\
+OrB & $1$ & $4.2 \pm 6.02$ & $2.81 \pm 0.258$ & $7.56 \pm 1.76$ & $1.74 \pm 0.262$ & $21.9 \pm 9.05$ & $0$ & $6.1 \pm 10.8$ & $3.82 \pm 0.813$ & $13.6 \pm 3.51$ & $1.51 \pm 0.45$ & $42.7 \pm 15.1$ \\
+ScE & $1$ & $1.24 \pm 0.27$ & $1.35 \pm 0.0819$ & $3.99 \pm 0.751$ & $1.28 \pm 0.387$ & $4.55 \pm 1$ & $0$ & $4.86 \pm 5.47$ & $7.46 \pm 1.82$ & $61.7 \pm 7.45$ & $5.12 \pm 7.07$ & $72.9 \pm 9.77$ \\
+Position-Velocity Encoder + PPO & $1$ & $7.72 \pm 10.3$ & $2.86 \pm 0.6$ & $4.51 \pm 1.58$ & $1.13 \pm 0.0922$ & $13.1 \pm 9.53$ & $0$ & $60.7 \pm 56.8$ & $23.4 \pm 12$ & $46 \pm 25.1$ & $1.28 \pm 1.28$ & $111 \pm 22.6$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

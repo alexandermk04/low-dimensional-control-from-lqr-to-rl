@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\caption{Pixels + PPO under measurement noise of increasing intensity.}
+\label{tab:ch6-noise-levels-ppo-pixel-fc}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Intensity & none & weak & standard & strong & divergent \\
+\midrule
+Relative degradation $\kappa$ & $1$ & $1.46 \pm 0.72$ & $4.13 \pm 1.99$ & $16.8 \pm 9.88$ & $67.7 \pm 23$ \\
+Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ & $0$ & $0.739 \pm 1.23$ & $4.89 \pm 3.36$ & $25.1 \pm 18$ & $102 \pm 37.4$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

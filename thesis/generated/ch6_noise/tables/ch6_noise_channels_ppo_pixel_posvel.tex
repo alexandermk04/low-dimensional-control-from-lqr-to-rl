@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\caption{Position-Velocity Encoder + PPO under each noise channel at intensity \emph{strong}.}
+\label{tab:ch6-noise-channels-ppo-pixel-posvel}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Channel & none & measurement & control & parametric & disturbance & all channels \\
+\midrule
+Relative degradation $\kappa$ & $1$ & $12.8 \pm 10.2$ & $8.4 \pm 2.38$ & $6.55 \pm 2.6$ & $1.7 \pm 0.43$ & $19.9 \pm 12.1$ \\
+Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ & $0$ & $104 \pm 50.4$ & $92.9 \pm 45.8$ & $61.6 \pm 23.4$ & $7.9 \pm 4.93$ & $178 \pm 14.6$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
