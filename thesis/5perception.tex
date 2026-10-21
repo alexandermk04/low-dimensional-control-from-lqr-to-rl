@@ -257,6 +257,31 @@ For one test episode we use $\lceil 2000/30 \rceil = 67$ agent steps, correspond
 \subsection{Results}
 \label{subsec:visual-inputs-results}
 
+Looking at the evolution of the training suboptimality, we can again differentiate between two groups. While the
+fully trainable architectures achieve suboptimalities below $1$ with a small spread, the ones that mostly consist
+of frozen parameters do show a decrease in the beginning, but then flatten out from over the last $9 \cdot 10^6$ steps.
+FcE and OrB do the exact opposite, and rather increase their learning slope over this range.
+
+
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch6_perception}{ch6_perception_curves_steps}
+  \caption{Training suboptimality $(J - J^{*})/J^{*}$ of the PPO variants.}
+  \label{fig:perc-curves}
+\end{figure}
+
+\Cref{tab:ch6-perception-parameters} shows us how we can differentiate our architectures in relation to low-dimensionality.
+FcE, OrB and ScE are in total parameters of the same magnitude, however of those, ScE consists of $\approx 99.74\%$ frozen
+parameters, and its trainable parameters are rather comparable to PVE, of which the extractor is around $8 \times$ smaller.
+For FcE and OrB, the main difference is only the projection into the two-dimensional latent space for OrB.
+
+\input{generated/ch6_perception/tables/ch6_perception_parameters.tex}
+
+If we now take a look at the test suboptimality for our architectures (\cref{fig:perc-subopt}), we notice the same order as in
+the training suboptimality, and that FcE, being the largest in trainable parameters, performs the best here, while the projection
+of OrB seems to only increase the cost. ScE and PVE achieve similar medians, however PVEs interquartile region is further
+spread out, having both episodes performing better than ScE, but also some which are worse.
+
 \begin{figure}[htbp]
   \centering
   \generatedfigure{ch6_perception}{ch6_perception_subopt}
@@ -265,14 +290,29 @@ For one test episode we use $\lceil 2000/30 \rceil = 67$ agent steps, correspond
   \label{fig:perc-subopt}
 \end{figure}
 
-\input{generated/ch6_perception/tables/ch6_perception_parameters.tex}
+Putting the suboptimality into the context of example trajectories observed in \cref{fig:app-perc-trajectories}, we can see that PVE is 
+not controlling the mass at all and ScE only slightly, with both not failing to effectively move the mass. 
 
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{ch6_perception}{ch6_perception_trajectories}
-  \caption[Example trajectories of the PPO variants.]{Trajectories of the PPO variants for one sampled episode under one seed.}
-  \label{fig:perc-trajectories}
-\end{figure}
+To effectively pinpoint the issues both PVE and ScE have, and attribute the success of FcE and OrB correctly, we
+evaluate how well the extractors of each approach linearly encode position, velocity and control in their latent state.
+For this, we use ridge regression on the representation of the latent state, and compare the results with the true state
+or the control commanded by the oracle. \Cref{tab:ch6-perception-probe} shows us that FcE encodes both position and
+velocity fairly well from the observations, however not the control. Calculating a control input from these is then
+probably delegated to the PPO network, and the extractor is therefore only an encoder.
+For OrB, we notice a difference here: The latent state correlates more with the actuation commanded by the controller,
+but not at all with position and velocity, indicating that its extractor moves the mentioned calculation before the latent projection. 
+As we see that OrB wastes some thrust energy in \cref{fig:perc-null-waste}, the complexity of PPO could be too little to perfectly
+translate this signal into effective thrust. We can notice a similar pattern in both ScE and PVE, where
+the latent state indeed contains both control and position correlation, at even higher levels than FcE,
+indicating that the encoding is effective. However, ScE is missing velocity observations, which makes it
+difficult for it to see the effects of its control. As a result, it looses some masses outside the screen
+(\cref{fig:perc-off-screen}). Encoding wise, PVE captures the position of its point almost perfectly, and
+indicates well how the controller should steer the mass. But again here, like in the previous cases, but the
+most severe, the complexity of PPO here is to reduced to effectively translate it onto the thrusters. Judging
+by the major waste in the nullspace, PVE can not seem to differentiate well between effective and wasteful
+thrusters, and therefore does not move at all in some cases (\cref{fig:perc-trajectories}).
+
+\input{generated/ch6_perception/tables/ch6_perception_probe.tex}
 
 \begin{figure}[htbp]
   \centering
@@ -292,7 +332,12 @@ For one test episode we use $\lceil 2000/30 \rceil = 67$ agent steps, correspond
   \label{fig:perc-off-screen-waste}
 \end{figure}
 
-\input{generated/ch6_perception/tables/ch6_perception_probe.tex}
+As a summary, we note that a low-dimensional latent layer can indeed produce effective encodings of the
+true state, with a much shorter training process. However, the complexity of the following network must
+allow this encoding to be translated back into action, which for our case it fails to do so. This effect
+is even more enlarged if the extractor is frozen, and thus both parts are trained seperately, and the
+majority of the training happens just on less than $1\%$ of the parameters. Increasing the complexity of
+the actor until performances comparable to FcE can be achieved is left for future research.
 
 \section{Noisy Perception}
 \label{sec:perception-noise}
@@ -328,6 +373,18 @@ run from \cref{sec:visual-inputs}.
 \subsection{Results}
 \label{subsec:perception-noise-results}
 
+As we have already noted in \cref{subsec:visual-inputs-results}, ScE and PVE perform far worse, than
+FcE and OrB, and are barely acting on the mass. We keep this in mind for our analysis of the results,
+and drop relative degradation as a metric for this section, as it is heavily skewed. 
+
+Looking now at parametric uncertainty, we do notice that FcE and OrB seem to be more robust under lower
+intensities, however sharply increase in absolute degradation, from standard onwards, while PVE and ScE
+already increase a lot under weak, but then remain relatively stable. While it would be interesting to
+see how they would behave under even stronger noise, it could be that the frozen encoding, and reduction to
+a low-dimensional state can absorb parametric uncertainty better.
+
+% left parametric absolute tradeoff, right external disturbance
+
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[t]{0.49\linewidth}
@@ -346,6 +403,21 @@ run from \cref{sec:visual-inputs}.
   \label{fig:perc-noise-parametric}
 \end{figure}
 
+If we take a look at external disturbance now, we can also see that PVE seems to be similarly
+affected as FcE and OrB under lower intensities, with ScE performing worse, while under divergent
+our largely pretrained controllers outperform the others. What is generally noticeable is that the
+baseline does outperform all of them, however this is expected as is not affected by the high complexity
+of the environment.
+
+When now looking at the effect of control noise again, we can notice proof of our previous hypothesis that
+PVE does not manage to correctly address its thrusters. Because differently from ScE, which just overall
+does not apply much control input, resulting in a lower cost increase than the baseline, it increases in
+cost similarly to FcE. This tells us that PVE applies probably similar control output,
+however spread out over all the thrusters, thus being affected the same, but as the coordination
+between them fails, the resulting actuation is $0$. That OrB sits further above indicates that here
+the missing position encodings affect the controller, which relies only on control direction signals,
+even more.
+
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[t]{0.49\linewidth}
@@ -363,6 +435,20 @@ run from \cref{sec:visual-inputs}.
   \caption{Degradation of the PPO variants in the perception environment under external disturbance.}
   \label{fig:perc-noise-disturbance}
 \end{figure}
+
+Taking now a look at measurement noise, it is quite difficult to interpret the result. On the one hand side,
+the lower effect of it on ScE and PVE could be an indicator that those low-dimensional controllers are less
+affected by measurement noise, which is something we suspected from the results throughout our thesis. However,
+on the other hand, it also again shows that controllers, who on the clean plant are already non-functional, are
+generally less affected by noise on their inputs. We want to make the claim here, that, while both are true, the
+former is the more logical explanation here. The first indicator for that is that OrB sits below FcE throughout
+the intensities, which speaks in favor of the low-dimensional latent state. The second argument is, that we have
+seen before in relation to control noise, that PVE actually successfully maps inputs to outputs, however does not
+manage to apply them effectively. If the map were non-functional, PVE would sit at a similar level as ScE.
+So, we can suspect that the majority of the cost from PVE comes from the wasted thruster energy, which does not
+increase as much if the the controller is robust to measurement noise and can still correctly read out the position
+and velocity of the mass. When putting FcE and PVE into relation, this is a possible explanation for the observed
+behavior.
 
 \begin{figure}[htbp]
   \centering
@@ -403,3 +489,14 @@ run from \cref{sec:visual-inputs}.
 
 \section{Discussion}
 \label{sec:perception-discussion}
+
+Concluding this chapter, we first of all note, that on the clean loop the fully connected approach, FcE,
+is unbeaten in terms of performance, and a low-dimensional latent layer as in OrB does not show any improvement,
+instead it performs worse. This was already prominent under our artifical inflation, however has now 
+persisted into our real example. Similarly, we also were not able to effectively implement ScE, such that
+it could show strong improvements over the other controllers. While, for large it still functioned, well
+with only a fraction of trainable parameters, under visual input it became practically useless. Similarly,
+PVE also was not able to effectively function, due to a same reason, which was the PPO network being too
+small to translate encodings into actions. Compared with ScE, however, PVE was super effective in encoding
+velocity as well, on levels similar to FcE, or even better for Position and Control, hinting at being much
+more computationally efficient. 
