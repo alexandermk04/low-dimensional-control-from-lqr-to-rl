@@ -1,0 +1,17 @@
+\begin{table}[htbp]
+\centering
+\caption{Actor parameters of the PPO variants in the camera environment, split into those trained by PPO and those frozen after pretraining.}
+\label{tab:ch6-perception-parameters}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{lrrr}
+\toprule
+Solver & Trainable & Frozen & Total \\
+\midrule
+FcE & $9\,672\,064$ & $0$ & $9\,672\,064$ \\
+OrB & $9\,655\,808$ & $0$ & $9\,655\,808$ \\
+ScE & $24\,960$ & $9\,570\,693$ & $9\,595\,653$ \\
+PVE & $21\,504$ & $1\,261\,445$ & $1\,282\,949$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

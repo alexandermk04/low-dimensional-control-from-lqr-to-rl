@@ -38,8 +38,8 @@ SOLVER_LABELS = {
     "ppo_fc_extractor": "FcE",
     # Chapter 6
     "oracle_coarse": "Oracle (true state)",
-    "ppo_pixel_fc": "Pixels + PPO",
-    "ppo_pixel_posvel": "Position-Velocity Encoder + PPO",
+    "ppo_pixel_fc": "FcE",
+    "ppo_pixel_posvel": "PVE",
     "ppo_pixel_ortho": "OrB",
     "ppo_pixel_estimator": "ScE",
 }

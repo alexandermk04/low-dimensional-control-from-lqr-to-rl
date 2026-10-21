@@ -80,7 +80,7 @@ def _tick_label(key: tuple, wrap: int | None = None) -> str:
         parts = [
             "\n".join(
                 textwrap.wrap(
-                    part, wrap, break_on_hyphens=False, break_long_words=False,
+                    part, wrap, break_long_words=False,
                 ) or [part]
             )
             for part in parts
@@ -486,7 +486,7 @@ def degradation_curves(
         ax.plot(
             positions, kappa - 1.0 if absolute else kappa,
             color=BASELINE_COLOR, linestyle="--", linewidth=1.0,
-            label=r"Calibration $\kappa_\ell - 1$" if absolute else r"Calibration $\kappa_\ell$",
+            label=r"$\kappa_\ell - 1$" if absolute else r"$\kappa_\ell$",
         )
 
     if absolute:
@@ -501,10 +501,18 @@ def degradation_curves(
     ax.set_xlabel("Noise intensity")
     ax.set_ylabel(METRIC_LABELS["absolute_degradation" if absolute else "relative_degradation"])
     handles, labels = ax.get_legend_handles_labels()
-    short = max((len(label) for label in labels), default=0) <= 10
+
+    # based on rendered label
+    short = max((len(label) for label in labels[:len(drawn)]), default=0) <= 10
+    ncol = min(len(handles), (7 if short else 3) if width >= 1.0 else (
+        (4 if reference is None else 3) if short else 1
+    ))
+
+    # Fill by row
+    order = [i for c in range(ncol) for i in range(c, len(handles), ncol)]
     ax.legend(
-        frameon=False, loc="lower center", bbox_to_anchor=(0.5, 1.0),
-        ncol=min(len(handles), (7 if short else 3) if width >= 1.0 else (4 if short else 1)),
+        [handles[i] for i in order], [labels[i] for i in order],
+        frameon=False, loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=ncol,
         columnspacing=0.6, handlelength=1.2,
     )
 

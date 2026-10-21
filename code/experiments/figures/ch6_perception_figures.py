@@ -8,6 +8,7 @@ Run with::
 import config as cfg
 import settings
 from experiments.figures.aggregate import (
+    label_for,
     latest_per_experiment,
     tidy,
     with_suboptimality,
@@ -18,8 +19,8 @@ from experiments.figures.panels import (
     learning_bands,
     trajectory_overlay,
 )
-from experiments.figures.style import figure_dir, new_figure, save, table_dir
-from experiments.figures.tables import metric_table, write_table
+from experiments.figures.style import figure_dir, new_figure, save, save_variants, table_dir
+from experiments.figures.tables import _fit, metric_table, write_table
 from experiments.store import load_experiment
 
 EXPERIMENT = "ch6_perception"
@@ -74,6 +75,43 @@ def observation_preview():
     save(figure, "pixel_observation", EXPERIMENT)
 
 
+def parameter_table(rows):
+    """Trainable, frozen and total actor parameters per solver."""
+
+    def count(n: int) -> str:
+        return "$" + f"{n:,}".replace(",", r"\,") + "$"
+
+    lines = [
+        r"\begin{tabular}{lrrr}",
+        r"\toprule",
+        r"Solver & Trainable & Frozen & Total \\",
+        r"\midrule",
+    ]
+    for solver in ORDER[1:]:
+        # Same architecture for every seed
+        row = next(r for r in rows if r["solver"] == solver)
+        total = int(row["policy_complexity"])
+        frozen = int(row.get("policy_complexity_frozen") or 0)
+        lines.append(" & ".join(
+            [label_for(solver), count(total - frozen), count(frozen), count(total)]
+        ) + r" \\")
+    lines += [r"\bottomrule", r"\end{tabular}"]
+
+    write_table(
+        "\n".join([
+            r"\begin{table}[htbp]",
+            r"\centering",
+            r"\caption{Actor parameters of the PPO variants in the camera environment, "
+            r"split into those trained by PPO and those frozen after pretraining.}",
+            r"\label{tab:ch6-perception-parameters}",
+            _fit("\n".join(lines)),
+            r"\end{table}",
+        ]),
+        "ch6_perception_parameters",
+        EXPERIMENT,
+    )
+
+
 def main():
     observation_preview()
 
@@ -108,9 +146,17 @@ def main():
         ax = box_metric(learned, "solver", metric, order=ORDER, log=False)
         save(ax.figure, f"ch6_perception_{metric}", EXPERIMENT)
 
+    # Half width figures
     for metric in ("off_screen_rate", "null_waste_mean"):
-        ax = box_metric(rows, "solver", metric, order=ORDER, log=False)
-        save(ax.figure, f"ch6_perception_{metric}", EXPERIMENT)
+        save_variants(
+            lambda metric=metric, **size: box_metric(
+                learned, "solver", metric, order=ORDER, log=False, **size
+            ),
+            f"ch6_perception_{metric}",
+            EXPERIMENT,
+        )
+
+    parameter_table(learned)
 
     write_table(
         metric_table(

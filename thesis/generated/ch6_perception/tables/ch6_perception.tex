@@ -1,7 +1,7 @@
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
- & Oracle (true state) & Pixels + PPO & OrB & ScE & Position-Velocity Encoder + PPO \\
+ & Oracle (true state) & FcE & OrB & ScE & PVE \\
 \midrule
 True cost $J$ & $4708 \pm 379.5$ & $6280 \pm 526$ & $7720 \pm 857.4$ & $1.916 \times 10^{4} \pm 1840$ & $2.879 \times 10^{4} \pm 1.592 \times 10^{4}$ \\
 Training suboptimality $(J-J^*)/J^*$ & $0$ & $0.34 \pm 0.0264$ & $0.641 \pm 0.139$ & $3.07 \pm 0.215$ & $5.17 \pm 3.51$ \\
