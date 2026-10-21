@@ -202,6 +202,7 @@ We train this extractor with data of $20\,000$ agent steps, which is split into 
 which at our action repeat corresponds to $27$ agent actions. Similar to before, we use $K_0$ acting on the true
 state in $70\,\%$ with least-norm allocation through the thrusters and random, uniformly distributed actuation in $30\,\%$ of the time,
 before freezing the extractor's weights and using it in front of our PPO construct (\cref{sec:ppo-variants}).
+We will refer to it as Position-Velocity Encoder + PPO (\emph{PVE}).
 
 \emph{ScE} is pretrained with a similar data split for this setting.
 
@@ -213,20 +214,20 @@ before freezing the extractor's weights and using it in front of our PPO constru
 
 For the experiments here, we use the optimal gain under our action repeat (\cref{subsec:pixelated-environment})
 as our reference and compare it with different approaches,
-which here consist of Pixels + PPO (equivalent to \emph{FcE}), \emph{ScE}, \emph{OrB} as well as our
-Position-Velocity Encoder + PPO (\cref{subsec:pve}). As they reuse the already introduced architectures,
+which here consist of \emph{FcE}, \emph{ScE}, \emph{OrB} as well as our
+\emph{PVE} (\cref{subsec:pve}). As they reuse the already introduced architectures,
 they will not be repeated here. The only difference is that we increase the latent dimension of \emph{ScE}
-to $5$, which is the same as Position-Velocity Encoder + PPO, after initial results showed a weak performance with $2$.
+to $5$, which is the same as \emph{PVE}, after initial results showed a weak performance with $2$.
 The optimal controller for this setup actually does not
 act based on the perception, but instead has access to the real state, while the output
 remains our thrusters, for which it uses the least-norm allocation.
 It is therefore optimal
 for this setup, and serves as our comparison. Given the knowledge it has about the true
 state, we call it ``Oracle (true state)'' in our visualizations.
-For the other approaches, except for Position-Velocity Encoder + PPO, which takes images
+For the other approaches, except for \emph{PVE}, which takes images
 as an input, we flatten the images, such that they receive an $18\,432$-dimensional input vector.
 The learning rates we use here are identical to the ones extrapolated in \cref{tab:pixel-learning-rates}.
-As we did not use Position-Velocity Encoder + PPO (\cref{subsec:pve}) before, we copy the learning rate from \emph{ScE} for it, as it is the
+As we did not use \emph{PVE} (\cref{subsec:pve}) before, we copy the learning rate from \emph{ScE} for it, as it is the
 most similar (both use robotic priors).
 
 However, we also modify some of our PPO parameters for this setting. Not mentioned parameters
@@ -255,6 +256,43 @@ For one test episode we use $\lceil 2000/30 \rceil = 67$ agent steps, correspond
 
 \subsection{Results}
 \label{subsec:visual-inputs-results}
+
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch6_perception}{ch6_perception_subopt}
+  \caption[Suboptimality $S$ of the PPO variants]{Suboptimality $S$ of the PPO variants. The boxes indicate the interquartile range, while
+  the central line marks the median, and the whiskers span the $5$th to $95$th percentile. Points show episodes outside this range.}
+  \label{fig:perc-subopt}
+\end{figure}
+
+\input{generated/ch6_perception/tables/ch6_perception_parameters.tex}
+
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch6_perception}{ch6_perception_trajectories}
+  \caption[Example trajectories of the PPO variants.]{Trajectories of the PPO variants for one sampled episode under one seed.}
+  \label{fig:perc-trajectories}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch6_perception}{ch6_perception_off_screen_rate}
+    \caption{Fraction of agent steps with the mass outside the observable area.}
+    \label{fig:perc-off-screen}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch6_perception}{ch6_perception_null_waste_mean}
+    \caption{Thruster energy per agent step exceeding the least-norm allocation.}
+    \label{fig:perc-null-waste}
+  \end{subfigure}
+  \caption{Off-screen rate and wasted thrust of the PPO variants.}
+  \label{fig:perc-off-screen-waste}
+\end{figure}
+
+\input{generated/ch6_perception/tables/ch6_perception_probe.tex}
 
 \section{Noisy Perception}
 \label{sec:perception-noise}
@@ -289,6 +327,79 @@ run from \cref{sec:visual-inputs}.
 
 \subsection{Results}
 \label{subsec:perception-noise-results}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch6_noise}{ch6_noise_relative_degradation_parametric-divergent}
+    \caption{Relative degradation $\kappa$ at intensity \emph{divergent}.}
+    \label{fig:perc-noise-parametric-divergent}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch6_noise}{ch6_noise_tradeoff_absolute_parametric}
+    \caption{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ over the intensities.}
+    \label{fig:perc-noise-parametric-absolute}
+  \end{subfigure}
+  \caption{Degradation of the PPO variants in the perception environment under parametric uncertainty.}
+  \label{fig:perc-noise-parametric}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch6_noise}{ch6_noise_relative_degradation_disturbance-divergent}
+    \caption{Relative degradation $\kappa$ at intensity \emph{divergent}.}
+    \label{fig:perc-noise-disturbance-divergent}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch6_noise}{ch6_noise_tradeoff_absolute_disturbance}
+    \caption{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ over the intensities.}
+    \label{fig:perc-noise-disturbance-absolute}
+  \end{subfigure}
+  \caption{Degradation of the PPO variants in the perception environment under external disturbance.}
+  \label{fig:perc-noise-disturbance}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch6_noise}{ch6_noise_relative_degradation_control-divergent}
+    \caption{Relative degradation $\kappa$ at intensity \emph{divergent}.}
+    \label{fig:perc-noise-control-divergent}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch6_noise}{ch6_noise_tradeoff_relative_control}
+    \caption{Relative degradation $\kappa$ over the intensities.}
+    \label{fig:perc-noise-control-relative}
+  \end{subfigure}
+  \caption{Degradation of the PPO variants in the perception environment under control noise.}
+  \label{fig:perc-noise-control}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch6_noise}{ch6_noise_relative_degradation_measurement-divergent}
+    \caption{Relative degradation $\kappa$ at intensity \emph{divergent}.}
+    \label{fig:perc-noise-measurement-divergent}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch6_noise}{ch6_noise_tradeoff_relative_measurement}
+    \caption{Relative degradation $\kappa$ over the intensities.}
+    \label{fig:perc-noise-measurement-relative}
+  \end{subfigure}
+  \caption{Degradation of the PPO variants in the perception environment under measurement noise.}
+  \label{fig:perc-noise-measurement}
+\end{figure}
+
 
 \section{Discussion}
 \label{sec:perception-discussion}

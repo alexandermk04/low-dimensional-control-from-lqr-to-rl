@@ -1002,7 +1002,7 @@ to exactly the sizes that will later be used by the pixelated environment. This 
 \emph{MLP} and \emph{OrB}, as the other approaches either do not scale well or are not relevant to the comparison.
 
 Then, using the same architectural constructions for these solvers, but applied to our new environment,
-we compare them with the additionally introduced position-velocity encoder~\cite{Jonschkowski2017PVE} (Position-Velocity Encoder + PPO),
+we compare them with the additionally introduced position-velocity encoder~\cite{Jonschkowski2017PVE} followed by PPO (\emph{PVE}),
 which uses similar robotic priors to \emph{ScE}, but focuses
 more on position, velocity and acceleration. It learns positional encodings from the observations, and then calculates the velocity state based
 on finite differences. Here, it is quite clear that we use knowledge of the limitations of the embodiment to construct more optimal controllers,
