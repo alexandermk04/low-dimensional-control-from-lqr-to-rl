@@ -1,28 +1,85 @@
-\chapter{Conclusion}\label{chap:conclusion}
+\chapter{Conclusion}
+\label{chap:conclusion}
 
+% Template
 
-You generally cover three things in the Conclusions section, and each of these usually merits a separate subsection:
+% You generally cover three things in the Conclusions section, and each of these usually merits a separate subsection:
+
+% \begin{enumerate}
+% 	\item Conclusions
+% 	\item Summary of Contributions
+% 	\item Future Research
+% \end{enumerate}
+
+% Conclusions are not a rambling summary of the thesis: they are short, concise statements of the inferences that you have made because of your work. It helps to organize these as short numbered paragraphs, ordered from most to least important. All conclusions should be directly related to the research question stated in the introduction. Examples:
+
+% \begin{enumerate}
+% 	\item The problem stated in the introduction has been solved: as shown in Sections ? to ??, an algorithm capable of handling large-scale Zylon problems in reasonable time has been developed.
+% 	\item The principal mechanism needed in the improved Zylon algorithm is the Grooty mechanism.
+% 	\item Etc.
+% \end{enumerate}
+
+% The Summary of Contributions will be much sought and carefully read by the examiners. Here you list the contributions of new knowledge that your thesis makes. Of course, the thesis itself must substantiate any claims made here. There is often some overlap with the Conclusions, but that's okay. Concise numbered paragraphs are again best. Organize from most to least important. Examples:
+
+% \begin{enumerate}
+% 	\item Developed a much quicker algorithm for large-scale Zylon problems.
+% 	\item Demonstrated the first use of the Grooty mechanism for Zylon calculations.
+% 	\item Etc.
+% \end{enumerate}
+
+% The Future Research subsection is included so that researchers picking up this work in future have the benefit of the ideas that you generated while you were working on the project. Again, concise numbered paragraphs are usually best. 
+
+\section{Conclusions}
+\label{sec:conclusions}
+
+In this thesis we have shown that simply enforcing low-dimensional structures, or latent layers does not
+improve the performance of controllers for overparameterized systems, instead it hurts performance. However,
+when combining sufficiently pretrained latent projectors with the right controller architecture, they can
+achieve similar performances to fully-connected networks, while being more efficient in their parameter count
+and training time. While this could be clearly shown for LQR, under RL only tendencies were observed, requiring
+further investigation.
+
+We further found low-dimensional latent states to improve robustness to measurement noise, across all of our
+experiment implementations. Additionally, a lower count in parameters can improve this robustness even more.
+
+Regarding the latent state, it is also important to ensure that not only control information is carried
+here, but also information about the observed state. Otherwise, robustness to control noise is compromised.
+In relation to that, we also note that a low degradation in control noise can also hint at a barely acting
+controller, and is not always a sign of robustness.
+
+Finally, we note that there might also be a slight robustness improvement in relation to parametric uncertainty
+for controllers carrying a low-dimensional latent state and less parameters. This however can not reliably be
+shown, as degradation here also increases with worse performance on the clean plant, which in our case was true
+for these controllers.
+
+\section{Summary of Contributions}
+\label{sec:contributions}
+
+We have presented that, similar to nature, a bow-tie shaped architecture can improve robustness, especially to
+measurement noise. Further, we showed that combining pretrained encoders with a trainable network
+can reduce both parameter count and training time, while noting common problems in relation to
+architecture design. Additionally, we observed tendencies in relation to other noise types, which
+open possibilities for further research here.
+
+\section{Future Research}
+\label{sec:future-research}
+
+From where this thesis ends, there are different directions, which we have left for future research
+and discussion. Some, but not only limited to include whether:
 
 \begin{enumerate}
-	\item Conclusions
-	\item Summary of Contributions
-	\item Future Research
+	\item And how the number of parameters can be more effectively distributed between
+	the extractor and the actor, to achieve comparable performances to a fully-connected network
+	\item Better robustness to measurement noise for low-dimensional controllers also holds
+	for more complex systems, such a walking humanoid roboter
+	\item These findings are transferrable to real-world applications, i.e. if this setup
+	would be constructed and tested
+	\item Fully-connected networks improve robustness to control noise,
+	and low-dimensional networks robustness to parametric uncertainty
 \end{enumerate}
 
-Conclusions are not a rambling summary of the thesis: they are short, concise statements of the inferences that you have made because of your work. It helps to organize these as short numbered paragraphs, ordered from most to least important. All conclusions should be directly related to the research question stated in the introduction. Examples:
-
-\begin{enumerate}
-	\item The problem stated in the introduction has been solved: as shown in Sections ? to ??, an algorithm capable of handling large-scale Zylon problems in reasonable time has been developed.
-	\item The principal mechanism needed in the improved Zylon algorithm is the Grooty mechanism.
-	\item Etc.
-\end{enumerate}
-
-The Summary of Contributions will be much sought and carefully read by the examiners. Here you list the contributions of new knowledge that your thesis makes. Of course, the thesis itself must substantiate any claims made here. There is often some overlap with the Conclusions, but that's okay. Concise numbered paragraphs are again best. Organize from most to least important. Examples:
-
-\begin{enumerate}
-	\item Developed a much quicker algorithm for large-scale Zylon problems.
-	\item Demonstrated the first use of the Grooty mechanism for Zylon calculations.
-	\item Etc.
-\end{enumerate}
-
-The Future Research subsection is included so that researchers picking up this work in future have the benefit of the ideas that you generated while you were working on the project. Again, concise numbered paragraphs are usually best. 
+Finally, we also want to mention, that while these are interesting directions, the data produced from
+our experiments still offers a lot of possibilities for additional analysis. For example,
+while we captured the compute time and environment steps needed, a different angle could include
+this in the evaluation of the approaches. And while it seems like our conclusions
+leave us with more questions than we started with, this is what research is for.
