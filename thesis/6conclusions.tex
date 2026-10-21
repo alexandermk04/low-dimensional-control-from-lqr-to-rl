@@ -32,10 +32,10 @@
 \section{Conclusions}
 \label{sec:conclusions}
 
-In this thesis we have shown that simply enforcing low-dimensional structures, or latent layers does not
-improve the performance of controllers for overparameterized systems, instead it hurts performance. However,
+In this thesis we have shown that simply enforcing low-dimensional structures or latent layers does not
+improve the performance of controllers for overparameterized systems; instead, it hurts performance. However,
 when combining sufficiently pretrained latent projectors with the right controller architecture, they can
-achieve similar performances to fully-connected networks, while being more efficient in their parameter count
+achieve similar performances to fully connected networks, while being more efficient in their parameter count
 and training time. While this could be clearly shown for LQR, under RL only tendencies were observed, requiring
 further investigation.
 
@@ -48,14 +48,14 @@ In relation to that, we also note that a low degradation in control noise can al
 controller, and is not always a sign of robustness.
 
 Finally, we note that there might also be a slight robustness improvement in relation to parametric uncertainty
-for controllers carrying a low-dimensional latent state and less parameters. This however can not reliably be
+for controllers carrying a low-dimensional latent state and fewer parameters. This, however, cannot reliably be
 shown, as degradation here also increases with worse performance on the clean plant, which in our case was true
 for these controllers.
 
 \section{Summary of Contributions}
 \label{sec:contributions}
 
-We have presented that, similar to nature, a bow-tie shaped architecture can improve robustness, especially to
+We have presented that, similar to nature, a bow-tie-shaped architecture can improve robustness, especially to
 measurement noise. Further, we showed that combining pretrained encoders with a trainable network
 can reduce both parameter count and training time, while noting common problems in relation to
 architecture design. Additionally, we observed tendencies in relation to other noise types, which
@@ -65,20 +65,20 @@ open possibilities for further research here.
 \label{sec:future-research}
 
 From where this thesis ends, there are different directions, which we have left for future research
-and discussion. Some, but not only limited to include whether:
+and discussion. These include, but are not limited to, whether:
 
 \begin{enumerate}
-	\item And how the number of parameters can be more effectively distributed between
-	the extractor and the actor, to achieve comparable performances to a fully-connected network
-	\item Better robustness to measurement noise for low-dimensional controllers also holds
-	for more complex systems, such a walking humanoid roboter
-	\item These findings are transferrable to real-world applications, i.e. if this setup
-	would be constructed and tested
-	\item Fully-connected networks improve robustness to control noise,
-	and low-dimensional networks robustness to parametric uncertainty
+	\item and how the number of parameters can be distributed more effectively between
+	the extractor and the actor, to achieve performances comparable to a fully connected network;
+	\item better robustness to measurement noise for low-dimensional controllers also holds
+	for more complex systems, such as a walking humanoid robot;
+	\item these findings are transferable to real-world applications, i.e., if this setup
+	were built and tested;
+	\item fully connected networks improve robustness to control noise,
+	and low-dimensional networks robustness to parametric uncertainty.
 \end{enumerate}
 
-Finally, we also want to mention, that while these are interesting directions, the data produced from
+Finally, we also want to mention that, while these are interesting directions, the data produced from
 our experiments still offers a lot of possibilities for additional analysis. For example,
 while we captured the compute time and environment steps needed, a different angle could include
 this in the evaluation of the approaches. And while it seems like our conclusions
