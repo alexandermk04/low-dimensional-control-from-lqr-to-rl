@@ -500,3 +500,21 @@ PVE also was not able to effectively function, due to a same reason, which was t
 small to translate encodings into actions. Compared with ScE, however, PVE was super effective in encoding
 velocity as well, on levels similar to FcE, or even better for Position and Control, hinting at being much
 more computationally efficient. 
+
+Looking at the effect of noise, we again notice that parametric uncertainty affects already worse performing
+controllers generally more, however architectures employing a frozen extractor seem to degrade less with 
+increasing noise, than large, fully trained networks. This however would need further investigation under stronger
+noise. For external disturbances, we do observe such pattern under divergent intensity, where ScE and PVE both
+degrade noticeably less than FcE and OrB. Under control noise, we again find that controllers which barely act and
+consequently are less affected by it. However, the distinction need to be made that while effective control can be $0$
+(as is the case for PVE), the commanded actuation is still existent, and thus noise affects the cost of the controller.
+An interesting case is also OrB, where the latent state carries only control information, which is consequently more
+affected by this type of noise. Finally, we notice again that controllers carrying a low-dimensional latent state
+are more robust to measurement noise, as OrB and PVE sit below FcE. ScE is excluded here, due to its ineffectivenesss.
+
+Overall, based on our observations in this section, controllers containing a low-dimensional latent state,
+as well as far less trainable parameters, can be constructed using pretrained extractors. Making them perform
+at suboptimalities similar to fully connected controllers however requires a careful selection of the actor size,
+as well as an effective encoding of all relevant properties. The latter is especially what matters when it comes
+to robustness. If both are fulfilled, it is probable that such controller can outperform a full network, while being
+more space and training compute efficient.
