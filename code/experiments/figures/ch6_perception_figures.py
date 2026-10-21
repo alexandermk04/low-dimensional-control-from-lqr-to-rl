@@ -130,9 +130,13 @@ def main():
     ax.set_xlabel("Agent steps")
     save(ax.figure, "ch6_perception_curves_steps", EXPERIMENT)
 
-    # Trajectories are sampled at the agent rate
+    # Use a seed which is available in every solver
+    shared_seed = min(set.intersection(*(
+        {r.seed for r in records if r.solver == solver} for solver in ORDER
+    )))
     axes = trajectory_overlay(
-        records, "solver", dt=cfg.DEFAULT_DT * cfg.DEFAULT_ACTION_REPEAT, order=ORDER,
+        records, "solver", dt=cfg.DEFAULT_DT * cfg.DEFAULT_ACTION_REPEAT,
+        seed=shared_seed, order=ORDER,
     )
     save(axes[0].figure, "ch6_perception_trajectories", EXPERIMENT)
 
@@ -176,6 +180,10 @@ def main():
             learned, "solver",
             metrics=("r2_position", "r2_velocity", "r2_control", "training_subopt_final"),
             column_order=ORDER,
+            caption=r"Held-out $R^2$ of a linear probe from the latent state of each PPO variant to the true "
+                    r"position, the true velocity and the control of the oracle, together with the final "
+                    r"training suboptimality.",
+            label="tab:ch6-perception-probe",
         ),
         "ch6_perception_probe",
         EXPERIMENT,
