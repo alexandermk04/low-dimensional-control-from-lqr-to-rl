@@ -290,7 +290,7 @@ spread out, having both episodes performing better than \emph{ScE}, but also som
 \end{figure}
 
 Putting the suboptimality into the context of example trajectories observed in \cref{fig:app-perc-trajectories}, we can see that \emph{PVE} is
-not controlling the mass at all and \emph{ScE} only slightly, with both not failing to effectively move the mass.
+not controlling the mass at all and \emph{ScE} only slightly, with both failing to effectively move the mass.
 
 To effectively pinpoint the issues both \emph{PVE} and \emph{ScE} have, and attribute the success of \emph{FcE} and \emph{OrB} correctly, we
 evaluate how well the extractors of each approach linearly encode position, velocity and control in their latent state.
@@ -378,9 +378,10 @@ and drop relative degradation as a metric for this section, as it is heavily ske
 
 Looking now at parametric uncertainty, we do notice that \emph{FcE} and \emph{OrB} seem to be more robust under lower
 intensities, but sharply increase in absolute degradation from \emph{standard} onwards, while \emph{PVE} and \emph{ScE}
-already increase a lot under \emph{weak}, but then remain relatively stable (\cref{fig:perc-noise-parametric-absolute}). While it would be interesting to
-see how they would behave under even stronger noise, it could be that the frozen encoding, and reduction to
-a low-dimensional state can absorb parametric uncertainty better.
+already increase a lot under \emph{weak}, but then remain relatively stable (\cref{fig:perc-noise-parametric-absolute}). 
+While initially suspected to indicate robustness, the plateauing is actually caused by penalties for leaving the screen.
+Under weak, for ScE the mass exits $52\%$ of the time, for PVE it sits at $36\%$. As under divergent those values sit
+at $74\%$ and $62\%$ respectively, we can attribute this cap on the increase to this.
 
 \begin{figure}[htbp]
   \centering
@@ -407,27 +408,22 @@ baseline does outperform all of them; however, this is expected, as it is not af
 of the environment.
 
 When now looking at the effect of control noise again, we can notice proof of our previous hypothesis that
-\emph{PVE} does not manage to correctly address its thrusters. Because differently from \emph{ScE}, which just overall
-does not apply much control input, resulting in a lower cost increase than the baseline, it increases in
-cost similarly to \emph{FcE} (\cref{fig:perc-noise-control-absolute}). This tells us that \emph{PVE} applies probably similar control output,
-however spread out over all the thrusters, thus being affected the same, but as the coordination
-between them fails, the resulting actuation is $0$. That \emph{OrB} sits further above indicates that here
-the missing position encodings affect the controller, which relies only on control direction signals,
-even more.
+\emph{PVE} does not manage to correctly address its thrusters. Because similarly to \emph{ScE}, which wastes
+more thrust in the null-space than the other architectures, this leads to a higher increase in absolute degradation
+under control noise, as overall more control is applied (\cref{fig:perc-noise-control-absolute}). Again, we do
+notice overall, that the larger architectures handle control noise much better, than the smaller ones. For
+\emph{OrB}, the influence of only encoding the control signal in its latent state could potentially also have
+an effect.
 
 Taking now a look at measurement noise, it is quite difficult to interpret the result. On the one hand,
-the lower effect of it on \emph{ScE} and \emph{PVE} (\cref{fig:perc-noise-measurement-absolute}) could be an indicator that those low-dimensional controllers are less
-affected by measurement noise, which is something we suspected from the results throughout our thesis. However,
+the lower effect of it on \emph{ScE} and \emph{PVE} (\cref{fig:perc-noise-measurement-absolute}) could be an indicator that
+those low-dimensional controllers are less affected by measurement noise, which is something we suspected from the results throughout our thesis. However,
 on the other hand, it also again shows that controllers which are already non-functional on the clean plant are
-generally less affected by noise on their inputs. We want to make the claim here that, while both are true, the
-former is the more logical explanation here. The first indicator for that is that \emph{OrB} sits below \emph{FcE} throughout
-the intensities, which speaks in favor of the low-dimensional latent state. The second argument is that we have
-seen before, in relation to control noise, that \emph{PVE} actually successfully maps inputs to outputs, however does not
-manage to apply them effectively. If the map were non-functional, \emph{PVE} would sit at a similar level as \emph{ScE}.
-So, we can suspect that the majority of the cost from \emph{PVE} comes from the wasted thruster energy, which does not
-increase as much if the controller is robust to measurement noise and can still correctly read out the position
-and velocity of the mass. When putting \emph{FcE} and \emph{PVE} into relation, this is a possible explanation for the observed
-behavior.
+generally less affected by noise on their inputs. The latter rather seems to be the case here. Any noise intensity applied
+already leads to a lot of screen exits for \emph{PVE} ($0.18$, $0.43$, $0.73$ and $0.79$), which makes the curve flatten
+here. \emph{ScE} is less affected here, but as we have seen before, this is also due to the second reason. And as
+\emph{FcE} and \emph{OrB} do not show any difference under \emph{divergent}, there is not establishable base for such
+a claim here.
 
 \begin{figure}[htbp]
   \centering
@@ -456,25 +452,22 @@ instead, it performs worse. This was already prominent under our artificial infl
 persisted into our real example. Similarly, we also were not able to effectively implement \emph{ScE}, such that
 it could show strong improvements over the other controllers. While under \emph{large} it still functioned well
 with only a fraction of trainable parameters, under visual input it became practically useless. Similarly,
-\emph{PVE} also was not able to effectively function, for the same reason, which was the PPO network being too
+\emph{PVE} also was not able to effectively function, which we suspect was for the same reason, which is the PPO network being too
 small to translate encodings into actions. Compared with \emph{ScE}, however, \emph{PVE} was super effective in encoding
 velocity as well, on levels similar to \emph{FcE}, or even better for position and control, hinting at being much
 more computationally efficient.
 
 Looking at the effect of noise, we again notice that parametric uncertainty affects already worse performing
-controllers generally more, however architectures employing a frozen extractor seem to degrade less with
-increasing noise than large, fully trained networks. This however would need further investigation under stronger
-noise. For external disturbances, we do observe such a pattern under \emph{divergent} intensity, where \emph{ScE} and \emph{PVE} both
-degrade noticeably less than \emph{FcE} and \emph{OrB}. Under control noise, we again find that controllers which barely act are
-consequently less affected by it. However, the distinction needs to be made that while effective control can be $0$
-(as is the case for \emph{PVE}), the commanded actuation is still existent, and thus noise affects the cost of the controller.
-An interesting case is also \emph{OrB}, where the latent state carries only control information, which is consequently more
-affected by this type of noise. Finally, we notice again that controllers carrying a low-dimensional latent state
-are more robust to measurement noise, as \emph{OrB} and \emph{PVE} sit below \emph{FcE}. \emph{ScE} is excluded here, due to its ineffectiveness.
+controllers generally more. For external disturbances, we observe a pattern under \emph{divergent} intensity, where \emph{ScE} and \emph{PVE} both
+degrade noticeably less than \emph{FcE} and \emph{OrB}, hinting at possibly more robustness with frozen extractors. 
+Under control noise, we find that controllers which can not coordinate their thrusters well, and waste more thrusts,
+are consequently more affected by it. Also, the trend that fully-parameterized controllers are less affected by it
+continues in our experiments. Finally, we notice, contrary to our previous findings, that controllers carrying a low-dimensional latent state
+do not show more robustness to measurement noise, as they mostly produce screen exists here.
 
 Overall, based on our observations in this chapter, controllers containing a low-dimensional latent state,
 as well as far fewer trainable parameters, can be constructed using pretrained extractors. Making them perform
 at suboptimalities similar to fully connected controllers however requires a careful selection of the actor size,
 as well as an effective encoding of all relevant properties. The latter is especially what matters when it comes
 to robustness. If both are fulfilled, it is probable that such a controller can outperform a full network, while being
-more space and training compute efficient.
+more space and training compute efficient, however at the cost of control noise robustness.

@@ -33,33 +33,34 @@
 \label{sec:conclusions}
 
 In this thesis we have shown that simply enforcing low-dimensional structures or latent layers does not
-improve the performance of controllers for overparameterized systems; instead, it hurts performance. However,
+improve the performance of controllers for overparameterized systems; instead, it might even hurt performance. However,
 when combining sufficiently pretrained latent projectors with the right controller architecture, they can
 achieve similar performances to fully connected networks, while being more efficient in their parameter count
 and training time. While this could be clearly shown for LQR, under RL only tendencies were observed, requiring
 further investigation.
 
-We further found low-dimensional latent states to improve robustness to measurement noise, across all of our
-experiment implementations. Additionally, a lower count in parameters can improve this robustness even more.
+We further found conflicting results on whether low-dimensional latent states
+can improve robustness to measurement noise. While for LQR solvers and model-informed
+\emph{StE} this holds true, for the camera environment, we could not clearly observe that. This however might
+be related to the first point, where our RL approaches showed already bad performance
+under the clean loop.
 
 Regarding the latent state, it is also important to ensure that not only control information is carried
-here, but also information about the observed state. Otherwise, robustness to control noise is compromised.
+here, but also information about the observed state. Otherwise, robustness to control noise might worsen.
 In relation to that, we also note that a low degradation in control noise can also hint at a barely acting
 controller, and is not always a sign of robustness.
 
-Finally, we note that there might also be a slight robustness improvement in relation to parametric uncertainty
-for controllers carrying a low-dimensional latent state and fewer parameters. This, however, cannot reliably be
-shown, as degradation here also increases with worse performance on the clean plant, which in our case was true
-for these controllers.
+Finally, control noise does affect low-dimensional controllers more than fully parameterized ones,
+which we observed across all experiments.
 
 \section{Summary of Contributions}
 \label{sec:contributions}
 
-We have presented that, similar to nature, a bow-tie-shaped architecture can improve robustness, especially to
-measurement noise. Further, we showed that combining pretrained encoders with a trainable network
+We have presented that combining pretrained encoders with a trainable network
 can reduce both parameter count and training time, while noting common problems in relation to
-architecture design. Additionally, we observed tendencies in relation to other noise types, which
-open possibilities for further research here.
+architecture design. Further, we showed that fully parameterized controllers offer indeed more
+robustness to control noise, while for the other noise types we could only observe tendencies,
+which open possibilities for further research here.
 
 \section{Future Research}
 \label{sec:future-research}
@@ -70,12 +71,10 @@ and discussion. These include, but are not limited to, whether:
 \begin{enumerate}
 	\item and how the number of parameters can be distributed more effectively between
 	the extractor and the actor, to achieve performances comparable to a fully connected network;
-	\item better robustness to measurement noise for low-dimensional controllers also holds
-	for more complex systems, such as a walking humanoid robot;
+	\item our results, such as better robustness to measurement noise of low-dimensional LQR controllers, might hold
+	for more complex systems, i.e. a walking humanoid robot;
 	\item these findings are transferable to real-world applications, i.e., if this setup
 	were built and tested;
-	\item fully connected networks improve robustness to control noise,
-	and low-dimensional networks robustness to parametric uncertainty.
 \end{enumerate}
 
 Finally, we also want to mention that, while these are interesting directions, the data produced from
