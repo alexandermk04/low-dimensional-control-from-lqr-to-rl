@@ -335,6 +335,8 @@ Hier die deutsche Zusammenfassung einf\"ugen (notwendig).
 % Make plots stick to their headings in the appendix
 \let\appendixsection\section
 \renewcommand{\section}{\FloatBarrier\appendixsection}
+\let\appendixsubsection\subsection
+\renewcommand{\subsection}{\FloatBarrier\appendixsubsection}
 \fancyhead[LO,RE]{}                      % Define the header style for the appendixpages
 
 \fancyhead[LE,RO]{\it Anhang A. Nomenclature}                %Adapt letter!
