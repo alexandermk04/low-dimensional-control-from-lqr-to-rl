@@ -85,10 +85,10 @@ to just accept the position penalty, without wasting additional energy.
 
 Finally, we want to take a look at how the test suboptimality here compares to that of the
 previous chapter (\cref{fig:pixel-inflation-subopt}). Generally, we notice that it has increased across all architectures, which
-makes sense given the much larger input dimension. However, it becomes clearer that larger policies
-perform better in the median. \emph{ScE}, which had been worse than \emph{MLP} under \emph{large}
-inflation, now has improved and sits below it
-(median $S$ of $17.5$ vs.\ $35.4$ for \emph{MLP}, \cref{tab:ch6-solvers-spread}).
+makes sense given the much larger input dimension. However, it can be observed that the policies with a larger total parameter count,
+perform better (judging by the median). \emph{ScE}, which had been worse than \emph{MLP} under \emph{large}
+inflation, was overtaken by it, and sits now below with a median $S$ of $17.5$
+($35.4$ for \emph{MLP}, \cref{tab:ch6-solvers-spread}).
 
 \begin{figure}[htbp]
     \centering
@@ -108,9 +108,9 @@ inflation, now has improved and sits below it
     \label{fig:pixel-inflation-subopt}
 \end{figure}
 
-Another noticeable thing is the large spread across all architectures, where the worst episode
-is multiple times larger than the best one (\cref{tab:ch6-solvers-spread}). In the context of the controllers applying little
-force, this makes sense, as then the initial states have a much larger influence on the incurred
+Another noticeable thing, which we know also observed in the previous chapter, is the large spread across all architectures, where the worst episode
+is multiple orders larger than the best one (\cref{tab:ch6-solvers-spread}). In the context of some controllers applying little
+force and thus not steering the mass, this makes sense, as then the initial velocity direction has a much larger influence on the incurred
 cost. However, there is indeed still a noticeable difference, as \emph{OrB} and \emph{ScE} have a similar spread,
 however \emph{OrB} has a better median and core quantile region. Both are however beaten by \emph{FcE}, showing
 us that the projection in \emph{OrB} is not much of help here.
@@ -300,16 +300,19 @@ velocity fairly well from the observations, but not the control. Calculating a c
 probably delegated to the PPO network, and the extractor is therefore only an encoder.
 For \emph{OrB}, we notice a difference here: The latent state correlates more with the actuation commanded by the controller,
 but not at all with position and velocity, indicating that its extractor moves the mentioned calculation before the latent projection.
-As we see that \emph{OrB} wastes some thrust energy in \cref{fig:perc-null-waste}, the complexity of PPO could be too little to perfectly
+As we see that \emph{OrB} wastes some thrust energy in \cref{fig:perc-null-waste}, the size of the PPO head could be too little to perfectly
 translate this signal into effective thrust. We can notice a similar pattern in both \emph{ScE} and \emph{PVE}, where
 the latent state indeed contains both control and position correlation, at even higher levels than \emph{FcE},
 indicating that the encoding is effective. However, \emph{ScE} is missing velocity observations, which makes it
-difficult for it to see the effects of its control. As a result, it loses some masses outside the screen
-(\cref{fig:perc-off-screen}). Encoding-wise, \emph{PVE} captures the position of its point almost perfectly, and
+difficult for it to see the effects of its control. As a result, it loses the mass outside the screen in $6.4\%$
+of the test episodes, getting charged the exit penalty (\cref{fig:perc-off-screen}). 
+Encoding-wise, \emph{PVE} captures the position of its point almost perfectly, and
 indicates well how the controller should steer the mass. But again here, like in the previous cases, but the
 most severe, the complexity of PPO here is too reduced to effectively translate it onto the thrusters. Judging
 by the major waste in the null space, \emph{PVE} cannot seem to differentiate well between effective and wasteful
-thrusters, and therefore does not move at all in some cases (\cref{fig:app-perc-trajectories}).
+thrusters, and therefore does not move at all in some cases (\cref{fig:app-perc-trajectories}). As a result, it also
+loses the mass in $3.1\%$ of the episodes. So, for both \emph{ScE} and \emph{PVE}, a higher suboptimality
+than \emph{FcE} or \emph{OrB} is produced, which do not exit any episode early.
 
 \input{generated/ch6_perception/tables/ch6_perception_probe.tex}
 
@@ -364,10 +367,10 @@ so this noise does not affect it. Still, the chosen values are found in the appe
 
 We now run the trained controllers from \cref{sec:visual-inputs} on
 noise-affected trajectories at different strengths under the test protocol introduced in \cref{subsec:visual-inputs-setting}.
-To make the comparison under each noise channel equal, we exclude our optimal controller
-baseline, as it does not observe the measurement noise like the other controllers do. So
-instead we use the cost ratio \eqref{eq:clean-ratio} of each controller to its clean
-run from \cref{sec:visual-inputs}.
+For evaluation, we use the absolute degradation \needcite{cref to def} of each controller in relation to its clean run in \cref{sec:visual-inputs}
+and display it in units of the cost of the oracle on the clean plant.
+For all noise channels, except measurement noise, we will also display the calibrated level $\kappa_\ell - 1$
+as a dashed line for reference.
 
 \subsection{Results}
 \label{subsec:perception-noise-results}
@@ -404,7 +407,7 @@ at $74\%$ and $62\%$ respectively, we can attribute this cap on the increase to 
 If we take a look at external disturbance now, we can also see that \emph{PVE} seems to be similarly
 affected as \emph{FcE} and \emph{OrB} under lower intensities, with \emph{ScE} performing worse, while under \emph{divergent}
 our largely pretrained controllers outperform the others (\cref{fig:perc-noise-disturbance-absolute}). What is generally noticeable is that the
-baseline does outperform all of them; however, this is expected, as it is not affected by the high complexity
+oracle does outperform all of them; however, this is expected, as it is not affected by the high complexity
 of the environment.
 
 When now looking at the effect of control noise again, we can notice proof of our previous hypothesis that
@@ -416,14 +419,15 @@ notice overall, that the larger architectures handle control noise much better, 
 an effect.
 
 Taking now a look at measurement noise, it is quite difficult to interpret the result. On the one hand,
-the lower effect of it on \emph{ScE} and \emph{PVE} (\cref{fig:perc-noise-measurement-absolute}) could be an indicator that
-those low-dimensional controllers are less affected by measurement noise, which is something we suspected from the results throughout our thesis. However,
-on the other hand, it also again shows that controllers which are already non-functional on the clean plant are
-generally less affected by noise on their inputs. The latter rather seems to be the case here. Any noise intensity applied
-already leads to a lot of screen exits for \emph{PVE} ($0.18$, $0.43$, $0.73$ and $0.79$), which makes the curve flatten
-here. \emph{ScE} is less affected here, but as we have seen before, this is also due to the second reason. And as
-\emph{FcE} and \emph{OrB} do not show any difference under \emph{divergent}, there is not establishable base for such
-a claim here.
+the lower effect of it on \emph{ScE} and the flattening of the curve for \emph{PVE} (\cref{fig:perc-noise-measurement-absolute}) could be an indicator that
+those low-dimensional controllers are less affected by measurement noise, which is something we suspected from the results in our previous chapters. However,
+this is not the case here. Instead, for \emph{ScE} it is the effect we noticed before, where controllers,
+which are already non-functional on the clean plant are generally less affected by noise on their inputs. For \emph{PvE},
+any noise intensity applied leads to high percentage of the mass exiting the screen ($0.18$, $0.43$, $0.73$ and $0.79$), 
+which consequently ends the episode early with our previously discussed penalty (\cref{subsec:pixel-inflation-setting}).
+As a result, the curve flattens at the higher intensities, as the cost cannot increase much more.
+Therefore, as \emph{FcE} and \emph{OrB} do not show any difference under \emph{divergent}, there is not establishable base for the
+claim that low-dimensional latents improve robustness against measurement noise, at least for this setting.
 
 \begin{figure}[htbp]
   \centering
@@ -448,22 +452,25 @@ a claim here.
 
 Concluding this chapter, we first of all note that, on the clean loop, the fully connected approach, \emph{FcE},
 is unbeaten in terms of performance, and a low-dimensional latent layer as in \emph{OrB} does not show any improvement;
-instead, it performs worse. This was already prominent under our artificial inflation, and has now
-persisted into our real example. Similarly, we also were not able to effectively implement \emph{ScE}, such that
-it could show strong improvements over the other controllers. While under \emph{large} it still functioned well
-with only a fraction of trainable parameters, under visual input it became practically useless. Similarly,
-\emph{PVE} also was not able to effectively function, which we suspect was for the same reason, which is the PPO network being too
-small to translate encodings into actions. Compared with \emph{ScE}, however, \emph{PVE} was super effective in encoding
-velocity as well, on levels similar to \emph{FcE}, or even better for position and control, hinting at being much
-more computationally efficient.
+instead, it performs worse. This was already prominent under our pixel-size inflation, and has now
+persisted in our visual input example. Similarly, we also were not able to effectively implement \emph{ScE}, such that
+it could show strong improvements over the other controllers. While it still functioned under \emph{large}, even though worse
+than the other controllers, with only a fraction of trainable parameters, under visual input it became practically useless, most likely due to
+its inability to encode velocity. \emph{PVE}, however, does encode velocity ($R^2 \approx 0.68$), and position and control
+even better than \emph{FcE}, with a much smaller extractor and a quarter of the training time. 
+In the end, the actor head failed to translate those encodings into the correct actions,
+which hints at the PPO network being too small, if the extractor is frozen before. This could have also contributed to 
+\emph{ScE}'s worse performance.
 
 Looking at the effect of noise, we again notice that parametric uncertainty affects already worse performing
 controllers generally more. For external disturbances, we observe a pattern under \emph{divergent} intensity, where \emph{ScE} and \emph{PVE} both
-degrade noticeably less than \emph{FcE} and \emph{OrB}, hinting at possibly more robustness with frozen extractors. 
+degrade noticeably less than \emph{FcE} and \emph{OrB}, which are not able to contain the mass in most of the episodes. A possible robustness
+stemming from the frozen extractors could be the case, but cannot be clearly attributed by our data.
 Under control noise, we find that controllers which can not coordinate their thrusters well, and waste more thrusts,
 are consequently more affected by it. Also, the trend that fully-parameterized controllers are less affected by it
 continues in our experiments. Finally, we notice, contrary to our previous findings, that controllers carrying a low-dimensional latent state
-do not show more robustness to measurement noise, as they mostly produce screen exists here.
+do not show more robustness to measurement noise, as the only lower absolute degradation of \emph{ScE} can be explained by ineffectiveness of the
+controller on the clean plant.
 
 Overall, based on our observations in this chapter, controllers containing a low-dimensional latent state,
 as well as far fewer trainable parameters, can be constructed using pretrained extractors. Making them perform
