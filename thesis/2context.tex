@@ -932,8 +932,6 @@ and instead reported separately. To define a diverging controller, we differenti
 Under the stronger noise conditions, individual episodes might still diverge, even
 though their controller was stable before. To keep our mean finite, we exclude them
 from the calculation, and report them separately as the divergence rate.
-% FROM DRAFT (before 2026-10-25): D(K; c) \coloneqq \frac{1}{M N} \lvert \{ (s, i) : J^{(i,s)}_T(K; c) = \infty \} \rvert, "where $M = 10$ is the number of seeds and $N = 100$ the number of episodes per seed."
-% TODO: Verify — (1) numerator now counts only episodes where K diverges and K^* stays finite (`n_diverged` in `aggregate._pooled_episodes`); both diverging counts as "no reference" (`n_reference_diverged`); (2) denominator uses the stable seeds \mathcal{S} (`n_episodes`), not M = 10; (3) new symbol \mathcal{S} (added to App. A); (4) no generated table currently shows a "diverged" or "no reference" row, so "we report their share separately" is not yet backed (C4-64)
 \begin{equation}
     \label{eq:divergence-rate}
     D(K; c) \coloneqq \frac{1}{\lvert \mathcal{S} \rvert\, N}

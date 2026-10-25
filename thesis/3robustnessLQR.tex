@@ -426,11 +426,27 @@ $\lambda_{\mathrm{medium}} = 400$ and $\eta_{\mathrm{medium}} = 3.5 \times 10^{-
 Looking at the time until convergence, as well as the achieved training suboptimality, we notice that \emph{MfS}
 produced under \emph{large} inflation a very expensive gain, while still not achieving a strong reduction in rank. As this was the same problem
 we observed during our parameter search (\cref{sec:app-spi-mf}), we accept it as an unsuccessful attempt and difficult to implement. Apart from
-this, it is noticeable that \emph{MfN} takes longer to converge the larger the inflation gets, with an increase from $167$ at \emph{base} to $610$ at \emph{large}.
+this, it is noticeable that \emph{MfN} takes longer to converge the larger the inflation gets, with an increase from $167$ at \emph{base} to $610$ at \emph{large} (\cref{tab:identified-iterations}).
 This makes it slower than \emph{IdS} and \emph{IdP}, where \emph{IdS} (at most $90$ across the sizes) again is still much faster than \emph{IdP} (around $350$). The fastest approach here is \emph{IdD}, as it only
 requires the identification step, and no iteration.
 
-% TODO: insert table with the median +- iterations per solver per size, rows are solvers, columns size
+\begin{table}[htbp]
+  \centering
+  \caption{Iterations until convergence of the solvers without the model, as mean and standard deviation over the ten seeds,
+  for each inflation size.}
+  \label{tab:identified-iterations}
+  \begin{tabular}{@{}lrrrr@{}}
+    \toprule
+    Solver & \emph{base} & \emph{small} & \emph{medium} & \emph{large} \\
+    \midrule
+    IdD & $1$            & $1$            & $1$             & $1$             \\
+    IdP & $346$          & $346 \pm 3$    & $346 \pm 1$     & $346$           \\
+    IdS & $34 \pm 1$     & $90 \pm 5$     & $76 \pm 0.3$      & $68$            \\
+    MfN & $167 \pm 9$    & $216 \pm 43$   & $356 \pm 46$    & $610 \pm 104$   \\
+    MfS & $368 \pm 58$   & $216 \pm 32$   & $186 \pm 116$   & $451 \pm 5$     \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 Looking at the policy sizes, we can see that \emph{IdS} indeed produces the smallest policy, with \emph{IdD}
 being slightly larger in some cases (\cref{fig:identified-across-sizes-complexity}), but still a lot smaller
@@ -444,9 +460,7 @@ than the full-rank gains.
 \end{figure}
 
 Analyzing the resulting test suboptimality, we see the expected worse performance of \emph{MfS} from \emph{medium} onwards, but also that the direct approaches
-underperform the indirect (identification) approaches. Here, we can also notice a difference: with increasing inflation size,
-\emph{MfN} trains for more iterations, with an increase from $167$ at \emph{base} to $610$ at \emph{large},
-while for the identification-based policies it stays similar. What also jumps out is that \emph{IdD} matches
+underperform the indirect (identification) approaches. What also jumps out is that \emph{IdD} matches
 the optimal performance within $2 \cdot 10^{-7}$ across every size (\cref{fig:identified-across-sizes-subopt}),
 indicating that N4SID is able to almost perfectly identify the underlying system.
 

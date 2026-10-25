@@ -457,7 +457,7 @@ persisted in our visual input example. Similarly, we also were not able to effec
 it could show strong improvements over the other controllers. While it still functioned under \emph{large}, even though worse
 than the other controllers, with only a fraction of trainable parameters, under visual input it became practically useless, most likely due to
 its inability to encode velocity. \emph{PVE}, however, does encode velocity ($R^2 \approx 0.68$), and position and control
-even better than \emph{FcE}, with a much smaller extractor and a quarter of the training time.
+even better than \emph{FcE}, with a much smaller extractor.
 In the end, the actor head failed to translate those encodings into the correct actions,
 which hints at the PPO network being too small, if the extractor is frozen before. This could have also contributed to
 \emph{ScE}'s worse performance.
@@ -477,4 +477,4 @@ as well as far fewer trainable parameters, can be constructed using pretrained e
 at suboptimalities similar to fully connected controllers however requires a careful selection of the actor size,
 as well as an effective encoding of all relevant properties. The latter is especially what matters when it comes
 to robustness. If both are fulfilled, it is probable that such a controller can outperform a full network, while being
-more space and training compute efficient.
+more space efficient.
