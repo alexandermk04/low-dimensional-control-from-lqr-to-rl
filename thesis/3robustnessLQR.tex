@@ -423,15 +423,14 @@ $\lambda_{\mathrm{medium}} = 400$ and $\eta_{\mathrm{medium}} = 3.5 \times 10^{-
 \subsection{Results}
 \label{subsec:unknown-model-results}
 
-% TODO - check values again
 Looking at the time until convergence, as well as the achieved training suboptimality, we notice that \emph{MfS}
 produced under \emph{large} inflation a very expensive gain, while still not achieving a strong reduction in rank. As this was the same problem
 we observed during our parameter search (\cref{sec:app-spi-mf}), we accept it as an unsuccessful attempt and difficult to implement. Apart from
-this, it is noticeable that \emph{MfN} takes longer to converge the larger the inflation gets, with an increase from $167$ at \emph{base} to $390$ at \emph{large}.
-This makes it slower than \emph{IdS} (around $25$) and \emph{IdP} (around $350$), where \emph{IdS} again is still much faster than \emph{IdP}. The fastest approach here is \emph{IdD}, as it only
+this, it is noticeable that \emph{MfN} takes longer to converge the larger the inflation gets, with an increase from $167$ at \emph{base} to $610$ at \emph{large}.
+This makes it slower than \emph{IdS} and \emph{IdP}, where \emph{IdS} (at most $90$ across the sizes) again is still much faster than \emph{IdP} (around $350$). The fastest approach here is \emph{IdD}, as it only
 requires the identification step, and no iteration.
 
-% here table?
+% TODO: insert table with the median +- iterations per solver per size, rows are solvers, columns size
 
 Looking at the policy sizes, we can see that \emph{IdS} indeed produces the smallest policy, with \emph{IdD}
 being slightly larger in some cases (\cref{fig:identified-across-sizes-complexity}), but still a lot smaller
@@ -465,8 +464,8 @@ indicating that N4SID is able to almost perfectly identify the underlying system
 Again, we investigate our system inflated to \emph{large} size and repeat our experiments from the
 true model section (\cref{subsec:true-model-noise}).
 
-We first start by taking a look at parametric uncertainty. As it is a multiplicative noise type, already
-worse performance is magnified even more. For \emph{MfS}, this can clearly be seen, as
+We first start by taking a look at parametric uncertainty. As it affects the model matrices directly, already
+worse performance on the clean plant is magnified even more if the dynamics change. For \emph{MfS}, this can clearly be seen, as
 under \emph{divergent} intensity, even the least relative degradation amounts to $7714$,
 with the majority being above $10^5$ (\cref{tab:noise-large-parametric}).
 
@@ -599,12 +598,13 @@ From our results, we can see that on the clean loop the identification-based app
 than the direct approaches, achieving a performance similar to that of the optimal controller. Here, \emph{IdD} seems to
 be the best solution, as it does not require any training iterations, achieves the lowest suboptimality,
 and is of a similar size as \emph{IdS}. When looking at our model-free approaches, nothing speaks in favor of them---they
-require more iterations, in the case of \emph{MfS} perform horribly on the clean loop and do not even
-achieve a rank reduction.
+require more iterations, and in the case of \emph{MfS} under \emph{large} inflation perform poorly on the clean loop, while not even
+achieving a strong rank reduction.
 
 This worse performance is then amplified under parametric uncertainty, penalizing them even
 more, while \emph{IdD}, \emph{IdP} and \emph{IdS} degrade the same as the baseline. External disturbance affects
-all controllers the same, so this is not something where direct approaches show more robustness.
+all indirect approaches the same; while for the direct approaches \emph{MfN} show more,
+and \emph{MfS} less robustness than those when judging from absolute degradation.
 
 When looking at control noise, it might seem like this is where \emph{MfS} is much more robust than the
 others, and \emph{MfN} slightly as well. But when taking a look at \cref{fig:identified-large-trajectories}, we
