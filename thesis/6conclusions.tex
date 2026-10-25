@@ -47,18 +47,18 @@ under the clean loop.
 
 Regarding the latent state, it is also important to ensure that not only control information is carried
 here, but also information about the observed state. Otherwise, robustness to control noise might worsen.
-In relation to that, we also note that a low degradation in control noise can also hint at a barely acting
-controller, and is not always a sign of robustness.
 
-Finally, control noise does affect low-dimensional controllers more than fully parameterized ones,
-which we observed across all experiments.
+In relation to that, we also note that a low degradation in control noise can also hint at a barely acting
+controller, and is not always a sign of robustness. Still, in our experiments, low-dimensional controllers 
+were affected slightly more by it than fully parameterized ones, which we observed across all experiments.
 
 \section{Summary of Contributions}
 \label{sec:contributions}
 
 We have presented that combining pretrained encoders with a trainable network
-can reduce both parameter count and training time, while noting common problems in relation to
-architecture design. Further, we showed that fully parameterized controllers offer indeed more
+can reduce the parameter count effectively on a toy example, while noting common problems in relation to
+architecture design. Failing to translate the success of it onto a vision-based problem brought
+additional pitfalls to light. Further, we showed that fully parameterized controllers offer, if even only slightly, more
 robustness to control noise, while for the other noise types we could only observe tendencies,
 which open possibilities for further research here.
 
