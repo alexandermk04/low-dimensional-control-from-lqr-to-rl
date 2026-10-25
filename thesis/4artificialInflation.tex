@@ -395,8 +395,9 @@ and better than \emph{OrB}, as it uses far fewer parameters than both.
 \section{Discussion}
 \label{sec:rl-discussion}
 
-What we notice in our experiments is that under \emph{large} inflation, larger policies generally perform better than smaller ones
-on the clean loop. \emph{FcE} and \emph{OrB} are nearly identical here, and also better than the other controllers if we look at the median,
+What we notice in our experiments is that under \emph{large} inflation, the largest policies (by the number of trainable parameters)
+generally perform better than smaller ones on the clean loop, with \emph{StE} being an exception.
+\emph{FcE} and \emph{OrB} are nearly identical here, and also better than the other controllers if we look at the median,
 which tells us that the low-dimensional latent state neither improves nor hurts performance here. What is indeed noticeable
 is that \emph{Lin}, which is much smaller than those, becomes more unstable the larger the inflation grows. However,
 if we take a look at \emph{StE}, which has only half the parameters of \emph{Lin} or \emph{MLP}, we can see that its performance beats both under the
@@ -410,10 +411,10 @@ available for training.
 
 Overall, we can see that a low-dimensional latent state does not generally guarantee performance or robustness improvement. Instead,
 under control noise more parameters generally help the controller stay slightly more robust. However, certain low-dimensional structures,
-especially pretrained, or model-informed ones, as seen in \emph{StE} or \emph{ScE}, can perform similarly to fully parameterized controllers, while
-cutting training time in half (\needcite{cref to table where mentioned}), and in the case of \emph{StE} also the parameter count (a reduction of more than $90\,\%$ compared to \emph{FcE} and \emph{OrB}).
+as seen with \emph{StE}, can perform similarly to fully parameterized controllers, while
+containing far fewer parameters (a reduction of more than $90\,\%$ compared to \emph{FcE} and \emph{OrB}).
 Especially under measurement noise and external disturbance, this low-dimensionality offers good robustness properties which are similar to
-larger controllers, and at or below the baseline. Under parametric uncertainty, all policies degrade similarly, except for 
+larger controllers, and at or below the baseline. Under parametric uncertainty, all policies degrade similarly, except for
 \emph{Lin}, which degrades less.
 
 Comparing that to our previous chapter, where we also already noticed that controllers with more parameters are more robust, this explains also
@@ -423,7 +424,7 @@ We can also see that the robustness in relation to measurement noise for low-dim
 however, it seems as if a very large number of parameters can compensate that.
 What also stands out is that a hybrid approach of pretraining a large extractor and then a smaller model is comparable with the indirect
 approaches of our previous chapter. Even closer is using the pseudoinverse of the output matrix like we did in \emph{StE}, which also
-performed great in relation to its parameter count and training time.
+performed great in relation to its parameter count.
 
 So, to conclude this chapter, we again emphasize that the low-dimensional architecture one chooses indeed plays a major
 role in whether the controller can achieve comparable performances, and how robust it is. However, as we have only validated
