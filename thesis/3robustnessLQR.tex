@@ -443,7 +443,7 @@ than the full-rank gains.
   \label{fig:identified-across-sizes-complexity}
 \end{figure}
 
-Analyzing the resulting test suboptimality, we see the expected worse performance of \emph{MfS}, but also that the direct approaches
+Analyzing the resulting test suboptimality, we see the expected worse performance of \emph{MfS} from \emph{medium} onwards, but also that the direct approaches
 underperform the indirect (identification) approaches. Here, we can also notice a difference: with increasing inflation size,
 \emph{MfN} trains for more iterations, with an increase from $167$ at \emph{base} to $610$ at \emph{large},
 while for the identification-based policies it stays similar. What also jumps out is that \emph{IdD} matches
@@ -598,13 +598,13 @@ From our results, we can see that on the clean loop the identification-based app
 than the direct approaches, achieving a performance similar to that of the optimal controller. Here, \emph{IdD} seems to
 be the best solution, as it does not require any training iterations, achieves the lowest suboptimality,
 and is of a similar size as \emph{IdS}. When looking at our model-free approaches, nothing speaks in favor of them---they
-require more iterations, and in the case of \emph{MfS} under \emph{large} inflation perform poorly on the clean loop, while not even
+require more iterations and, in the case of \emph{MfS} under \emph{large} inflation, perform poorly on the clean loop, while not even
 achieving a strong rank reduction.
 
 This worse performance is then amplified under parametric uncertainty, penalizing them even
 more, while \emph{IdD}, \emph{IdP} and \emph{IdS} degrade the same as the baseline. External disturbance affects
-all indirect approaches the same; while for the direct approaches \emph{MfN} show more,
-and \emph{MfS} less robustness than those when judging from absolute degradation.
+all indirect approaches the same, while among the direct approaches, \emph{MfN} shows more
+and \emph{MfS} less robustness than those, judging from the absolute degradation.
 
 When looking at control noise, it might seem like this is where \emph{MfS} is much more robust than the
 others, and \emph{MfN} slightly as well. But when taking a look at \cref{fig:identified-large-trajectories}, we
