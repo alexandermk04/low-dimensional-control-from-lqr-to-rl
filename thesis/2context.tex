@@ -719,7 +719,7 @@ Our second metric relates to robustness, and helps us evaluate how much a contro
 by a noise condition $c$. It is the ratio of the test cost under noise $c$ to the test cost under
 the clean loop, which we from now on will call \emph{relative degradation}. Formalized, this gives
 \begin{equation}
-    \label{eq:clean-ratio}
+    \label{eq:relative-degradation}
     \kappa^{(s)}(K; c) \coloneqq \frac{\hat{J}^{(s)}_T(K; c)}{\hat{J}^{(s)}_T(K; \varnothing)} ,
 \end{equation}
 where $\hat{J}^{(s)}_T$ is \eqref{eq:empirical-cost} containing only the episodes of seed $s$.
@@ -727,7 +727,7 @@ Thus, the closer $\kappa^{(s)}(K; c)$ is to $1$, the more robust a controller is
 We can also compare the relative degradation to the performance of the optimal gain, which we calibrated in \eqref{eq:noise-calibration}
 to specific ratios, by taking the ratio of the costs averaged over all seeds,
 \begin{equation}
-    \label{eq:clean-ratio-pooled}
+    \label{eq:relative-degradation-pooled}
     \kappa(K; c) \coloneqq \frac{\hat{J}_T(K; c)}{\hat{J}_T(K; \varnothing)} ,
 \end{equation}
 for which $\kappa_{\ell} = \kappa(K^{*}; c_{\ell})$ holds by \eqref{eq:noise-calibration}.
