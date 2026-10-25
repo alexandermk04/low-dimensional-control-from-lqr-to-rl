@@ -39,6 +39,7 @@ METRIC_LABELS = {
     "r2_velocity": r"Linear probe $R^2$, velocity",
     "r2_control": r"Linear probe $R^2$, optimal control",
     "off_screen_rate": r"Fraction of steps off screen",
+    "terminated_rate": r"Share of episodes exiting the screen",
     "null_waste_mean": r"Thrust wasted in the null space",
     "thruster_energy_mean": r"Thruster energy per step",
     "policy_complexity": r"Policy parameters",

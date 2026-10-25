@@ -320,8 +320,8 @@ than \emph{FcE} or \emph{OrB} is produced, which do not exit any episode early.
   \centering
   \begin{subfigure}[t]{0.49\linewidth}
     \centering
-    \generatedhalffigure{ch6_perception}{ch6_perception_off_screen_rate}
-    \caption{Fraction of agent steps with the mass outside the observable area.}
+    \generatedhalffigure{ch6_perception}{ch6_perception_terminated_rate}
+    \caption{Share of test episodes in which the mass exited the screen.}
     \label{fig:perc-off-screen}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.49\linewidth}
@@ -330,7 +330,7 @@ than \emph{FcE} or \emph{OrB} is produced, which do not exit any episode early.
     \caption{Thruster energy per agent step exceeding the least-norm allocation.}
     \label{fig:perc-null-waste}
   \end{subfigure}
-  \caption{Off-screen rate and wasted thrust of the PPO variants.}
+  \caption{Terminated episodes and wasted thrust of the PPO variants.}
   \label{fig:perc-off-screen-waste}
 \end{figure}
 

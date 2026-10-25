@@ -53,6 +53,7 @@ METRIC_ROWS = {
     "r2_velocity": (r"Probe $R^2$, velocity", "{:.3f}"),
     "r2_control": (r"Probe $R^2$, optimal control", "{:.3f}"),
     "iters_to_thresh_1pct": (r"Iterations to 1\,\%", "{:.0f}"),
+    "terminated_rate": (r"Episodes exiting the screen", "{:.3f}"),
 }
 
 DEFAULT_METRICS = ("J_final", "training_subopt_final", "subopt")
