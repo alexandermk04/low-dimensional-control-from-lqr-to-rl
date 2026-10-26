@@ -254,6 +254,27 @@ To maintain similarity to the previous experiments, we choose $27$ agent steps p
 corresponding to $810$ environment steps. The overall training step budget is chosen as $10^{7}$ agent steps.
 For one test episode we use $\lceil 2000/30 \rceil = 67$ agent steps, corresponding to $2010$ environment steps.
 
+\subsection{Additional metrics}
+\label{subsec:visual-inputs-metrics}
+
+With an increase in environment complexity, it becomes increasingly difficult to trace back performance
+to certain behaviors. To change that, we introduce two additional metrics for this chapter, which allow
+us to assess the quality of the encoded latent state, as well as a controllers ability to actuate effectively.
+
+Inspired by Jonschkowski et al. \needcite{Sec. C Jonschkowski2017PVE}, we implement a regression based probe on the latent
+state. To not replicate the exact setup from the PVE paper \needcite{Jonschkowski2017PVE}, which could potentially be
+biased, we instead rely on a construction similar to the one used by Alain and Bengio \needcite{AlainBengio}. We use
+Ridge Regression, due to its better performance with correlated predictors\needcite{HoerlKennard}, and collect pairs
+of the true- and the latent state over $20$ episodes with $27$ agent steps each post-training. We train with a ridge of $10^{-3}$
+on $70\%$ of the data, before calculating the squared residual $R^2$ for predictions of the true state (position, velocity) from
+the remaining $30\%$ of latent states. Similarly, we include the control command from the oracle during training and testing, to
+see how well the latent state correlates with control. Resultingly, an $R^2 \approx 1$ tells us that the latent state has encoded
+this feature linearly well \needcite{4.3, Lesort2018State}.
+
+A second metric we will use is unnecessary control input. As mentioned in \cref{subsec:pixelated-environment}, some thrusters
+have less effect than others on the mass. We define it as $\lVert v_k\rVert^2 - a_k^2/\lVert c\rVert^2$, which is excess
+thrust beyond the least-norm allocation, or differently said, how well it applies the control compared to the oracle controller.
+
 \subsection{Results}
 \label{subsec:visual-inputs-results}
 
@@ -292,10 +313,7 @@ spread out, having both episodes performing better than \emph{ScE}, but also som
 Putting the suboptimality into the context of example trajectories observed in \cref{fig:app-perc-trajectories}, we can see that \emph{PVE} is
 not controlling the mass at all and \emph{ScE} only slightly, with both failing to effectively move the mass.
 
-To effectively pinpoint the issues both \emph{PVE} and \emph{ScE} have, and attribute the success of \emph{FcE} and \emph{OrB} correctly, we
-evaluate how well the extractors of each approach linearly encode position, velocity and control in their latent state.
-For this, we use ridge regression on the representation of the latent state, and compare the results with the true state
-or the control commanded by the oracle. \Cref{tab:ch6-perception-probe} shows us that \emph{FcE} encodes both position and
+\Cref{tab:ch6-perception-probe} shows us that \emph{FcE} encodes both position and
 velocity fairly well from the observations, but not the control. Calculating a control input from these is then
 probably delegated to the PPO network, and the extractor is therefore only an encoder.
 For \emph{OrB}, we notice a difference here: The latent state correlates more with the actuation commanded by the controller,
