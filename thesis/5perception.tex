@@ -335,7 +335,7 @@ than \emph{FcE} or \emph{OrB} is produced, which do not exit any episode early.
 \end{figure}
 
 As a summary, we note that a low-dimensional latent layer can indeed produce effective encodings of the
-true state, with a much shorter training process. However, the complexity of the following network must
+true state, even with far fewer parameters. However, the complexity of the following network must
 allow this encoding to be translated back into action, which in our case it fails to do. This effect
 is even more enlarged if the extractor is frozen, and thus both parts are trained separately, and the
 majority of the training happens just on less than $1\,\%$ of the parameters. Increasing the complexity of

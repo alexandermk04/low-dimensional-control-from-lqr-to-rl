@@ -261,15 +261,15 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Abstract:
 \section*{Abstract}\label{sec:abstract}
-%\fancyhead[LE,RO]{\it Abstract}
+\fancyhead[LE,RO]{\it Abstract}
 %\addcontentsline{toc}{chapter}{\numberline{}Abstract}
 %Your English abstract here (mandatory if written in English and recommended otherwise).
-This thesis investigates the effect of low-dimensional structures in the control architectures for
+This thesis investigates the effects of low-dimensional structures in the control architectures for
 embodied agents, starting from simple LQR-based solvers and expanding to RL-approaches implemented using proximal
 policy optimization. As the basis serves the double integrator, which is first artificially overparameterized by
-having the controller act in a higher dimension and use projection matrices to apply control to the underlying
-system. Afterwards, we also introduce a system with camera-based observations and a more complex actuation structure.
-Throughout our experiments, we notice that low-dimensional systems are difficult to implement successfully, and
+having the controller observe and act in a higher dimension and use projection matrices to change between it and the
+dimension of the underlying system. Afterwards, we also introduce a system with camera-based observations and a more complex actuation structure.
+Throughout our experiments, we notice that low-dimensional controllers are difficult to implement successfully, and
 require careful consideration during design. However, if done right, a combination of fixed, pretrained encoders
 together with a smaller, longer trained actor can perform similarly to a fully connected one. In some cases
 we even notice improved robustness to measurement noise, but not under our perception-based experiments.
@@ -280,8 +280,21 @@ In comparison, a fully trained controller seems to be more robust to control noi
 \vfill
 \section*{Zusammenfassung}\label{sec:zusammenfassung}
 %\addcontentsline{toc}{chapter}{\numberline{}Zusammenfassung} %Add the Zusammenfassung to the TOC
-Hier die deutsche Zusammenfassung einf\"ugen (notwendig).
-\fancyhead[LE,RO]{\it Abstract}
+%Hier die deutsche Zusammenfassung einf\"ugen (notwendig).
+%\fancyhead[LE,RO]{\it Abstract}
+Diese Arbeit untersucht die Effekte von niederdimensionalen Strukturen in der Regelungsarchitektur von
+Agenten mit einem Körper. Hierfür beginnen wir mit LQR-basierten Reglern und erweitern unsere Ansätze
+danach zu Reinforcement Learning, für welches wir Proximal Policy Optimization verweden. Die Basis
+bildet der Doppelintegrator, welchen wir künstlich überparametrisieren, indem wir den Regler in einer
+höheren Dimension beaobachten und agieren lassen, und mit Hilfe von Projektionsmatrizen zwischen dieser
+und der echten Dimension des System transferieren. Danach stellen wir ein kamera-basiertes System vor,
+welches eine komplexere Motorenstruktur besitzt. In unseren Experimenten bemerken wir, dass es schwierig
+ist niederdimensionale Regler effektiv zu implementieren und in jedem Falle genaue Planung bei dem Aufbau
+benötigt. Wenn es jedoch gelingt, können Kombinationen aus statischen, vortrainierten Codierern und kleineren,
+länger trainierten neuronalen Netzen Leistungen erzielen, die vergleichbar mit einem ganzheitlich trainiertem
+Netz sind. In manchen Fällen beobachten wir auch bessere Resistenz gegenüber Messungsstörungen, allerdings nicht
+in unseren Kamera-basierten Experimenten. Entgegengesetzt scheint ein ganzheitlich trainierter Regler resistenter
+gegenüber Regelungsstörungen zu sein.
 
 \cleardoublepage
 
