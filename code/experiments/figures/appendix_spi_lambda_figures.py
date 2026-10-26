@@ -15,8 +15,7 @@ from experiments.figures.style import figure_dir, save, table_dir
 from experiments.figures.sweeps import median, choose, print_choice, sweep_tables
 from experiments.store import MissingExperimentError, load_experiment
 
-METRICS = ("J_final", "training_subopt_final", "rank_final", "test_cost_mean",
-           "iterations", "spectral_radius_final")
+METRICS = ("training_subopt_final", "rank_final", "iterations")
 
 # Rank of the optimal gain, which S-PI should recover
 TARGET_RANK = 1

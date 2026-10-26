@@ -83,7 +83,7 @@ def _percent(value: float) -> str:
     if not np.isfinite(value):
         return r"$\infty$"
     value = 100 * value
-    return f"{value:.0f}\\,\\%" if value >= 10 else f"{value:.2g}\\,\\%"
+    return f"${value:.0f}\\,\\%$" if value >= 10 else f"${value:.2g}\\,\\%$"
 
 
 def _grid_table(results: list[tuple]) -> str:
@@ -91,12 +91,12 @@ def _grid_table(results: list[tuple]) -> str:
     lines = [
         r"\begin{tabular}{rrrrrr}",
         r"\toprule",
-        r"$\varepsilon_{\mathrm{rel}}$ & $N_{\mathrm{p}}$ & $N_{\mathrm{w}}$ & budget used & median regret & max regret \\",
+        r"$\varepsilon_{\mathrm{rel}}$ & $N_{\mathrm{p}}$ & $N_{\mathrm{w}}$ & Budget used & Median regret & Max.\ regret \\",
         r"\midrule",
     ]
     for (rel_tol, patience, window), used, regrets in results:
         lines.append(
-            f"{rel_tol:g} & {patience} & {window} & {_percent(np.median(used))} & "
+            f"${rel_tol:g}$ & ${patience}$ & ${window}$ & {_percent(np.median(used))} & "
             f"{_percent(np.median(regrets))} & {_percent(np.max(regrets))} \\\\"
         )
     lines += [r"\bottomrule", r"\end{tabular}"]
@@ -108,9 +108,9 @@ def _cell_table(records, order) -> str:
     lines = [
         r"\begin{tabular}{llrrrr}",
         r"\toprule",
-        r"Solver & Size & best policy at & regret at "
-        f"{100 * LATE:.0f}\\,\\%"
-        r" & regret final & regret by $\bar{g}_j$ \\",
+        r"Solver & Size & Best policy at & Regret at "
+        f"${100 * LATE:.0f}\\,\\%$"
+        r" & Final regret & Regret by $\bar{g}_j$ \\",
         r"\midrule",
     ]
     for size in settings.CH5_INFLATION_SIZES:
