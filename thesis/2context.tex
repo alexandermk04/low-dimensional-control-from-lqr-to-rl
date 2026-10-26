@@ -818,7 +818,7 @@ $1.05$ at the sizes $d_{\mathrm{in}} \times d_{\mathrm{out}} = 50 \times 25$ and
 For simplicity, however, we do not vary the levels by size, but instead accept this
 as a side effect.
 The concrete standard deviations per channel are listed in
-\cref{tab:noise_levels}.
+\cref{tab:noise-levels}.
 
 \subsection{Test Protocol}
 \label{subsec:protocol}
@@ -833,9 +833,9 @@ which for the uninflated system is $K_0 = [\,0.1,\ 0.5\,]$, whose closed loop ha
 On an inflated system, we use
 \begin{equation}
     \label{eq:initial-gain}
-    \tilde{K}_0 = U_2\T K_0 U_1\T + N , \qquad U_2 N U_1 = 0 , \qquad \lVert N \rVert_F = 0.5 .
+    \tilde{K}_0 = U_2\T K_0 U_1\T + K_{\perp} , \qquad U_2 K_{\perp} U_1 = 0 , \qquad \lVert K_{\perp} \rVert_F = 0.5 .
 \end{equation}
-We create the random matrix $N$ such that $U_2 N U_1 = 0$, and thus adding it does not change
+We create the random matrix $K_{\perp}$ such that $U_2 K_{\perp} U_1 = 0$, and thus adding it does not change
 the stability property of the matrix. This way, the effective gain remains $U_2 \tilde{K}_0 U_1 = K_0$,
 while $\tilde{K}_0$ is full rank, which offers the possibility of rank reduction.
 
@@ -898,13 +898,14 @@ evaluate the current policy's performance, to track its training process.
         \toprule
         & \emph{small} & \emph{medium} & \emph{large} & \emph{pixel} \\
         \midrule
-        Budget (environment steps) & $10^{7}$ & $1.5 \cdot 10^{7}$ & $3 \cdot 10^{7}$ & $3 \cdot 10^{8}$\textsuperscript{$*$} \\
+        Budget (environment steps) & $10^{7}$ & $1.5 \cdot 10^{7}$ & $3 \cdot 10^{7}$ & $10^{7}$\textsuperscript{$*$} \\
         \bottomrule
     \end{tabular}
 
     \smallskip
     {\footnotesize \textsuperscript{$*$}In the camera environment of \cref{sec:pixel-env}, one step corresponds to one decision
-    of the agent, which is then held for $30$ environment steps. In agent steps, the above named value gives $3 \cdot 10^{7}$.\par}
+    of the agent, which is then held for $30$ environment steps. There, the step budget is $10^{7}$ agent steps, which equals
+    $3 \cdot 10^{8}$ environment steps.\par}
 \end{table}
 
 After our controllers have been trained, we evaluate them per seed for \emph{100 episodes}
@@ -1000,7 +1001,7 @@ output, that is in reality governed by low-dimensional dynamics.
 By inputting images into our existing solvers, the dimensionality increases drastically. To be able to cleanly separate effects caused
 by the nonlinearity of the image construction from architecture-related effects, we will first artificially inflate our inputs and outputs 
 to exactly the sizes that will later be used by the pixelated environment. This evaluation will only be done on \emph{ScE},
-\emph{MLP} and \emph{OrB}, as the other approaches either do not scale well or are not relevant to the comparison.
+\emph{MLP}, \emph{OrB} and \emph{FcE}, as the other approaches either do not scale well or are not relevant to the comparison.
 
 Then, using the same architectural constructions for these solvers, but applied to our new environment,
 we compare them with the additionally introduced position-velocity encoder~\cite{Jonschkowski2017PVE} followed by PPO (\emph{PVE}),
