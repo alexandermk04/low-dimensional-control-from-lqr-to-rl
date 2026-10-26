@@ -254,26 +254,37 @@ To maintain similarity to the previous experiments, we choose $27$ agent steps p
 corresponding to $810$ environment steps. The overall training step budget is chosen as $10^{7}$ agent steps.
 For one test episode we use $\lceil 2000/30 \rceil = 67$ agent steps, corresponding to $2010$ environment steps.
 
-\subsection{Additional metrics}
+\subsection{Additional Metrics}
 \label{subsec:visual-inputs-metrics}
 
 With an increase in environment complexity, it becomes increasingly difficult to trace back performance
 to certain behaviors. To change that, we introduce two additional metrics for this chapter, which allow
-us to assess the quality of the encoded latent state, as well as a controllers ability to actuate effectively.
+us to assess the quality of the encoded latent state, as well as a controller's ability to actuate effectively.
 
-Inspired by Jonschkowski et al. \needcite{Sec. C Jonschkowski2017PVE}, we implement a regression based probe on the latent
-state. To not replicate the exact setup from the PVE paper \needcite{Jonschkowski2017PVE}, which could potentially be
-biased, we instead rely on a construction similar to the one used by Alain and Bengio \needcite{AlainBengio}. We use
-Ridge Regression, due to its better performance with correlated predictors\needcite{HoerlKennard}, and collect pairs
-of the true- and the latent state over $20$ episodes with $27$ agent steps each post-training. We train with a ridge of $10^{-3}$
-on $70\%$ of the data, before calculating the squared residual $R^2$ for predictions of the true state (position, velocity) from
-the remaining $30\%$ of latent states. Similarly, we include the control command from the oracle during training and testing, to
-see how well the latent state correlates with control. Resultingly, an $R^2 \approx 1$ tells us that the latent state has encoded
-this feature linearly well \needcite{4.3, Lesort2018State}.
+Inspired by Jonschkowski et al.~\cite[Sec.~IV-C]{Jonschkowski2017PVE}, we implement a regression-based probe on the latent
+state. To not replicate the exact setup from the PVE paper~\cite{Jonschkowski2017PVE}, which uses a neural network as the probe,
+we instead rely on a stricter, yet simpler, construction similar to the one used by Alain and Bengio~\cite{Alain2017Understanding}. We use
+ridge regression, due to its better performance with correlated predictors~\cite{Hoerl1970Ridge}, and collect pairs
+of the true and the latent state over $20$ episodes with $27$ agent steps each post-training. We train with a ridge of $10^{-3}$
+on $70\,\%$ of the data, before computing the coefficient of determination on the remaining $30\,\%$ of steps $\mathcal{T}$,
+\begin{equation}
+  \label{eq:probe-r2}
+  R^2 = 1 - \frac{\sum_{k \in \mathcal{T}} (y_k - \hat{y}_k)^2}{\sum_{k \in \mathcal{T}} (y_k - \bar{y})^2},
+\end{equation}
+where $y_k$ is the true value, $\hat{y}_k$ the prediction from the latent state and $\bar{y}$ its mean over the training steps.
+Similarly, we compute it for control, using the command from the oracle as a true state surrogate.
+In total, an $R^2 = 1$ tells us that the latent state has encoded this feature perfectly linearly~\cite[Sec.~4.3]{Lesort2018State},
+while a value close to $0$ means that it is not better than just predicting the training mean.
 
-A second metric we will use is unnecessary control input. As mentioned in \cref{subsec:pixelated-environment}, some thrusters
-have less effect than others on the mass. We define it as $\lVert v_k\rVert^2 - a_k^2/\lVert c\rVert^2$, which is excess
-thrust beyond the least-norm allocation, or differently said, how well it applies the control compared to the oracle controller.
+A second metric we use is wasted energy via the control input. As mentioned in \cref{subsec:pixelated-environment}, the resulting actuation $u_k$
+is calculated via $u_k = c\T v_k$, where $v_k$ is the commanded actuation, and $c \coloneqq s\,[\cos\theta_0, \dots, \cos\theta_{255}]\T$, due to
+the construction of the thrusters. We compare the least-norm allocation $u_k\, c/\lVert c\rVert^2$ with the commanded input, to determine what
+amount of energy is directed into the null space of $c\T$, and thus never reaches the mass. The resulting equation, calculated for each test episode, is
+\begin{equation}
+  \label{eq:null-waste}
+  \lVert v_k\rVert^2 - \frac{u_k^2}{\lVert c\rVert^2},
+\end{equation}
+which is then averaged over all $100$ episodes.
 
 \subsection{Results}
 \label{subsec:visual-inputs-results}
