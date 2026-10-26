@@ -325,8 +325,8 @@ Putting the suboptimality into the context of example trajectories observed in \
 not controlling the mass at all and \emph{ScE} only slightly, with both failing to effectively move the mass.
 
 \Cref{tab:ch6-perception-probe} shows us that \emph{FcE} encodes both position and
-velocity fairly well from the observations, but not the control. Calculating a control input from these is then
-probably delegated to the PPO network, and the extractor is therefore only an encoder.
+velocity fairly well from the observations, but the control less so ($R^2 \approx 0.60$).
+Calculating a control input from these is then probably delegated to the PPO network, and the extractor is therefore mainly an encoder.
 For \emph{OrB}, we notice a difference here: The latent state correlates more with the actuation commanded by the controller,
 but not at all with position and velocity, indicating that its extractor moves the mentioned calculation before the latent projection.
 As we see that \emph{OrB} wastes some thrust energy in \cref{fig:perc-null-waste}, the size of the PPO head could be too little to perfectly
