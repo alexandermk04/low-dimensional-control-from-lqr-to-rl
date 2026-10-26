@@ -1,19 +1,17 @@
 \begin{table}[htbp]
 \centering
-\caption{ScE under \emph{medium} inflation, over the seeds. Stable counts the seeds whose controller left the plant stable and kept the mass contained in every test episode.}
+\caption{ScE under \emph{medium} inflation, mean and standard deviation over the seeds. Stable counts the seeds whose controller left the plant stable and kept the mass contained in every test episode.}
 \label{tab:appendix-rl-learning-rate-ppo-encoder-scalable-medium}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrr}
+\begin{tabular}{lrrr}
 \toprule
-Learning rate & 0.00013 & 4.5e-05 & 4.5e-06 & 1.3e-05 & 1.3e-06 \\
+Learning rate $\eta_0$ & Stable & Training suboptimality & Env.\ steps to best policy \\
 \midrule
-Stable & $3/3$ & $3/3$ & $3/3$ & $3/3$ & $2/3$ \\
-\midrule
-True cost $J$ & $6209 \pm 1021$ & $6893 \pm 1285$ & $7105 \pm 288.9$ & $6029 \pm 806.4$ & $8101 \pm 1180$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.089 \pm 0.0237$ & $0.223 \pm 0.267$ & $0.262 \pm 0.15$ & $0.0603 \pm 0.0127$ & $0.552 \pm 0.201$ \\
-Test cost & $6568 \pm 5712$ & $7373 \pm 6448$ & $8969 \pm 6684$ & $6346 \pm 5549$ & $9731 \pm 8864$ \\
-Env.\ steps to best policy & $1.14 \times 10^{7} \pm 2.85 \times 10^{6}$ & $9.99 \times 10^{6} \pm 1.82 \times 10^{6}$ & $9.5 \times 10^{6} \pm 2.29 \times 10^{6}$ & $1.05 \times 10^{7} \pm 1.36 \times 10^{6}$ & $1.41 \times 10^{7} \pm 3.01 \times 10^{5}$ \\
-Env.\ steps & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ \\
+$1.3 \times 10^{-6}$ & $2/3$ & $0.552 \pm 0.201$ & $(1.41 \pm 0.03) \times 10^{7}$ \\
+$4.5 \times 10^{-6}$ & $3/3$ & $0.262 \pm 0.150$ & $(9.49 \pm 2.29) \times 10^{6}$ \\
+$1.3 \times 10^{-5}$ & $3/3$ & $0.0603 \pm 0.0127$ & $(1.05 \pm 0.14) \times 10^{7}$ \\
+$4.5 \times 10^{-5}$ & $3/3$ & $0.223 \pm 0.267$ & $(9.99 \pm 1.82) \times 10^{6}$ \\
+$0.00013$ & $3/3$ & $0.0890 \pm 0.0237$ & $(1.14 \pm 0.29) \times 10^{7}$ \\
 \bottomrule
 \end{tabular}
 }

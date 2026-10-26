@@ -1,17 +1,17 @@
 \begin{table}[htbp]
 \centering
-\caption{OrB under \emph{medium} inflation, over the seeds.}
+\caption{OrB under \emph{medium} inflation, mean and standard deviation over the seeds.}
 \label{tab:appendix-rl-learning-rate-ppo-bottleneck-medium}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrr}
+\begin{tabular}{lrr}
 \toprule
-Learning rate & 0.00013 & 4.5e-05 & 1.3e-05 & 1.3e-06 & 4.5e-06 \\
+Learning rate $\eta_0$ & Training suboptimality & Env.\ steps to best policy \\
 \midrule
-True cost $J$ & $6310 \pm 579.5$ & $5983 \pm 816.2$ & $5980 \pm 861.8$ & $6540 \pm 1011$ & $6070 \pm 915.6$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.114 \pm 0.0676$ & $0.052 \pm 0.0161$ & $0.0507 \pm 0.0156$ & $0.148 \pm 0.0206$ & $0.0659 \pm 0.00559$ \\
-Test cost & $6708 \pm 6014$ & $6269 \pm 5633$ & $6275 \pm 5613$ & $7162 \pm 6196$ & $6367 \pm 5740$ \\
-Env.\ steps to best policy & $1.37 \times 10^{7} \pm 2.34 \times 10^{6}$ & $1.37 \times 10^{7} \pm 2.34 \times 10^{6}$ & $1.37 \times 10^{7} \pm 2.34 \times 10^{6}$ & $1.37 \times 10^{7} \pm 2.34 \times 10^{6}$ & $1.37 \times 10^{7} \pm 2.34 \times 10^{6}$ \\
-Env.\ steps & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ \\
+$1.3 \times 10^{-6}$ & $0.148 \pm 0.021$ & $(1.37 \pm 0.23) \times 10^{7}$ \\
+$4.5 \times 10^{-6}$ & $0.0659 \pm 0.0056$ & $(1.37 \pm 0.23) \times 10^{7}$ \\
+$1.3 \times 10^{-5}$ & $0.0507 \pm 0.0156$ & $(1.37 \pm 0.23) \times 10^{7}$ \\
+$4.5 \times 10^{-5}$ & $0.0520 \pm 0.0161$ & $(1.37 \pm 0.23) \times 10^{7}$ \\
+$0.00013$ & $0.114 \pm 0.068$ & $(1.37 \pm 0.23) \times 10^{7}$ \\
 \bottomrule
 \end{tabular}
 }

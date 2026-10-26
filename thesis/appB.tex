@@ -104,22 +104,15 @@ training suboptimality for all inflation sizes.
 \section{Step Size and Nuclear-Norm Weight of \emph{MfS}}
 \label{sec:app-spi-mf}
 
-Here, we show different combinations of values for the stepsize
-and $\lambda$ under \emph{large} inflation. Excluded are the tables
-for $\lambda = 400$, as no rank reduction could be observed ($\lambda$ too low),
-as well as $\lambda = 4 \times 10^{6}$, as here all produced
-controllers were unstable ($\lambda$ too high).
-
-From the remainders, we picked a value that exhibits rank reduction, while
+Here, we show different combinations of values for the step size
+and $\lambda$ under \emph{large} inflation (\cref{tab:appendix-spi-mf-large}).
+For $\lambda = 400$, no rank reduction could be observed ($\lambda$ too low),
+while for $\lambda = 4 \times 10^{6}$ every controller except those with the smallest step size
+was unstable ($\lambda$ too high).
+From the remaining values, we picked a combination that exhibits rank reduction, while
 at the same time having a low suboptimality.
-\Cref{tab:appendix-spi-mf-large-4000,tab:appendix-spi-mf-large-40000,tab:appendix-spi-mf-large-400000}
-show the results for the remaining values of $\lambda$.
 
-\input{generated/appendix_spi_mf/tables/appendix_spi_mf_large_4000.tex}
-
-\input{generated/appendix_spi_mf/tables/appendix_spi_mf_large_40000.tex}
-
-\input{generated/appendix_spi_mf/tables/appendix_spi_mf_large_400000.tex}
+\input{generated/appendix_spi_mf/tables/appendix_spi_mf_large.tex}
 
 \section{Parameters for the RL Solvers}
 \label{sec:app-rl-parameters}
@@ -139,7 +132,7 @@ All other parameters keep their default values.
     Parameter & SB3 default & Used here \\
     \midrule
     Discount factor $\gamma$ & $0.99$ & $0.999$ \\
-    Learning rate & $3 \cdot 10^{-4}$, constant & \cref{tab:app-rl-learning-rates}, annealed by \eqref{eq:lr-annealing} \\
+    Learning rate & $3 \times 10^{-4}$, constant & \cref{tab:app-rl-learning-rates}, annealed by \eqref{eq:lr-annealing} \\
     Target KL divergence & none & $0.02$ \\
     Initial log standard deviation & $0$ & $-2$ \\
     Orthogonal initialization & yes & no \\
@@ -153,7 +146,7 @@ All other parameters keep their default values.
 For each solver and inflation size, we train three seeds with each initial learning rate
 \begin{equation}
   \label{eq:app-rl-learning-rate-grid}
-  \eta_0 \in 3 \cdot 10^{-4} \sqrt{\frac{10}{d_{\mathrm{in}}}} \cdot \left\{ 0.01,\ \tfrac{1}{30},\ 0.1,\ \tfrac{1}{3},\ 1 \right\} ,
+  \eta_0 \in 3 \times 10^{-4} \sqrt{\frac{10}{d_{\mathrm{in}}}} \cdot \left\{ 0.01,\ \tfrac{1}{30},\ 0.1,\ \tfrac{1}{3},\ 1 \right\} ,
 \end{equation}
 rounded to two digits. The final rates were then chosen based on inspection of the training curves (\cref{tab:app-rl-learning-rates}).
 For \emph{Lin} under \emph{large} every gain becomes unstable during training (\cref{fig:app-rl-learning-rate-ppo-linear-large}).
@@ -166,12 +159,12 @@ For \emph{Lin} under \emph{large} every gain becomes unstable during training (\
     \toprule
     Solver & \emph{small} & \emph{medium} & \emph{large} \\ 
     \midrule
-    Lin & $1 \cdot 10^{-4}$ & $4.5 \cdot 10^{-6}$ & $2.2 \cdot 10^{-6}$ \\
-    OrB & $3 \cdot 10^{-5}$ & $4.5 \cdot 10^{-5}$ & $6.7 \cdot 10^{-6}$ \\
-    StE & $1 \cdot 10^{-4}$ & $4.5 \cdot 10^{-5}$ & $6.7 \cdot 10^{-6}$ \\
-    ScE & $1 \cdot 10^{-4}$ & $1.3 \cdot 10^{-5}$ & $2.2 \cdot 10^{-6}$ \\
-    MLP & $3 \cdot 10^{-5}$ & $1.3 \cdot 10^{-5}$ & $6.7 \cdot 10^{-6}$ \\
-    FcE & $3 \cdot 10^{-5}$ & $1.3 \cdot 10^{-5}$ & $6.7 \cdot 10^{-6}$ \\
+    Lin & $10^{-4}$ & $4.5 \times 10^{-6}$ & $2.2 \times 10^{-6}$ \\
+    OrB & $3 \times 10^{-5}$ & $4.5 \times 10^{-5}$ & $6.7 \times 10^{-6}$ \\
+    StE & $10^{-4}$ & $4.5 \times 10^{-5}$ & $6.7 \times 10^{-6}$ \\
+    ScE & $10^{-4}$ & $1.3 \times 10^{-5}$ & $2.2 \times 10^{-6}$ \\
+    MLP & $3 \times 10^{-5}$ & $1.3 \times 10^{-5}$ & $6.7 \times 10^{-6}$ \\
+    FcE & $3 \times 10^{-5}$ & $1.3 \times 10^{-5}$ & $6.7 \times 10^{-6}$ \\
     \bottomrule
   \end{tabular}
 \end{table}

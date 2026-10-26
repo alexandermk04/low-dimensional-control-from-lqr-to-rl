@@ -1,17 +1,17 @@
 \begin{table}[htbp]
 \centering
-\caption{MLP under \emph{medium} inflation, over the seeds.}
+\caption{MLP under \emph{medium} inflation, mean and standard deviation over the seeds.}
 \label{tab:appendix-rl-learning-rate-ppo-mlp-medium}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrr}
+\begin{tabular}{lrr}
 \toprule
-Learning rate & 0.00013 & 4.5e-05 & 4.5e-06 & 1.3e-06 & 1.3e-05 \\
+Learning rate $\eta_0$ & Training suboptimality & Env.\ steps to best policy \\
 \midrule
-True cost $J$ & $7089 \pm 1171$ & $6568 \pm 680.5$ & $6735 \pm 857.2$ & $7143 \pm 1049$ & $6523 \pm 748.1$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.243 \pm 0.0366$ & $0.158 \pm 0.0519$ & $0.185 \pm 0.0225$ & $0.255 \pm 0.0377$ & $0.15 \pm 0.0592$ \\
-Test cost & $8091 \pm 6306$ & $7315 \pm 6040$ & $7205 \pm 6250$ & $7670 \pm 6793$ & $7276 \pm 6000$ \\
-Env.\ steps to best policy & $1.22 \times 10^{7} \pm 3 \times 10^{6}$ & $1.43 \times 10^{7} \pm 6.3 \times 10^{5}$ & $1.22 \times 10^{7} \pm 3 \times 10^{6}$ & $1.22 \times 10^{7} \pm 3 \times 10^{6}$ & $1.22 \times 10^{7} \pm 3 \times 10^{6}$ \\
-Env.\ steps & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ \\
+$1.3 \times 10^{-6}$ & $0.255 \pm 0.038$ & $(1.22 \pm 0.30) \times 10^{7}$ \\
+$4.5 \times 10^{-6}$ & $0.185 \pm 0.022$ & $(1.22 \pm 0.30) \times 10^{7}$ \\
+$1.3 \times 10^{-5}$ & $0.150 \pm 0.059$ & $(1.22 \pm 0.30) \times 10^{7}$ \\
+$4.5 \times 10^{-5}$ & $0.158 \pm 0.052$ & $(1.43 \pm 0.06) \times 10^{7}$ \\
+$0.00013$ & $0.243 \pm 0.037$ & $(1.22 \pm 0.30) \times 10^{7}$ \\
 \bottomrule
 \end{tabular}
 }

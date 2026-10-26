@@ -1,18 +1,18 @@
 \begin{table}[htbp]
 \centering
-\caption{IdS under \emph{large} inflation, over the seeds.}
+\caption{IdS under \emph{large} inflation, mean and standard deviation over the seeds.}
 \label{tab:appendix-spi-lambda-spi-est-large}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrr}
 \toprule
-$\lambda$ & 1 & 5 & 20 & 50 & 200 & 1000 \\
+$\lambda$ & Training suboptimality & Gain rank & Iterations \\
 \midrule
-True cost $J$ & $5848 \pm 0.0004728$ & $5849 \pm 0.001213$ & $5861 \pm 0.006368$ & $5904 \pm 0.0148$ & $6184 \pm 0.04361$ & $7277 \pm 0.1081$ \\
-Training suboptimality $(J-J^*)/J^*$ & $7.06 \times 10^{-6} \pm 8.09 \times 10^{-8}$ & $0.000165 \pm 2.07 \times 10^{-7}$ & $0.00213 \pm 1.09 \times 10^{-6}$ & $0.00951 \pm 2.53 \times 10^{-6}$ & $0.0574 \pm 7.46 \times 10^{-6}$ & $0.244 \pm 1.85 \times 10^{-5}$ \\
-Gain rank & $1.0$ & $1.0$ & $1.0$ & $1.0$ & $1.0$ & $1.0$ \\
-Test cost & $5968 \pm 5272$ & $5969 \pm 5273$ & $5981 \pm 5284$ & $6025 \pm 5322$ & $6313 \pm 5572$ & $7433 \pm 6535$ \\
-Iterations & $68$ & $60$ & $59$ & $60$ & $44 \pm 2$ & $31 \pm 2$ \\
-Spectral radius & $0.9914 \pm 0.0000$ & $0.9917 \pm 0.0000$ & $0.9924 \pm 0.0000$ & $0.9933 \pm 0.0000$ & $0.9953 \pm 0.0000$ & $0.9974 \pm 0.0000$ \\
+$10^{0}$ & $(7.06 \pm 0.08) \times 10^{-6}$ & $1.0$ & $68$ \\
+$5 \times 10^{0}$ & $1.65 \times 10^{-4}$ & $1.0$ & $60$ \\
+$2 \times 10^{1}$ & $0.00213$ & $1.0$ & $59$ \\
+$5 \times 10^{1}$ & $0.00951$ & $1.0$ & $60$ \\
+$2 \times 10^{2}$ & $0.0574$ & $1.0$ & $44 \pm 2$ \\
+$10^{3}$ & $0.244$ & $1.0$ & $31 \pm 2$ \\
 \bottomrule
 \end{tabular}
 }

@@ -1,19 +1,17 @@
 \begin{table}[htbp]
 \centering
-\caption{MfN under \emph{base} inflation, over the seeds.}
+\caption{MfN under \emph{base} inflation, mean and standard deviation over the seeds. Times to $1\,\%$ average over the seeds that reach it. Stable counts the seeds whose controller left the plant stable and kept the mass contained in every test episode.}
 \label{tab:appendix-learning-rate-mf-npg-base}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrr}
+\begin{tabular}{lrrrr}
 \toprule
-Learning rate & 0.001 & 0.003 & 0.01 & 0.03 & 0.1 \\
+Learning rate $\eta$ & Stable & Training suboptimality & Env.\ steps & Env.\ steps to $1\,\%$ \\
 \midrule
-True cost $J$ & $5910 \pm 29.05$ & $5850 \pm 1.592$ & $5868 \pm 5.293$ & $5886 \pm 2.704$ & $5891 \pm 1.541$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.0106 \pm 0.00497$ & $0.000243 \pm 0.000272$ & $0.00334 \pm 0.000905$ & $0.00652 \pm 0.000462$ & $0.00728 \pm 0.000264$ \\
-Test cost & $6031 \pm 5326$ & $5970 \pm 5274$ & $5988 \pm 5290$ & $6007 \pm 5307$ & $6012 \pm 5311$ \\
-Iterations & $969 \pm 114$ & $604 \pm 51$ & $348 \pm 38$ & $228 \pm 36$ & $167 \pm 9$ \\
-Iterations to 1\,\% & $919 \pm 2$ & $306 \pm 2$ & $92 \pm 1$ & $30 \pm 1$ & $8 \pm 0$ \\
-Env.\ steps to 1\,\% & $1.84 \times 10^{8} \pm 3.93 \times 10^{5}$ & $6.15 \times 10^{7} \pm 3.89 \times 10^{5}$ & $1.85 \times 10^{7} \pm 1.41 \times 10^{5}$ & $6.14 \times 10^{6} \pm 1.35 \times 10^{5}$ & $1.86 \times 10^{6} \pm 9.66 \times 10^{4}$ \\
-Env.\ steps & $1.94 \times 10^{8} \pm 2.28 \times 10^{7}$ & $1.21 \times 10^{8} \pm 1.01 \times 10^{7}$ & $6.96 \times 10^{7} \pm 7.67 \times 10^{6}$ & $4.55 \times 10^{7} \pm 7.25 \times 10^{6}$ & $3.34 \times 10^{7} \pm 1.82 \times 10^{6}$ \\
+$0.001$ & $10/10$ & $0.0106 \pm 0.0050$ & $(1.94 \pm 0.23) \times 10^{8}$ & $1.84 \times 10^{8}$ \\
+$0.003$ & $10/10$ & $(2.43 \pm 2.72) \times 10^{-4}$ & $(1.21 \pm 0.10) \times 10^{8}$ & $(6.15 \pm 0.04) \times 10^{7}$ \\
+$0.01$ & $10/10$ & $0.00334 \pm 0.00091$ & $(6.96 \pm 0.77) \times 10^{7}$ & $(1.85 \pm 0.01) \times 10^{7}$ \\
+$0.03$ & $10/10$ & $0.00652 \pm 0.00046$ & $(4.55 \pm 0.72) \times 10^{7}$ & $(6.14 \pm 0.13) \times 10^{6}$ \\
+$0.1$ & $10/10$ & $0.00728 \pm 0.00026$ & $(3.34 \pm 0.18) \times 10^{7}$ & $(1.86 \pm 0.10) \times 10^{6}$ \\
 \bottomrule
 \end{tabular}
 }

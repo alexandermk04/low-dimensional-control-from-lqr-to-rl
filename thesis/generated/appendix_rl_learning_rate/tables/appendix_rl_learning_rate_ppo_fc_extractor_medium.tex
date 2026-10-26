@@ -1,17 +1,17 @@
 \begin{table}[htbp]
 \centering
-\caption{FcE under \emph{medium} inflation, over the seeds.}
+\caption{FcE under \emph{medium} inflation, mean and standard deviation over the seeds.}
 \label{tab:appendix-rl-learning-rate-ppo-fc-extractor-medium}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrr}
+\begin{tabular}{lrr}
 \toprule
-Learning rate & 0.00013 & 4.5e-05 & 1.3e-05 & 4.5e-06 & 1.3e-06 \\
+Learning rate $\eta_0$ & Training suboptimality & Env.\ steps to best policy \\
 \midrule
-True cost $J$ & $5959 \pm 871.6$ & $5911 \pm 897.2$ & $5897 \pm 862.2$ & $5992 \pm 877.4$ & $6280 \pm 943.2$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.0468 \pm 0.00112$ & $0.0379 \pm 0.00841$ & $0.0359 \pm 0.00204$ & $0.0526 \pm 0.00328$ & $0.103 \pm 0.0133$ \\
-Test cost & $6256 \pm 5573$ & $6189 \pm 5518$ & $6171 \pm 5526$ & $6295 \pm 5629$ & $6766 \pm 5944$ \\
-Env.\ steps to best policy & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ \\
-Env.\ steps & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ & $1.5 \times 10^{7}$ \\
+$1.3 \times 10^{-6}$ & $0.103 \pm 0.013$ & $1.50 \times 10^{7}$ \\
+$4.5 \times 10^{-6}$ & $0.0526 \pm 0.0033$ & $1.50 \times 10^{7}$ \\
+$1.3 \times 10^{-5}$ & $0.0359 \pm 0.0020$ & $1.50 \times 10^{7}$ \\
+$4.5 \times 10^{-5}$ & $0.0379 \pm 0.0084$ & $1.50 \times 10^{7}$ \\
+$0.00013$ & $0.0468 \pm 0.0011$ & $1.50 \times 10^{7}$ \\
 \bottomrule
 \end{tabular}
 }

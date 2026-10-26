@@ -1,0 +1,42 @@
+\begin{table}[htbp]
+\centering
+\caption{MfS per nuclear-norm weight $\lambda$ and step size $\eta$ under \emph{small} inflation, mean and standard deviation over the stable seeds. Stable counts the seeds whose controller left the plant stable and kept the mass contained in every test episode.}
+\label{tab:appendix-spi-mf-small}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{llrrr}
+\toprule
+$\lambda$ & Step size $\eta$ & Stable & Training suboptimality & Gain rank \\
+\midrule
+$4 \times 10^{1}$ & $3.5 \times 10^{-8}$ & $10/10$ & $0.683 \pm 0.166$ & $5.0$ \\
+ & $3.5 \times 10^{-7}$ & $10/10$ & $0.302 \pm 0.013$ & $5.0$ \\
+ & $3.5 \times 10^{-6}$ & $10/10$ & $0.105 \pm 0.003$ & $5.0$ \\
+ & $3.5 \times 10^{-5}$ & $10/10$ & $0.00806 \pm 0.01455$ & $5.0$ \\
+ & $3.5 \times 10^{-4}$ & $10/10$ & $1.17 \pm 0.03$ & $5.0$ \\
+\midrule
+$4 \times 10^{2}$ & $3.5 \times 10^{-8}$ & $10/10$ & $0.683 \pm 0.166$ & $5.0$ \\
+ & $3.5 \times 10^{-7}$ & $10/10$ & $0.306 \pm 0.012$ & $5.0$ \\
+ & $3.5 \times 10^{-6}$ & $10/10$ & $0.120 \pm 0.006$ & $4.9 \pm 0.3$ \\
+ & $3.5 \times 10^{-5}$ & $10/10$ & $0.00784 \pm 0.00620$ & $2.4 \pm 1.1$ \\
+ & $3.5 \times 10^{-4}$ & $10/10$ & $1.17 \pm 0.03$ & $5.0$ \\
+\midrule
+$4 \times 10^{3}$ & $3.5 \times 10^{-8}$ & $10/10$ & $0.686 \pm 0.165$ & $5.0$ \\
+ & $3.5 \times 10^{-7}$ & $10/10$ & $0.357 \pm 0.010$ & $5.0$ \\
+ & $3.5 \times 10^{-6}$ & $10/10$ & $0.400 \pm 0.010$ & $1.0$ \\
+ & $3.5 \times 10^{-5}$ & $10/10$ & $0.349 \pm 0.164$ & $1.0$ \\
+ & $3.5 \times 10^{-4}$ & $10/10$ & $1.17 \pm 0.03$ & $5.0$ \\
+\midrule
+$4 \times 10^{4}$ & $3.5 \times 10^{-8}$ & $10/10$ & $0.683 \pm 0.028$ & $4.9 \pm 0.3$ \\
+ & $3.5 \times 10^{-7}$ & $10/10$ & $5.64 \pm 0.71$ & $1.0$ \\
+ & $3.5 \times 10^{-6}$ & $10/10$ & $15.0 \pm 5.7$ & $1.0$ \\
+ & $3.5 \times 10^{-5}$ & $3/10$ & $12.0 \pm 12.1$ & $1.0$ \\
+ & $3.5 \times 10^{-4}$ & $10/10$ & $1.17 \pm 0.03$ & $5.0$ \\
+\midrule
+$4 \times 10^{5}$ & $3.5 \times 10^{-8}$ & $0/10$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+ & $3.5 \times 10^{-7}$ & $0/10$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+ & $3.5 \times 10^{-6}$ & $0/10$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+ & $3.5 \times 10^{-5}$ & $0/10$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+ & $3.5 \times 10^{-4}$ & $0/10$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

@@ -1,0 +1,42 @@
+\begin{table}[htbp]
+\centering
+\caption{MfS per nuclear-norm weight $\lambda$ and step size $\eta$ under \emph{medium} inflation, mean and standard deviation over the stable seeds. Stable counts the seeds whose controller left the plant stable and kept the mass contained in every test episode.}
+\label{tab:appendix-spi-mf-medium}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{llrrr}
+\toprule
+$\lambda$ & Step size $\eta$ & Stable & Training suboptimality & Gain rank \\
+\midrule
+$4 \times 10^{1}$ & $3.5 \times 10^{-8}$ & $10/10$ & $0.682 \pm 0.158$ & $25.0$ \\
+ & $3.5 \times 10^{-7}$ & $10/10$ & $0.300 \pm 0.003$ & $25.0$ \\
+ & $3.5 \times 10^{-6}$ & $10/10$ & $0.121 \pm 0.006$ & $25.0$ \\
+ & $3.5 \times 10^{-5}$ & $10/10$ & $0.129 \pm 0.352$ & $25.0$ \\
+ & $3.5 \times 10^{-4}$ & $10/10$ & $1.13$ & $25.0$ \\
+\midrule
+$4 \times 10^{2}$ & $3.5 \times 10^{-8}$ & $10/10$ & $0.682 \pm 0.158$ & $25.0$ \\
+ & $3.5 \times 10^{-7}$ & $10/10$ & $0.305 \pm 0.003$ & $25.0$ \\
+ & $3.5 \times 10^{-6}$ & $10/10$ & $0.138 \pm 0.004$ & $25.0$ \\
+ & $3.5 \times 10^{-5}$ & $10/10$ & $1.02 \pm 0.35$ & $24.2 \pm 2.5$ \\
+ & $3.5 \times 10^{-4}$ & $10/10$ & $1.13$ & $25.0$ \\
+\midrule
+$4 \times 10^{3}$ & $3.5 \times 10^{-8}$ & $10/10$ & $0.686 \pm 0.157$ & $25.0$ \\
+ & $3.5 \times 10^{-7}$ & $10/10$ & $0.367 \pm 0.005$ & $19.4 \pm 1.4$ \\
+ & $3.5 \times 10^{-6}$ & $10/10$ & $0.535 \pm 0.015$ & $7.1 \pm 3.2$ \\
+ & $3.5 \times 10^{-5}$ & $10/10$ & $1.13$ & $25.0$ \\
+ & $3.5 \times 10^{-4}$ & $10/10$ & $1.13$ & $25.0$ \\
+\midrule
+$4 \times 10^{4}$ & $3.5 \times 10^{-8}$ & $10/10$ & $0.692 \pm 0.006$ & $17.8 \pm 0.6$ \\
+ & $3.5 \times 10^{-7}$ & $10/10$ & $13.5 \pm 1.1$ & $3.7 \pm 2.5$ \\
+ & $3.5 \times 10^{-6}$ & $10/10$ & $66.6 \pm 79.5$ & $1.0$ \\
+ & $3.5 \times 10^{-5}$ & $5/10$ & $4.27 \pm 1.12$ & $1.2 \pm 0.4$ \\
+ & $3.5 \times 10^{-4}$ & $9/10$ & $1.78 \pm 1.95$ & $22.3 \pm 8.0$ \\
+\midrule
+$4 \times 10^{5}$ & $3.5 \times 10^{-8}$ & $0/10$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+ & $3.5 \times 10^{-7}$ & $0/10$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+ & $3.5 \times 10^{-6}$ & $0/10$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+ & $3.5 \times 10^{-5}$ & $0/10$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+ & $3.5 \times 10^{-4}$ & $0/10$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
