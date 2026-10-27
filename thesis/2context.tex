@@ -212,7 +212,7 @@ Using this as our definition, $J$ becomes well defined for every gain.
 \label{subsubsec:lqr-optimal}
 
 What makes the LQR problem special is that its solution is a static linear feedback
-law: the optimal input at time $k$ depends only on the current state of the model.
+law~\cite[p.~26, Eq.~(6.4)]{Werner2021Optimal}: the optimal input at time $k$ depends only on the current state of the model.
 Introducing a gain matrix $K \in \R^{m \times n}$, we write it as%
 \footnote{Note that the minus in front of $K$ has been chosen as the convention for this thesis.
 This turns our closed loop into the format $A - BK$, while some referenced literature
@@ -226,12 +226,12 @@ Our controller is thus reduced to choosing a matrix, and the
 optimal controller is given by the optimal gain matrix $K^{*}$.
 
 As we are dealing with a discrete-time system, that gain is obtained from the
-\emph{discrete algebraic Riccati equation} (DARE)
+\emph{discrete algebraic Riccati equation} (DARE)~\cite[Sec.~4, Eq.~(4.2)]{Recht2019Tour}
 \begin{equation}
     \label{eq:dare}
     P = A\T P A - A\T P B \left( R + B\T P B \right)^{-1} B\T P A + Q ,
 \end{equation}
-whose stabilizing solution $P = P\T \succeq 0$ yields
+whose stabilizing solution $P = P\T \succeq 0$ yields~\cite[Sec.~4]{Recht2019Tour}
 \begin{equation}
     \label{eq:optimal-gain}
     K^{*} = \left( R + B\T P B \right)^{-1} B\T P A ,
@@ -239,7 +239,7 @@ whose stabilizing solution $P = P\T \succeq 0$ yields
     u_k^{*} = -K^{*} x_k .
 \end{equation}
 The matrix $P$ is additionally our
-\emph{cost-to-go} matrix, meaning that we can use it to calculate the optimal cost 
+\emph{cost-to-go} matrix~\cite[Sec.~1, Eq.~(1)]{Fazel2018Global}, meaning that we can use it to calculate the optimal cost 
 incurred from any state $x$ onwards with
 \begin{equation}
     \label{eq:cost-to-go}
@@ -273,7 +273,7 @@ Fix a gain $K$ and write the resulting closed loop as
 $x_{k+1} = A_K x_k$ with $A_K \coloneqq A - BK$. Substituting
 \eqref{eq:feedback-law} into \eqref{eq:lqr-cost-infinite} shows that the cost is
 again a quadratic form, $J(x_0, K) = x_0\T P_K x_0$, where $P_K$ now solves
-the far simpler discrete \emph{Lyapunov equation}
+the far simpler discrete \emph{Lyapunov equation}~\cite[Sec.~2.1]{Fazel2018Global}
 \begin{equation}
     \label{eq:lyapunov}
     P_K = A_K\T P_K A_K + Q + K\T R K ,
@@ -290,9 +290,9 @@ outside of which we set the cost to $+\infty$, consistent with the remark after
 One dependency remains, namely on the initial state. Evaluating the gain
 based on a single $x_0$ would reward gains that happen to fit that one
 point, so we instead draw the initial state from a distribution,
-$x_0 \sim \mathcal{D}$, and average. Writing
+$x_0 \sim \mathcal{D}$, and average~\cite[Sec.~3]{Fazel2018Global}. Writing
 $\Sigma_0 \coloneqq \E_{x_0 \sim \mathcal{D}}[x_0 x_0\T]$ for its second moment,
-the objective becomes
+the objective~\cite[Sec.~2.1]{Fazel2018Global} becomes
 \begin{equation}
     \label{eq:cost-of-gain}
     f(K) \coloneqq \E_{x_0 \sim \mathcal{D}} \left[ x_0\T P_K x_0 \right]
@@ -333,7 +333,7 @@ M{\"u}ller and Hoffmann~\cite[p.~4]{Mueller2017Morphological} mention such a com
 climbing up walls, whose design was inspired by geckos, indeed using energy for control, however
 very little compared to an approach not exploiting this specific embodiment design. Further, it can
 be seen that the complex
-behaviors are not only less energy-intensive to produce, but also utilize muscle
+behaviors are not only less energy-intensive to produce~\cite[p.~4]{Mueller2017Morphological}, but also utilize muscle
 synergies~\cite{DAvella2003Combinations} and thus fewer control parameters. And while it is
 difficult to clearly attribute the effect of the embodiment~\cite{Zahedi2013Quantifying}, for us,
 this gives reason to believe that the simplicity, and thus efficiency, comes from a
@@ -964,8 +964,8 @@ approaches, we will use numerical algorithms for subspace state-space system ide
 trajectory. A more detailed description, as well as the exact parameters selected,
 will be provided in the sections discussing the setup. With this estimated model as
 the basis, we employ three different approaches, called N4SID + DARE (\emph{IdD}), N4SID + Model-based PG (\emph{IdP}) and N4SID + S-PI (\emph{IdS}).
-They will be complemented by Model-free NPG (\emph{MfN}) and model-free S-PI (\emph{MfS}), which are
-direct solvers and estimate the gradient from episode rollouts~\cite{Fazel2018Global}.
+They will be complemented by Model-free Natural Policy Gradient (\emph{MfN})~\cite{Fazel2018Global} and model-free S-PI (\emph{MfS})~\cite{Park2020Structured},
+which are direct solvers and estimate the gradient from episode rollouts.
 All these will also be discussed in \cref{chap:lqr}.
 
 In \cref{chap:inflation}, we will then first introduce RL-based approaches. With proximal policy optimization
