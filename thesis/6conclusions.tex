@@ -32,7 +32,7 @@
 \section{Conclusions}
 \label{sec:conclusions}
 
-In this thesis we have shown that simply enforcing low-dimensional structures or latent layers does not
+In this thesis, we have shown that simply enforcing low-dimensional structures or latent layers does not
 improve the performance of controllers for overparameterized systems; instead, it might even hurt performance. However,
 when combining sufficiently pretrained latent projectors with the right controller architecture, they can
 achieve similar performances to fully connected networks, while being more efficient in their parameter count
@@ -41,15 +41,15 @@ further investigation.
 
 We further found conflicting results on whether low-dimensional latent states
 can improve robustness to measurement noise. While for LQR solvers and model-informed
-\emph{StE} this holds true, for the camera environment, we could not clearly observe that. This however might
-be related to the first point, where our RL approaches showed already bad performance
+\emph{StE} this holds true, for the camera environment, we could not clearly observe that. This, however, might
+be related to the first point, where our RL approaches already showed bad performance
 under the clean loop.
 
 Regarding the latent state, it is also important to ensure that not only control information is carried
 here, but also information about the observed state. Otherwise, robustness to control noise might worsen.
 
-In relation to that, we also note that a low degradation in control noise can also hint at a barely acting
-controller, and is not always a sign of robustness. Still, in our experiments, low-dimensional controllers 
+In relation to that, we also note that a low degradation under control noise can also hint at a barely acting
+controller, and is not always a sign of robustness. Still, in our experiments, low-dimensional controllers
 were affected slightly more by it than fully parameterized ones, which we observed across all experiments.
 
 \section{Summary of Contributions}
@@ -57,23 +57,23 @@ were affected slightly more by it than fully parameterized ones, which we observ
 
 We have presented that combining pretrained encoders with a trainable network
 can reduce the parameter count effectively on a toy example, while noting common problems in relation to
-architecture design. Failing to translate the success of it onto a vision-based problem brought
-additional pitfalls to light. Further, we presented that fully parameterized controllers offer, if even only slightly, more
+architecture design. Failing to translate its success to a vision-based problem brought
+additional pitfalls to light. Further, we presented that fully parameterized controllers offer, if only slightly, more
 robustness to control noise, while for the other noise types we could only observe tendencies,
 which open possibilities for further research here.
 
 \section{Limitations}
 \label{sec:limitations}
 
-Throughout our experiments we noticed multiple times how variable metrics across seeds are. While we intended to mitigate
+Throughout our experiments, we noticed multiple times how variable metrics across seeds are. While we intended to mitigate
 this by using multiple seeds, in some cases relying only on the median might not be as expressive as it should be. Additionally,
 by excluding diverging seeds, we might have unintentionally improved the values for these controllers.
 
-What is also important to note, is the setup for \cref{chap:perception}. Here, due to the simplicity of the camera setup, as well as
-the extrapolation of learning rates instead of calibration, the quality of the results has suffered. Including the high percentage of
-exits during episodes here, as well as non-functional controllers using pre-trained encoders, it is difficult to draw much from these
-experiments. While these decisions taken were mostly caused by time constraints of this thesis, it would be interesting to repeat them
-in a more appropriate complexity in the future.
+What is also important to note is the setup for \cref{chap:perception}. Here, due to the simplicity of the camera setup, as well as
+the extrapolation of learning rates instead of calibration, the quality of the results has suffered. Given the high percentage of
+exits during episodes here, as well as non-functional controllers using pretrained encoders, it is difficult to draw much from these
+experiments. While these decisions were mostly caused by time constraints of this thesis, it would be interesting to repeat these experiments
+at a more appropriate complexity in the future.
 
 \section{Future Research}
 \label{sec:future-research}
@@ -85,7 +85,7 @@ and discussion. These include, but are not limited to, whether:
 	\item and how the number of parameters can be distributed more effectively between
 	the extractor and the actor, to achieve performances comparable to a fully connected network;
 	\item improving the imaging setup leads to better position and velocity encodings for fully trained networks;
-	\item our results hold for more complex systems, e.g. a walking humanoid robot;
+	\item our results hold for more complex systems, e.g., a walking humanoid robot;
 	\item these findings are transferable to real-world applications, i.e., if this setup
 	were built and tested.
 \end{enumerate}

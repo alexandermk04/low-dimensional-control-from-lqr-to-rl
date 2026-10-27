@@ -2,19 +2,19 @@
 \label{chap:introduction}
 
 For a robot, our world is a messy place, consisting of a multitude of variables, all influencing what a correct behavior would
-be at any given moment. Understandably, newer, larger models have equated to better (at least theoretical) performance,
-both in vision~\cite{Dehghani2023Scaling}, as well as continuous control~\cite{Nauman2024Bigger,Lee2025SimBa}.
+be at any given moment. Understandably, newer, larger models have led to better (at least theoretical) performance,
+both in vision~\cite{Dehghani2023Scaling} and in continuous control~\cite{Nauman2024Bigger,Lee2025SimBa}.
 However, when transferring them over from training in a digital environment to an actual embodiment, not only do limitations
 in memory space and energy usage arise~\cite[p.~7]{Roy2021MachineLearning}, but the real world also behaves slightly differently, which the
 controller needs to be robust against~\cite{Tobin2017Domain,Peng2018SimToReal}. So ideally, we should
 remove unnecessary parameters, while still maintaining enough to help us adapt to variable environments. This leaves us with the question:
 \emph{How does enforcing low-dimensional structures in controllers for embodied agents affect their performance and robustness to noise?}
 
-Inspired by nature, embodiment has been shown that complex behavior can be expressed by simple control architectures if combined with
+Inspired by nature, research has shown that complex behavior can be expressed by simple control architectures if combined with
 the right embodiment~\cite{McGeer1990Passive,Mueller2017Morphological}. However, finding this simple architecture remains difficult
 as an embodiment might offer a large number of sensors and actuators, which outnumber the dimension governing the underlying dynamics~\cite{Todorov2002Optimal,Lesort2018State}.
-Synergizing parameters, like in muscles do in nature~\cite{DAvella2003Combinations}, is thus the goal for a controller.
-And while low-dimensionality for embodied agents have been studied before~\cite{Montufar2015CheapControl,Datar2025Universal},
+Synergizing parameters, like muscles do in nature~\cite{DAvella2003Combinations}, is thus the goal for a controller.
+And while low-dimensionality for embodied agents has been studied before~\cite{Montufar2015CheapControl,Datar2025Universal},
 the robustness of such controllers has, to our knowledge, not yet been investigated systematically, starting from
 simple linear controllers, moving on to more complex ones based on reinforcement learning (RL),
 and ending with perception-based agents acting in simulated environments.
@@ -23,13 +23,13 @@ This is where we aim to contribute.
 To be able to quantify performance and optimality, we rely on a very well-researched example~\cite{Kalman1960Contributions,Hu2023Toward}: the linear quadratic regulator (LQR), which,
 together with some related work, we will introduce in \cref{chap:background}. We use the well-known double integrator~\cite{Rao2001Naive} as our environment,
 and artificially inflate it to higher input and output dimensions via projection for our controllers to train on, to simulate overparameterization.
-In \cref{chap:lqr} we compare LQR-based approaches on this system, followed by introducing noise to the environment during testing
-and compare the robustness between the trained controllers. The next step consists of moving from these simpler, gain-matrix-based controllers
+In \cref{chap:lqr}, we compare LQR-based approaches on this system, followed by introducing noise to the environment during testing
+and comparing the robustness between the trained controllers. The next step consists of moving from these simpler, gain-matrix-based controllers
 to RL approaches based on proximal policy optimization~\cite{Schulman2017Proximal} (\cref{chap:inflation}), while still
 maintaining our optimal controller from before as the comparison. Robustness evaluations are a part of this again. Finally, in \cref{chap:perception},
 we inflate the system even further to dimensions matching our next experiment. Through a simulated environment, still based on the double integrator,
-which will be observed by a camera, and influenced by multiple differently angled thrusters, we introduce more realism. We again introduce noise
-in a second step here, which allows us to understand the behavior of low-dimensional controllers throughout our experiments better.
+which will be observed by a camera and influenced by multiple differently angled thrusters, we introduce more realism. We again introduce noise
+in a second step here, which allows us to better understand the behavior of low-dimensional controllers throughout our experiments.
 We conclude in \cref{chap:conclusion} with our findings that low-dimensional structures are difficult to implement
-with a performance gain, and often lead to worse results, which however could be caused by our controller design. Possible future experiments,
+with a performance gain and often lead to worse results, which, however, could be caused by our controller design. Possible future experiments,
 related to those limitations, are also proposed.
