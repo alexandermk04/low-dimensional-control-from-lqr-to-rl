@@ -1,59 +1,35 @@
 \chapter{Introduction}
 \label{chap:introduction}
 
-
-% The introduction describes the problem, why it is important, the main
-% ideas of the thesis, what are the main contributions of the
-% thesis, etc. The introduction is the most important part of your thesis because it answers the question of why you are researching your topic at all. The introduction does not only motivate your thesis, it also justifies it. 
-% Compared to the rest of your thesis, it is a very short text, but this text should be extremely well-written and clear. It deserves a lot of polishing. If the introduction is boring or not well written, a reader (and your supervisor who will finally grade your thesis) will most likely not have fun reading your work. The introduction (together with abstract and title) is the ``bait'' to get your reader, your supervisor and your reviewer hooked.
-
-% The introduction should be a short version of the whole thesis, with a focus on motivation. A good introduction is structured as follows:
-
-% \begin{enumerate}
-% \item It should start with a brief motivational problem outline to set the stage, e.g., ``It is important to build intelligent robots. A popular method to build intelligent robots is X. However, X has problem Y.''
-
-% \item It should then contain a specific formulation of your research question (RQ). For a good description of how to formulate a research question, consider \url{https://www.scribbr.com/research-process/research-questions/}. E.g.: ``Problem Y has not yet been addressed sufficiently by other researchers, so how can we extend X to address Y?''
-
-% \item In addition to your research question, you can (but don't have to) state a specific hypothesis: 
-% ``I hypothesize that we can address Y by extending X with Z.'' It is important that you also say how you plan to validate your hypothesis. For example, if you do an empirical investigation, write something like ``I will validate my hypothesis by measuring ... with experiment ...''. If you write a more formal thesis, you might want to prove a certain theorem, so you could write ``I will validate my hypothesis by proving that ...''
-
-% \item The RQ and hypothesis should be followed by a very brief (one-two sentences) summary of how you want to address the question, i.e., the methods and evaluation metrics you want to use, highlighting your research contributions with respect to the state of the art. 
-% Herein, you should also refer to the individual sections in your paper to give the reader a brief outline. 
-% ``The review of the related work in Section 2 of this paper shows that method Q has not yet been investigated as a solution to problem X. As a novel contribution, I will address this hypothesis / RQ by implementing Z using method Q, as described in Section 3. I will evaluate the results by measuring V, as described in Section 4.'' (Note that you might not have a Section 4 if you do not conduct empirical research  but focus on theory instead.)
-
-% \item You should conclude with a sentence like this: ``I conclude in Section 5, by highlighting that extending X with Z indeed achieves Y, but only if W holds.'' 
-
-% \end{enumerate}
-% It does not matter whether you use ``I'' or ``We''. It does matter, however, that you use the same pronoun consistently.
-
-% My part
 For a robot, our world is a messy place, consisting of a multitude of variables, all influencing what a correct behavior would
-be at any given moment. Rightfully, newer, larger controller models have equated to better (at least theoretical) performance~\cite{Nauman2024Bigger,Lee2025SimBa,Dehghani2023Scaling}.
+be at any given moment. Understandably, newer, larger models have equated to better (at least theoretical) performance,
+both in vision~\cite{Dehghani2023Scaling}, as well as continuous control~\cite{Nauman2024Bigger,Lee2025SimBa}.
 However, when transferring them over from training in a digital environment to an actual embodiment, not only do limitations
 in memory space and energy usage arise~\cite[p.~7]{Roy2021MachineLearning}, but the real world also behaves slightly differently, which the
 controller needs to be robust against~\cite{Tobin2017Domain,Peng2018SimToReal}. So ideally, we should
-remove unnecessary parameters, while still maintaining those helping us adapt to variable environments. This leaves us with the question:
+remove unnecessary parameters, while still maintaining enough to help us adapt to variable environments. This leaves us with the question:
 \emph{How does enforcing low-dimensional structures in controllers for embodied agents affect their performance and robustness to noise?}
 
-Inspired by nature, it has been shown that more complex behavior can be expressed by simple control architectures if combined with
+Inspired by nature, embodiment has been shown that complex behavior can be expressed by simple control architectures if combined with
 the right embodiment~\cite{McGeer1990Passive,Mueller2017Morphological}. However, finding this simple architecture remains difficult
 as an embodiment might offer a large number of sensors and actuators, which outnumber the dimension governing the underlying dynamics~\cite{Todorov2002Optimal,Lesort2018State}.
-Synergizing these, like in nature~\cite{DAvella2003Combinations}, is thus the goal here.
-And while low-dimensional controllers for embodied agents have been studied before~\cite{Montufar2015CheapControl,Datar2025Universal},
+Synergizing parameters, like in muscles do in nature~\cite{DAvella2003Combinations}, is thus the goal for a controller.
+And while low-dimensionality for embodied agents have been studied before~\cite{Montufar2015CheapControl,Datar2025Universal},
 the robustness of such controllers has, to our knowledge, not yet been investigated systematically, starting from
 simple linear controllers, moving on to more complex ones based on reinforcement learning (RL),
 and ending with perception-based agents acting in simulated environments.
 This is where we aim to contribute.
 
-To be able to quantify performance and what optimal means, we rely on a very well-researched example~\cite{Kalman1960Contributions,Hu2023Toward}: the linear quadratic regulator, which,
-together with some related work, we will introduce in \cref{chap:background}.
-We use the also well-known double integrator as our environment, and artificially produce higher input and output dimensions via projection for our
-controllers to train on, to simulate overparameterization like mentioned above in \cref{chap:lqr}. Then, we will introduce noise to the environment during testing
-and compare the robustness between them. The next step consists of moving from these simpler, gain-matrix-based controllers
+To be able to quantify performance and optimality, we rely on a very well-researched example~\cite{Kalman1960Contributions,Hu2023Toward}: the linear quadratic regulator (LQR), which,
+together with some related work, we will introduce in \cref{chap:background}. We use the well-known double integrator~\cite{Rao2001Naive} as our environment,
+and artificially inflate it to higher input and output dimensions via projection for our controllers to train on, to simulate overparameterization.
+In \cref{chap:lqr} we compare LQR-based approaches on this system, followed by introducing noise to the environment during testing
+and compare the robustness between the trained controllers. The next step consists of moving from these simpler, gain-matrix-based controllers
 to RL approaches based on proximal policy optimization~\cite{Schulman2017Proximal} (\cref{chap:inflation}), while still
-maintaining our optimal controller from before as the comparison. Robustness evaluations are a part of this again. Finally, we move to an
-example closer to reality in \cref{chap:perception}, by introducing a real simulated environment, still based on the double integrator,
-which however will be observed by a camera, and influenced by multiple thrusters, which differ from each other. Again introducing noise
-in a second step here, this allows us to understand the behavior of low-dimensional controllers better, as we slowly increase the complexity
-of the setup throughout. We end this thesis in \cref{chap:conclusion} by discussing our findings, pointing out limitations of our work, before outlining possible
-future directions.
+maintaining our optimal controller from before as the comparison. Robustness evaluations are a part of this again. Finally, in \cref{chap:perception},
+we inflate the system even further to dimensions matching our next experiment. Through a simulated environment, still based on the double integrator,
+which will be observed by a camera, and influenced by multiple differently angled thrusters, we introduce more realism. We again introduce noise
+in a second step here, which allows us to understand the behavior of low-dimensional controllers throughout our experiments better.
+We conclude in \cref{chap:conclusion} with our findings that low-dimensional structures are difficult to implement
+with a performance gain, and often lead to worse results, which however could be caused by our controller design. Possible future experiments,
+related to those limitations, are also proposed.

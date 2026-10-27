@@ -58,9 +58,22 @@ were affected slightly more by it than fully parameterized ones, which we observ
 We have presented that combining pretrained encoders with a trainable network
 can reduce the parameter count effectively on a toy example, while noting common problems in relation to
 architecture design. Failing to translate the success of it onto a vision-based problem brought
-additional pitfalls to light. Further, we showed that fully parameterized controllers offer, if even only slightly, more
+additional pitfalls to light. Further, we presented that fully parameterized controllers offer, if even only slightly, more
 robustness to control noise, while for the other noise types we could only observe tendencies,
 which open possibilities for further research here.
+
+\section{Limitations}
+\label{sec:limitations}
+
+Throughout our experiments we noticed multiple times how variable metrics across seeds are. While we intended to mitigate
+this by using multiple seeds, in some cases relying only on the median might not be as expressive as it should be. Additionally,
+by excluding diverging seeds, we might have unintentionally improved the values for these controllers.
+
+What is also important to note, is the setup for \cref{chap:perception}. Here, due to the simplicity of the camera setup, as well as
+the extrapolation of learning rates instead of calibration, the quality of the results has suffered. Including the high percentage of
+exits during episodes here, as well as non-functional controllers using pre-trained encoders, it is difficult to draw much from these
+experiments. While these decisions taken were mostly caused by time constraints of this thesis, it would be interesting to repeat them
+in a more appropriate complexity in the future.
 
 \section{Future Research}
 \label{sec:future-research}
@@ -72,14 +85,14 @@ and discussion. These include, but are not limited to, whether:
 	\item and how the number of parameters can be distributed more effectively between
 	the extractor and the actor, to achieve performances comparable to a fully connected network;
 	\item improving the imaging setup leads to better position and velocity encodings for fully trained networks;
-	\item our results, such as better robustness to measurement noise of low-dimensional LQR controllers, might hold
-	for more complex systems, i.e. a walking humanoid robot;
+	\item our results hold for more complex systems, e.g. a walking humanoid robot;
 	\item these findings are transferable to real-world applications, i.e., if this setup
-	were built and tested;
+	were built and tested.
 \end{enumerate}
 
-Finally, we also want to mention that, while these are interesting directions, the data produced from
-our experiments still offers a lot of possibilities for additional analysis. For example,
+Finally, we also want to mention that, while these are interesting directions, the data collected
+in our experiments permits additional analysis. For example,
 while we captured the compute time and environment steps needed, a different angle could include
-this in the evaluation of the approaches. And while it seems like our conclusions
-leave us with more questions than we started with, this is what research is for.
+this in the evaluation of the approaches. Taken together with the limitations mentioned, we believe
+that while we found low-dimensional controllers to perform worse,
+there is more research to be done on this topic.
