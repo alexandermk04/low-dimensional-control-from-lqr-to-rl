@@ -212,7 +212,7 @@ Using this as our definition, $J$ becomes well defined for every gain.
 \label{subsubsec:lqr-optimal}
 
 What makes the LQR problem special is that its solution is a static linear feedback
-law~\cite[p.~26, Eq.~(6.4)]{Werner2021Optimal}: the optimal input at time $k$ depends only on the current state of the model.
+law~\cite[Sec.~4]{Recht2019Tour}: the optimal input at time $k$ depends only on the current state of the model.
 Introducing a gain matrix $K \in \R^{m \times n}$, we write it as%
 \footnote{Note that the minus in front of $K$ has been chosen as the convention for this thesis.
 This turns our closed loop into the format $A - BK$, while some referenced literature
@@ -314,7 +314,7 @@ In other words, the agent is a function in relation to its environment, and to f
 behavior, we need to approximate this optimal function as closely as possible. While neural networks
 are known to be universal approximators~\cite{Cybenko1989Approximation,Hornik1989Multilayer}, and
 hence able to approximate any function, in the case of an embodied agent, different constraints need to
-be taken into account. Ay~\cite{Ay2015Geometric} names additionally to external embodiment constraints
+be taken into account. Ay~\cite[p.~392]{Ay2015Geometric} names additionally to external embodiment constraints
 possible intrinsic constraints, and argues that such can even be ``beneficial'' for the control
 structure. By the core notion of cheap design, embodiment can help produce complex
 behaviors while only needing smaller controllers~\cite{Pfeifer2006HowBody}, which
@@ -348,7 +348,7 @@ for achieving $90\,\%$ of the performance of a fully connected network on MNIST,
 the dimensionality can be reduced by $99.6\,\%$. For a convolutional neural
 network, it is still a $99.3\,\%$ reduction.
 Others show that the ``least complex model which is able to learn
-an optimal policy does learn faster''~\cite{Montufar2015Geometry}. For a neural network, being
+an optimal policy does learn faster''~\cite[Sec.~6]{Montufar2015Geometry}. For a neural network, being
 more parameter-efficient can be done in different ways, some of which we look at in
 \cref{chap:inflation}. In comparison, for LQR, where the controller is a gain matrix, the
 corresponding approach is reducing its rank, for example via a nuclear-norm regularization~\cite{Recht2010Guaranteed}.
@@ -358,7 +358,7 @@ noise~\cite{Datar2025Universal}.
 
 Robustness to noise, however, is one of the important characteristics of controllers acting under
 real-world conditions~\cite{Rao2001Naive,Roy2021MachineLearning}. One approach to achieving this
-in nature is the principle of ``redundancy and diversity''~\cite{Kitano2004Biological}, which stands
+in nature is the principle of ``redundancy and diversity''~\cite[p.~828]{Kitano2004Biological}, which stands
 in direct contrast to our goal of reducing redundant parameterizations. Another reason for producing
 robust controllers is the difficult transfer from a digital training environment to real-world
 embodiments, commonly referred to as the ``reality gap''~\cite{Tobin2017Domain,Peng2018SimToReal}.
@@ -413,7 +413,7 @@ and therefore requires approaches for mitigating them~\cite{Dean2020Robust}.
 Our goal for this thesis is therefore to look a bit deeper at the combination of low-dimensionality
 and robustness in an empirical way, motivated by the findings of Datar and Ay~\cite{Datar2025Universal}. LQR
 serves as the perfect, well-investigated basis~\cite{Recht2019Tour}, offering low-rank approaches that have been proposed
-and analyzed theoretically, but have not yet been applied in practice and under noise~\cite{Park2020Structured}. Previously
+and analyzed theoretically, but have not yet been applied in practice and under noise~~\cite[Sec.~4]{Park2020Structured}. Previously
 investigated policies for LQR under noise in comparison did not look at low-dimensionality
 specifically~\cite{Zhang2021Policy}.
 For RL, low-dimensionality has been explored

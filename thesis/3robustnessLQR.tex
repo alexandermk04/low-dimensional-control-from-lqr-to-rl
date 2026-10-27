@@ -28,7 +28,7 @@ $\Sigma_{K_j}$ then follows from solving a second Lyapunov equation,
     \Sigma_{K_j} = (A - B K_j) \Sigma_{K_j} (A - B K_j)\T + \Sigma_0 ,
 \end{equation}
 where, for initial states drawn uniformly from $[-10, 10] \times [-1, 1]$ as described in \cref{subsec:protocol},
-the second moment is $\Sigma_0 = \operatorname{diag}\left( 10^2/3, \, 1^2/3 \right)$. The policy gradient
+the second moment is $\Sigma_0 = \operatorname{diag}\left( 10^2/3, \, 1^2/3 \right)$. The policy gradient~\cite[Lemma~1]{Fazel2018Global}
 \begin{equation}
     \label{eq:pg-gradient}
     \nabla f(K_j) = 2 \left( \left( R + B\T P_{K_j} B \right) K_j - B\T P_{K_j} A \right) \Sigma_{K_j}
@@ -77,7 +77,7 @@ with small adaptations in the following way.
 % Def mb_spi
 We reuse the computation of the gradient $\nabla f(K_j)$ from \cref{alg:mb-pg}.
 For inducing the structure, we optimize the regularized cost $f(K) + \lambda \lVert K \rVert_{*}$,
-where the nuclear norm $\lVert \cdot \rVert_{*}$ can be reduced by eliminating singular values of $K$,
+where the nuclear norm $\lVert \cdot \rVert_{*}$ can be reduced by eliminating singular values of $K$\cite[Sec.~2.2]{Park2020Structured},
 and $\lambda$ is its weight in the whole cost. It further uses an adaptive learning rate,
 combined with a line search criterion, consisting of a stability and a sufficient decrease condition.
 Starting from the initial step size $\eta = 1 / (2 \lambda)$, following the paper's recommendation of $\mathcal{O}(1/\lambda)$,
@@ -125,7 +125,7 @@ stopped earlier if the criterion $\lVert K_{j+1} - K_j \rVert_F < \varepsilon$ i
 \end{algorithm}
 
 As one can see, there are a lot of parameters that can be modified here. We set $\varepsilon = 10^{-8}$,
-and use the same $\beta = 0.5$ as in the experiments section of Park et al.~\cite{Park2020Structured}.
+and use the same $\beta = 0.5$ as in the experiments section of Park et al.~\cite[Sec.~4.2]{Park2020Structured}.
 For $\lambda$, as it defines the learning rate as well, we have run an experiment with various values,
 which can be found in \cref{sec:app-spi-lambda}. A value of $\lambda = 5$ has shown the most promising results across the sizes.
 
@@ -258,7 +258,7 @@ introduced by Van Overschee and De Moor~\cite{VanOverschee1994N4SID}, uses ``the
 onto the past and future inputs and the past outputs''~\cite[Sec.~3]{VanOverschee1994N4SID}. These projections can then be
 described as ``a function of the system matrices and the input-output block Hankel matrices''~\cite[Sec.~3]{VanOverschee1994N4SID}, which
 allows us to reconstruct exactly that from the results. Important are further the assumptions that the systems are
-observable and controllable~\cite[pp.~127--128]{Werner2021Control}. For simplicity, we rely on the
+observable and controllable~\cite[Sec.~2.1]{VanOverschee1994N4SID}. For simplicity, we rely on the
 implementation of N4SID from SIPPY~\cite{SIPPY2026N4SID}, which we integrate into our own setup. This implementation allows us
 to recover estimates $A_{\mathrm{id}}$, $B_{\mathrm{id}}$ and $C_{\mathrm{id}}$ of the system matrices, whereas the cost
 matrices $\tilde{Q}$ and $\tilde{R}$ are choices of the controller design (\cref{subsec:protocol}), and thus already known beforehand. To the identified matrices
@@ -282,7 +282,7 @@ sampled excitation added on top of it,
     \qquad k = 0, \dots, T - 1 .
 \end{equation}
 
-The paper mentions that the approximation error becomes smaller as the number of block rows of the Hankel matrices
+The paper mentions that a part of the result becomes exact as the number of block rows of the Hankel matrices
 grows~\cite[Sec.~5.3]{VanOverschee1994N4SID}. With the number of columns being dependent on our trajectory length $T$,
 we aim to find the best combination of both. Denoting the number of block rows as the ``Hankel horizon'', we evaluated different
 combinations to find the optimal setting to use in our experiment. The full results of the selection can be found in
@@ -405,8 +405,8 @@ and $\lambda$, we define our learning loop in \cref{alg:mf-spi}.
 \end{algorithm}
 
 Now to the selection of the parameters. Park et al.\ already note the difficulty of finding a fixed step size
-that does not produce divergence of the method~\cite{Park2020Structured}. Also, the example shown only
-uses the model-based approach and the regularizer to induce sparse structure, not the model-free variant combined
+that does not produce divergence of the method~\cite[Sec.~3.2]{Park2020Structured}. Also, the example shown only
+uses the model-based approach and the regularizer to induce sparse structure\cite[Sec.~4]{Park2020Structured}, not the model-free variant combined
 with low dimensionality. So during our first tests, we often ran into either unstable controllers, or ones that
 did not induce any structure at all, hinting at a $\lambda$ that is too low. If we remember the proximal step
 \eqref{eq:spi-prox}, we can see that it depends on both the step size and $\lambda$, as every singular value is
@@ -642,7 +642,7 @@ the cost. In this case, it seems to help reduce its degradation.
 One interesting thing however remains. Again, for measurement noise, \emph{IdS} seems to sit slightly
 below \emph{IdP}, hinting again at a better resistance of smaller policies to measurement noise,
 like we hypothesized in \cref{subsec:noise-large-inflation}. One might say that \emph{MfS} also shows this; however,
-this is incorrect. Based on the nearly non-existent size reduction, and the difficulties controlling
+this is incorrect. Based on the small size reduction, and the difficulties controlling
 the mass under the clean loop, it would be an inconsistent comparison. But, comparing \emph{IdS} to
 \emph{IdP} and \emph{MfN}, we can indeed see that \emph{IdS} is slightly more robust to measurement noise, while
 being much smaller than those other two.
@@ -658,7 +658,7 @@ As we have noticed, direct approaches perform generally worse, and require more 
 with a mixed approach of system identification and policy iteration. Unbeaten is clearly \emph{IdD}, which
 requires just the system identification step, and performs on par with the optimal controller throughout.
 
-As this system is a very simple case, and system identification is not scalable to larger inflation as we
-show in \cref{chap:perception}, we cannot rely on these approaches for real-world applications. We
+As this system is a very simple case, and system identification is not scalable to larger inflation
+(as we will mention in \cref{chap:perception}), we cannot rely on these approaches for real-world applications. We
 therefore take these learnings and indications with us, and try to use them for choosing RL-based algorithms
 in \cref{chap:inflation}.
