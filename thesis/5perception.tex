@@ -4,9 +4,9 @@
 From the previous artificially inflated inputs, we aim to move to a more realistic
 example, which shows the robustness of low-dimensional controllers in a scenario involving
 an image observation as input. We do this by first using our setup from the previous
-chapter to scale it to dimension of the images (\cref{sec:pixel-inflation}). Afterwards, we
+chapter to scale it to the dimension of the images (\cref{sec:pixel-inflation}). Afterwards, we
 build a new environment (\cref{sec:pixel-env}), which combines perception-based observation with
-multiple actuators acting on our double integrator, before comparing the controllers performance
+multiple actuators acting on our double integrator, before comparing the controllers' performance
 on it (\cref{sec:visual-inputs}). Finally, we again apply noise and analyze its effects (\cref{sec:perception-noise}).
 
 \section{Artificial Inflation to Pixel Size}
@@ -19,11 +19,11 @@ As mentioned, we take our loop from before (\cref{subsubsec:inflated-model}) and
 dimension in this case becomes $18\,432$, while we set the output dimension to $256$. These numbers
 were specifically selected to match the dimensions in \cref{sec:pixel-env}, such that we can
 compare both more closely. For the input dimension, this is a $96 \times 96$ image stack of two images,
-and the output dimension the number of thrusters. The goal is to seperate effects caused by image observation from
-the increased dimensions in the next chapter.
+and for the output dimension, the number of thrusters. The goal is to separate effects caused by image observation from
+the increased dimensions later in \cref{sec:visual-inputs}.
 
 We further note that \emph{StE} cannot be applied at this scale, as the identification
-for such large matrices is computationally unfeasible, as the matrix decompositions would not fit into
+for such large matrices is computationally infeasible, since the matrix decompositions would not fit into
 memory. Additionally, we excluded \emph{Lin}, due to its already weak performance under \emph{large}.
 
 Due to computational complexity and time restrictions, we reduced the training steps to $10^{7}$ and
@@ -58,8 +58,8 @@ rounded to two significant digits as in \eqref{eq:app-rl-learning-rate-grid}, wh
 
 When we now take a look at the training results, we can see that only for \emph{OrB} and \emph{FcE}
 we can actually notice a learning process (\cref{fig:pixel-inflation-curves}). Here it is interesting to see that \emph{FcE} performs
-noticeably better than \emph{OrB} in the median ($1.37$ vs. $2.57$), even though they share nearly the same architecture.
-\emph{ScE} in comparison is mostly flat, with a small improvement at $2 \cdot 10^6$, before flattening again ($3.77$) while
+noticeably better than \emph{OrB} in the median ($1.37$ vs.\ $2.57$), even though they share nearly the same architecture.
+\emph{ScE} in comparison is mostly flat, with a small improvement at $2 \cdot 10^{6}$ steps, before flattening again ($3.77$), while
 \emph{MLP} only shows a slight decrease of suboptimality towards the end (ending at $5.11$).
 Potentially, the shorter training length and rescaled learning rates could be at fault here, as the original ones were calibrated
 for triple the step budget.
@@ -86,7 +86,7 @@ to just accept the position penalty, without wasting additional energy.
 
 Finally, we want to investigate how the test suboptimality here compares to that of the
 previous chapter (\cref{fig:pixel-inflation-subopt}). Generally, we notice that it has increased strongly across all architectures, which
-is caused by both the much larger input dimension, as well as step budget and learning rate changes.
+is caused by both the much larger input dimension and the changed step budget and learning rates.
 However, it can be observed that the policies with a larger total parameter count
 perform better (judging by the median). \emph{ScE}, which had been worse than \emph{MLP} under \emph{large}
 inflation, has overtaken it and now sits below it with a median $S$ of $17.5$
@@ -94,19 +94,8 @@ inflation, has overtaken it and now sits below it with a median $S$ of $17.5$
 
 \begin{figure}[htbp]
     \centering
-    \begin{subfigure}[t]{0.49\linewidth}
-        \centering
-        \generatedhalffigure{ch5_inflation_sizes}{ch5_inflation_large_subopt}
-        \caption{Under \emph{large} inflation (\cref{sec:rl-comparison}).}
-        \label{fig:pixel-inflation-subopt-large}
-    \end{subfigure}\hfill
-    \begin{subfigure}[t]{0.49\linewidth}
-        \centering
-        \generatedhalffigure{ch6_solver_comparison}{ch6_solvers_subopt}
-        \caption{Under \emph{pixel} inflation.}
-        \label{fig:pixel-inflation-subopt-pixel}
-    \end{subfigure}
-    \caption{Suboptimality $S$ of the PPO variants under \emph{large} and \emph{pixel} inflation.}
+    \generatedfigure{ch6_solver_comparison}{ch6_solvers_subopt_large_pixel}
+    \caption{Suboptimality $S$ of the PPO variants under \emph{large} (\cref{sec:rl-comparison}) and \emph{pixel} inflation.}
     \label{fig:pixel-inflation-subopt}
 \end{figure}
 
@@ -119,7 +108,7 @@ us that the projection in \emph{OrB} is negatively affecting it.
 
 \input{generated/ch6_solver_comparison/tables/ch6_solvers_spread.tex}
 
-We will revisit these results again in the context of the new environment (\cref{sec:perception-discussion}).
+We will revisit these results in the context of the new environment (\cref{sec:perception-discussion}).
 
 \section{The New Environment and the Position-Velocity Encoder}
 \label{sec:pixel-env}
@@ -132,18 +121,18 @@ simulate its actual movement. This simulation is observed by a monochromatic cam
 images of a mass with a radius of two pixels moving horizontally in front of a black background. The visible range
 is from $-12$ to $12$ meters, so a total of $24$ meters, corresponding to $0.25$ meters per pixel. To be able to see
 changes between the pictures, we hold any action commanded by the agent for $30$ environment steps before
-capturing another frame and call this intervall an \emph{agent step}.
+capturing another frame and call this interval an \emph{agent step}.
 The agent then receives a stack of two images as the input. \Cref{fig:pixel-setup-observation} shows
 an example of such an image.
 
-Additionally to the input being high-dimensional compared to the actual state, we also modify the way
+In addition to the input being high-dimensional compared to the actual state, we also modify the way
 our mass is actuated. We replace the single actuator with $256$ thrusters, distributed equally around
 a half circle, so thruster $i \in \{0, \dots, 255\}$ sits at an angle $\theta_i = \pi i / 256$. Each thruster can actuate in the
 range $v_i \in [-1, 1]$, however, due to the angle, only $s\cos\theta_i$ effective acceleration is produced on
 the mass, where $s$ is a scaling factor.%
 \footnote{The most energy-efficient and thus cheapest way to produce an acceleration $a$ is the least-norm allocation, which
 uses the thrusters based on their output effectiveness $v_i = a\cos\theta_i/(128 \cdot s)$, where $128 = \sum_i \cos^2\theta_i$.
-The horizontal, and thus most effective thruster saturates at $a = 128 \cdot s$. We thus choose $s$ here such that $1.5$ times the maximum acceleration demanded
+The horizontal, and thus most effective, thruster saturates at $a = 128 \cdot s$. We thus choose $s$ here such that $1.5$ times the maximum acceleration demanded
 by our optimal controller can be reached without clipping, which is $26\,\mathrm{m/s^2}$, so $s = 26/128$.}
 
 This leads to some thrusters being more effective than others, while all are charged for the commanded output,
@@ -193,7 +182,7 @@ helps in designing the controller architecture (\cref{sec:approach}). The priors
 
 For our implementation, we follow the paper's recommended approach. Each frame is input
 into a convolutional neural network (CNN), which encodes a latent position state $s^{(\mathrm{p})}_k$
-from it. Its dimension is a hyperparameter, but used throughout the paper as five~\cite[Sec.~III-C]{Jonschkowski2017PVE},
+from it. Its dimension is a hyperparameter, but is set to five throughout the paper~\cite[Sec.~III-C]{Jonschkowski2017PVE},
 which we follow. The velocity is then calculated as the difference between two frames,
 or $s^{(\mathrm{v})}_k = \alpha \left(s^{(\mathrm{p})}_k - s^{(\mathrm{p})}_{k-1}\right)$, where
 $\alpha$ is the inverse of the time between two agent steps. For the weighting of our
@@ -224,7 +213,7 @@ to $5$, which is the same as \emph{PVE}, after initial results showed a weak per
 The optimal controller for this setup actually does not
 act based on the perception, but instead has access to the real state, while the output
 remains our thrusters, for which it uses the least-norm allocation.
-It is therefore optimal, and serves as the lower-bound for our comparison. Given the knowledge it has about the true
+It is therefore optimal, and serves as the lower bound for our comparison. Given the knowledge it has about the true
 state, we call it ``Oracle (true state)'' in our visualizations.
 For the other approaches, except for \emph{PVE}, which takes images
 as an input, we flatten the images, such that they receive an $18\,432$-dimensional input vector.
@@ -236,7 +225,7 @@ However, we also modify some of our PPO parameters for this setting. Not mention
 equate to their \cref{chap:inflation} values. Specifically, we
 \begin{itemize}
     \item set $\gamma = 0.97$, which gives us around $1/(1-\gamma) \approx 33$ effective agent steps.
-    Multiplying this with our agent action interval of $0.3\,\mathrm{s}$ gives us roughly $10\,\mathrm{s}$
+    Multiplying this with our agent step interval of $0.3\,\mathrm{s}$ gives us roughly $10\,\mathrm{s}$
     of effective horizon, equal to what we used before;
     \item raise the reward clipping threshold from $10$ to $\infty$ (\cref{subsec:rl-training}), so the reward is never clipped;
     \item charge the input cost on the command before clipping, though only enact the clipped command;
@@ -264,12 +253,12 @@ to certain behaviors. To change that, we introduce two additional metrics for th
 us to assess the quality of the encoded latent state, as well as a controller's ability to actuate effectively.
 
 Inspired by Jonschkowski et al.~\cite[Sec.~IV-C]{Jonschkowski2017PVE} and Lesort et al.~\cite[Sec.~4.3]{Lesort2018State},
-we implement a regression-based probe on the latent state. 
+we implement a regression-based probe on the latent state.
 To not replicate the exact setup from the PVE paper~\cite{Jonschkowski2017PVE}, which uses a neural network as the probe,
 we instead rely on a stricter, yet simpler, construction similar to the one used by Alain and Bengio~\cite{Alain2017Understanding}. We use
 ridge regression, which keeps the system well conditioned for strongly correlated predictors~\cite{Hoerl1970Ridge}, and collect pairs
 of the true and the latent state over $20$ episodes with $27$ agent steps each post-training. We train with a ridge of $10^{-3}$
-on the first $14$ episodes of the data, before computing the coefficient of determination on the steps remaining $6$ episodes $\mathcal{T}$,
+on the first $14$ episodes of the data, before computing the coefficient of determination on the steps $\mathcal{T}$ of the remaining six episodes,
 \begin{equation}
   \label{eq:probe-r2}
   R^2 = 1 - \frac{\sum_{k \in \mathcal{T}} (y_k - \hat{y}_k)^2}{\sum_{k \in \mathcal{T}} (y_k - \bar{y})^2},
@@ -368,9 +357,9 @@ than \emph{FcE} or \emph{OrB} is produced, where the latter do not exit any epis
 
 As a summary, we note that a low-dimensional latent layer can indeed produce effective encodings of the
 true state, even with far fewer parameters. However, the complexity of the following network must
-allow this encoding to be translated back into action, which in our case it fails to do, possibly Because
+allow this encoding to be translated back into action, which in our case it fails to do, possibly because
 of its size. This effect is even more enlarged if the extractor is frozen, and thus both parts are trained separately, and the
-majority of the training happens only on $0.3\,\%$ \emph{ScE} or $1.7\,\%$ (\emph{PVE}) of the parameters. Increasing the complexity of
+majority of the training happens only on $0.3\,\%$ (\emph{ScE}) or $1.7\,\%$ (\emph{PVE}) of the parameters. Increasing the complexity of
 the actor until performances comparable to \emph{FcE} can be achieved is left for future research.
 
 \section{Noisy Perception}
@@ -442,7 +431,7 @@ our largely pretrained controllers outperform the others (\cref{fig:perc-noise-d
 oracle does outperform all of them; however, this is expected, as it is not affected by the high complexity
 of the environment.
 
-When now looking at the effect of control noise again, it supports our previous hypothesis that
+Looking at the effect of control noise again, we find support for our previous hypothesis that
 \emph{PVE} does not manage to correctly address its thrusters. Similarly to \emph{ScE}, which wastes
 more thrust in the null space than the other architectures, this leads to a higher increase in absolute degradation
 under control noise, as overall more control is applied (\cref{fig:perc-noise-control-absolute}). Again, we
@@ -489,8 +478,8 @@ persisted in our visual input example. Similarly, we also were not able to effec
 it could show strong improvements over the other controllers. While it still functioned under \emph{large}, even though worse
 than the other controllers, with only a fraction of trainable parameters, under visual input it became practically useless, most likely due to
 its inability to encode velocity. \emph{PVE}, however, does encode velocity ($R^2 \approx 0.68$), and position and control
-even better than \emph{FcE}, with a much smaller extractor. A previously mentioned increase in the number of frames stacked,
-or improved imaging (anti-aliasing) could potentially improve these encodings for \emph{FcE}.
+even better than \emph{FcE}, with a much smaller extractor. A previously mentioned increase in the number of frames stacked
+or improved imaging (anti-aliasing, \cref{subsec:pixelated-environment}) could potentially improve these encodings for \emph{FcE}.
 In the end, the actor head failed to translate those encodings into the correct actions,
 which hints at the PPO network being too small, if the extractor is frozen before. This could have also contributed to
 \emph{ScE}'s worse performance.

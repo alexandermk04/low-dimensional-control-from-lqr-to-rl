@@ -118,6 +118,7 @@ $r_k(\theta)$, $\hat{A}_k$ & probability ratio and advantage estimate & \eqref{e
 $L^{\mathrm{CLIP}}$, $\varepsilon_{\mathrm{clip}}$ & clipped surrogate objective and clip range & \eqref{eq:ppo-clip} \\
 $\gamma$ & discount factor & \cref{subsec:rl-training} \\
 $\eta_0$, $N_{\mathrm{env}}$, $N_{\max}$ & initial learning rate, environment steps so far, step budget & \eqref{eq:lr-annealing} \\
+$\eta_0^{\mathrm{large}}$, $\eta_0^{\mathrm{pixel}}$ & initial learning rate at the \emph{large} and \emph{pixel} size & \eqref{eq:pixel-learning-rate} \\
 $W$ & weight matrix of \emph{Lin}, $W = -K$ & \eqref{eq:linear-ppo} \\
 $f_\psi$, $\psi$ & scalable encoder and its parameters & \cref{alg:encoder-pretraining} \\
 $a_{\max}$ & action bound & \cref{alg:encoder-pretraining} \\
@@ -143,9 +144,9 @@ The settings used for the different noise intensities in the perception-based en
 of \cref{sec:pixel-env}, obtained by the calibration \eqref{eq:noise-calibration}
 with the optimal controller acting on the true state as reference. As measurement
 noise is not calibrated but set by hand (\cref{subsec:perception-noise-setting}), its values
-indicate the standard deviation $\sigma_m$ of the noise drawn. Pixel brightness is scaled to
+indicate the standard deviation $\sigma_{\mathrm{m}}$ of the noise drawn. Pixel brightness is scaled to
 $[0, 1]$, so after applying the noise, the image will be clipped to this range. We
-chose a value of $0.5$ for divergent based on visual inspection, and then halved the number
+chose a value of $0.5$ for \emph{divergent} based on visual inspection, and then halved the value
 for each lower intensity.
 
 \input{generated/appendix_calibrate_pixel_noise/tables/pixel_noise_levels.tex}

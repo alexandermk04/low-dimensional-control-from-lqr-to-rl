@@ -271,8 +271,8 @@ policy optimization. As the basis serves the double integrator, which is first a
 having the controller observe and act in a higher dimension and use projection matrices to change between it and the
 dimension of the underlying system. Afterwards, we also introduce a system with camera-based observations and a more complex actuation structure.
 Throughout our experiments, we notice that low-dimensional controllers are difficult to implement successfully, and
-require careful consideration during design. However, if done right, a combination of fixed, shortly pretrained encoders
-together with a smaller, longer trained actor can perform similarly to a fully connected one. In some cases
+require careful consideration during design. However, if done right, a combination of fixed, briefly pretrained encoders
+together with a smaller, longer-trained actor can perform similarly to a fully connected one. In some cases
 we even notice improved robustness to measurement noise, but not under our perception-based experiments.
 In comparison, a fully trained controller seems to be more robust to control noise.
 
