@@ -50,9 +50,9 @@ learning rates in \cref{tab:app-rl-learning-rates}, which differ by inflation si
 After initial runs with this basic setup, we could observe some divergence behavior, which
 led us to consider additional implementation improvements, as suggested by Huang et al.~\cite{Huang2022Implementation}.
 Specifically, we modified the discount factor to $\gamma = 0.999$ instead of $0.99$
-and used the reward normalization implementation from SB3~\cite{StableBaselines2026VecNormalize}, based
-on a discounted moving average~\cite[continuous-action Detail~8]{Huang2022Implementation}. Two additional
-helpful changes were:
+and used the reward normalization implementation from SB3~\cite{StableBaselines2026VecNormalize} based
+on a discounted moving average~\cite[continuous-action Detail~8]{Huang2022Implementation}, which
+also clips the normalized reward to $[-10, 10]$. Two additional helpful changes were:
 \begin{enumerate}
     \item Using learning-rate annealing instead of a fixed rate~\cite[Detail~4]{Huang2022Implementation}. Now the learning
     rate is decreased with every update, such that at the end of the step budget (\cref{tab:rl-step-caps}) it is equal

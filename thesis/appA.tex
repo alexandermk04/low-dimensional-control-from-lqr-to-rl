@@ -141,8 +141,12 @@ and that the disturbance noise uses its sinusoidal variant \eqref{eq:dist-sin}.
 
 The settings used for the different noise intensities in the perception-based environment
 of \cref{sec:pixel-env}, obtained by the calibration \eqref{eq:noise-calibration}
-with the optimal controller acting on the true state as reference. Measurement
-noise is not calibrated but set by hand (\cref{subsec:perception-noise-setting}).
+with the optimal controller acting on the true state as reference. As measurement
+noise is not calibrated but set by hand (\cref{subsec:perception-noise-setting}), its values
+indicate the standard deviation $\sigma_m$ of the noise drawn. Pixel brightness is scaled to
+$[0, 1]$, so after applying the noise, the image will be clipped to this range. We
+chose a value of $0.5$ for divergent based on visual inspection, and then halved the number
+for each lower intensity.
 
 \input{generated/appendix_calibrate_pixel_noise/tables/pixel_noise_levels.tex}
 
