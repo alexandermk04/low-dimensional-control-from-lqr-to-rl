@@ -3,9 +3,14 @@
 Run with::
 
     python -m experiments.appendix_calibrate_noise
+
+Afterwards, the cost ratio of the optimal controller is measured per inflation
+size. ``python -m experiments.appendix_calibrate_noise sizes`` only repeats this
+step, with the stored intensities.
 """
 
 import json
+import sys
 
 import numpy as np
 
@@ -56,6 +61,34 @@ def calibrate(cost, target: float, clean: float) -> float:
     return float(f"{10 ** middle:.3g}")
 
 
+def measure_sizes(sizes=settings.CH4_INFLATION_SIZES):
+    """Cost ratio of the optimal controller per inflation size, at the calibrated intensities.
+
+    Reads ``calibration.json`` and writes ``size_ratios.json`` next to it.
+    """
+    root = experiment_root(EXPERIMENT)
+    levels = json.loads((root / "calibration.json").read_text())["levels"]
+
+    result = {}
+    for size in sizes:
+        problems = [make_problem(seed, settings.INFLATION_SIZES[size]) for seed in settings.SEEDS]
+        clean = mean_cost(problems)
+
+        result[size] = {}
+        for channel, entries in levels.items():
+            result[size][channel] = {
+                level: mean_cost(problems, channel, entry["std"]) / clean
+                for level, entry in entries.items() if "target" in entry
+            }
+            print(f"{size:>8} {channel:>12}: "
+                  + " ".join(f"{r:.3f}" for r in result[size][channel].values()), flush=True)
+
+    (root / "size_ratios.json").write_text(json.dumps({
+        "inflation": {size: list(settings.INFLATION_SIZES[size]) for size in sizes},
+        "ratios": result,
+    }, indent=2))
+
+
 def main():
     base = settings.INFLATION_SIZES["base"]
     problems = [make_problem(seed, base) for seed in settings.SEEDS]
@@ -90,6 +123,11 @@ def main():
         print("    },")
     print("}")
 
+    measure_sizes()
+
 
 if __name__ == "__main__":
-    main()
+    if sys.argv[1:] == ["sizes"]:
+        measure_sizes()
+    else:
+        main()

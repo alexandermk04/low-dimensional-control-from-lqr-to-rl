@@ -1,6 +1,6 @@
-"""Table of the calibrated noise intensities.
+"""Tables of the calibrated noise intensities and of their cost ratio per inflation size.
 
-Reads ``experiment_results/appendix_calibrate_noise/calibration.json``.
+Reads ``calibration.json`` and ``size_ratios.json`` in ``experiment_results/appendix_calibrate_noise/``.
 
 Run with::
 
@@ -70,6 +70,45 @@ def noise_table(calibration: dict, label: str = "tab:noise-levels", note: str = 
     ])
 
 
+def size_table(ratios: dict) -> str:
+    """The cost ratio of the optimal controller per channel, inflation size and level."""
+    inflation, ratios = ratios["inflation"], ratios["ratios"]
+    sizes = list(ratios)
+    channels = list(ratios[sizes[0]])
+    names = list(ratios[sizes[0]][channels[0]])
+
+    lines = [
+        r"\begin{tabular}{@{}ll" + "r" * len(names) + "@{}}",
+        r"\toprule",
+        " & ".join(["Channel", "Size"] + [rf"\emph{{{name}}}" for name in names]) + r" \\",
+    ]
+    for channel in channels:
+        lines.append(r"\midrule")
+        for i, size in enumerate(sizes):
+            d_in, d_out = inflation[size]
+            lines.append(" & ".join(
+                [CHANNEL_ROWS.get(channel, channel) if i == 0 else "",
+                 rf"\emph{{{size}}} (${d_in} \times {d_out}$)"]
+                + [f"${ratios[size][channel][name]:.2f}$" for name in names]
+            ) + r" \\")
+    lines += [r"\bottomrule", r"\end{tabular}"]
+
+    caption = (
+        r"Cost ratio $\hat{J}_T(K^{*}; c_{\ell}) / \hat{J}_T(K^{*}; \varnothing)$ of the optimal gain "
+        r"per inflation size $d_{\mathrm{in}} \times d_{\mathrm{out}}$, at the standard deviations of "
+        r"\cref{tab:noise-levels}, which are calibrated on \emph{base}."
+    )
+
+    return "\n".join([
+        r"\begin{table}[htbp]",
+        r"\centering",
+        rf"\caption{{{caption}}}",
+        r"\label{tab:noise-size-ratios}",
+        *lines,
+        r"\end{table}",
+    ])
+
+
 def main():
     path = ROOT / EXPERIMENT / "calibration.json"
     if not path.exists():
@@ -78,6 +117,12 @@ def main():
         )
 
     write_table(noise_table(json.loads(path.read_text())), "noise_levels", EXPERIMENT)
+
+    sizes = ROOT / EXPERIMENT / "size_ratios.json"
+    if sizes.exists():
+        write_table(size_table(json.loads(sizes.read_text())), "noise_size_ratios", EXPERIMENT)
+    else:
+        print(f"No {sizes.name}, run `python -m experiments.{EXPERIMENT} sizes` first.")
     print("wrote tables  to", table_dir(EXPERIMENT))
 
 
