@@ -811,10 +811,10 @@ in a way such that for the condition $c_{\ell}$ under the test protocol of \cref
 applies for \emph{weak}, \emph{standard}, \emph{strong} and \emph{divergent}
 respectively.
 For $K^{*}$, the increase stays the same under inflation for all channels
-except control noise. As it acts elementwise on the inflated output, it
-is averaged out over the number of actuators: \emph{strong} control noise raises the
-cost of $K^{*}$ by a factor of $3.0$ without inflation, but only by $1.22$ and
-$1.05$ at the sizes $d_{\mathrm{in}} \times d_{\mathrm{out}} = 50 \times 25$ and $200 \times 100$.
+except control noise (\cref{tab:noise-size-ratios}). As it acts elementwise on the inflated output, its
+effect on the plant is averaged over the number of actuators: \emph{divergent} control noise raises the
+cost of $K^{*}$ by a factor of $9.97$ without inflation, but only by $6.80$ and
+$6.62$ at the sizes $d_{\mathrm{in}} \times d_{\mathrm{out}} = 50 \times 25$ and $200 \times 100$.
 For simplicity, however, we do not vary the levels by size, but instead accept this
 as a side effect.
 The concrete standard deviations per channel are listed in
@@ -885,7 +885,7 @@ The number of steps the plant progressed and solver iterations until convergence
 counted and reported. An upper cap of $20\,000$ iterations is set to prevent looping.
 
 For RL-based algorithms we do not use such early-stopping logic. Following our experiments in
-\cref{subsec:app-rl-convergence}, we observed that implementing such a rule would lead to worse
+\cref{sec:app-rl-convergence}, we observed that implementing such a rule would lead to worse
 policies in the end. Instead, the best policy is achieved close to the end, which leads us
 to running each algorithm for as many steps as noted in \cref{tab:rl-step-caps}, and then
 taking the final policy. Every $25\,000$ environment steps throughout, we

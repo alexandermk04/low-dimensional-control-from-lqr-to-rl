@@ -151,6 +151,29 @@ for each lower intensity.
 
 \input{generated/appendix_calibrate_pixel_noise/tables/pixel_noise_levels.tex}
 
+\section{Deviations from SB3 Standard Parameters}
+\label{sec:app-rl-sb3-parameters}
+
+\Cref{tab:app-rl-sb3-parameters} lists the parameters of the PPO solvers in \cref{chap:inflation} that differ
+from the defaults of SB3 (version~2.9.0)~\cite{StableBaselines2026PPO,StableBaselines2026Policy,StableBaselines2026VecNormalize}.
+All other parameters keep their default values.
+\begin{table}[htbp]
+  \centering
+  \caption{Parameters of the PPO solvers that differ from the SB3 defaults.}
+  \label{tab:app-rl-sb3-parameters}
+  \begin{tabular}{@{}llp{0.36\linewidth}@{}}
+    \toprule
+    Parameter & SB3 default & Used here \\
+    \midrule
+    Discount factor $\gamma$ & $0.99$ & $0.999$ \\
+    Learning rate & $3 \times 10^{-4}$, constant & \cref{tab:app-rl-learning-rates}, annealed by \eqref{eq:lr-annealing} \\
+    Target KL divergence & none & $0.02$ \\
+    Initial log standard deviation & $0$ & $-2$ \\
+    Orthogonal initialization & yes & no \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
 \section{Policy Architectures}
 \label{sec:app-ppo-architectures}
 

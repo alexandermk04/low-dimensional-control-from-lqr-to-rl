@@ -55,10 +55,10 @@
 %\usepackage{fancyheadings}             % Nicer numbering of headlines
 \usepackage[body={5.8in,9in}]{geometry} % Type area (size, margins...)
 
-%\geometry{a4paper,outer=3.35cm}        % !!!Release version (Normal margins)
+\geometry{a4paper,outer=3.35cm}        % !!!Release version (Normal margins)
 %\geometry{a4paper,outer=2.5cm}         % !!!Print version (Additional margin on the left for the binding)
 %\geometry{a4paper}                     % !!!Proofread version (Additional margin on the right for corrections)
-\geometry{a4paper,outer=3.15cm}         % !!!Draft version (Same margins on left and right)
+%\geometry{a4paper,outer=3.15cm}         % !!!Draft version (Same margins on left and right)
 %\geometry{paperheight=10.0in,paperwidth=6.4in,top=0.51in,left=0.3in}  % !!!Developer version (Minimal margins)
 
 \usepackage{graphicx}                   % Inclusion of graphics
@@ -354,12 +354,16 @@ gegenüber Regelungsstörungen zu sein.
 \renewcommand{\subsection}{\FloatBarrier\appendixsubsection}
 \fancyhead[LO,RE]{}                      % Define the header style for the appendixpages
 
-\fancyhead[LE,RO]{\it Anhang A. Nomenclature}                %Adapt letter!
+\fancyhead[LE,RO]{\it Appendix A. Nomenclature}
   \input{appA.tex}
 \cleardoublepage
 
-\fancyhead[LE,RO]{\it Anhang B. Complete Simulation Results}%Adapt letter!
+\fancyhead[LE,RO]{\it Appendix B. Supplementary Results}
   \input{appB.tex}
+\cleardoublepage
+
+\fancyhead[LE,RO]{\it Appendix C. Calibration Results}
+  \input{appC.tex}
 \cleardoublepage
 
 % ... add as much appendices as you need (one can also add source code, for example)

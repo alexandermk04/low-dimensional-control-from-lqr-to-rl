@@ -404,7 +404,8 @@ Looking now at parametric uncertainty, we do notice that \emph{FcE} and \emph{Or
 intensities, but sharply increase in absolute degradation from \emph{standard} onwards, while \emph{PVE} and \emph{ScE}
 already increase a lot under \emph{weak}, but then remain relatively stable (\cref{fig:perc-noise-parametric-absolute}).
 While initially suspected to indicate robustness, the plateauing is actually caused by penalties for leaving the screen.
-Under \emph{weak}, for \emph{ScE} the mass exits $52\,\%$ of the time, for \emph{PVE} it sits at $36\,\%$. As under \emph{divergent} those values sit
+Under \emph{weak}, for \emph{ScE} the mass exits $52\,\%$ of the time, for \emph{PVE} it sits at $36\,\%$
+(\cref{tab:perc-noise-terminated}). As under \emph{divergent} those values sit
 at $74\,\%$ and $62\,\%$ respectively, we can attribute this cap on the increase to this.
 
 \begin{figure}[htbp]
@@ -444,7 +445,7 @@ the lower effect of it on \emph{ScE} and the flattening of the curve for \emph{P
 those low-dimensional controllers are less affected by measurement noise, which is something we suspected from the results in our previous chapters. However,
 this is not the case here. Instead, for \emph{ScE} it is the effect we noticed before, where controllers
 that are already non-functional on the clean plant are generally less affected by noise on their inputs. For \emph{PVE},
-any noise intensity applied leads to a high percentage of the mass exiting the screen ($18$, $43$, $73$ and $79\,\%$),
+any noise intensity applied leads to a high percentage of the mass exiting the screen ($18$, $43$, $73$ and $79\,\%$, \cref{tab:perc-noise-terminated}),
 which consequently ends the episode early with our previously discussed penalty (\cref{subsec:visual-inputs-setting}).
 As a result, the curve flattens at the higher intensities, as the cost cannot increase much more.
 Therefore, as \emph{FcE} and \emph{OrB} do not show any difference under \emph{divergent}, there is no establishable basis for the
@@ -486,7 +487,7 @@ which hints at the PPO network being too small, if the extractor is frozen befor
 
 Looking at the effect of noise, we again notice that parametric uncertainty affects already worse performing
 controllers generally more. For external disturbances, we observe a pattern under \emph{divergent} intensity, where \emph{ScE} and \emph{PVE} both
-degrade noticeably less than \emph{FcE} and \emph{OrB}, which are not able to contain the mass in most of the episodes. A possible robustness
+degrade noticeably less than \emph{FcE} and \emph{OrB}, which are not able to contain the mass in most of the episodes (\cref{tab:perc-noise-terminated}). A possible robustness
 stemming from the frozen extractors could be the case, but cannot be clearly attributed by our data.
 Under control noise, we find that controllers which cannot coordinate their thrusters well, and waste more thrust,
 are consequently more affected by it. Also, the trend that fully parameterized controllers are less affected by it

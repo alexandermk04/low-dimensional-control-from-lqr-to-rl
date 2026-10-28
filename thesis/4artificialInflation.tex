@@ -44,7 +44,7 @@ and can influence the effectiveness of it in practice. For our construction, we 
 the architecture provided by Stable-Baselines3 (SB3)~\cite{StableBaselines2026PPO}.
 As the standard architecture, for our Fully-connected PPO (\emph{MLP}), we use the standard two-layer multilayer perceptron (MLP) with 64 neurons
 per layer for both the actor and the critic~\cite{StableBaselines2026Policy}. \Cref{tab:app-rl-sb3-parameters} in
-\cref{sec:app-rl-parameters} lists all deviations from the default parameters. After evaluating different values, we settled on the
+\cref{sec:app-rl-sb3-parameters} lists all deviations from the default parameters. After evaluating different values, we settled on the
 learning rates in \cref{tab:app-rl-learning-rates}, which differ by inflation size.
 
 After initial runs with this basic setup, we could observe some divergence behavior, which
