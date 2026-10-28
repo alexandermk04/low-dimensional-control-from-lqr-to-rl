@@ -26,7 +26,7 @@ imposing constraints on the policy update size~\cite[Sec.~3]{Schulman2017Proxima
 a fixed KL for an update, sets a target KL divergence~\cite[Sec.~4]{Schulman2017Proximal}. In case further interest
 arises, we refer to the original paper~\cite{Schulman2017Proximal}.
 With the probability ratio $r_k(\theta)$ between the current policy $\pi_\theta$ and the policy
-$\pi_{\theta_{\mathrm{old}}}$ that collected the data, the clipped objective becomes
+$\pi_{\theta_{\mathrm{old}}}$ that collected the data, the clipped objective~\cite[Sec.~3, Eq.~(7)]{Schulman2017Proximal} becomes
 \begin{equation}
     \label{eq:ppo-clip}
     \begin{aligned}
@@ -49,8 +49,8 @@ learning rates in \cref{tab:app-rl-learning-rates}, which differ by inflation si
 
 After initial runs with this basic setup, we could observe some divergence behavior, which
 led us to consider additional implementation improvements, as suggested by Huang et al.~\cite{Huang2022Implementation}.
-Specifically, we modified the discount factor to $\gamma = 0.999$ instead of $0.99$
-and used the reward normalization implementation from SB3~\cite{StableBaselines2026VecNormalize} based
+Specifically, we modified the discount factor to $\gamma = 0.999$ instead of $0.99$, which gives us an effective horizon
+of $1/(1-\gamma) = 1000$ steps and used the reward normalization implementation from SB3~\cite{StableBaselines2026VecNormalize} based
 on a discounted moving average~\cite[continuous-action Detail~8]{Huang2022Implementation}, which
 also clips the normalized reward to $[-10, 10]$. Two additional helpful changes were:
 \begin{enumerate}
@@ -132,7 +132,7 @@ to improve our controller architecture. Here, we will use the following priors~\
 \begin{itemize}
     \item simplicity: the relevant information is lower in dimensionality than the observation,
     \item temporal coherence: state changes are rather slow,
-    \item proportionality: similar actions should show similar output magnitudes,
+    \item proportionality: similar actions should cause changes of similar magnitudes,
     \item repeatability: similar actions in similar states should show similar state changes,
     \item causality: prevents the trivial solution of mapping every observation to the same point.
 \end{itemize}
@@ -145,7 +145,7 @@ by dropping the $\mathcal{L}_{\mathrm{reg}}$ term, and thus obtain
     \mathcal{L} = \omega_1 \mathcal{L}_{\mathrm{temp}} + \omega_2 \mathcal{L}_{\mathrm{prop}} + \omega_3 \mathcal{L}_{\mathrm{rep}}
         + \omega_4 \mathcal{L}_{\mathrm{caus}} ,
 \end{equation}
-with $\omega_1 = \omega_2 = \omega_3 = 1$ and $\omega_4 = 2$.
+with $\omega_1 = \omega_2 = \omega_3 = 1$ and $\omega_4 = 2$, as in~\cite[Eq.~(9)]{Botteghi2021LowDimensional}.
 
 As this encoder must be trained first, we pretrain it for $20$ epochs on $20\,000$
 collected environment steps, before freezing its parameters and prepending

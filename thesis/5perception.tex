@@ -28,7 +28,7 @@ memory. Additionally, we excluded \emph{Lin}, due to its already weak performanc
 
 Due to computational complexity and time restrictions, we reduced the training steps to $10^{7}$ and
 did not run experiments to determine the optimal learning rate here. Instead, we used the optimal
-learning rate for \emph{large}, and scaled it via
+learning rate for \emph{large}, and extrapolate it from our known values via
 \begin{equation}
     \label{eq:pixel-learning-rate}
     \eta_0^{\mathrm{pixel}}
@@ -86,7 +86,7 @@ to just accept the position penalty, without wasting additional energy.
 
 Finally, we want to investigate how the test suboptimality here compares to that of the
 previous chapter (\cref{fig:pixel-inflation-subopt}). Generally, we notice that it has increased strongly across all architectures, which
-is caused by both the much larger input dimension and the changed step budget and learning rates.
+is likely caused by both the much larger input dimension and the changed step budget and learning rates.
 However, it can be observed that the policies with a larger total parameter count
 perform better (judging by the median). \emph{ScE}, which had been worse than \emph{MLP} under \emph{large}
 inflation, has overtaken it and now sits below it with a median $S$ of $17.5$
@@ -185,8 +185,8 @@ into a convolutional neural network (CNN), which encodes a latent position state
 from it. Its dimension is a hyperparameter, but is set to five throughout the paper~\cite[Sec.~III-C]{Jonschkowski2017PVE},
 which we follow. The velocity is then calculated as the difference between two frames,
 or $s^{(\mathrm{v})}_k = \alpha \left(s^{(\mathrm{p})}_k - s^{(\mathrm{p})}_{k-1}\right)$, where
-$\alpha$ is the inverse of the time between two agent steps. For the weighting of our
-prior loss terms, we use the combination suggested for similar tasks in~\cite[Tab.~I]{Jonschkowski2017PVE}, and thus
+$\alpha$ is the inverse of the time between two agent steps. In the choice of $\alpha$ we deviated from the paper for simplicity. 
+For the weighting of our prior loss terms, we use the combination suggested for similar tasks in~\cite[Tab.~I]{Jonschkowski2017PVE}, and thus
 exclude the controllability prior. For the training process we further follow the one proposed in~\cite[Sec.~III-C]{Jonschkowski2017PVE}.
 For details on how exactly the total loss function is constructed, we refer the reader to the original paper~\cite{Jonschkowski2017PVE}.
 We train this extractor with data of $20\,000$ agent steps, which is split into episodes of $810$ environment steps,
@@ -499,4 +499,4 @@ as well as far fewer trainable parameters, can be constructed using pretrained e
 at suboptimalities similar to fully connected controllers however requires a careful selection of the actor size,
 as well as an effective encoding of all relevant properties. The latter is especially what matters when it comes
 to robustness. If both are fulfilled, it is probable that such a controller can outperform a full network, while being
-more space efficient.
+more space efficient. This however remains to be shown.
