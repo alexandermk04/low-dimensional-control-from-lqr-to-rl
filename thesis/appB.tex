@@ -42,7 +42,7 @@ inflated version of \eqref{eq:state-correlation} yields
     &\qquad = U_1 \left( \left( A - B K_j \right) \Sigma_{K_j} \left( A - B K_j \right)\T + \Sigma_0 \right) U_1\T
     = U_1 \Sigma_{K_j} U_1\T .
 \end{align*}
-Hence $\tilde{\Sigma}_{\tilde{K}_j} = U_1 \Sigma_{K_j} U_1\T$.
+Hence $\tilde{\Sigma}_{\tilde{K}_j} = U_1 \Sigma_{K_j} U_1\T$, which is the unique solution, as the iterates are stabilizing.
 
 If we now take a look at the update of the second component $\tilde{K}_j P_{\perp}$ in \cref{alg:mb-pg}, we get
 $\tilde{K}_{j+1} P_{\perp} = \tilde{K}_j P_{\perp} - \eta \nabla f(\tilde{K}_j) P_{\perp}$. The policy gradient
@@ -90,6 +90,7 @@ for which the control cost, with $\tilde{R} = I_{d_{\mathrm{out}}}$, is
     + \sigma_{\mathrm{m}}^{2} \lVert K_{\perp} P_{\perp} \rVert_F^2 .
 \end{equation}
 
+Above, we can dropp the cross terms, as $x_k$ is independent from $n^{\mathrm{m}}_k$, and our noise is isotropic and has a zero mean.
 Separating this, we can see that \emph{TrP} always incurs the additional cost
 $\sigma_{\mathrm{m}}^{2} \lVert K_{\perp} P_{\perp} \rVert_F^2$ per step, which by \cref{thm:app-trp-invisible-gain} it
 cannot remove from its gain via gradient optimization.
@@ -100,7 +101,7 @@ With $\hat{P}_{\perp} \coloneqq I_{d_{\mathrm{in}}} - \hat{C} \hat{C}\T$, every 
 $\tilde{K}_j \hat{P}_{\perp} = \tilde{K}_0 \hat{P}_{\perp}$, and \emph{IdP} incurs the additional cost
 $\sigma_{\mathrm{m}}^{2} \lVert \tilde{K}_0 \hat{P}_{\perp} \rVert_F^2$ per step.
 
-For \emph{TrS} or \emph{IdS}, the gradient will also not remove the $K_{\perp} P_{\perp}$ part, as the same argument as above holds.
+For \emph{TrS} or \emph{IdS}, the gradient will also not remove the $\tilde{K}_0 \hat{P}_{\perp}$ part, as the same argument as above holds.
 However, the soft-thresholding of the singular values \eqref{eq:spi-prox} is
 applied to the whole matrix, so it can also affect this part, and thus reduce or completely eliminate the additional cost.
 With $v_i$ being the columns of $V$ in \eqref{eq:spi-prox}, and $U$ having orthonormal columns, the gain update here satisfies
