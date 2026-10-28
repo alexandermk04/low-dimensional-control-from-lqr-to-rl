@@ -1,45 +1,120 @@
 \chapter{Supplementary Results}
 \label{app:supplementary-results}
 
-\section{Reasoning for the performance of TrP under measurement noise}
-\label{sec:app-perf-trp-measurment-noise}
+\section{Reasoning for the Performance of \emph{TrP} and \emph{IdP} under Measurement Noise}
+\label{sec:app-perf-trp-measurement-noise}
 
-% TODO: Apply tildes to all the inflated parts here
+Throughout this section, $\tilde{K}_j$ denotes the iterates of \emph{TrP},
+started from the stable initial gain $\tilde{K}_0$ as in \eqref{eq:initial-gain}. As mentioned below \eqref{eq:initial-gain}, $K_j \coloneqq U_2 \tilde{K}_j U_1$
+denotes the effective gain on the uninflated loop. We now define the projector onto the complement of $\operatorname{range}(U_1)$ as
+\begin{equation}
+    \label{eq:app-projector}
+    P_{\perp} \coloneqq I_{d_{\mathrm{in}}} - U_1 U_1\T ,
+\end{equation}
+which satisfies $U_1\T P_{\perp} = 0$ and $P_{\perp} U_1 = 0$ as $U_1\T U_1 = I_n$. We can therefore
+separate any $\tilde{K}_j$ into $\tilde{K}_j = \tilde{K}_j U_1 U_1\T + \tilde{K}_j P_{\perp}$, where the second component only acts on
+directions outside $\operatorname{range}(U_1)$.
+\begin{lemma}
+\label{thm:app-trp-invisible-gain}
+As long as all iterates of \emph{TrP} are stabilizing, they satisfy
+\begin{equation*}
+    \tilde{K}_j P_{\perp} = K_{\perp} P_{\perp} \qquad \text{for all } j \in \mathbb{N}_0 .
+\end{equation*}
+\end{lemma}
+\begin{proof}
+We start by looking at the clean loop. Here, any $y_k = U_1 x_k$ lies in $\operatorname{range}(U_1)$ by construction,
+and its initial second moment is therefore
+\begin{equation*}
+    \tilde{\Sigma}_0 = \E_{x_0 \sim \mathcal{D}} \left[ y_0 y_0\T \right] = U_1 \E_{x_0 \sim \mathcal{D}} \left[ x_0 x_0\T \right] U_1\T
+    = U_1 \Sigma_0 U_1\T .
+\end{equation*}
+For the closed loop of the inflated model, $U_1\T U_1 = I_n$ gives
+\begin{equation*}
+    \left( \tilde{A} - \tilde{B} \tilde{K}_j \right) U_1
+    = U_1 A U_1\T U_1 - U_1 B U_2 \tilde{K}_j U_1
+    = U_1 \left( A - B K_j \right) ,
+\end{equation*}
+so inserting
+$U_1 \Sigma_{K_j} U_1\T$, where $\Sigma_{K_j}$ is the solution of \eqref{eq:state-correlation} on the uninflated loop, into the
+inflated version of \eqref{eq:state-correlation} yields
+\begin{align*}
+    &\left( \tilde{A} - \tilde{B} \tilde{K}_j \right) U_1 \Sigma_{K_j} U_1\T \left( \tilde{A} - \tilde{B} \tilde{K}_j \right)\T + \tilde{\Sigma}_0 \\
+    &\qquad = U_1 \left( \left( A - B K_j \right) \Sigma_{K_j} \left( A - B K_j \right)\T + \Sigma_0 \right) U_1\T
+    = U_1 \Sigma_{K_j} U_1\T .
+\end{align*}
+Hence $\tilde{\Sigma}_{\tilde{K}_j} = U_1 \Sigma_{K_j} U_1\T$.
 
-We start by looking at the clean loop. Here, any $y_k$ lies in $\operatorname{range}(U_1)$ by construction.
-We also have $\tilde{\Sigma}_0 = U_1 \Sigma_0 U_1\T$. % TODO: Why?
-Solving now \eqref{eq:state-correlation}, we obtain $\tilde{\Sigma}_{K_j} = U_1 \Sigma_{K_j} U_1\T$, where $\Sigma_{K_j}$ is the solution
-of the uninflated loop.
+If we now take a look at the update of the second component $\tilde{K}_j P_{\perp}$ in \cref{alg:mb-pg}, we get
+$\tilde{K}_{j+1} P_{\perp} = \tilde{K}_j P_{\perp} - \eta \nabla f(\tilde{K}_j) P_{\perp}$. The policy gradient
+\eqref{eq:pg-gradient} on the inflated model then turns into
+\begin{equation*}
+    \nabla f(\tilde{K}_j) P_{\perp}
+    = 2 \left( \left( \tilde{R} + \tilde{B}\T \tilde{P}_{\tilde{K}_j} \tilde{B} \right) \tilde{K}_j
+    - \tilde{B}\T \tilde{P}_{\tilde{K}_j} \tilde{A} \right) \tilde{\Sigma}_{\tilde{K}_j} P_{\perp} ,
+\end{equation*}
+where
+\begin{align*}
+    \tilde{\Sigma}_{\tilde{K}_j} P_{\perp}
+    &= U_1 \Sigma_{K_j} U_1\T \left( I_{d_{\mathrm{in}}} - U_1 U_1\T \right) \\
+    &= U_1 \Sigma_{K_j} U_1\T - U_1 \Sigma_{K_j} \left( U_1\T U_1 \right) U_1\T \\
+    &= U_1 \Sigma_{K_j} U_1\T - U_1 \Sigma_{K_j} U_1\T = 0 .
+\end{align*}
+Plugging this back into the gradient, we also have $\nabla f(\tilde{K}_j) P_{\perp} = 0$, and therefore
+$\tilde{K}_{j+1} P_{\perp} = \tilde{K}_j P_{\perp} - 0$ holds for all $j$, meaning $\tilde{K}_j P_{\perp} = \tilde{K}_0 P_{\perp}$,
+i.e.\ this component is never updated by the policy gradient. With the construction of $\tilde{K}_0$ in \eqref{eq:initial-gain},
+we finally have
+\begin{equation*}
+    \tilde{K}_0 P_{\perp} = U_2\T K_0 U_1\T P_{\perp} + K_{\perp} P_{\perp} = 0 + K_{\perp} P_{\perp} .
+    \qedhere
+\end{equation*}
+\end{proof}
 
-We now define the projector onto the complement of $\operatorname{range}(U_1)$ as $P_{\perp_1} = I_{d_{\mathrm{in}}} - U_1 U_1\T$.
-For any $K_j$, we can therefore seperate it into $K_j = K_jU_1 U_1\T + K_jP_{\perp_1}$. If we now take a look at the updated of this second
-component in \cref{alg:mb-pg}, we get $K_{j+1}P_{\perp_1} = K_jP_{\perp_1} - \eta \nabla f(K_j)P_{\perp_1}$. Using the gradient calculation
-from \eqref{eq:pg-gradient}, the part on the right turns into 
-$\nabla f(K_j)P_{\perp_1} = 2 \left( \left( R + B\T P_{K_j} B \right) K_j - B\T P_{K_j} A \right) \tilde{\Sigma}_{K_j} P_{\perp_1}$, where
-$\tilde{\Sigma}_{K_j} P_{\perp_1} = U_1 \Sigma_{K_j} U_1\T (I_{d_{\mathrm{in}}} - U_1 U_1\T) = U_1 \Sigma_{K_j} U_1\T - U_1 \Sigma_{K_j} U_1\T = 0$. % TODO: Break into multilines
-Plugging this back into \needcite{ref to gradient calc}, we also have $\nabla f(K_j)P_{\perp_1} = 0$, and therefore
-$K_{j+1}P_{\perp_1} = K_jP_{\perp_1} - 0$ holds for all $j$, meaning $K_j P_{\perp_1} = K_0 P_{\perp_1}$, i.e. is never updated
-via the policy gradient. And as we construct $\tilde{K}_0 = U_2\T K_0 U_1\T + K_{\perp}$, where 
-$\tilde{K}_0 P_{\perp_1} = U_2\T K_0 U_1\T P_{\perp_1} + K_{\perp} P_{\perp_1} = 0 + K_{\perp} P_{\perp_1}$, we know this component
-to not be zero.
+For any $d_{\mathrm{in}} > n$, this component is not zero, as $K_{\perp}$ is drawn randomly, and $U_2 K_{\perp} U_1 = 0$
+from \eqref{eq:initial-gain} only restricts how it acts on $\operatorname{range}(U_1)$. Only under
+\emph{base} inflation is $d_{\mathrm{in}} = n$, so $P_{\perp} = 0$ and the lemma holds trivially.
 
-That the gradient equals zero for this part of the gain also makes sense, it is not associated with any commanded actuation, as
-$K_{j} P_{\perp_1}(U_1 x) = 0$. However, under measurement noise, where we have the noise component $n_m$, and $y_k = U_1 x + n_{m_k}$
+That the gradient equals zero for this part of the gain also makes sense, as it is not associated with any commanded
+actuation on the clean loop as $K_{\perp} P_{\perp} U_1 x_k = 0$. However, under measurement noise \eqref{eq:measurement-noise},
+where $y_k = U_1 x_k + n^{\mathrm{m}}_k$, this part becomes non-zero, and instead contributes
+$-K_{\perp} P_{\perp} n^{\mathrm{m}}_k$ to $v_k$. Overall, we have
+\begin{equation}
+    \label{eq:app-noisy-input}
+    v_k = -\tilde{K}_j y_k = -\tilde{K}_j U_1 x_k - \tilde{K}_j U_1 U_1\T n^{\mathrm{m}}_k - K_{\perp} P_{\perp} n^{\mathrm{m}}_k ,
+\end{equation}
+for which the control cost, with $\tilde{R} = I_{d_{\mathrm{out}}}$, is
+\begin{equation}
+    \label{eq:app-noisy-control-cost}
+    \E \left[ v_k\T \tilde{R}\, v_k \right]
+    = \E \left[ \lVert \tilde{K}_j U_1 x_k \rVert^2 \right]
+    + \sigma_{\mathrm{m}}^{2} \lVert \tilde{K}_j U_1 U_1\T \rVert_F^2
+    + \sigma_{\mathrm{m}}^{2} \lVert K_{\perp} P_{\perp} \rVert_F^2 .
+\end{equation}
 
-2. \eqref{eq:pg-gradient} multiplies by $\tilde{\Sigma}_K$ from the right, so with $P_{\perp} = I_{d_{\mathrm{in}}} - U_1 U_1\T$ every gradient
-satisfies $\nabla f(\tilde{K}_j) P_{\perp} = 0$. Hence $\tilde{K}_j P_{\perp} = \tilde{K}_0 P_{\perp} = K_{\perp} P_{\perp}$ for all $j$
-(\eqref{eq:initial-gain}, as $U_1\T P_{\perp} = 0$): \emph{TrP} never changes the part of the gain that sees only the invisible directions.
+Separating this, we can see that \emph{TrP} always incurs the additional cost
+$\sigma_{\mathrm{m}}^{2} \lVert K_{\perp} P_{\perp} \rVert_F^2$ per step, which by \cref{thm:app-trp-invisible-gain} it
+cannot remove from its gain via gradient optimization.
 
-3. Without noise this part has no effect on the cost. Under measurement noise ($y_k = U_1 x_k + n^{\mathrm{m}}_k$, Ch. 2 l. 544, noise in all
-$d_{\mathrm{in}}$ directions), $\tilde{v}_k$ contains $-K_{\perp} P_{\perp} n^{\mathrm{m}}_k$. It is charged through $\tilde{v}_k\T \tilde{R}\,
-\tilde{v}_k$ with $\tilde{R} = I$, and enters the dynamics through $B U_2 K_{\perp} P_{\perp} n^{\mathrm{m}}_k$ ($U_2 K_{\perp} U_1 = 0$ does not
-imply $U_2 K_{\perp} P_{\perp} = 0$). With $\sigma_{\mathrm{m}}^{2} I_{d_{\mathrm{in}}}$, the control cost alone grows by at least
-$\sigma_{\mathrm{m}}^{2} \lVert K_{\perp} P_{\perp} \rVert_F^2$ per step, a term no iteration of \emph{TrP} reduces.
+The same argument holds for \emph{IdP}. On the identified model of \cref{subsec:unknown-model-setting}, $\hat{C}$, which has
+also orthonormal columns, is used instead of $U_1$, $U_2$ becomes $I_{d_{\mathrm{out}}}$, and $\tilde{\Sigma}_0 = \hat{C} \hat{C}\T$.
+With $\hat{P}_{\perp} \coloneqq I_{d_{\mathrm{in}}} - \hat{C} \hat{C}\T$, every iterate thus satisfies
+$\tilde{K}_j \hat{P}_{\perp} = \tilde{K}_0 \hat{P}_{\perp}$, and \emph{IdP} incurs the additional cost
+$\sigma_{\mathrm{m}}^{2} \lVert \tilde{K}_0 \hat{P}_{\perp} \rVert_F^2$ per step.
 
-4. S-PI's proximal step soft-thresholds all singular values, so it shrinks this part as well (state as "can remove", unless shown in general).
-
-5. \emph{IdP}: the same argument on the identified model with $\operatorname{range}(\hat{C})$ in place of $\operatorname{range}(U_1)$.
-
+For \emph{TrS} or \emph{IdS}, the gradient will also not remove the $K_{\perp} P_{\perp}$ part, as the same argument as above holds.
+However, the soft-thresholding of the singular values \eqref{eq:spi-prox} is
+applied to the whole matrix, so it can also affect this part, and thus reduce or completely eliminate the additional cost.
+With $v_i$ being the columns of $V$ in \eqref{eq:spi-prox}, and $U$ having orthonormal columns, the gain update here satisfies
+\begin{equation}
+    \label{eq:app-prox-shrink}
+    \begin{aligned}
+    \lVert \tilde{K}_{j+1} P_{\perp} \rVert_F^2
+    &= \sum_{i=1}^{\bar{r}} \max\{\sigma_i - \eta \lambda, 0\}^2 \lVert P_{\perp} v_i \rVert^2
+    \leq \sum_{i=1}^{\bar{r}} \sigma_i^2 \lVert P_{\perp} v_i \rVert^2 \\
+    &= \lVert \left( \tilde{K}_j - \eta \nabla f(\tilde{K}_j) \right) P_{\perp} \rVert_F^2
+    = \lVert \tilde{K}_j P_{\perp} \rVert_F^2 ,
+    \end{aligned}
+\end{equation}
+i.e. the additional cost can only shrink or stay the same at every update step.
 
 \section{Additional Plots for the Perception Experiments}
 \label{sec:app-perc-plots}
