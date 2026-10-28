@@ -1,6 +1,46 @@
 \chapter{Supplementary Results}
 \label{app:supplementary-results}
 
+\section{Reasoning for the performance of TrP under measurement noise}
+\label{sec:app-perf-trp-measurment-noise}
+
+% TODO: Apply tildes to all the inflated parts here
+
+We start by looking at the clean loop. Here, any $y_k$ lies in $\operatorname{range}(U_1)$ by construction.
+We also have $\tilde{\Sigma}_0 = U_1 \Sigma_0 U_1\T$. % TODO: Why?
+Solving now \eqref{eq:state-correlation}, we obtain $\tilde{\Sigma}_{K_j} = U_1 \Sigma_{K_j} U_1\T$, where $\Sigma_{K_j}$ is the solution
+of the uninflated loop.
+
+We now define the projector onto the complement of $\operatorname{range}(U_1)$ as $P_{\perp_1} = I_{d_{\mathrm{in}}} - U_1 U_1\T$.
+For any $K_j$, we can therefore seperate it into $K_j = K_jU_1 U_1\T + K_jP_{\perp_1}$. If we now take a look at the updated of this second
+component in \cref{alg:mb-pg}, we get $K_{j+1}P_{\perp_1} = K_jP_{\perp_1} - \eta \nabla f(K_j)P_{\perp_1}$. Using the gradient calculation
+from \eqref{eq:pg-gradient}, the part on the right turns into 
+$\nabla f(K_j)P_{\perp_1} = 2 \left( \left( R + B\T P_{K_j} B \right) K_j - B\T P_{K_j} A \right) \tilde{\Sigma}_{K_j} P_{\perp_1}$, where
+$\tilde{\Sigma}_{K_j} P_{\perp_1} = U_1 \Sigma_{K_j} U_1\T (I_{d_{\mathrm{in}}} - U_1 U_1\T) = U_1 \Sigma_{K_j} U_1\T - U_1 \Sigma_{K_j} U_1\T = 0$. % TODO: Break into multilines
+Plugging this back into \needcite{ref to gradient calc}, we also have $\nabla f(K_j)P_{\perp_1} = 0$, and therefore
+$K_{j+1}P_{\perp_1} = K_jP_{\perp_1} - 0$ holds for all $j$, meaning $K_j P_{\perp_1} = K_0 P_{\perp_1}$, i.e. is never updated
+via the policy gradient. And as we construct $\tilde{K}_0 = U_2\T K_0 U_1\T + K_{\perp}$, where 
+$\tilde{K}_0 P_{\perp_1} = U_2\T K_0 U_1\T P_{\perp_1} + K_{\perp} P_{\perp_1} = 0 + K_{\perp} P_{\perp_1}$, we know this component
+to not be zero.
+
+That the gradient equals zero for this part of the gain also makes sense, it is not associated with any commanded actuation, as
+$K_{j} P_{\perp_1}(U_1 x) = 0$. However, under measurement noise, where we have the noise component $n_m$, and $y_k = U_1 x + n_{m_k}$
+
+2. \eqref{eq:pg-gradient} multiplies by $\tilde{\Sigma}_K$ from the right, so with $P_{\perp} = I_{d_{\mathrm{in}}} - U_1 U_1\T$ every gradient
+satisfies $\nabla f(\tilde{K}_j) P_{\perp} = 0$. Hence $\tilde{K}_j P_{\perp} = \tilde{K}_0 P_{\perp} = K_{\perp} P_{\perp}$ for all $j$
+(\eqref{eq:initial-gain}, as $U_1\T P_{\perp} = 0$): \emph{TrP} never changes the part of the gain that sees only the invisible directions.
+
+3. Without noise this part has no effect on the cost. Under measurement noise ($y_k = U_1 x_k + n^{\mathrm{m}}_k$, Ch. 2 l. 544, noise in all
+$d_{\mathrm{in}}$ directions), $\tilde{v}_k$ contains $-K_{\perp} P_{\perp} n^{\mathrm{m}}_k$. It is charged through $\tilde{v}_k\T \tilde{R}\,
+\tilde{v}_k$ with $\tilde{R} = I$, and enters the dynamics through $B U_2 K_{\perp} P_{\perp} n^{\mathrm{m}}_k$ ($U_2 K_{\perp} U_1 = 0$ does not
+imply $U_2 K_{\perp} P_{\perp} = 0$). With $\sigma_{\mathrm{m}}^{2} I_{d_{\mathrm{in}}}$, the control cost alone grows by at least
+$\sigma_{\mathrm{m}}^{2} \lVert K_{\perp} P_{\perp} \rVert_F^2$ per step, a term no iteration of \emph{TrP} reduces.
+
+4. S-PI's proximal step soft-thresholds all singular values, so it shrinks this part as well (state as "can remove", unless shown in general).
+
+5. \emph{IdP}: the same argument on the identified model with $\operatorname{range}(\hat{C})$ in place of $\operatorname{range}(U_1)$.
+
+
 \section{Additional Plots for the Perception Experiments}
 \label{sec:app-perc-plots}
 
