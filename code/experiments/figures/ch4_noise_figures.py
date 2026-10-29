@@ -321,7 +321,7 @@ def frozen_gain_table(size: str = "large", level: str = "divergent") -> str:
         r"\begin{tabular}{@{}llrrr@{}}",
         r"\toprule",
         r"Model & Solver & $\lVert \tilde{K} P_{\perp} \rVert_F$ "
-        r"& $\sigma_{\mathrm{m}}^{2} H \lVert \tilde{K} P_{\perp} \rVert_F^2 / \hat{J}^{*}$ "
+        r"& $\sigma_{\mathrm{m}}^{2} T \lVert \tilde{K} P_{\perp} \rVert_F^2 / \hat{J}^{*}$ "
         r"& $\Delta \hat{J} / \hat{J}^{*}$ \\",
     ]
     for model, experiment, solvers in sources:
@@ -358,7 +358,7 @@ def frozen_gain_table(size: str = "large", level: str = "divergent") -> str:
                     for metric, fmt in (
                         ("perp_norm", "{:.3f}"),
                         ("frozen_share", "{:.3f}"),
-                        ("absolute_degradation", "{:.3g}"),
+                        ("absolute_degradation", "{:.2f}"),
                     )
                 ]
             ) + r" \\")
@@ -366,7 +366,7 @@ def frozen_gain_table(size: str = "large", level: str = "divergent") -> str:
 
     caption = (
         rf"Part of the final gain outside $\operatorname{{range}}(U_1)$ under \emph{{{size}}} inflation, "
-        r"the control cost it adds per test episode of $H$ steps under measurement noise at intensity "
+        r"the control cost it adds per test episode of $T$ steps under measurement noise at intensity "
         rf"\emph{{{level}}}, and the measured absolute degradation. Both costs are relative to the clean "
         r"cost $\hat{J}^{*}$ of the optimal gain. Mean $\pm$ standard deviation over the seeds."
     )

@@ -107,13 +107,13 @@ $\sigma_{\mathrm{m}}^{2} \lVert \tilde{K}_0 \hat{P}_{\perp} \rVert_F^2$ per step
 For \emph{TrS} or \emph{IdS}, the gradient will also not remove the $\tilde{K}_0 \hat{P}_{\perp}$ part, as the same argument as above holds.
 However, the soft-thresholding of the singular values \eqref{eq:spi-prox} is
 applied to the whole matrix, so it can also affect this part, and thus reduce or completely eliminate the additional cost.
-With $v_i$ being the columns of $V$ in \eqref{eq:spi-prox}, and $U$ having orthonormal columns, the gain update here satisfies
+With $\Psi e_i$ being the $i$-th column of $\Psi$ in \eqref{eq:spi-prox}, and $\Phi$ having orthonormal columns, the gain update here satisfies
 \begin{equation}
     \label{eq:app-prox-shrink}
     \begin{aligned}
     \lVert \tilde{K}_{j+1} P_{\perp} \rVert_F^2
-    &= \sum_{i=1}^{\bar{r}} \max\{\sigma_i - \eta \lambda, 0\}^2 \lVert P_{\perp} v_i \rVert^2
-    \leq \sum_{i=1}^{\bar{r}} \sigma_i^2 \lVert P_{\perp} v_i \rVert^2 \\
+    &= \sum_{i=1}^{\bar{r}} \max\{\chi_i - \eta \lambda, 0\}^2 \lVert P_{\perp} \Psi e_i \rVert^2
+    \leq \sum_{i=1}^{\bar{r}} \chi_i^2 \lVert P_{\perp} \Psi e_i \rVert^2 \\
     &= \lVert \left( \tilde{K}_j - \eta \nabla f(\tilde{K}_j) \right) P_{\perp} \rVert_F^2
     = \lVert \tilde{K}_j P_{\perp} \rVert_F^2 ,
     \end{aligned}

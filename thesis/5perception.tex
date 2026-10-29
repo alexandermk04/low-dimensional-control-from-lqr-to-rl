@@ -127,16 +127,16 @@ an example of such an image.
 
 In addition to the input being high-dimensional compared to the actual state, we also modify the way
 our mass is actuated. We replace the single actuator with $256$ thrusters, distributed equally around
-a half circle, so thruster $i \in \{0, \dots, 255\}$ sits at an angle $\theta_i = \pi i / 256$. Each thruster can actuate in the
-range $v_i \in [-1, 1]$, however, due to the angle, only $s\cos\theta_i$ effective acceleration is produced on
-the mass, where $s$ is a scaling factor.%
-\footnote{The most energy-efficient and thus cheapest way to produce an acceleration $a$ is the least-norm allocation, which
-uses the thrusters based on their output effectiveness $v_i = a\cos\theta_i/(128 \cdot s)$, where $128 = \sum_i \cos^2\theta_i$.
-The horizontal, and thus most effective, thruster saturates at $a = 128 \cdot s$. We thus choose $s$ here such that $1.5$ times the maximum acceleration demanded
-by our optimal controller can be reached without clipping, which is $26\,\mathrm{m/s^2}$, so $s = 26/128$.}
+a half circle, so thruster $i \in \{0, \dots, 255\}$ sits at an angle of $\pi i / 256$. Each thruster can actuate in the
+range $(v_k)_i \in [-1, 1]$, however, due to the angle, only $b_i \coloneqq b_{\max} \cos(\pi i / 256)$ effective acceleration is produced on
+the mass, where $b_{\max}$ is a scaling factor.%
+\footnote{The most energy-efficient and thus cheapest way to produce an acceleration $u_k$ is the least-norm allocation, which
+uses the thrusters based on their output effectiveness $(v_k)_i = u_k \cos(\pi i / 256)/(128 \cdot b_{\max})$, where $128 = \sum_i \cos^2(\pi i / 256)$.
+The horizontal, and thus most effective, thruster saturates at $u_k = 128 \cdot b_{\max}$. We thus choose $b_{\max}$ here such that $1.5$ times the maximum acceleration demanded
+by our optimal controller can be reached without clipping, which is $26\,\mathrm{m/s^2}$, so $b_{\max} = 26/128$.}
 
 This leads to some thrusters being more effective than others, while all are charged for the commanded output,
-so some energy might be lost. For example, the only vertically acting thruster $\theta = \pi/2$ cannot
+so some energy might be lost. For example, the only vertically acting thruster $i = 128$ cannot
 affect the mass in any way, and would thus only waste energy if used. \Cref{fig:pixel-setup-thrusters}
 visualizes the thrust directions for eight thrusters.
 
@@ -181,10 +181,10 @@ helps in designing the controller architecture (\cref{sec:approach}). The priors
 \end{enumerate}
 
 For our implementation, we follow the paper's recommended approach. Each frame is input
-into a convolutional neural network (CNN), which encodes a latent position state $s^{(\mathrm{p})}_k$
+into a convolutional neural network (CNN), which encodes a latent position state $\hat{p}_k$
 from it. Its dimension is a hyperparameter, but is set to five throughout the paper~\cite[Sec.~III-C]{Jonschkowski2017PVE},
 which we follow. The velocity is then calculated as the difference between two frames,
-or $s^{(\mathrm{v})}_k = \alpha \left(s^{(\mathrm{p})}_k - s^{(\mathrm{p})}_{k-1}\right)$, where
+or $\hat{\dot{p}}_k = \alpha \left(\hat{p}_k - \hat{p}_{k-1}\right)$, where
 $\alpha$ is the inverse of the time between two agent steps. In the choice of $\alpha$ we deviated from the paper for simplicity. 
 For the weighting of our prior loss terms, we use the combination suggested for similar tasks in~\cite[Tab.~I]{Jonschkowski2017PVE}, and thus
 exclude the controllability prior. For the training process we further follow the one proposed in~\cite[Sec.~III-C]{Jonschkowski2017PVE}.
@@ -258,23 +258,23 @@ To not replicate the exact setup from the PVE paper~\cite{Jonschkowski2017PVE}, 
 we instead rely on a stricter, yet simpler, construction similar to the one used by Alain and Bengio~\cite{Alain2017Understanding}. We use
 ridge regression, which keeps the system well conditioned for strongly correlated predictors~\cite{Hoerl1970Ridge}, and collect pairs
 of the true and the latent state over $20$ episodes with $27$ agent steps each post-training. We train with a ridge of $10^{-3}$
-on the first $14$ episodes of the data, before computing the coefficient of determination on the steps $\mathcal{T}$ of the remaining six episodes,
+on the first $14$ episodes of the data, before computing the coefficient of determination on the steps $\mathcal{I}_{\mathrm{test}}$ of the remaining six episodes,
 \begin{equation}
   \label{eq:probe-r2}
-  R^2 = 1 - \frac{\sum_{k \in \mathcal{T}} (y_k - \hat{y}_k)^2}{\sum_{k \in \mathcal{T}} (y_k - \bar{y})^2},
+  R^2 = 1 - \frac{\sum_{k \in \mathcal{I}_{\mathrm{test}}} (\xi_k - \hat{\xi}_k)^2}{\sum_{k \in \mathcal{I}_{\mathrm{test}}} (\xi_k - \bar{\xi})^2},
 \end{equation}
-where $y_k$ is the true value, $\hat{y}_k$ the prediction from the latent state and $\bar{y}$ its mean over the training steps.
+where $\xi_k$ is the true value, $\hat{\xi}_k$ the prediction from the latent state and $\bar{\xi}$ its mean over the training steps.
 Similarly, we compute it for control, using the command from the oracle as the target.
 Overall, an $R^2 = 1$ tells us that the latent state has encoded this feature perfectly linearly,
 while a value close to $0$ means that it is not better than just predicting the training mean.
 
 A second metric we use is wasted energy via the control input. As mentioned in \cref{subsec:pixelated-environment}, the resulting actuation $u_k$
-is calculated via $u_k = c\T v_k$, where $v_k$ is the commanded actuation, and $c \coloneqq s\,[\cos\theta_0, \dots, \cos\theta_{255}]\T$, due to
-the construction of the thrusters. We compare the least-norm allocation $u_k\, c/\lVert c\rVert^2$ with the commanded input, to determine what
-amount of energy is directed into the null space of $c\T$, and thus never reaches the mass. The resulting equation, calculated for each step, is
+is calculated via $u_k = b\T v_k$, where $v_k$ is the commanded actuation, and $b \coloneqq [\,b_0, \dots, b_{255}\,]\T$, due to
+the construction of the thrusters. We compare the least-norm allocation $u_k\, b/\lVert b\rVert^2$ with the commanded input, to determine what
+amount of energy is directed into the null space of $b\T$, and thus never reaches the mass. The resulting equation, calculated for each step, is
 \begin{equation}
   \label{eq:null-waste}
-  \lVert v_k\rVert^2 - \frac{u_k^2}{\lVert c\rVert^2},
+  \lVert v_k\rVert^2 - \frac{u_k^2}{\lVert b\rVert^2},
 \end{equation}
 which is then averaged over the steps of all $100$ episodes.
 

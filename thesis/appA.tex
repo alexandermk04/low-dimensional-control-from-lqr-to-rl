@@ -20,11 +20,11 @@ used throughout this thesis, together with the place where each is defined:
 \endfoot
 \multicolumn{3}{@{}l}{\emph{Sets and operators}} \\[2pt]
 $\R$, $\C$, $\mathbb{N}_0$ & real numbers, complex numbers, natural numbers including zero & \\
-$I_n$, $\mathbf{1}_n$, $e_1$ & identity matrix and all-ones vector of dimension $n$, first unit vector & \\
+$I_n$, $\mathbf{1}_n$, $e_i$ & identity matrix and all-ones vector of dimension $n$, $i$-th unit vector & \\
 $M\T$, $M^{\dagger}$ & transpose and (truncated) pseudoinverse of $M$ & \cref{alg:mf-npg} \\
 $\tr$, $\rank$, $\operatorname{diag}$ & trace, rank, diagonal matrix & \\
-$\lambda_i(M)$, $\sigma_i(M)$ & $i$-th eigenvalue and $i$-th singular value of $M$ & \\
-$U \Sigma V\T$ & singular value decomposition, $\Sigma = \operatorname{diag}(\sigma_1, \dots, \sigma_r)$ & \eqref{eq:svd} \\
+$\lambda_i(M)$, $\chi_i(M)$ & $i$-th eigenvalue and $i$-th singular value of $M$ & \\
+$\Phi \operatorname{diag}(\chi_1, \dots, \chi_r) \Psi\T$ & singular value decomposition, $\Phi$ and $\Psi$ with orthonormal columns & \eqref{eq:svd} \\
 $\spr(M)$ & spectral radius, $\max_i \lvert \lambda_i(M) \rvert$ & \cref{subsec:double-integrator} \\
 $M \succeq 0$, $M \succ 0$ & $M$ symmetric positive semi-definite / positive definite & \\
 $\lVert \cdot \rVert$, $\lVert \cdot \rVert_F$, $\lVert \cdot \rVert_{*}$ & Euclidean (spectral) norm, Frobenius norm, nuclear norm & \\
@@ -40,7 +40,7 @@ $t$, $k$, $h$ & continuous time, discrete step index, sampling period & \eqref{e
 $x_k \in \R^{n}$ & state & \eqref{eq:ss-disc} \\
 $u_k \in \R^{m}$ & control input of the plant & \eqref{eq:ss-disc} \\
 $y_k \in \R^{q}$ & observed output & \eqref{eq:ss-cont} \\
-$p$, $v$ & position and velocity of the double integrator, $x = [\,p,\ v\,]\T$ & \eqref{eq:di-first-order} \\
+$p$, $\dot{p}$ & position and velocity of the double integrator, $x = [\,p,\ \dot{p}\,]\T$ & \eqref{eq:di-first-order} \\
 $A_c$, $B_c$ & continuous-time system and input matrix & \eqref{eq:ss-cont} \\
 $A$, $B$ & their zero-order-hold discretizations & \eqref{eq:zoh-matrices} \\
 $C$, $D$ & output and feedthrough matrix; $D = 0$ throughout & \eqref{eq:ss-cont} \\
@@ -105,7 +105,7 @@ $A_{\mathrm{id}}$, $B_{\mathrm{id}}$, $C_{\mathrm{id}}$ & system matrices return
 $\hat{A}$, $\hat{B}$, $\hat{C}$, $\hat{n}$ & identified model in the basis with orthonormal $\hat{C}$, and its order & \eqref{eq:identified-basis} \\
 $\Theta$ & upper triangular factor of the QR decomposition $C_{\mathrm{id}} = \hat{C} \Theta$ & \eqref{eq:identified-basis} \\
 $\hat{x}_k$ & encoded state $\hat{C}\T y_k$ & \eqref{eq:state-encoder} \\
-$N_{\mathrm{traj}}$, $l$, $r$ & number of perturbation pairs, rollout length, smoothing radius & \cref{alg:mf-gradient} \\
+$N_{\mathrm{traj}}$, $l$, $\zeta$ & number of perturbation pairs, rollout length, smoothing radius & \cref{alg:mf-gradient} \\
 $\Xi_i$ & perturbation of the gain & \cref{alg:mf-gradient} \\
 $c_k^{\pm}$, $\hat{J}_i^{\pm}$ & stage cost and rollout cost of $K \pm \Xi_i$ & \cref{alg:mf-gradient} \\
 $\delta_i$, $\bar{\delta}$ & cost difference of a pair and its mean & \cref{alg:mf-gradient} \\
@@ -125,6 +125,11 @@ $a_{\max}$ & action bound & \cref{alg:encoder-pretraining} \\
 $\mathcal{L}$, $\omega_1, \dots, \omega_4$ & prior loss and its weights & \eqref{eq:prior-loss} \\
 $z_k$, $d_{\mathrm{z}}$ & output of the bottleneck extractor and its dimension & \eqref{eq:ortho-bottleneck} \\
 $U_{\mathrm{b}}$, $d_{\mathrm{b}}$ & orthonormal bottleneck projection and bottleneck dimension & \eqref{eq:ortho-bottleneck} \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Perception environment}} \\[2pt]
+$b_i$, $b$, $b_{\max}$ & effectiveness of thruster $i$, all of them as a vector, scaling factor & \cref{subsec:pixelated-environment} \\
+$\hat{p}_k$, $\hat{\dot{p}}_k$, $\alpha$ & latent position and velocity state of \emph{PVE}, inverse time between agent steps & \cref{subsec:pve} \\
+$\xi_k$, $\hat{\xi}_k$, $\bar{\xi}$, $\mathcal{I}_{\mathrm{test}}$ & probed feature, its prediction and training mean, test steps & \eqref{eq:probe-r2} \\
 \end{longtable}
 
 \section{Calibrated Noise Intensities}

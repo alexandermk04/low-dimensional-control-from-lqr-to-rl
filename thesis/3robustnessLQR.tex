@@ -85,11 +85,11 @@ each iteration takes a gradient step and applies the
 proximal operator of the nuclear norm, which soft-thresholds the singular values,
 \begin{equation}
     \label{eq:spi-prox}
-    K^{+} = U \operatorname{diag} \left( \max\{\sigma_1 - \eta \lambda, 0\}, \dots,
-    \max\{\sigma_{\bar{r}} - \eta \lambda, 0\} \right) V\T ,
+    K^{+} = \Phi \operatorname{diag} \left( \max\{\chi_1 - \eta \lambda, 0\}, \dots,
+    \max\{\chi_{\bar{r}} - \eta \lambda, 0\} \right) \Psi\T ,
     \qquad \bar{r} \coloneqq \min\{d_{\mathrm{out}}, d_{\mathrm{in}}\} ,
 \end{equation}
-where $U \operatorname{diag}(\sigma_1, \dots, \sigma_{\bar{r}}) V\T$ is the singular value decomposition of
+where $\Phi \operatorname{diag}(\chi_1, \dots, \chi_{\bar{r}}) \Psi\T$ is the singular value decomposition of
 the gradient step $K_j - \eta \nabla f(K_j)$. The candidate $K^{+}$ is accepted if it is stabilizing, $\spr(A - B K^{+}) < 1$, and
 satisfies the sufficient decrease condition
 \begin{equation}
@@ -331,9 +331,9 @@ as this drastically reduced the variance of the estimates, and thus the instabil
     \label{alg:mf-gradient}
     \begin{algorithmic}[1]
         \REQUIRE gain $K \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$, number of perturbation pairs $N_{\mathrm{traj}}$,
-        rollout length $l$, smoothing radius $r$
+        rollout length $l$, smoothing radius $\zeta$
         \FOR{$i = 1, \dots, N_{\mathrm{traj}}$}
-            \STATE sample $\Xi_i$ uniformly from the matrices with $\lVert \Xi_i \rVert_F = r$
+            \STATE sample $\Xi_i$ uniformly from the matrices with $\lVert \Xi_i \rVert_F = \zeta$
             \STATE sample an initial state $x_0 \sim \mathcal{D}$
             \STATE simulate $K + \Xi_i$ and $K - \Xi_i$ for $l$ steps from $x_0$, with stage costs $c_k^{\pm}$ and
             observations $y_k^{\pm}$
@@ -343,7 +343,7 @@ as this drastically reduced the variance of the estimates, and thus the instabil
         \ENDFOR
         \STATE $\bar{\delta} = \frac{1}{N_{\mathrm{traj}}} \sum_{i=1}^{N_{\mathrm{traj}}} \delta_i$
         \STATE $\widehat{\nabla f}(K) = \frac{1}{N_{\mathrm{traj}}} \sum_{i=1}^{N_{\mathrm{traj}}}
-        \frac{d_{\mathrm{out}} d_{\mathrm{in}}}{2 r^2} \left( \delta_i - \bar{\delta} \right) \Xi_i$
+        \frac{d_{\mathrm{out}} d_{\mathrm{in}}}{2 \zeta^2} \left( \delta_i - \bar{\delta} \right) \Xi_i$
         \STATE $\hat{\Sigma}_K = \frac{1}{N_{\mathrm{traj}}} \sum_{i=1}^{N_{\mathrm{traj}}} \left( \hat{\Sigma}_i^{+} + \hat{\Sigma}_i^{-} \right)$
         \STATE $\hat{f}(K) = \frac{1}{N_{\mathrm{traj}}} \sum_{i=1}^{N_{\mathrm{traj}}} \frac{1}{2} \left( \hat{J}_i^{+} + \hat{J}_i^{-} \right)$
         \RETURN $\widehat{\nabla f}(K)$, $\hat{\Sigma}_K$, $\hat{f}(K)$
@@ -364,7 +364,7 @@ Our full learning algorithm, which we refer to as Model-free NPG (\emph{MfN}), i
     \caption{Model-free NPG}
     \label{alg:mf-npg}
     \begin{algorithmic}[1]
-        \REQUIRE stabilizing gain $K_0 \in \mathcal{K}$, $N_{\mathrm{traj}}$, $l$, $r$, step size $\eta$
+        \REQUIRE stabilizing gain $K_0 \in \mathcal{K}$, $N_{\mathrm{traj}}$, $l$, $\zeta$, step size $\eta$
         \FOR{$j = 0, 1, 2, \dots$}
             \STATE compute $\widehat{\nabla f}(K_j)$ and $\hat{\Sigma}_{K_j}$ by \cref{alg:mf-gradient}
             \STATE update the gain by $K_{j+1} = K_j - \eta \, \widehat{\nabla f}(K_j) \, \hat{\Sigma}_{K_j}^{\dagger}$
@@ -376,7 +376,7 @@ We use the natural gradient $\widehat{\nabla f} \, \hat{\Sigma}^{\dagger}$ here,
 preconditions the update with the pseudoinverse of the state correlation instead of applying
 the update directly like the standard model-free version~\cite{Fazel2018Global}. In initial
 experiments it consequently showed better stability, which is why we selected it.
-In the same process we decided on a smoothing parameter of $r = 0.5$, and, based
+In the same process we decided on a smoothing radius of $\zeta = 0.5$, and, based
 on separate results in \cref{sec:app-learning-rate-mf-npg}, have chosen a learning rate of $\eta_{\mathrm{base}} = 0.1$,
 $\eta_{\mathrm{small}} = 0.03$, $\eta_{\mathrm{medium}} = 0.01$ and $\eta_{\mathrm{large}} = 0.01$.
 
@@ -412,7 +412,7 @@ did not induce any structure at all, hinting at a $\lambda$ that is too low. If 
 mapped to
 \begin{equation}
     \label{eq:spi-threshold}
-    \sigma_i \mapsto \max\{ \sigma_i - \eta \lambda, 0 \} .
+    \chi_i \mapsto \max\{ \chi_i - \eta \lambda, 0 \} .
 \end{equation}
 Even after some improvement by using the two-point estimator (\cref{alg:mf-gradient}), it remained quite a difficult
 topic. So rather extensive experiments on the variation of $\lambda$ and the step size can be found in \cref{sec:app-spi-mf}.
