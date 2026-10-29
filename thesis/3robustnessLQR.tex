@@ -578,7 +578,7 @@ around tenfold increase in cost (with \emph{MfN} even slightly higher) similar t
 the intensities at a relative degradation of one. However, this time we cannot fully attribute this to
 its higher nominal cost. Under \emph{weak} and \emph{standard} intensity, measurement noise does not increase its cost
 measurably (\cref{fig:noise-large-measurement-absolute}) and under higher intensities it remains much
-more robust than the other approaches. This however, is most likely caused by its inability to translate inputs
+more robust than the other approaches. This, however, is most likely caused by its inability to translate inputs
 to meaningful output on the clean loop already, and therefore is not influenced by changes to those inputs at all.
 
 \begin{figure}[htbp]
@@ -604,12 +604,12 @@ When now taking a look at the other architectures in more detail, we notice that
 and \emph{IdP} also degrades slightly more than \emph{IdS}, with the baseline sitting between both. We
 already noticed a similar pattern in the previous experiment, where \emph{TrS} performed slightly better
 than \emph{TrP}, for which we suspected that fewer parameters might make a controller more robust against measurement noise.
-However, by the construction of our initial gain $K_0$ and the policy gradient updates, we know that \emph{TrP} is incurrs
-an additional cost each step under measurement noise, which it cannot remove from its gain, while \emph{TrS} can remove
+However, by the construction of our initial gain $\tilde{K}_0$ and the policy gradient updates, we know that \emph{TrP} incurs
+an additional cost each step under measurement noise, which it cannot remove from its gain, while \emph{TrS} can remove it
 through the soft-thresholding of singular values. The same holds true for \emph{IdP} and \emph{IdS} respectively. The
 full proof behind it can be found in \cref{sec:app-perf-trp-measurement-noise}. While this does not uniquely determine differences
 in the cost, it contributes to it, and as the difference in absolute degradation between \emph{IdP} and \emph{IdS} is barely noticeable,
-we cannot conclude any improved robustness to the low-dimensional controllers.
+we cannot conclude any improved robustness of the low-dimensional controllers.
 
 \subsection{Discussion}
 \label{subsec:id-model-discussion}
@@ -646,9 +646,9 @@ mapping inputs to effective outputs, then a change to these named inputs could h
 the cost. In this case, it seems to help reduce its degradation.
 
 Again, for measurement noise, for \emph{IdS} its slight improvement over \emph{IdP} can be attributed
-to a partial removal of the cost associated with the part of the gain, located outside the range of
+to a partial removal of the cost associated with the part of the gain located outside the range of
 our inflation projection (\cref{sec:app-perf-trp-measurement-noise}). Still, if we account for this,
-both perform fairly similar.
+both perform fairly similarly.
 
 \section{Discussion}
 \label{sec:lqr-discussion}

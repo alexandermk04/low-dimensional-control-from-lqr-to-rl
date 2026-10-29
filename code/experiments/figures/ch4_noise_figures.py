@@ -5,8 +5,11 @@ Run with::
     python -m experiments.figures.ch4_noise_figures
 """
 
+import numpy as np
+
 import settings
 from experiments.figures.aggregate import (
+    aggregate,
     group,
     label_for,
     latest_per_experiment,
@@ -15,9 +18,12 @@ from experiments.figures.aggregate import (
 )
 from experiments.figures.panels import box_metric, degradation_curves, trajectory_overlay
 from experiments.figures.style import figure_dir, save, save_variants, table_dir
-from experiments.figures.tables import METRIC_ROWS, metric_table, setting_table, write_table
+from experiments.figures.tables import (
+    METRIC_ROWS, _cell, metric_table, setting_table, usable, write_table,
+)
 from experiments.settings_guard import require_choice
 from experiments.ch4_noise import SIZES
+from experiments.problem import make_problem
 from experiments.store import load_experiment
 
 EXPERIMENT = "ch4_noise"
@@ -303,10 +309,84 @@ def render_sizes(experiment: str, prefix: str, solvers, sizes):
         )
 
 
+def frozen_gain_table(size: str = "large", level: str = "divergent") -> str:
+    """Part of the gain outside ``range(U_1)`` and the control cost it adds under measurement noise.
+    """
+    sources = (
+        ("True", "ch4_true_model_noise", ("baseline", "mb_pg", "spi")),
+        ("Identified", EXPERIMENT, ("ce_dare", "mb_est", "spi_est")),
+    )
+
+    lines = [
+        r"\begin{tabular}{@{}llrrr@{}}",
+        r"\toprule",
+        r"Model & Solver & $\lVert \tilde{K} P_{\perp} \rVert_F$ "
+        r"& $\sigma_{\mathrm{m}}^{2} H \lVert \tilde{K} P_{\perp} \rVert_F^2 / \hat{J}^{*}$ "
+        r"& $\Delta \hat{J} / \hat{J}^{*}$ \\",
+    ]
+    for model, experiment, solvers in sources:
+        records = latest_per_experiment(load_experiment(experiment))
+        rows = {r["run_id"]: r for r in with_degradation(tidy(records))}
+
+        cells = []
+        for record in records:
+            row = rows[record.run_id]
+            if (record.solver not in solvers or not usable(row) or row.get("size") != size
+                    or row.get("channel") != "measurement" or row.get("level") != level):
+                continue
+
+            problem = make_problem(record.seed, tuple(record.config["inflation"]))
+            perp = np.asarray(record.arrays["K_final"]) @ (
+                np.eye(problem.U_1.shape[0]) - problem.U_1 @ problem.U_1.T
+            )
+            sigma = record.config["noise"]["measurement_noise"]["measurement_noise_std"]
+            frozen = sigma ** 2 * row["test_horizon"] * np.sum(perp * (problem.R[:, None] * perp))
+
+            cells.append({
+                "solver": record.solver,
+                "perp_norm": float(np.linalg.norm(perp)),
+                "frozen_share": float(frozen / row["reference_cost"]),
+                "absolute_degradation": row["absolute_degradation"],
+            })
+
+        lines.append(r"\midrule")
+        for i, solver in enumerate(solvers):
+            lines.append(" & ".join(
+                [model if i == 0 else "", label_for(solver)]
+                + [
+                    _cell(aggregate(cells, "solver", metric).get((solver,)), fmt, show_spread=True)
+                    for metric, fmt in (
+                        ("perp_norm", "{:.3f}"),
+                        ("frozen_share", "{:.3f}"),
+                        ("absolute_degradation", "{:.3g}"),
+                    )
+                ]
+            ) + r" \\")
+    lines += [r"\bottomrule", r"\end{tabular}"]
+
+    caption = (
+        rf"Part of the final gain outside $\operatorname{{range}}(U_1)$ under \emph{{{size}}} inflation, "
+        r"the control cost it adds per test episode of $H$ steps under measurement noise at intensity "
+        rf"\emph{{{level}}}, and the measured absolute degradation. Both costs are relative to the clean "
+        r"cost $\hat{J}^{*}$ of the optimal gain. Mean $\pm$ standard deviation over the seeds."
+    )
+
+    return "\n".join([
+        r"\begin{table}[htbp]",
+        r"\centering",
+        rf"\caption{{{caption}}}",
+        r"\label{tab:app-frozen-gain}",
+        *lines,
+        r"\end{table}",
+    ])
+
+
 def main():
     for size in SIZES:
         render(EXPERIMENT, f"{PREFIX}_{size}", settings.CH4_IDENTIFIED_SOLVERS, size=size)
     render_sizes(EXPERIMENT, PREFIX, settings.CH4_IDENTIFIED_SOLVERS, SIZES)
+
+    write_table(frozen_gain_table(), f"{PREFIX}_frozen_gain", EXPERIMENT)
 
 
 if __name__ == "__main__":

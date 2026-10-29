@@ -4,6 +4,9 @@
 \section{Reasoning for the Performance of \emph{TrP} and \emph{IdP} under Measurement Noise}
 \label{sec:app-perf-trp-measurement-noise}
 
+\subsection{Proof}
+\label{subsec:app-perf-trp-proof}
+
 Throughout this section, $\tilde{K}_j$ denotes the iterates of \emph{TrP},
 started from the stable initial gain $\tilde{K}_0$ as in \eqref{eq:initial-gain}. As mentioned below \eqref{eq:initial-gain}, $K_j \coloneqq U_2 \tilde{K}_j U_1$
 denotes the effective gain on the uninflated loop. We now define the projector onto the complement of $\operatorname{range}(U_1)$ as
@@ -90,7 +93,7 @@ for which the control cost, with $\tilde{R} = I_{d_{\mathrm{out}}}$, is
     + \sigma_{\mathrm{m}}^{2} \lVert K_{\perp} P_{\perp} \rVert_F^2 .
 \end{equation}
 
-Above, we can dropp the cross terms, as $x_k$ is independent from $n^{\mathrm{m}}_k$, and our noise is isotropic and has a zero mean.
+Above, we can drop the cross terms, as $x_k$ is independent from $n^{\mathrm{m}}_k$, and our noise is isotropic and has a zero mean.
 Separating this, we can see that \emph{TrP} always incurs the additional cost
 $\sigma_{\mathrm{m}}^{2} \lVert K_{\perp} P_{\perp} \rVert_F^2$ per step, which by \cref{thm:app-trp-invisible-gain} it
 cannot remove from its gain via gradient optimization.
@@ -116,6 +119,18 @@ With $v_i$ being the columns of $V$ in \eqref{eq:spi-prox}, and $U$ having ortho
     \end{aligned}
 \end{equation}
 i.e. the additional cost can only shrink or stay the same at every update step.
+
+\subsection{Empirical Verification}
+\label{subsec:app-perf-trp-empirical}
+
+We check whether \cref{thm:app-trp-invisible-gain} can be observed during our experiments with the final
+gains under \emph{large} inflation and \emph{divergent} measurement noise. We notice that for \emph{TrP} and \emph{IdP}
+$\lVert \tilde{K} P_{\perp} \rVert_F$ keeps the same value as $\tilde{K}_0$ on every seed, while \emph{TrS} and \emph{IdS}
+reduce it around tenfold. This shows that \cref{thm:app-trp-invisible-gain} indeed applies here. In \cref{tab:app-frozen-gain} 
+we can see that a removal of the associated cost would make both \emph{TrP} and \emph{IdP} the best performing solvers
+in their experiments.
+
+\input{generated/ch4_noise/tables/ch4_noise_frozen_gain.tex}
 
 \section{Additional Plots for the Perception Experiments}
 \label{sec:app-perc-plots}
