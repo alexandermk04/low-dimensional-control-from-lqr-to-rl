@@ -128,7 +128,7 @@ we want. So, we introduce another encoder, which offers this scalability, and ca
 is based on the results of Jonschkowski and Brock~\cite{Jonschkowski2015Learning} and Botteghi et al.~\cite{Botteghi2021LowDimensional}, which use robotic priors. Robotic priors, simply described,
 are prior knowledge, like physical laws, from which we define loss functions. By adding them to the training process, and optimizing for them, we can
 ensure that the learned representation is in line with these laws. As mentioned in \cref{sec:approach}, this allows us to make use of the embodiment
-to improve our controller architecture. Here, we will use the following priors~\cite{Botteghi2021LowDimensional}:
+to improve our controller architecture. Here, we will use the following priors~\cite[Sec.~IV-B]{Botteghi2021LowDimensional}:
 \begin{itemize}
     \item simplicity: the relevant information is lower in dimensionality than the observation,
     \item temporal coherence: state changes are rather slow,
@@ -138,7 +138,7 @@ to improve our controller architecture. Here, we will use the following priors~\
 \end{itemize}
 
 The translation of these principles into loss calculations can be found in detail in the
-paper~\cite{Botteghi2021LowDimensional}. We modify their total loss calculation slightly,
+paper~\cite[Sec.~IV-B]{Botteghi2021LowDimensional}. We modify their total loss calculation slightly,
 by dropping the $\mathcal{L}_{\mathrm{reg}}$ term, and thus obtain
 \begin{equation}
     \label{eq:prior-loss}

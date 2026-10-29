@@ -254,7 +254,7 @@ us to assess the quality of the encoded latent state, as well as a controller's 
 
 Inspired by Jonschkowski et al.~\cite[Sec.~IV-C]{Jonschkowski2017PVE} and Lesort et al.~\cite[Sec.~4.3]{Lesort2018State},
 we implement a regression-based probe on the latent state.
-To not replicate the exact setup from the PVE paper~\cite{Jonschkowski2017PVE}, which uses a neural network as the probe,
+To not replicate the exact setup from the PVE paper~\cite[Sec.~IV-C]{Jonschkowski2017PVE}, which uses a neural network as the probe,
 we instead rely on a stricter, yet simpler, construction similar to the one used by Alain and Bengio~\cite{Alain2017Understanding}. We use
 ridge regression, which keeps the system well conditioned for strongly correlated predictors~\cite{Hoerl1970Ridge}, and collect pairs
 of the true and the latent state over $20$ episodes with $27$ agent steps each post-training. We train with a ridge of $10^{-3}$

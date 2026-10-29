@@ -62,7 +62,7 @@ such that the resulting gain is $K \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in
 
 Now we also want to implement a solver that produces a low-dimensional controller. As in our
 case the controller is characterized by the gain matrix, and for matrices dimensionality is ``often
-[\ldots] expressed by means of the rank''~\cite{Recht2010Guaranteed}, we aim at learning a low-rank
+[\ldots] expressed by means of the rank''~\cite[Sec.~1]{Recht2010Guaranteed}, we aim at learning a low-rank
 gain matrix. However, to make this comparable later to RL approaches that rely on the number of parameters,
 we measure the complexity of a gain by its policy size $\lvert K \rvert$ from \cref{def:policy-size}, which uses
 the more efficient version between the full and the factored parameterization.
@@ -321,7 +321,7 @@ settle this, we evaluated different combinations of them in \cref{sec:app-sample
 trade-off between computational efficiency and quality gave $N_{\mathrm{traj}} = 200$ and $l = 500$.
 
 % mf npg
-We use the model-free natural policy gradient (NPG) estimation described by Fazel et al.~\cite{Fazel2018Global},
+We use the model-free natural policy gradient (NPG) estimation described by Fazel et al.~\cite[Sec.~4.2]{Fazel2018Global},
 which at its core consists of the loop in \cref{alg:mf-gradient}. Instead of the proposed single-point estimator,
 we use a two-point estimator inspired by Duchi et al. and Mania et al.~\cite{Duchi2015Optimal,Mania2018Simple},
 as this drastically reduced the variance of the estimates, and thus the instability of the controller.

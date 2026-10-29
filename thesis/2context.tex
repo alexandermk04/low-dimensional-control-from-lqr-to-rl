@@ -318,7 +318,7 @@ possible intrinsic constraints, and argues that such can even be ``beneficial'' 
 structure. By the core notion of cheap design, embodiment can help produce complex
 behaviors while only needing smaller controllers~\cite{Pfeifer2006HowBody}, which
 inherently requires constraints. So, for such embodied agents, the goal is to find an ``embodied universal
-approximator''~\cite[Sec.~1]{Montufar2015CheapControl}, which restricts the neural network
+[approximator]''~\cite[p.~3]{Montufar2015CheapControl}, which restricts the neural network
 architecture to an intrinsic, unknown dimension, encoding physical properties belonging to the agent
 and the environment, while disallowing impossible movements~\cite[Sec.~3]{Montufar2015CheapControl}.
 
@@ -327,7 +327,7 @@ some features of the control architecture can be simplified and delegated to the
 embodiment~\cite{Mueller2017Morphological}. For example, McGeer's passive walker~\cite{McGeer1990Passive} clearly
 shows that some movements can be produced by the body without any control input, just by choosing
 the right embodiment. While obviously here being simplified to not include any control at all, it
-can quite simply be extended with such~\cite{McGeer1988Stability}.
+can quite simply be extended with such~\cite[Sec.~10]{McGeer1988Stability}.
 M{\"u}ller and Hoffmann~\cite[p.~4]{Mueller2017Morphological} mention such a combination, a robot
 climbing up walls, whose design was inspired by geckos, indeed using energy for control, however
 very little compared to an approach not exploiting this specific embodiment design. Further, it can
@@ -336,7 +336,7 @@ behaviors are not only less energy-intensive to produce~\cite[p.~4]{Mueller2017M
 synergies~\cite{DAvella2003Combinations} and thus fewer control parameters. And while it is
 difficult to clearly attribute the effect of the embodiment~\cite{Zahedi2013Quantifying}, for us,
 this gives reason to believe that the simplicity, and thus efficiency, comes from a
-low-dimensionality of the controller~\cite{Montufar2015CheapControl}.
+low-dimensionality of the controller~\cite[Sec.~5]{Montufar2015CheapControl}.
 
 That this is indeed true for certain examples has been shown both in theory and practice
 before~\cite{Datar2025Universal,Montufar2015Geometry,Li2018Measuring}. Li et
@@ -361,9 +361,10 @@ in nature is the principle of ``redundancy and diversity''~\cite[p.~828]{Kitano2
 in direct contrast to our goal of reducing redundant parameterizations. Another reason for producing
 robust controllers is the difficult transfer from a digital training environment to real-world
 embodiments, commonly referred to as the ``reality gap''~\cite{Tobin2017Domain,Peng2018SimToReal}.
-Approaches to training robust controllers typically introduce noise already during training, be it
-by using a linear quadratic Gaussian (LQG) controller or by including variations to the
-dynamics~\cite{Rao2001Naive,Peng2018SimToReal}.
+Approaches to training robust controllers typically introduce noise already during training, be it by modelling
+measurement and disturbance noise explicitly, as the linear quadratic Gaussian (LQG) controller
+does~\cite[p.~89]{Rao2001Naive}, or by including variations to the
+dynamics~\cite{Peng2018SimToReal}.
 These approaches, however, do not look at low-dimensionality, which makes sense as
 Kitano~\cite[p.~833]{Kitano2004Biological} proposes that robustness cannot be increased
 without sacrificing performance or accepting ``increased resource
@@ -385,7 +386,7 @@ have been studied with regard to robustness, but, to our knowledge, not in combi
 
 Research evaluating RL on control tasks has also shown that there is room for simplification, for
 example using linear policies instead of complex, fully connected neural
-networks~\cite{Mania2018Simple,Rajeswaran2017Towards}. This, together with the
+networks~\cite[Sec.~4.2]{Mania2018Simple}, \cite{Rajeswaran2017Towards}. This, together with the
 fact that parameters in neural networks are highly dependent, and thus redundant~\cite{Denil2013Predicting}, allows us to assume that
 low-dimensionality can improve efficiency here. Examples of this exist, for example by factorizing a discretized low-rank
 policy into a thin and wide matrix~\cite{Rozada2024Matrix} or by introducing an orthogonal projection inside the layer
@@ -399,14 +400,14 @@ these states from a high-dimensional, often nonlinear encoding~\cite[Sec.~1]{Wat
 state representation learning (SRL), exist, which use different variants to create a latent embedding of the image,
 used as a state~\cite{Lesort2018State}. The most interesting approach, especially for us looking at embodied agents, is
 the usage of so-called ``priors'', which restrict the latent space by using knowledge about the
-environment~\cite{Lesort2018State}.
-This is similar to Ay's argument that the embodiment actively defines the action space~\cite{Ay2015Geometric}.
+environment~\cite[Sec.~2.2]{Lesort2018State}.
+This is similar to Ay's argument that the embodiment actively defines the action space~\cite[Sec.~1]{Ay2015Geometric}.
 Robotic priors were introduced by Jonschkowski and Brock~\cite{Jonschkowski2015Learning} in 2015, and then further
 refined by Botteghi et al.~\cite{Botteghi2021LowDimensional} for continuous action spaces. A more specific version
 restricted to position and velocity also exists here, training a model to encode an image into a low-dimensional
 position state, from which the velocity is calculated by finite differences~\cite{Jonschkowski2017PVE}.
 However, perception-based control is also affected by the problems of robust control,
-as noise induced through perception directly affects the performance~\cite{Xu2021Perception}
+as noise induced through perception directly affects the performance~\cite[Sec.~3.3]{Xu2021Perception}
 and therefore requires approaches for mitigating them~\cite{Dean2020Robust}.
 
 Our goal for this thesis is therefore to look a bit deeper at the combination of low-dimensionality
@@ -978,7 +979,7 @@ followed by PPO, gives us FC-Extractor + PPO (\emph{FcE}).
 From now on, we refer to all PPO variants by their short names.
 
 All these low-dimensional approaches, if visualized, exhibit a ``bow-tie'' shape, which in nature can actually
-improve robustness~\cite{Kitano2004Biological}. So this is indeed interesting to investigate. However,
+improve robustness~\cite[p.~829]{Kitano2004Biological}. So this is indeed interesting to investigate. However,
 first, like in \cref{chap:lqr}, we start by comparing these different approaches across the different inflation
 sizes, without any noise applied, to see how they generally behave. Then, we introduce noise, and compare
 our approaches under \emph{large} inflation dimensions.
