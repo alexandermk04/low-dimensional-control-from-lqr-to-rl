@@ -32,7 +32,11 @@
 \section{Main Findings}
 \label{sec:conclusions}
 
-In this thesis, we have shown that simply enforcing low-dimensional structures or latent layers does not
+Enforcing low-dimensional structures in controllers for embodied agents tends to negatively affect 
+their performance, except for specific architectures. Robustness to noise does not increase,
+and indeed might decrease under control noise.
+
+Specifically, we have shown that simply enforcing low-dimensional structures or latent layers does not
 improve the performance of controllers for overparameterized systems; instead, it might even hurt performance. However,
 when combining sufficiently pretrained latent projectors with the right controller architecture, they can
 achieve similar performances to fully connected networks, while being more efficient in their parameter count
@@ -56,12 +60,16 @@ were affected slightly more by it than fully parameterized ones, which we observ
 \section{Summary of Contributions}
 \label{sec:contributions}
 
-We have presented that combining pretrained encoders with a trainable network
-can reduce the parameter count effectively on a toy example, while noting common problems in relation to
-architecture design. Failing to translate its success to a vision-based problem brought
-additional pitfalls to light. Further, we presented that fully parameterized controllers offer, if only slightly, more
-robustness to control noise, while for the other noise types we could only observe tendencies,
-which open possibilities for further research here.
+With this thesis, we contributed
+
+\begin{enumerate}
+	\item a systematic comparison of low-dimensional LQR solvers with known and estimated models under four unique noise channels of varying intensities;
+	\item an extension of it to RL, evaluating PPO-based controllers with linear, bottleneck and encoder architectures;
+	\item a perception-based double-integrator environment with redundant thrusters for more realistic results.
+\end{enumerate}
+
+Especially the environment can be either used for additional experiments on the double-integrator
+or as an inspiration for a setup regarding other control tasks.
 
 \section{Limitations}
 \label{sec:limitations}

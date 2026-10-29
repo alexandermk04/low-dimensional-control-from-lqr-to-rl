@@ -414,13 +414,13 @@ under control noise more parameters generally help the controller stay slightly 
 as seen with \emph{StE}, can perform similarly to fully parameterized controllers, while
 containing far fewer parameters (a reduction of more than $90\,\%$ compared to \emph{FcE} and \emph{OrB}).
 Especially under measurement noise and external disturbance, this low-dimensionality offers good robustness properties which are similar to
-larger controllers, and at or below the baseline. Under parametric uncertainty, all policies degrade similarly, except for
-\emph{Lin}, which degrades less.
+larger controllers, and, under measurement noise, below the baseline from \emph{strong} intensity on.
+Under parametric uncertainty, all policies degrade similarly, except for \emph{Lin}, which degrades less.
 
 Comparing that to our previous chapter, where we also already noticed that controllers with more parameters are more robust, this explains also
 why the order in comparison to the clean loop was inverted there---as the worse controllers did not apply any control, this order was flipped, while
 in our experiment all controllers are acting, and \emph{OrB} and \emph{FcE} were already the best on the clean loop, and thus kept their position.
-We can also see that \emph{StE}, as a low-dimensional controller, degrades less than the baseline under measurement noise;
+We can also see that \emph{StE}, as a low-dimensional controller, degrades less than the baseline under \emph{strong} and \emph{divergent} measurement noise;
 however, it seems as if a very large number of parameters can compensate that as well, with \emph{FcE} achieving similar absolute degradation.
 What also stands out is that a hybrid approach of pretraining a large extractor and then a smaller model is comparable with the indirect
 approaches of our previous chapter. Even closer is using the pseudoinverse of the output matrix like we did in \emph{StE}, which also
