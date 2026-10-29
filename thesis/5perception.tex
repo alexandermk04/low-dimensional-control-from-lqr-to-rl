@@ -12,7 +12,7 @@ on it (\cref{sec:visual-inputs}). Finally, we again apply noise and analyze its 
 \section{Artificial Inflation to Pixel Size}
 \label{sec:pixel-inflation}
 
-\subsection{Setting}
+\subsection{Scaling to Pixels}
 \label{subsec:pixel-inflation-setting}
 
 As mentioned, we take our loop from before (\cref{subsubsec:inflated-model}) and scale it up further. The input
@@ -53,7 +53,7 @@ rounded to two significant digits as in \eqref{eq:app-rl-learning-rate-grid}, wh
     \end{tabular}
 \end{table}
 
-\subsection{Results}
+\subsection{Performance at Pixel Size}
 \label{subsec:pixel-inflation-results}
 
 When we now take a look at the training results, we can see that only for \emph{OrB} and \emph{FcE}
@@ -201,7 +201,7 @@ We refer to it as Position-Velocity Encoder + PPO (\emph{PVE}).
 \section{Effect of Visual Inputs on the Solvers}
 \label{sec:visual-inputs}
 
-\subsection{Setting}
+\subsection{Reference Controller and Solvers}
 \label{subsec:visual-inputs-setting}
 
 For the experiments here, we use the optimal gain under our action repeat (\cref{subsec:pixelated-environment})
@@ -278,7 +278,7 @@ amount of energy is directed into the null space of $c\T$, and thus never reache
 \end{equation}
 which is then averaged over the steps of all $100$ episodes.
 
-\subsection{Results}
+\subsection{Learning from Camera Observations}
 \label{subsec:visual-inputs-results}
 
 Looking at the evolution of the training suboptimality, we can again differentiate between two groups. While the
@@ -365,7 +365,7 @@ the actor until performances comparable to \emph{FcE} can be achieved is left fo
 \section{Noisy Perception}
 \label{sec:perception-noise}
 
-\subsection{Setting}
+\subsection{Noise Calibration for the Environment}
 \label{subsec:perception-noise-setting}
 
 As our environment setup changed drastically, the cost increases associated with the noise levels
@@ -393,7 +393,7 @@ and display it in units of the cost of the oracle on the clean plant.
 For all noise channels, except measurement noise, we also display the calibrated level $\kappa_{\ell} - 1$
 as a dashed line for reference.
 
-\subsection{Results}
+\subsection{Robustness of Perception-Based Control}
 \label{subsec:perception-noise-results}
 
 As we have already noted in \cref{subsec:visual-inputs-results}, \emph{ScE} and \emph{PVE} perform far worse than

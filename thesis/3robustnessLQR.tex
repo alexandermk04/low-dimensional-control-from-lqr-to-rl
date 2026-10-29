@@ -9,7 +9,7 @@ and thus do not need to estimate gradients but can calculate them exactly. This 
 us to clearly separate the benefits of a low-dimensional controller from estimation
 errors.
 
-\subsection{Setting}
+\subsection{Solvers on the True Model}
 \label{subsec:known-model-setting}
 
 % mb pg
@@ -136,7 +136,7 @@ to stabilize, the loop runs until the update produces no effect at all.
 Now that we have defined our controllers and how they learn, we test them in comparison to the DARE-calculated
 solution \eqref{eq:dare} from \cref{subsubsec:lqr-optimal}.
 
-\subsection{Results}
+\subsection{Performance across Inflation Sizes}
 \label{subsec:known-model-results}
 
 We apply our solvers to the \emph{base} and inflated versions of the true model, for now noise-free, as described in
@@ -162,7 +162,7 @@ visualizes this.
 
 Overall, this looks very promising for \emph{TrS}; still, our goal is to find out whether it is also a robust controller.
 
-\subsection{Noise Experiments}
+\subsection{Robustness under \emph{Large} Inflation}
 \label{subsec:true-model-noise}
 
 Now, we reuse the controllers we trained in \cref{subsec:known-model-results} and evaluate them under the test protocol
@@ -233,9 +233,6 @@ The most noticeable difference is under control noise, where \emph{TrP} noticeab
   \label{fig:true-noise-large-control-divergent}
 \end{figure}
 
-\subsection{Discussion}
-\label{subsec:true-model-discussion}
-
 Judging from our results, it is difficult to draw significant conclusions in relation to robustness of the controllers.
 It seems like a trained, larger controller could be more robust to control noise; however, we need to verify this in
 the following experiments. What generally stands out is that \emph{TrS} needs far fewer training iterations, and
@@ -250,7 +247,7 @@ Now we take a look at the more realistic case, where we do not know the underlyi
 Before we can get into the results, we first take a deeper look at the solvers that we use and how the experiments are
 set up.
 
-\subsection{Setting}
+\subsection{System Identification and Model-Free Solvers}
 \label{subsec:unknown-model-setting}
 
 First, we introduce our basis for the indirect approaches, which is based on system identification. N4SID,
@@ -354,8 +351,10 @@ as this drastically reduced the variance of the estimates, and thus the instabil
 \end{algorithm}
 
 We further aim to clarify a couple of things about the given loop.
-Subtracting the mean difference $\bar{\delta}$ does not change the expected value of the estimate, since
-$\E[\Xi_i] = 0$, but lowers its variance. We count a rollout as diverged once its observation exceeds
+Subtracting the mean difference $\bar{\delta}$ here helps us lower the variance of the estimate.
+As $\bar{\delta}$ contains $\delta_i$, it scales the expectation by $1 - 1/N_{\mathrm{traj}}$,
+which is negligible for our $N_{\mathrm{traj}} = 200$.
+We count a rollout as diverged once its observation exceeds
 $\lVert y_k \rVert = 10^{5}$. It is therefore ended early and charged a penalty cost of $10^{10}$.
 Additionally, for inflated dimensions, $\hat{\Sigma}_K$ is singular, so we precondition with its
 truncated pseudoinverse $\hat{\Sigma}_K^{\dagger}$ instead, which discards singular values below $10^{-6}$ times the largest one.
@@ -420,7 +419,7 @@ topic. So rather extensive experiments on the variation of $\lambda$ and the ste
 Based on those, we selected $\lambda_{\mathrm{base}} = 4$ and $\eta_{\mathrm{base}} = 3.5 \times 10^{-6}$, $\lambda_{\mathrm{small}} = 400$ and $\eta_{\mathrm{small}} = 3.5 \times 10^{-5}$,
 $\lambda_{\mathrm{medium}} = 400$ and $\eta_{\mathrm{medium}} = 3.5 \times 10^{-5}$; and $\lambda_{\mathrm{large}} = 40\,000$ and $\eta_{\mathrm{large}} = 3.5 \times 10^{-8}$.
 
-\subsection{Results}
+\subsection{Performance with an Identified Model}
 \label{subsec:unknown-model-results}
 
 Looking at the time until convergence, as well as the achieved training suboptimality, we notice that \emph{MfS}
@@ -472,7 +471,7 @@ indicating that N4SID is able to almost perfectly identify the underlying system
   \label{fig:identified-across-sizes-subopt}
 \end{figure}
 
-\subsection{Noise Experiments on Large Inflation}
+\subsection{Robustness of Indirect and Direct Model-Free Approaches}
 \label{subsec:noise-large-inflation}
 
 Again, we investigate our system inflated to \emph{large} size and repeat our experiments from the
@@ -608,11 +607,11 @@ However, by the construction of our initial gain $\tilde{K}_0$ and the policy gr
 an additional cost each step under measurement noise, which it cannot remove from its gain, while \emph{TrS} can remove it
 through the soft-thresholding of singular values. The same holds true for \emph{IdP} and \emph{IdS} respectively. The
 full proof behind it can be found in \cref{sec:app-perf-trp-measurement-noise}. While this does not uniquely determine differences
-in the cost, it contributes to it, and as the difference in absolute degradation between \emph{IdP} and \emph{IdS} is barely noticeable,
-we cannot conclude any improved robustness of the low-dimensional controllers.
+in the cost, the removal of it makes the difference in absolute degradation between \emph{IdP} and \emph{IdS} barely noticeable,
+so we cannot conclude any improved robustness of the low-dimensional controllers.
 
-\subsection{Discussion}
-\label{subsec:id-model-discussion}
+\section{Discussion}
+\label{sec:lqr-discussion}
 
 From our results, we can see that on the clean loop the identification-based approaches perform much better
 than the direct approaches, achieving a performance similar to that of the optimal controller. Here, \emph{IdD} seems to
@@ -649,16 +648,6 @@ Again, for measurement noise, for \emph{IdS} its slight improvement over \emph{I
 to a partial removal of the cost associated with the part of the gain located outside the range of
 our inflation projection (\cref{sec:app-perf-trp-measurement-noise}). Still, if we account for this,
 both perform fairly similarly.
-
-\section{Discussion}
-\label{sec:lqr-discussion}
-
-This chapter has shown us that smaller-sized policies can indeed achieve performances similar to
-fully parameterized controllers, while maintaining similar robustness properties.
-The main side note here, though, is that it depends on the choice of the algorithm that creates such a policy.
-As we have noticed, direct approaches perform generally worse, and require more training time, compared
-with a mixed approach of system identification and policy iteration. Unbeaten is clearly \emph{IdD}, which
-requires just the system identification step, and performs on par with the optimal controller throughout.
 
 As this system is a very simple case, and system identification is not scalable to larger inflation
 (as we will mention in \cref{chap:perception}), we cannot rely on these approaches for real-world applications. We

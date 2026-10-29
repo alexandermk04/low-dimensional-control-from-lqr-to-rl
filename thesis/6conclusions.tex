@@ -29,7 +29,7 @@
 
 % The Future Research subsection is included so that researchers picking up this work in future have the benefit of the ideas that you generated while you were working on the project. Again, concise numbered paragraphs are usually best. 
 
-\section{Conclusions}
+\section{Main Findings}
 \label{sec:conclusions}
 
 In this thesis, we have shown that simply enforcing low-dimensional structures or latent layers does not
@@ -39,11 +39,11 @@ achieve similar performances to fully connected networks, while being more effic
 and training time. While this could be clearly shown for LQR, under RL only tendencies were observed, requiring
 further investigation.
 
-We further found conflicting results on whether low-dimensional latent states
-can improve robustness to measurement noise. While LQR solvers and model-informed
-\emph{StE} present a tendency here, it is insignificant compared to the spread of the seeds. For LQR,
-this tendency could be further explained by our experiment construction, therefore refuting this claim.
-For the camera environment, we could not observe anything in this direction.
+We further found no evidence that low-dimensional latent states can improve robustness to measurement noise.
+For the LQR solvers, the slight advantage comes from the part of the initial gain which a full-rank
+policy gradient solver cannot remove (\cref{sec:app-perf-trp-measurement-noise}). For \emph{StE}, the observed
+tendency is insignificant compared to the spread of the seeds, while for the camera environment we could not observe
+it at all.
 
 Regarding the latent state, it is also important to ensure that not only control information is carried
 here, but also information about the observed state. Otherwise, robustness to control noise might worsen.

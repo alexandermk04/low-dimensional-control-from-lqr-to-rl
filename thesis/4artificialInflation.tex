@@ -420,8 +420,8 @@ larger controllers, and at or below the baseline. Under parametric uncertainty, 
 Comparing that to our previous chapter, where we also already noticed that controllers with more parameters are more robust, this explains also
 why the order in comparison to the clean loop was inverted there---as the worse controllers did not apply any control, this order was flipped, while
 in our experiment all controllers are acting, and \emph{OrB} and \emph{FcE} were already the best on the clean loop, and thus kept their position.
-We can also see that the robustness in relation to measurement noise for low-dimensional controllers does indeed still hold;
-however, it seems as if a very large number of parameters can compensate that.
+We can also see that \emph{StE}, as a low-dimensional controller, degrades less than the baseline under measurement noise;
+however, it seems as if a very large number of parameters can compensate that as well, with \emph{FcE} achieving similar absolute degradation.
 What also stands out is that a hybrid approach of pretraining a large extractor and then a smaller model is comparable with the indirect
 approaches of our previous chapter. Even closer is using the pseudoinverse of the output matrix like we did in \emph{StE}, which also
 performed great in relation to its parameter count.
