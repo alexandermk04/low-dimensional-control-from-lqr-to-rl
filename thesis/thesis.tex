@@ -272,9 +272,9 @@ having the controller observe and act in a higher dimension and use projection m
 dimension of the underlying system. Afterwards, we also introduce a system with camera-based observations and a more complex actuation structure.
 Throughout our experiments, we notice that low-dimensional controllers are difficult to implement successfully, and
 require careful consideration during design. However, if done right, a combination of fixed, briefly pretrained encoders
-together with a smaller, longer-trained actor can perform similarly to a fully connected one. In some cases
-we even notice improved robustness to measurement noise, but not under our perception-based experiments.
-In comparison, a fully trained controller seems to be more robust to control noise.
+together with a smaller, longer-trained actor can perform similarly to a fully connected one. In regards to noise,
+no significant improvement in robustness for low-dimensional controllers could be observed.
+However, a fully trained controller seems to be more robust to control noise.
 
 % If the abstract ist not longer than half a page, then the German Zusammenfassung can be places on the same page
 %\cleardoublepage
@@ -290,12 +290,12 @@ danach zu Reinforcement Learning, für welches wir Proximal Policy Optimization 
 bildet der Doppelintegrator, welchen wir künstlich überparametrisieren, indem wir den Regler in einer
 höheren Dimension beobachten und agieren lassen, und mit Hilfe von Projektionsmatrizen zwischen dieser
 und der echten Dimension des Systems transferieren. Danach stellen wir ein kamera-basiertes System vor,
-welches eine komplexere Motorenstruktur besitzt. In unseren Experimenten bemerken wir, dass es schwierig
+welches eine komplexere Motorenstruktur besitzt. In unseren Experimenten erkennen wir, dass es schwierig
 ist niederdimensionale Regler effektiv zu implementieren und in jedem Falle genaue Planung bei dem Aufbau
-benötigt. Wenn es jedoch gelingt, können Kombinationen aus statischen, vortrainierten Codierern und kleineren,
-länger trainierten neuronalen Netzen Leistungen erzielen, die vergleichbar mit einem ganzheitlich trainierten
-Netz sind. In manchen Fällen beobachten wir auch bessere Resistenz gegenüber Messungsstörungen, allerdings nicht
-in unseren Kamera-basierten Experimenten. Entgegengesetzt scheint ein ganzheitlich trainierter Regler resistenter
+benötigt. Bei korrekter Umsetzung können Kombinationen aus statischen, vortrainierten Codierern und kleineren,
+länger trainierten neuronalen Netzen jedoch Leistungen erzielen, die vergleichbar mit einem ganzheitlich trainierten
+Netz sind. Im Bezug auf Rauschen konnten keine signifikanten Verbesserungen in der Resistenz für niederdimensionale Regler
+beobachtet werden. Allerdings scheint ein ganzheitlich trainierter Regler resistenter
 gegenüber Regelungsstörungen zu sein.
 
 \cleardoublepage

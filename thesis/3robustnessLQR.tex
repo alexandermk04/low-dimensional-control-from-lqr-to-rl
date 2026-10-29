@@ -578,7 +578,8 @@ around tenfold increase in cost (with \emph{MfN} even slightly higher) similar t
 the intensities at a relative degradation of one. However, this time we cannot fully attribute this to
 its higher nominal cost. Under \emph{weak} and \emph{standard} intensity, measurement noise does not increase its cost
 measurably (\cref{fig:noise-large-measurement-absolute}) and under higher intensities it remains much
-more robust than the other approaches.
+more robust than the other approaches. This however, is most likely caused by its inability to translate inputs
+to meaningful output on the clean loop already, and therefore is not influenced by changes to those inputs at all.
 
 \begin{figure}[htbp]
   \centering
@@ -599,11 +600,16 @@ more robust than the other approaches.
   \label{fig:noise-large-measurement}
 \end{figure}
 
-When now taking a look at the other architectures in more detail, we notice that the larger
-controllers are indeed more affected by the noise. \emph{MfN} sits above all the model-based approaches,
+When now taking a look at the other architectures in more detail, we notice that \emph{MfN} sits above all the model-based approaches,
 and \emph{IdP} also degrades slightly more than \emph{IdS}, with the baseline sitting between both. We
 already noticed a similar pattern in the previous experiment, where \emph{TrS} performed slightly better
-than \emph{TrP}, indicating that fewer parameters might make a controller more robust against measurement noise.
+than \emph{TrP}, for which we suspected that fewer parameters might make a controller more robust against measurement noise.
+However, by the construction of our initial gain $K_0$ and the policy gradient updates, we know that \emph{TrP} is incurrs
+an additional cost each step under measurement noise, which it cannot remove from its gain, while \emph{TrS} can remove
+through the soft-thresholding of singular values. The same holds true for \emph{IdP} and \emph{IdS} respectively. The
+full proof behind it can be found in \cref{sec:app-perf-trp-measurement-noise}. While this does not uniquely determine differences
+in the cost, it contributes to it, and as the difference in absolute degradation between \emph{IdP} and \emph{IdS} is barely noticeable,
+we cannot conclude any improved robustness to the low-dimensional controllers.
 
 \subsection{Discussion}
 \label{subsec:id-model-discussion}
@@ -639,20 +645,16 @@ degradation here. If the gain matrix was not able to control the mass without no
 mapping inputs to effective outputs, then a change to these named inputs could have any effect on
 the cost. In this case, it seems to help reduce its degradation.
 
-One interesting thing however remains. Again, for measurement noise, \emph{IdS} seems to sit slightly
-below \emph{IdP}, hinting again at a better resistance of smaller policies to measurement noise,
-like we hypothesized in \cref{subsec:noise-large-inflation}. One might say that \emph{MfS} also shows this; however,
-this is incorrect. Based on the small size reduction, and the difficulties controlling
-the mass under the clean loop, it would be an inconsistent comparison. But, comparing \emph{IdS} to
-\emph{IdP} and \emph{MfN}, we can indeed see that \emph{IdS} is slightly more robust to measurement noise, while
-being much smaller than those other two.
-
+Again, for measurement noise, for \emph{IdS} its slight improvement over \emph{IdP} can be attributed
+to a partial removal of the cost associated with the part of the gain, located outside the range of
+our inflation projection (\cref{sec:app-perf-trp-measurement-noise}). Still, if we account for this,
+both perform fairly similar.
 
 \section{Discussion}
 \label{sec:lqr-discussion}
 
 This chapter has shown us that smaller-sized policies can indeed achieve performances similar to
-fully parameterized controllers, while maintaining similar or partially better robustness properties.
+fully parameterized controllers, while maintaining similar robustness properties.
 The main side note here, though, is that it depends on the choice of the algorithm that creates such a policy.
 As we have noticed, direct approaches perform generally worse, and require more training time, compared
 with a mixed approach of system identification and policy iteration. Unbeaten is clearly \emph{IdD}, which

@@ -41,10 +41,9 @@ further investigation.
 
 We further found conflicting results on whether low-dimensional latent states
 can improve robustness to measurement noise. While LQR solvers and model-informed
-\emph{StE} present a tendency here, it is insignificant compared to the spread of the seeds.
-For the camera environment, we could not observe any of that. This, however, might
-be related to the first point, where our RL approaches already showed bad performance
-under the clean loop.
+\emph{StE} present a tendency here, it is insignificant compared to the spread of the seeds. For LQR
+this tendency could be further explained by our experiment construction, therefore refuting this claim.
+For the camera environment, we could not observe anything in this direction.
 
 Regarding the latent state, it is also important to ensure that not only control information is carried
 here, but also information about the observed state. Otherwise, robustness to control noise might worsen.
