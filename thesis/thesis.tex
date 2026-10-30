@@ -1,4 +1,5 @@
 \documentclass[12pt,final,twoside]{report}
+\usepackage[a-2b]{pdfx}                 % PDF/A-2b; loads hyperref, metadata from thesis.xmpdata
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Some credits:
 % The template initially was created by Prof. Dr. Holger Karl/Uni Paderborn '2006
@@ -81,25 +82,17 @@
 % PDF Information und Definitions:
 \author{\trauthor}
 
-\ifx\pdftexversion\undefined
-\usepackage{hyperref}
-\else
-\usepackage[colorlinks=false,           % link is colores (true) or has colored frame (false)
+% hyperref is loaded by pdfx; title, author, subject and keywords come from thesis.xmpdata
+\hypersetup{colorlinks=false,           % link is colores (true) or has colored frame (false)
             linkcolor=uhhRed,           % case colorlinks=true: define color.
             urlcolor=uhhRed,
             citecolor=uhhRed,
-            bookmarks,                  % Place bookmarks erstellen
             bookmarksopen=true,         % Bookmarks will be shown at start (true/false)
-            pdfpagemode=UseOutlines,    
+            pdfpagemode=UseOutlines,
             bookmarksopenlevel=1,       % Define the depth of shown links
             bookmarksnumbered,          % Numbers of chapers in Bookmarks
-            pdftitle={\trtitle},
-            pdfsubject={\trtype},
-            pdfkeywords={\trkeywords},
-            pdfauthor={\trauthor},
             plainpages=false
-            ]{hyperref}
-\fi
+            }
 
 \ifx\pdftexversion\undefined
 \else
