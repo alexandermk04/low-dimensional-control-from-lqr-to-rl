@@ -24,7 +24,7 @@ $I_n$, $\mathbf{1}_n$, $e_i$ & identity matrix and all-ones vector of dimension 
 $M\T$, $M^{\dagger}$ & transpose and (truncated) pseudoinverse of $M$ & \cref{alg:mf-npg} \\
 $\tr$, $\rank$, $\operatorname{diag}$ & trace, rank, diagonal matrix & \\
 $\lambda_i(M)$, $\chi_i(M)$ & $i$-th eigenvalue and $i$-th singular value of $M$ & \\
-$\Phi \operatorname{diag}(\chi_1, \dots, \chi_r) \Psi\T$ & singular value decomposition, $\Phi$ and $\Psi$ with orthonormal columns & \eqref{eq:svd} \\
+$\Phi$, $\Psi$ & factors with orthonormal columns of the singular value decomposition $\Phi \operatorname{diag}(\chi_1, \dots, \chi_r) \Psi\T$ & \eqref{eq:svd} \\
 $\spr(M)$ & spectral radius, $\max_i \lvert \lambda_i(M) \rvert$ & \cref{subsec:double-integrator} \\
 $M \succeq 0$, $M \succ 0$ & $M$ symmetric positive semi-definite / positive definite & \\
 $\lVert \cdot \rVert$, $\lVert \cdot \rVert_F$, $\lVert \cdot \rVert_{*}$ & Euclidean (spectral) norm, Frobenius norm, nuclear norm & \\
@@ -79,7 +79,7 @@ $\ell$, $c_{\ell}$, $\kappa_{\ell}$ & noise intensity, a channel at intensity $\
 \multicolumn{3}{@{}l}{\emph{Evaluation and training protocol}} \\[2pt]
 $T$ & horizon of a rollout & \eqref{eq:empirical-return} \\
 $s$, $i$ & index of the seed and of the episode & \eqref{eq:empirical-return} \\
-$M$, $N$ & number of seeds and of episodes per seed & \eqref{eq:divergence-rate} \\
+$N$ & number of episodes per seed & \eqref{eq:divergence-rate} \\
 $\mathcal{S}$ & set of seeds whose controller is stable on the clean loop & \eqref{eq:divergence-rate} \\
 $J^{(i,s)}_T(K; c)$ & empirical cost of one episode & \eqref{eq:empirical-return} \\
 $\hat{J}_T(K; c)$, $\mathcal{F}$ & mean empirical cost, set of finite episodes & \eqref{eq:empirical-cost} \\
@@ -135,7 +135,7 @@ $\xi_k$, $\hat{\xi}_k$, $\bar{\xi}$, $\mathcal{I}_{\mathrm{test}}$ & probed feat
 \section{Calibrated Noise Intensities}
 \label{sec:app-noise-levels}
 
-The settings used for the different noise intensities, obtained by the
+\Cref{tab:noise-levels} lists the settings used for the different noise intensities, obtained by the
 calibration \eqref{eq:noise-calibration} on the non-inflated system.
 It is important to note that parametric noise is resampled at every step,
 and that the disturbance noise uses its sinusoidal variant \eqref{eq:dist-sin}.
@@ -145,7 +145,7 @@ and that the disturbance noise uses its sinusoidal variant \eqref{eq:dist-sin}.
 \section{Noise Intensities of the Perception Environment}
 \label{sec:app-pixel-noise-levels}
 
-The settings used for the different noise intensities in the perception-based environment
+\Cref{tab:pixel-noise-levels} lists the settings used for the different noise intensities in the perception-based environment
 of \cref{sec:pixel-env}, obtained by the calibration \eqref{eq:noise-calibration}
 with the optimal controller acting on the true state as reference. As measurement
 noise is not calibrated but set by hand (\cref{subsec:perception-noise-setting}), its values
@@ -182,13 +182,12 @@ All other parameters keep their default values.
 \section{Policy Architectures}
 \label{sec:app-ppo-architectures}
 
-The actor architectures of the PPO variants introduced in \cref{subsec:rl-architectures}.
+\Cref{fig:ppo-architectures} shows the actor architectures of the PPO variants introduced in \cref{subsec:rl-architectures}.
 
 \begin{figure}[htbp]
     \centering
     \input{figures/ppo-architectures.tex}
     \caption{Actor architectures of our PPO variants. For each layer, the number below indicates its neurons.
-    The critic receives the same encoder structure and uses its own 64-64 tanh perceptron with a scalar output.
-    Visualization created with Claude Code.}
+    The critic receives the same encoder structure and uses its own 64-64 tanh perceptron with a scalar output.}
     \label{fig:ppo-architectures}
 \end{figure}

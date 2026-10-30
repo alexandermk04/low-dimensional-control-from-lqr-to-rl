@@ -93,13 +93,13 @@ for which the control cost, with $\tilde{R} = I_{d_{\mathrm{out}}}$, is
     + \sigma_{\mathrm{m}}^{2} \lVert K_{\perp} P_{\perp} \rVert_F^2 .
 \end{equation}
 
-Above, we can drop the cross terms, as $x_k$ is independent from $n^{\mathrm{m}}_k$, and our noise is isotropic and has a zero mean.
+Above, we can drop the cross terms, as $x_k$ is independent of $n^{\mathrm{m}}_k$, and our noise is isotropic and has zero mean.
 Separating this, we can see that \emph{TrP} always incurs the additional cost
 $\sigma_{\mathrm{m}}^{2} \lVert K_{\perp} P_{\perp} \rVert_F^2$ per step, which by \cref{thm:app-trp-invisible-gain} it
 cannot remove from its gain via gradient optimization.
 
-The same argument holds for \emph{IdP}. On the identified model of \cref{subsec:unknown-model-setting}, $\hat{C}$, which has
-also orthonormal columns, is used instead of $U_1$, $U_2$ becomes $I_{d_{\mathrm{out}}}$, and $\tilde{\Sigma}_0 = \hat{C} \hat{C}\T$.
+The same argument holds for \emph{IdP}. On the identified model of \cref{subsec:unknown-model-setting}, $\hat{C}$, which
+also has orthonormal columns, is used instead of $U_1$, $U_2$ becomes $I_{d_{\mathrm{out}}}$, and $\tilde{\Sigma}_0 = \hat{C} \hat{C}\T$.
 With $\hat{P}_{\perp} \coloneqq I_{d_{\mathrm{in}}} - \hat{C} \hat{C}\T$, every iterate thus satisfies
 $\tilde{K}_j \hat{P}_{\perp} = \tilde{K}_0 \hat{P}_{\perp}$, and \emph{IdP} incurs the additional cost
 $\sigma_{\mathrm{m}}^{2} \lVert \tilde{K}_0 \hat{P}_{\perp} \rVert_F^2$ per step.
@@ -118,7 +118,7 @@ With $\Psi e_i$ being the $i$-th column of $\Psi$ in \eqref{eq:spi-prox}, and $\
     = \lVert \tilde{K}_j P_{\perp} \rVert_F^2 ,
     \end{aligned}
 \end{equation}
-i.e. the additional cost can only shrink or stay the same at every update step.
+i.e.\ the additional cost can only shrink or stay the same at every update step.
 
 \subsection{Empirical Verification}
 \label{subsec:app-perf-trp-empirical}
@@ -127,7 +127,7 @@ We check whether \cref{thm:app-trp-invisible-gain} can be observed during our ex
 gains under \emph{large} inflation and \emph{divergent} measurement noise. We notice that for \emph{TrP} and \emph{IdP}
 $\lVert \tilde{K} P_{\perp} \rVert_F$ keeps the same value as $\tilde{K}_0$ on every seed, while \emph{TrS} and \emph{IdS}
 reduce it around tenfold. This shows that \cref{thm:app-trp-invisible-gain} indeed applies here. In \cref{tab:app-frozen-gain} 
-we can see that a removal of the associated cost would make both \emph{TrP} and \emph{IdP} the best performing solvers
+we can see that a removal of the associated cost would make both \emph{TrP} and \emph{IdP} the best-performing solvers
 in their experiments.
 
 \input{generated/ch4_noise/tables/ch4_noise_frozen_gain.tex}

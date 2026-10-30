@@ -28,7 +28,7 @@ memory. Additionally, we excluded \emph{Lin}, due to its already weak performanc
 
 Due to computational complexity and time restrictions, we reduced the training steps to $10^{7}$ and
 did not run experiments to determine the optimal learning rate here. Instead, we used the optimal
-learning rate for \emph{large}, and extrapolate it from our known values via
+learning rate for \emph{large}, and extrapolated it from our known values via
 \begin{equation}
     \label{eq:pixel-learning-rate}
     \eta_0^{\mathrm{pixel}}
@@ -110,7 +110,7 @@ us that the projection in \emph{OrB} is negatively affecting it.
 
 We will revisit these results in the context of the new environment (\cref{sec:perception-discussion}).
 
-\section{The New Environment and the Position-Velocity Encoder}
+\section[The New Environment and the Position-Velocity Encoder]{The New Environment and the\\Position-Velocity Encoder}
 \label{sec:pixel-env}
 
 \subsection{Pixelated Environment}
@@ -127,8 +127,8 @@ an example of such an image.
 
 In addition to the input being high-dimensional compared to the actual state, we also modify the way
 our mass is actuated. We replace the single actuator with $256$ thrusters, distributed equally around
-a half circle, so thruster $i \in \{0, \dots, 255\}$ sits at an angle of $\pi i / 256$. Each thruster can actuate in the
-range $(v_k)_i \in [-1, 1]$, however, due to the angle, only $b_i \coloneqq b_{\max} \cos(\pi i / 256)$ effective acceleration is produced on
+a half-circle, so thruster $i \in \{0, \dots, 255\}$ sits at an angle of $\pi i / 256$. Each thruster can actuate in the
+range $(v_k)_i \in [-1, 1]$; however, due to the angle, only $b_i \coloneqq b_{\max} \cos(\pi i / 256)$ effective acceleration is produced on
 the mass, where $b_{\max}$ is a scaling factor.%
 \footnote{The most energy-efficient and thus cheapest way to produce an acceleration $u_k$ is the least-norm allocation, which
 uses the thrusters based on their output effectiveness $(v_k)_i = u_k \cos(\pi i / 256)/(128 \cdot b_{\max})$, where $128 = \sum_i \cos^2(\pi i / 256)$.
@@ -151,7 +151,7 @@ visualizes the thrust directions for eight thrusters.
     \begin{subfigure}[b]{0.49\linewidth}
         \centering
         \input{figures/thruster-ring.tex}
-        \caption{Schematic of the effect of eight thrusters. Created with Claude Code.}
+        \caption{Schematic of the effect of eight thrusters.}
         \label{fig:pixel-setup-thrusters}
     \end{subfigure}
     \caption{Observation and actuation in the camera environment.}
@@ -160,7 +160,7 @@ visualizes the thrust directions for eight thrusters.
 
 With our chosen frame and action repeat, a pixel difference between two frames can only be guaranteed at velocities
 above $0.83\,\mathrm{m/s}$. Otherwise, motion is only visible if the mass crosses a pixel boundary, making velocity
-generally hard to identify. For a better approximation the number of frames stacked could be increased,
+generally hard to identify. For a better approximation, the number of frames stacked could be increased,
 or anti-aliasing could be used to display changes better.
 
 \subsection{Position-Velocity Encoder}
@@ -221,8 +221,8 @@ The learning rates we use here are identical to the ones extrapolated in \cref{t
 As we did not use \emph{PVE} (\cref{subsec:pve}) before, we copy the learning rate from \emph{ScE} for it, as it is the
 most similar (both use robotic priors).
 
-However, we also modify some of our PPO parameters for this setting. Not mentioned parameters
-equate to their \cref{chap:inflation} values. Specifically, we
+However, we also modify some of our PPO parameters for this setting. Parameters not mentioned
+keep their values from \cref{chap:inflation}. Specifically, we
 \begin{itemize}
     \item set $\gamma = 0.97$, which gives us around $1/(1-\gamma) \approx 33$ effective agent steps.
     Multiplying this with our agent step interval of $0.3\,\mathrm{s}$ gives us roughly $10\,\mathrm{s}$
@@ -319,17 +319,17 @@ not controlling the mass at all and \emph{ScE} only slightly, with both failing 
 \Cref{tab:ch6-perception-probe} shows us that \emph{FcE} encodes both position and
 velocity fairly well from the observations, but the control less so ($R^2 \approx 0.60$).
 Calculating a control input from these is then probably delegated to the PPO network, and the extractor is therefore mainly an encoder.
-For \emph{OrB}, we notice a difference here: The latent state partially encodes the oracle's control ($0.68$),
+For \emph{OrB}, we notice a difference here: the latent state partially encodes the oracle's control ($0.68$),
 but barely position ($0.10$) and velocity ($-0.02$), indicating that its extractor moves the mentioned calculation before the latent projection.
-As we see that \emph{OrB} wastes some thrust energy in \cref{fig:perc-null-waste}, the size of the PPO head could be too little to perfectly
+As we see that \emph{OrB} wastes some thrust energy in \cref{fig:perc-null-waste}, the size of the PPO head could be too small to perfectly
 translate this signal into effective thrust. We can notice a similar pattern in both \emph{ScE} and \emph{PVE}, where
 the latent state indeed contains both control and position correlation, at even higher levels than \emph{FcE},
 indicating that the encoding is effective. However, \emph{ScE} is missing velocity observations, which makes it
 difficult for it to see the effects of its control. As a result, it loses the mass outside the screen in $6.4\,\%$
 of the test episodes, getting charged the exit penalty (\cref{fig:perc-off-screen}).
 Encoding-wise, \emph{PVE} captures the position of its point almost perfectly, and
-indicates well how the controller should steer the mass. But similar to the previous cases, however the
-most severe, the complexity of PPO here seems to be too reduced to effectively translate it onto the thrusters. Judging
+indicates well how the controller should steer the mass. But, as in the previous cases, and here most
+severely, the complexity of PPO seems to be too reduced to effectively translate it onto the thrusters. Judging
 by the major waste in the null space, \emph{PVE} cannot differentiate well between effective and wasteful
 thrusters, and therefore does not move at all in some cases (\cref{fig:app-perc-trajectories}). As a result, it also
 loses the mass in $3.1\,\%$ of the episodes. So, for both \emph{ScE} and \emph{PVE}, a higher suboptimality
@@ -358,7 +358,7 @@ than \emph{FcE} or \emph{OrB} is produced, where the latter do not exit any epis
 As a summary, we note that a low-dimensional latent layer can indeed produce effective encodings of the
 true state, even with far fewer parameters. However, the complexity of the following network must
 allow this encoding to be translated back into action, which in our case it fails to do, possibly because
-of its size. This effect is even more enlarged if the extractor is frozen, and thus both parts are trained separately, and the
+of its size. This effect is even more pronounced if the extractor is frozen, and thus both parts are trained separately, and the
 majority of the training happens only on $0.3\,\%$ (\emph{ScE}) or $1.7\,\%$ (\emph{PVE}) of the parameters. Increasing the complexity of
 the actor until performances comparable to \emph{FcE} can be achieved is left for future research.
 
@@ -485,10 +485,10 @@ In the end, the actor head failed to translate those encodings into the correct 
 which hints at the PPO network being too small, if the extractor is frozen before. This could have also contributed to
 \emph{ScE}'s worse performance.
 
-Looking at the effect of noise, we again notice that parametric uncertainty affects already worse performing
+Looking at the effect of noise, we again notice that parametric uncertainty affects already worse-performing
 controllers generally more. For external disturbances, we observe a pattern under \emph{divergent} intensity, where \emph{ScE} and \emph{PVE} both
 degrade noticeably less than \emph{FcE} and \emph{OrB}, which are not able to contain the mass in most of the episodes (\cref{tab:perc-noise-terminated}). A possible robustness
-stemming from the frozen extractors could be the case, but cannot be clearly attributed by our data.
+stemming from the frozen extractors could be the case, but cannot be clearly attributed based on our data.
 Under control noise, we find that controllers which cannot coordinate their thrusters well, and waste more thrust,
 are consequently more affected by it. Also, the trend that fully parameterized controllers are less affected by it
 continues in our experiments. Finally, we notice, contrary to our previous findings, that controllers carrying a low-dimensional latent state
@@ -497,7 +497,7 @@ controller on the clean plant.
 
 Overall, based on our observations in this chapter, controllers containing a low-dimensional latent state,
 as well as far fewer trainable parameters, can be constructed using pretrained extractors. Making them perform
-at suboptimalities similar to fully connected controllers however requires a careful selection of the actor size,
+at suboptimalities similar to fully connected controllers, however, requires a careful selection of the actor size,
 as well as an effective encoding of all relevant properties. The latter is especially what matters when it comes
 to robustness. If both are fulfilled, it is probable that such a controller can outperform a full network, while being
-more space efficient. This however remains to be shown.
+more space efficient. This, however, remains to be shown.

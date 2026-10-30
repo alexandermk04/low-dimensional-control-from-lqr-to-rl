@@ -14,8 +14,8 @@
 \newcommand{\trmatrikelnummer}{590156}
 \newcommand{\trbirth}{09.02.2004}
 \newcommand{\trstudies}{Data Science}
-\newcommand{\trgutachterA}{\href{mailto:nihat.ay@tuhh.de}{Prof. Dr. N. Ay}}
-\newcommand{\trgutachterB}{\href{mailto:manfred.eppe@tuhh.de}{Dr. Manfred Eppe}}
+\newcommand{\trgutachterA}{\href{mailto:nihat.ay@tuhh.de}{Prof. Dr. Nihat Ay}}
+\newcommand{\trgutachterB}{\href{mailto:adwait.datar@tuhh.de}{Dr. Adwait Datar}}
 \newcommand{\trbetreuung}{\href{mailto:adwait.datar@tuhh.de}{Dr. Adwait Datar}}
 \newcommand{\trfach}{Data Science Foundations}
 \newcommand{\trdate}{31.10.2026}
@@ -237,7 +237,7 @@
     \begin{center}
     \begin{tabular}{ll}
     Erstprüfer: & \trgutachterA \\
-    Zweitprüfer & \trgutachterB \\
+    Zweitprüfer: & \trgutachterB \\
     Betreuung:  & \trbetreuung \\    	% Adviser are not allowed to demand getting credited, but are happy getting credited by the students initiative
     \end{tabular}
     \end{center}
@@ -266,11 +266,11 @@
 %\addcontentsline{toc}{chapter}{\numberline{}Abstract}
 %Your English abstract here (mandatory if written in English and recommended otherwise).
 This thesis investigates the effects of low-dimensional structures in the control architectures for
-embodied agents, starting from simple LQR-based solvers and expanding to RL-approaches implemented using proximal
-policy optimization. As the basis serves the double integrator, which is first artificially overparameterized by
+embodied agents, starting from simple LQR-based solvers and expanding to RL approaches implemented using proximal
+policy optimization. The double integrator serves as the basis. It is first artificially overparameterized by
 having the controller observe and act in a higher dimension and use projection matrices to change between it and the
 dimension of the underlying system. Afterwards, we also introduce a system with camera-based observations and a more complex actuation structure.
-Throughout our experiments, we notice that low-dimensional controllers are difficult to implement successfully, and
+Throughout our experiments, we notice that low-dimensional controllers are difficult to implement successfully and
 require careful consideration during design. However, if done right, a combination of fixed, briefly pretrained encoders
 together with a smaller, longer-trained actor can perform similarly to a fully connected one. With regard to noise,
 no significant improvement in robustness for low-dimensional controllers could be observed.
@@ -289,13 +289,13 @@ Agenten mit einem Körper. Hierfür beginnen wir mit LQR-basierten Reglern und e
 danach zu Reinforcement Learning, für welches wir Proximal Policy Optimization verwenden. Die Basis
 bildet der Doppelintegrator, welchen wir künstlich überparametrisieren, indem wir den Regler in einer
 höheren Dimension beobachten und agieren lassen, und mit Hilfe von Projektionsmatrizen zwischen dieser
-und der echten Dimension des Systems transferieren. Danach stellen wir ein kamera-basiertes System vor,
+und der echten Dimension des Systems transferieren. Danach stellen wir ein kamerabasiertes System vor,
 welches eine komplexere Motorenstruktur besitzt. In unseren Experimenten erkennen wir, dass es schwierig
-ist niederdimensionale Regler effektiv zu implementieren und in jedem Falle genaue Planung bei dem Aufbau
+ist, niederdimensionale Regler effektiv zu implementieren, und dass ihr Aufbau in jedem Fall eine genaue Planung
 benötigt. Bei korrekter Umsetzung können Kombinationen aus statischen, vortrainierten Codierern und kleineren,
 länger trainierten neuronalen Netzen jedoch Leistungen erzielen, die vergleichbar mit einem ganzheitlich trainierten
-Netz sind. In Bezug auf Rauschen konnten keine signifikanten Verbesserungen in der Resistenz für niederdimensionale Regler
-beobachtet werden. Allerdings scheint ein ganzheitlich trainierter Regler resistenter
+Netz sind. In Bezug auf Rauschen konnten keine signifikanten Verbesserungen in der Robustheit niederdimensionaler Regler
+beobachtet werden. Allerdings scheint ein ganzheitlich trainierter Regler robuster
 gegenüber Regelungsstörungen zu sein.
 
 \cleardoublepage
@@ -393,34 +393,35 @@ continuous support during my thesis.
 \chapter*{Verwendete Hilfsmittel}
 \label{sec:tool-usage}
 \fancyhead[LE]{\it Erkl\"arung zur Benutzung von Hilfsmitteln}
-Für die Erstellung dieser Bachelorarbeit wurde Generative KI innerhalb
+Für die Erstellung dieser Bachelorarbeit wurde generative KI innerhalb
 der im Folgenden genannten Hilfsmittel für die angeführten Zwecke verwendet. Der Autor
-hat jegliche produzierten Ausgaben ausführlich geprüft, und übernimmt Verantwortung für diese.
-Die Selbständigkeit der produzierten Ideen, sowie deren Umsetzung, waren zu jeder
+hat jegliche produzierten Ausgaben ausführlich geprüft und übernimmt Verantwortung für diese.
+Die Selbstständigkeit der produzierten Ideen sowie deren Umsetzung waren zu jeder
 Zeit gewährleistet.
 
 Im Detail wurde genutzt:
 
 GitHub Copilot, integriert in Visual Studio Code, für:
 \begin{itemize}
-  \item Automatische Vervollständigung von Codezeilen ("Inline Suggestions") zur Unterstützung
-  bei Latex Formatierung, sowie der python-basierten Experimente
+  \item Automatische Vervollständigung von Codezeilen (\glqq Inline Suggestions\grqq{}) zur Unterstützung
+  bei der \LaTeX-Formatierung sowie bei den Python-basierten Experimenten
 \end{itemize}
 
 Claude Code, mit den Modellen Opus 4.8, Opus 5 und Opus 5.5, für:
 \begin{itemize}
   \item Korrektur von Grammatik, Zeichensetzung und Tippfehlern
-  \item Formatierung von Latex Code
+  \item Formatierung von \LaTeX-Code
   \item Quellenvorschläge
-  \item Automatisches Einpflegen meiner Quellen in die Latex Bibliografie
-  \item Erstellung von Latex-basierten Schema Visualisierungen von Code Implementierungen
+  \item Automatisches Einpflegen meiner Quellen in die \LaTeX-Bibliografie
+  \item Schematische \LaTeX-Visualisierungen von Code-Implementierungen
   \item Unterstützung bei der Erstellung von Skripten für die automatische Generierung von Figuren und Tabellen basierend
-  auf den Experiment Ergebnissen
-  \item Erstellung einer Anleitung, sowie eines Skripts für vereinfachte Datentransfers zwischen dem TUHH HPC Cluster und
+  auf den Experimentergebnissen
+  \item Erstellung einer Anleitung sowie eines Skripts für vereinfachte Datentransfers zwischen dem TUHH HPC Cluster und
   meinem lokalen Gerät
-  \item Anmerkung von Inkonsistenzen und Logik Fehlern in der textlichen Ausarbeitung
-  \item Herausfordern meiner Standpunkte und Umsetzung ("Sparring")
-  \item Erkennen von Fehlern im Python Code
+  \item Anmerkung von Inkonsistenzen und Logikfehlern in der textlichen Ausarbeitung
+  \item Herausfordern meiner Standpunkte und Umsetzung (\glqq Sparring\grqq{})
+  \item Erkennen von Fehlern im Python-Code
+  \item Dokumentierung des Code Repositories
 \end{itemize}
 
 %The backcover is always empty

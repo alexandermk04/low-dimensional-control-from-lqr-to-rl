@@ -33,7 +33,7 @@ the repository~\cite{Kranz2026LowDimControl}.
 \section{Nuclear-Norm Weight of S-PI}
 \label{sec:app-spi-lambda}
 
-\Cref{fig:app-spi-lambda-spi-large} show the results for
+\Cref{fig:app-spi-lambda-spi-large} shows the results for
 \emph{large} inflation.
 
 \begin{figure}[htbp]
@@ -129,7 +129,7 @@ For each solver and inflation size, we train three seeds with each initial learn
   \label{eq:app-rl-learning-rate-grid}
   \eta_0 \in 3 \times 10^{-4} \sqrt{\frac{10}{d_{\mathrm{in}}}} \cdot \left\{ 0.01,\ \tfrac{1}{30},\ 0.1,\ \tfrac{1}{3},\ 1 \right\} ,
 \end{equation}
-rounded to two digits. The final rates were then chosen based on inspection of the training curves (\cref{tab:app-rl-learning-rates}).
+rounded to two significant digits. The final rates were then chosen based on inspection of the training curves (\cref{tab:app-rl-learning-rates}).
 For \emph{Lin} under \emph{large} every gain becomes unstable during training (\cref{fig:app-rl-learning-rate-ppo-linear-large}).
 
 \begin{table}[htbp]
@@ -160,6 +160,9 @@ For \emph{Lin} under \emph{large} every gain becomes unstable during training (\
 \section{Stopping Rule of the RL Solvers}
 \label{sec:app-rl-convergence}
 
+For us, regret is the relative excess of a policy's training cost over the best policy of
+the same run.
+
 \begin{table}[htbp]
   \centering
   \caption{Stopping-rule settings with the lowest median regret.}
@@ -169,7 +172,7 @@ For \emph{Lin} under \emph{large} every gain becomes unstable during training (\
 
 \begin{table}[htbp]
   \centering
-  \caption{RL runs best policy, as a share of the step budget, and the regret
+  \caption{Position of the best policy of the RL runs, as a share of the step budget, and the regret
     of the policy after $75\,\%$ of the budget, of the final policy, and of the policy with the best
     $\bar{g}_j$.}
   \label{tab:app-rl-convergence-cells}

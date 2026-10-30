@@ -77,7 +77,7 @@ with small adaptations in the following way.
 % Def mb_spi
 We reuse the computation of the gradient $\nabla f(K_j)$ from \cref{alg:mb-pg}.
 For inducing the structure, we optimize the regularized cost $f(K) + \lambda \lVert K \rVert_{*}$,
-where the nuclear norm $\lVert \cdot \rVert_{*}$ can be reduced by eliminating singular values of $K$\cite[Sec.~2.2]{Park2020Structured},
+where the nuclear norm $\lVert \cdot \rVert_{*}$ can be reduced by eliminating singular values of $K$~\cite[Sec.~2.2]{Park2020Structured},
 and $\lambda$ is its weight in the whole cost. It further uses an adaptive learning rate,
 combined with a line search criterion, consisting of a stability and a sufficient decrease condition.
 Starting from the initial step size $\eta = 1 / (2 \lambda)$, following the paper's recommendation of $\mathcal{O}(1/\lambda)$,
@@ -254,7 +254,7 @@ First, we introduce our basis for the indirect approaches, which is based on sys
 introduced by Van Overschee and De Moor~\cite{VanOverschee1994N4SID}, uses ``the projection of the future outputs [of the system]
 onto the past and future inputs and the past outputs''~\cite[Sec.~3]{VanOverschee1994N4SID}. These projections can then be
 described as ``a function of the system matrices and the input-output block Hankel matrices''~\cite[Sec.~3]{VanOverschee1994N4SID}, which
-allows us to reconstruct exactly that from the results. Important are further the assumptions that the systems are
+allows us to reconstruct exactly that from the results. Further, the method assumes that the systems are
 observable and controllable~\cite[Sec.~2.1]{VanOverschee1994N4SID}. For simplicity, we rely on the
 implementation of N4SID from SIPPY~\cite{SIPPY2026N4SID}, which we integrate into our own setup. This implementation allows us
 to recover estimates $A_{\mathrm{id}}$, $B_{\mathrm{id}}$ and $C_{\mathrm{id}}$ of the system matrices, whereas the cost
@@ -405,7 +405,7 @@ and $\lambda$, we define our learning loop in \cref{alg:mf-spi}.
 
 Now to the selection of the parameters. Park et al.\ already note the difficulty of finding a fixed step size
 that does not produce divergence of the method~\cite[Sec.~3.2]{Park2020Structured}. Also, the example shown only
-uses the model-based approach and the regularizer to induce sparse structure\cite[Sec.~4]{Park2020Structured}, not the model-free variant combined
+uses the model-based approach and the regularizer to induce sparse structure~\cite[Sec.~4]{Park2020Structured}, not the model-free variant combined
 with low dimensionality. So during our first tests, we often ran into either unstable controllers, or ones that
 did not induce any structure at all, hinting at a $\lambda$ that is too low. If we remember the proximal step
 \eqref{eq:spi-prox}, we can see that it depends on both the step size and $\lambda$, as every singular value is
@@ -423,7 +423,7 @@ $\lambda_{\mathrm{medium}} = 400$ and $\eta_{\mathrm{medium}} = 3.5 \times 10^{-
 \label{subsec:unknown-model-results}
 
 Looking at the time until convergence, as well as the achieved training suboptimality, we notice that \emph{MfS}
-produced under \emph{large} inflation a very expensive gain, while still not achieving a strong reduction in rank. As this was the same problem
+produced a very expensive gain under \emph{large} inflation, while still not achieving a strong reduction in rank. As this was the same problem
 we observed during our parameter search (\cref{sec:app-spi-mf}), we accept it as an unsuccessful attempt and difficult to implement. Apart from
 this, it is noticeable that \emph{MfN} takes longer to converge the larger the inflation gets, with an increase from $167$ at \emph{base} to $610$ at \emph{large} (\cref{tab:identified-iterations}).
 This makes it slower than \emph{IdS} and \emph{IdP}, where \emph{IdS} (at most $90$ across the sizes) again is still much faster than \emph{IdP} (around $350$). The fastest approach here is \emph{IdD}, as it only
