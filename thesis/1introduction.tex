@@ -1,10 +1,15 @@
 \chapter{Introduction}
 \label{chap:introduction}
 
-For a robot, our world is a messy place, consisting of a multitude of variables, all influencing what a correct behavior would
-be at any given moment. Understandably, newer, larger models have led to better (at least theoretical) performance,
+The human brain contains an estimated 86 billion neurons~\cite{Azevedo2009Equal}, more than five orders of magnitude more
+than the roughly 167,000 neurons in the entire central nervous system of a fruit fly~\cite{Berg2026Sexual}.
+One might now argue that a human obviously has a much more complex body to govern, and therefore needs this capacity.
+Yet a fruit fly achieves stable flight with a fraction of these neurons, something a human cannot do without help. Size alone,
+it seems, does not define a controller's abilities.
+
+In robotics, however, the trend points the other way: newer, larger models have led to better (at least theoretical) performance,
 both in vision~\cite{Dehghani2023Scaling} and in continuous control~\cite{Nauman2024Bigger,Lee2025SimBa}.
-However, when transferring them over from training in a digital environment to an actual embodiment, not only do limitations
+Yet, when transferring them from training in a digital environment to an actual embodiment, not only do limitations
 in memory space and energy usage arise~\cite[p.~7]{Roy2021MachineLearning}, but the real world also behaves slightly differently, which the
 controller needs to be robust against~\cite{Tobin2017Domain,Peng2018SimToReal}. So ideally, we should
 remove unnecessary parameters, while still maintaining enough to help us adapt to variable environments. This leaves us with the question:
@@ -14,7 +19,7 @@ Inspired by nature, research has shown that complex behavior can be expressed by
 the right embodiment~\cite{McGeer1990Passive,Mueller2017Morphological}. However, finding this simple architecture remains difficult
 as an embodiment might offer a large number of sensors and actuators, which outnumber the dimension governing the underlying dynamics~\cite{Todorov2002Optimal,Lesort2018State}.
 Synergizing parameters, like muscles do in nature~\cite{DAvella2003Combinations}, is thus the goal for a controller.
-And while low-dimensionality for embodied agents has been studied before~\cite{Montufar2015CheapControl,Datar2025Universal},
+And while low-dimensional control of embodied agents has been studied before~\cite{Montufar2015CheapControl,Datar2025Universal},
 the robustness of such controllers has, to our knowledge, not yet been investigated systematically, starting from
 simple linear controllers, moving on to more complex ones based on reinforcement learning (RL),
 and ending with perception-based agents acting in simulated environments.
