@@ -271,7 +271,7 @@ policy optimization. The double integrator serves as the basis. It is first arti
 having the controller observe and act in a higher dimension and use a lift and a projection matrix to change between it and the
 dimension of the underlying system. Afterwards, we also introduce a system with camera-based observations and a more complex actuation structure.
 Throughout our experiments, we notice that low-dimensional controllers are difficult to implement successfully and
-require careful consideration during design. However, if done right, a combination of fixed, briefly pretrained encoders
+require careful consideration during design. However, if done right, a combination of a fixed encoding matrix
 together with a smaller, longer-trained actor can perform similarly to a fully connected one. With regard to noise,
 no significant improvement in robustness for low-dimensional controllers could be observed.
 However, a fully trained controller seems to be more robust to control noise.
@@ -292,7 +292,7 @@ höheren Dimension beobachten und agieren lassen, und mit Hilfe von Projektionsm
 und der echten Dimension des Systems transferieren. Danach stellen wir ein kamerabasiertes System vor,
 welches eine komplexere Motorenstruktur besitzt. In unseren Experimenten erkennen wir, dass es schwierig
 ist, niederdimensionale Regler effektiv zu implementieren, und dass ihr Aufbau in jedem Fall eine genaue Planung
-benötigt. Bei korrekter Umsetzung können Kombinationen aus statischen, vortrainierten Codierern und kleineren,
+benötigt. Bei korrekter Umsetzung können Kombinationen aus statischen Codiermatrizen und kleineren,
 länger trainierten neuronalen Netzen jedoch Leistungen erzielen, die vergleichbar mit einem ganzheitlich trainierten
 Netz sind. In Bezug auf Rauschen konnten keine signifikanten Verbesserungen in der Robustheit niederdimensionaler Regler
 beobachtet werden. Allerdings scheint ein ganzheitlich trainierter Regler robuster

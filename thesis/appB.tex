@@ -1,6 +1,21 @@
 \chapter{Supplementary Results}
 \label{app:supplementary-results}
 
+\section{Training Curves of \emph{TrP} and \emph{TrS}}
+\label{sec:app-true-curves}
+
+\Cref{fig:app-true-curves} shows the training suboptimality of \emph{TrP} and \emph{TrS} on the true model
+over the solver iterations under \emph{large} inflation (\cref{subsec:known-model-results}). The curves of the
+other inflation sizes look similar and can be found in the repository~\cite{Kranz2026LowDimControl}.
+
+\begin{figure}[htbp]
+  \centering
+  \generatedfigure{ch4_true_model}{ch4_true_large_curves_iterations}
+  \caption{Training suboptimality of \emph{TrP} and \emph{TrS} on the true model over the solver iterations
+    under \emph{large} inflation. Median and range over ten seeds.}
+  \label{fig:app-true-curves}
+\end{figure}
+
 \section{Reasoning for the Performance of \emph{TrP} and \emph{IdP} under Measurement Noise}
 \label{sec:app-perf-trp-measurement-noise}
 

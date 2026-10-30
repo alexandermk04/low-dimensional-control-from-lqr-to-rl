@@ -145,7 +145,7 @@ Specifically, as in \cref{subsec:protocol}, we train ten controllers per solver,
 The results are then pooled.
 
 The most interesting finding is how much faster \emph{TrS} converges compared to \emph{TrP}. While it achieves its best training
-suboptimality within around 50 iterations, \emph{TrP} still falls short of it after 450 iterations. We can also see in
+suboptimality within around 50 iterations, \emph{TrP} still falls short of it after 450 iterations (\cref{fig:app-true-curves}). We can also see in
 \cref{tab:ch4-true-across-sizes} that the reduction in complexity for all inflation sizes has worked well with \emph{TrS}.
 For our test suboptimality, \emph{TrS} also outperforms \emph{TrP} here by at least one order of magnitude. \Cref{fig:true-across-sizes-subopt}
 visualizes this.
@@ -192,7 +192,7 @@ are noticeable differences for the others.
   \label{fig:true-noise-large-all}
 \end{figure}
 
-For parametric uncertainty the distribution is also nearly identical, so here no difference can be noticed. When looking
+For parametric uncertainty the distribution is also nearly identical (\cref{fig:true-noise-large-parametric-divergent}), so here no difference can be noticed. When looking
 at measurement noise, however, we can notice that \emph{TrP} degrades slightly less than the baseline (median at $9.96$ vs.\ $9.98$),
 and \emph{TrS} is even further below (median at $9.88$, \cref{fig:true-noise-large-measurement-divergent}).
 
@@ -200,18 +200,30 @@ and \emph{TrS} is even further below (median at $9.88$, \cref{fig:true-noise-lar
   \centering
   \begin{subfigure}[t]{0.49\linewidth}
     \centering
+    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_relative_degradation_parametric-divergent}
+    \caption{Parametric uncertainty.}
+    \label{fig:true-noise-large-parametric-divergent}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
     \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_relative_degradation_measurement-divergent}
     \caption{Measurement noise.}
     \label{fig:true-noise-large-measurement-divergent}
-  \end{subfigure}\hfill
+  \end{subfigure}\par\medskip
   \begin{subfigure}[t]{0.49\linewidth}
     \centering
     \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_relative_degradation_disturbance-divergent}
     \caption{External disturbance.}
     \label{fig:true-noise-large-disturbance-divergent}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_relative_degradation_control-divergent}
+    \caption{Control noise.}
+    \label{fig:true-noise-large-control-divergent}
   \end{subfigure}
   \caption{Relative degradation $\kappa$ of the solvers on the true model under \emph{large} inflation at intensity
-  \emph{divergent}. The boxes indicate the interquartile range over the ten seeds, the line marks the
+  \emph{divergent}, per noise channel. The boxes indicate the interquartile range over the ten seeds, the line marks the
   median, and the whiskers span the $5$th to $95$th percentile. Points show the individual seeds.}
   \label{fig:true-noise-large-divergent}
 \end{figure}
@@ -223,15 +235,6 @@ baseline, with \emph{TrP} being the worst here (median at $10.09$ vs.\ $9.96$ fo
 The most noticeable difference is under control noise, where \emph{TrP} noticeably degrades less than \emph{TrS} or the baseline
 (median at $6.49$ vs.\ baseline at $6.61$, \cref{fig:true-noise-large-control-divergent}). \emph{TrS} also stays below the baseline
 (median $6.59$), but does not show as much robustness as \emph{TrP}.
-
-\begin{figure}[htbp]
-  \centering
-  \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_relative_degradation_control-divergent}
-  \caption{Relative degradation $\kappa$ of the solvers on the true model under \emph{large} inflation and control noise
-  at intensity \emph{divergent}. The boxes indicate the interquartile range over the ten seeds, the line marks the
-  median, and the whiskers span the $5$th to $95$th percentile. Points show the individual seeds.}
-  \label{fig:true-noise-large-control-divergent}
-\end{figure}
 
 Judging from our results, it is difficult to draw significant conclusions in relation to robustness of the controllers.
 It seems like a trained, larger controller could be more robust to control noise; however, we need to verify this in
@@ -270,6 +273,8 @@ $\hat{C} \in \R^{d_{\mathrm{in}} \times \hat{n}}$ and $\Theta \in \R^{\hat{n} \t
 such that $\hat{C}$ has orthonormal columns. This makes sense, as we have the knowledge that
 the output matrix $C$ of our true model is also of this construction, but also allows us to
 get the pseudoinverse of $\hat{C}$ as $\hat{C}\T$, since $\hat{C}\T \hat{C} = I_{\hat{n}}$.
+N4SID determines those system matrices only ``up to within a similarity transformation''~\cite[Sec.~2.1]{VanOverschee1994N4SID},
+such that \eqref{eq:identified-basis} does not change our underlying system~\cite[pp.~10--11]{Werner2021Control}.
 
 The collection of observation and action data runs the plant for $T$ steps under the initial gain, with a randomly
 sampled excitation added on top of it,
