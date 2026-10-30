@@ -15,7 +15,7 @@
     \draw[black!60, line width=1.2pt] (-2.6,0) -- (2.6,0);
     \node[lbl, anchor=south west] at (-2.6,0.05) {rail};
 
-    % thrust axes and thrusters at theta_i = pi i / 8
+    % thrust axes and thrusters at angles pi i / 8
     \foreach \i in {0,1,2,3,5,6,7} {
         \pgfmathsetmacro{\th}{22.5*\i}
         \draw[axis] (\th:0.95) -- (\th:\R);
@@ -26,12 +26,11 @@
     \node[lbl, anchor=south, align=center] at (90:\R+0.15) {};
 
     % one thruster, its push and the part along the rail
-    \draw[thrust] (0,0) -- (45:1.1) node[lbl, anchor=south east] {$v_i$};
+    \draw[thrust] (0,0) -- (45:1.1) node[lbl, anchor=south east] {$(v_k)_i$};
     \draw[dotted, line width=0.5pt] (45:1.1) -- ({1.1*cos(45)},0);
     \draw[effect] (0,0) -- ({1.1*cos(45)},0);
     \draw[line width=0.4pt] (0.55,0) arc (0:45:0.55);
-    \node[lbl] at (20:0.72) {$\theta_i$};
-    \node[lbl, anchor=north] at ({0.55*cos(45)},-0.05) {$s \cos\theta_i \, v_i$};
+    \node[lbl, anchor=north] at ({0.55*cos(45)},-0.05) {$b_i \, (v_k)_i$};
 
     \fill (0,0) circle (0.13);
     \node[lbl, anchor=south east] at (-0.12,0.08) {mass};

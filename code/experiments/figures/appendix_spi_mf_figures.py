@@ -5,54 +5,63 @@ Run with::
     python -m experiments.figures.appendix_spi_mf_figures
 """
 
+from itertools import product
+
 import settings
 from experiments.appendix_spi_mf import EXPERIMENT, SIZES
 from experiments.figures.aggregate import group, label_for, latest_per_experiment, tidy
 from experiments.figures.style import table_dir
 from experiments.figures.sweeps import median
-from experiments.figures.tables import _math, metric_table, write_table
+from experiments.figures.tables import _math, sweep_table, usable, write_table
 from experiments.store import MissingExperimentError, load_experiment
 
-METRICS = ("J_final", "training_subopt_final", "rank_final",
-           "spectral_radius_final", "iterations", "total_env_steps", "best_env_steps")
+METRICS = ("training_subopt_final", "rank_final")
 
 SUBOPT_TOLERANCE = 3.0
 
 
-def _slug(value: float) -> str:
-    """A filename-safe stem for one hyperparameter value."""
-    return f"{value:g}".replace("-", "m").replace("+", "").replace(".", "p")
+def _budget(rows) -> str:
+    """The caption sentence on the iterations and env steps."""
+    iterations = {r.get("iterations") for r in rows if usable(r)}
+    steps = {r.get("total_env_steps") for r in rows if usable(r)}
+    if len(iterations) != 1 or len(steps) != 1:
+        return ""
+    (iterations,), (steps,) = iterations, steps
+    return (f" Every stable run takes ${iterations:.0f}$ iterations and "
+            f"${_math(steps, '{:.3g}')}$ environment steps.")
 
 
 def render():
-    """One table per (inflation size, lambda)."""
+    """One table per inflation size, with a row per (lambda, step size)."""
     rows = tidy(latest_per_experiment(load_experiment(EXPERIMENT)))
 
     for size in SIZES:
-        at_size = [r for r in rows if r.get("size") == size]
+        at_size = [
+            r for r in rows if r.get("size") == size
+            and r.get("lambda") in settings.SPI_MF_LAMBDAS[size]
+            and r.get("stepsize") in settings.SPI_MF_STEPSIZES[size]
+        ]
         if not at_size:
             continue
 
-        for lambda_ in settings.SPI_MF_LAMBDAS[size]:
-            cell = [r for r in at_size if r.get("lambda") == lambda_]
-            if not cell:
-                continue
-
-            write_table(
-                metric_table(
-                    cell, "stepsize",
-                    metrics=METRICS,
-                    column_order=settings.SPI_MF_STEPSIZES[size],
-                    column_header="Step size",
-                    caption=(
-                        f"{label_for('spi_mf')} with $\\lambda = {_math(lambda_, '{:g}')}$ under "
-                        f"\\emph{{{size}}} inflation, over the seeds."
-                    ),
-                    label=f"tab:appendix-spi-mf-{size}-{_slug(lambda_)}",
+        write_table(
+            sweep_table(
+                at_size, ("lambda", "stepsize"),
+                metrics=METRICS,
+                row_order=list(product(settings.SPI_MF_LAMBDAS[size],
+                                       settings.SPI_MF_STEPSIZES[size])),
+                row_header=(r"$\lambda$", r"Step size $\eta$"),
+                census=True,
+                caption=(
+                    f"{label_for('spi_mf')} per nuclear-norm weight $\\lambda$ and step size "
+                    f"$\\eta$ under \\emph{{{size}}} inflation, mean and standard deviation "
+                    f"over the stable seeds.{_budget(at_size)}"
                 ),
-                f"appendix_spi_mf_{size}_{_slug(lambda_)}",
-                EXPERIMENT,
-            )
+                label=f"tab:appendix-spi-mf-{size}",
+            ),
+            f"appendix_spi_mf_{size}",
+            EXPERIMENT,
+        )
 
     choose(rows)
 

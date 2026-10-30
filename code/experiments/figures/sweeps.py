@@ -4,13 +4,20 @@
 import numpy as np
 
 from experiments.figures.aggregate import group, label_for
-from experiments.figures.tables import metric_table, write_table
+from experiments.figures.tables import sweep_table, write_table
 
 __all__ = ["sweep_tables", "median", "choose", "print_choice"]
 
 
-def sweep_tables(rows, experiment, solvers, sizes, column, order, metrics, header):
-    """One table per ``(solver, size)``, with the swept value as the column."""
+def sweep_tables(rows, experiment, solvers, sizes, column, order, metrics, header,
+                 census=None):
+    """One table per ``(solver, size)``, with a row per swept value.
+
+    ``order``, ``metrics`` and ``census`` may each be a callable of the solver.
+    """
+    def per_solver(value, solver):
+        return value(solver) if callable(value) else value
+
     for solver in solvers:
         for size in sizes:
             cell = [r for r in rows if r["solver"] == solver and r.get("size") == size]
@@ -18,12 +25,16 @@ def sweep_tables(rows, experiment, solvers, sizes, column, order, metrics, heade
                 continue
 
             write_table(
-                metric_table(
+                sweep_table(
                     cell, column,
-                    metrics=metrics,
-                    column_order=order(solver) if callable(order) else order,
-                    column_header=header,
-                    caption=f"{label_for(solver)} under \\emph{{{size}}} inflation, over the seeds.",
+                    metrics=per_solver(metrics, solver),
+                    row_order=per_solver(order, solver),
+                    row_header=header,
+                    census=per_solver(census, solver),
+                    caption=(
+                        f"{label_for(solver)} under \\emph{{{size}}} inflation, mean and "
+                        "standard deviation over the seeds."
+                    ),
                     label=f"tab:{experiment.replace('_', '-')}-{solver.replace('_', '-')}-{size}",
                 ),
                 f"{experiment}_{solver}_{size}",

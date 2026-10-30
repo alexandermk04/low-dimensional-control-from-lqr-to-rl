@@ -1,66 +1,58 @@
 \chapter{Conclusion}
 \label{chap:conclusion}
 
-% Template
-
-% You generally cover three things in the Conclusions section, and each of these usually merits a separate subsection:
-
-% \begin{enumerate}
-% 	\item Conclusions
-% 	\item Summary of Contributions
-% 	\item Future Research
-% \end{enumerate}
-
-% Conclusions are not a rambling summary of the thesis: they are short, concise statements of the inferences that you have made because of your work. It helps to organize these as short numbered paragraphs, ordered from most to least important. All conclusions should be directly related to the research question stated in the introduction. Examples:
-
-% \begin{enumerate}
-% 	\item The problem stated in the introduction has been solved: as shown in Sections ? to ??, an algorithm capable of handling large-scale Zylon problems in reasonable time has been developed.
-% 	\item The principal mechanism needed in the improved Zylon algorithm is the Grooty mechanism.
-% 	\item Etc.
-% \end{enumerate}
-
-% The Summary of Contributions will be much sought and carefully read by the examiners. Here you list the contributions of new knowledge that your thesis makes. Of course, the thesis itself must substantiate any claims made here. There is often some overlap with the Conclusions, but that's okay. Concise numbered paragraphs are again best. Organize from most to least important. Examples:
-
-% \begin{enumerate}
-% 	\item Developed a much quicker algorithm for large-scale Zylon problems.
-% 	\item Demonstrated the first use of the Grooty mechanism for Zylon calculations.
-% 	\item Etc.
-% \end{enumerate}
-
-% The Future Research subsection is included so that researchers picking up this work in future have the benefit of the ideas that you generated while you were working on the project. Again, concise numbered paragraphs are usually best. 
-
-\section{Conclusions}
+\section{Main Findings}
 \label{sec:conclusions}
 
-In this thesis we have shown that simply enforcing low-dimensional structures or latent layers does not
+Enforcing low-dimensional structures in controllers for embodied agents tends to negatively affect 
+their performance, except for specific architectures. Robustness to noise does not increase,
+and indeed might decrease under control noise.
+
+Specifically, we have shown that simply enforcing low-dimensional structures or latent layers does not
 improve the performance of controllers for overparameterized systems; instead, it might even hurt performance. However,
 when combining sufficiently pretrained latent projectors with the right controller architecture, they can
 achieve similar performances to fully connected networks, while being more efficient in their parameter count
 and training time. While this could be clearly shown for LQR, under RL only tendencies were observed, requiring
 further investigation.
 
-We further found conflicting results on whether low-dimensional latent states
-can improve robustness to measurement noise. While for LQR solvers and model-informed
-\emph{StE} this holds true, for the camera environment, we could not clearly observe that. This however might
-be related to the first point, where our RL approaches showed already bad performance
-under the clean loop.
+We further found no evidence that low-dimensional latent states can improve robustness to measurement noise.
+For the LQR solvers, the slight advantage comes from the part of the initial gain which a full-rank
+policy gradient solver cannot remove (\cref{sec:app-perf-trp-measurement-noise}). For \emph{StE}, the observed
+tendency is insignificant compared to the spread of the seeds, while for the camera environment we could not observe
+it at all.
 
-Regarding the latent state, it is also important to ensure that not only control information is carried
-here, but also information about the observed state. Otherwise, robustness to control noise might worsen.
-In relation to that, we also note that a low degradation in control noise can also hint at a barely acting
+In our experiments, low-dimensional controllers were affected slightly more by control noise than fully parameterized ones,
+which we observed on the true model in \cref{chap:lqr} and in \cref{chap:inflation,chap:perception}. Regarding the latent state,
+it is therefore important to ensure that not only control information is carried here, but also information about the observed state.
+Otherwise, robustness to control noise might worsen. We also note that a low degradation under control noise can also hint at a barely acting
 controller, and is not always a sign of robustness.
-
-Finally, control noise does affect low-dimensional controllers more than fully parameterized ones,
-which we observed across all experiments.
 
 \section{Summary of Contributions}
 \label{sec:contributions}
 
-We have presented that combining pretrained encoders with a trainable network
-can reduce both parameter count and training time, while noting common problems in relation to
-architecture design. Further, we showed that fully parameterized controllers offer indeed more
-robustness to control noise, while for the other noise types we could only observe tendencies,
-which open possibilities for further research here.
+With this thesis, we contributed
+
+\begin{enumerate}
+	\item a systematic comparison of low-dimensional LQR solvers with known and estimated models under four unique noise channels of varying intensities (\cref{chap:lqr});
+	\item an extension of it to RL, evaluating PPO-based controllers with linear, bottleneck and encoder architectures (\cref{chap:inflation});
+	\item a perception-based double-integrator environment with redundant thrusters for more realistic results (\cref{chap:perception}).
+\end{enumerate}
+
+The environment in particular can be used either for additional experiments on the double integrator
+or as an inspiration for a setup regarding other control tasks.
+
+\section{Limitations}
+\label{sec:limitations}
+
+Throughout our experiments, we noticed multiple times how variable metrics across seeds are. While we intended to mitigate
+this by using multiple seeds, in some cases relying only on the median might not be as expressive as it should be. Additionally,
+by excluding diverging seeds, we might have unintentionally improved the values for these controllers.
+
+What is also important to note is the setup for \cref{chap:perception}. Here, due to the simplicity of the camera setup, as well as
+the extrapolation of learning rates instead of calibration, the quality of the results has suffered. Given the high percentage of
+exits during episodes here, as well as non-functional controllers using pretrained encoders, it is difficult to draw much from these
+experiments. While these decisions were mostly caused by time constraints of this thesis, it would be interesting to repeat these experiments
+at a more appropriate complexity in the future.
 
 \section{Future Research}
 \label{sec:future-research}
@@ -71,14 +63,15 @@ and discussion. These include, but are not limited to, whether:
 \begin{enumerate}
 	\item and how the number of parameters can be distributed more effectively between
 	the extractor and the actor, to achieve performances comparable to a fully connected network;
-	\item our results, such as better robustness to measurement noise of low-dimensional LQR controllers, might hold
-	for more complex systems, i.e. a walking humanoid robot;
-	\item these findings are transferable to real-world applications, i.e., if this setup
-	were built and tested;
+	\item improving the imaging setup leads to better position and velocity encodings for fully trained networks;
+	\item our results hold for more complex systems, e.g.\ a walking humanoid robot;
+	\item these findings are transferable to real-world applications, i.e.\ if this setup
+	were built and tested.
 \end{enumerate}
 
-Finally, we also want to mention that, while these are interesting directions, the data produced from
-our experiments still offers a lot of possibilities for additional analysis. For example,
+Finally, we also want to mention that, while these are interesting directions, the data collected
+in our experiments permits additional analysis. For example,
 while we captured the compute time and environment steps needed, a different angle could include
-this in the evaluation of the approaches. And while it seems like our conclusions
-leave us with more questions than we started with, this is what research is for.
+this in the evaluation of the approaches. Taken together with the limitations mentioned, we believe
+that while we found low-dimensional controllers to perform worse,
+there is more research to be done on this topic.

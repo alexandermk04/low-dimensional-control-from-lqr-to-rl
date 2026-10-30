@@ -5,6 +5,8 @@ Run with::
     python -m experiments.figures.ch6_solver_comparison_figures
 """
 
+import numpy as np
+
 import settings
 from experiments.figures.aggregate import (
     aggregate,
@@ -18,12 +20,14 @@ from experiments.figures.panels import (
     learning_bands,
     trajectory_overlay,
     box_metric,
+    _symlog_axis,
 )
-from experiments.figures.style import figure_dir, save, save_variants, table_dir
+from experiments.figures.style import figure_dir, new_figure, save, save_variants, table_dir
 from experiments.figures.tables import _fit, _math, metric_table, usable, write_table
 from experiments.store import load_experiment
 
 EXPERIMENT = "ch6_solver_comparison"
+LARGE_EXPERIMENT = "ch5_inflation_sizes"
 
 ORDER = tuple(settings.CH6_COMPARISON_SOLVERS)
 
@@ -98,6 +102,43 @@ def spread_table(rows):
     )
 
 
+def large_vs_pixel(learned):
+    """Test suboptimality under large and pixel inflation.
+
+    Parameters
+    ----------
+    learned : list[dict]
+        Pixel rows without the baseline, from
+        :func:`~experiments.figures.aggregate.with_suboptimality`.
+    """
+    large = [
+        r for r in latest_per_experiment(load_experiment(LARGE_EXPERIMENT))
+        if r.condition.get("size") == "large"
+    ]
+    large_rows = with_suboptimality(tidy(large), by=("seed", "size"))
+    # Only the variants that also run at pixel size
+    large_learned = [r for r in large_rows if r["solver"] in ORDER[1:]]
+
+    _, axes = new_figure(1.0, 0.5, ncols=2, sharey=True)
+    panels = ((axes[0], large_learned, "large"), (axes[1], learned, "pixel"))
+    for ax, rows, size in panels:
+        box_metric(rows, "solver", "subopt", order=ORDER, log="symlog", ax=ax, width=0.48)
+        ax.set_title(rf"\emph{{{size}}}")
+    axes[1].set_ylabel("")
+
+    # Shared axis
+    cells = [
+        stat["values"]
+        for rows in (large_learned, learned)
+        for stat in aggregate([r for r in rows if usable(r)], "solver", "subopt").values()
+    ]
+    _symlog_axis(axes[0], cells, linscale=1.0)
+    axes[0].set_ylim(top=2.0 * max(float(np.max(values)) for values in cells if np.size(values)))
+    axes[0].yaxis.get_major_locator().set_params(numticks=8)
+
+    save(axes[0].figure, "ch6_solvers_subopt_large_pixel", EXPERIMENT)
+
+
 def main():
     records = latest_per_experiment(load_experiment(EXPERIMENT))
     rows = with_suboptimality(tidy(records), by=("seed",))
@@ -124,6 +165,7 @@ def main():
         "ch6_solvers_subopt",
         EXPERIMENT,
     )
+    large_vs_pixel(learned)
 
     ax = complexity_bars(learned, "solver", order=ORDER)
     save(ax.figure, "ch6_solvers_complexity", EXPERIMENT)

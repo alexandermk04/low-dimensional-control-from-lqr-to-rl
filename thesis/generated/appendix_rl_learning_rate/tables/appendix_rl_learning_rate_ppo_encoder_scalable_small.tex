@@ -1,19 +1,17 @@
 \begin{table}[htbp]
 \centering
-\caption{ScE under \emph{small} inflation, over the seeds. Stable counts the seeds whose controller left the plant stable and kept the mass contained in every test episode.}
+\caption{ScE under \emph{small} inflation, mean and standard deviation over the seeds. Stable counts the seeds whose controller left the plant stable and kept the mass contained in every test episode.}
 \label{tab:appendix-rl-learning-rate-ppo-encoder-scalable-small}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrr}
+\begin{tabular}{lrrr}
 \toprule
-Learning rate & 0.0003 & 0.0001 & 3e-05 & 1e-05 & 3e-06 \\
+Learning rate $\eta_0$ & Stable & Training suboptimality & Env.\ steps to best policy \\
 \midrule
-Stable & $3/3$ & $3/3$ & $3/3$ & $3/3$ & $2/3$ \\
-\midrule
-True cost $J$ & $8436 \pm 3568$ & $6113 \pm 843.1$ & $7256 \pm 2192$ & $7685 \pm 3927$ & $7152 \pm 1800$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.446 \pm 0.401$ & $0.0749 \pm 0.0214$ & $0.293 \pm 0.457$ & $0.305 \pm 0.462$ & $0.191 \pm 0.108$ \\
-Test cost & $9146 \pm 8313$ & $6564 \pm 5701$ & $7947 \pm 6853$ & $8423 \pm 7861$ & $7178 \pm 6256$ \\
-Env.\ steps to best policy & $7.64 \times 10^{6} \pm 1.96 \times 10^{6}$ & $6.74 \times 10^{6} \pm 1.35 \times 10^{6}$ & $7.54 \times 10^{6} \pm 1.58 \times 10^{6}$ & $8.5 \times 10^{6} \pm 9.89 \times 10^{5}$ & $9.07 \times 10^{6} \pm 1.77 \times 10^{5}$ \\
-Env.\ steps & $10^{7}$ & $10^{7}$ & $10^{7}$ & $10^{7}$ & $10^{7}$ \\
+$3 \times 10^{-6}$ & $2/3$ & $0.191 \pm 0.108$ & $(9.07 \pm 0.18) \times 10^{6}$ \\
+$10^{-5}$ & $3/3$ & $0.305 \pm 0.462$ & $(8.50 \pm 0.99) \times 10^{6}$ \\
+$3 \times 10^{-5}$ & $3/3$ & $0.293 \pm 0.457$ & $(7.54 \pm 1.58) \times 10^{6}$ \\
+$0.0001$ & $3/3$ & $0.0749 \pm 0.0214$ & $(6.74 \pm 1.35) \times 10^{6}$ \\
+$0.0003$ & $3/3$ & $0.446 \pm 0.401$ & $(7.64 \pm 1.96) \times 10^{6}$ \\
 \bottomrule
 \end{tabular}
 }

@@ -9,12 +9,12 @@ import settings
 from experiments.figures.aggregate import label_for, latest_per_experiment, tidy
 from experiments.figures.panels import learning_bands, box_metric
 from experiments.figures.style import figure_dir, save, table_dir
-from experiments.figures.tables import metric_table, usable, write_table
+from experiments.figures.tables import sweep_table, usable, write_table
 from experiments.store import load_experiment
 
 EXPERIMENT = "appendix_sample_size"
 
-CELL_LABEL = r"Rollout length $l$ / trajectories $m$"
+CELL_LABEL = r"Rollout length $l$ / trajectories $N_{\mathrm{traj}}$"
 
 
 def main():
@@ -60,16 +60,20 @@ def main():
         if not combined:
             continue
 
+        sizes = [size for size in settings.INFLATION_SIZES
+                 if any(size in row for row in combined.values())]
         write_table(
-            metric_table(
+            sweep_table(
                 list(combined.values()), ("l", "m"),
-                metrics=[size for size in settings.INFLATION_SIZES
-                         if any(size in row for row in combined.values())],
-                column_order=settings.SAMPLE_GRID,
-                column_header=r"$(l, m)$",
+                metrics=sizes,
+                row_order=settings.SAMPLE_GRID,
+                row_header=(r"$l$", r"$N_{\mathrm{traj}}$"),
+                headers={size: f"\\emph{{{size}}}" for size in sizes},
+                metric_header="Training suboptimality",
                 caption=(
-                    f"{label_for(solver)}: training suboptimality $(J-J^*)/J^*$ per inflation "
-                    "size (rows) and sample-size combination (columns)."
+                    f"{label_for(solver)} per rollout length $l$ and number of trajectories "
+                    "$N_{\\mathrm{traj}}$ for each inflation size, mean and standard deviation "
+                    "over the stable seeds."
                 ),
                 label=f"tab:appendix-sample-size-{solver.replace('_', '-')}",
                 census=False,

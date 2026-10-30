@@ -26,7 +26,7 @@ imposing constraints on the policy update size~\cite[Sec.~3]{Schulman2017Proxima
 a fixed KL for an update, sets a target KL divergence~\cite[Sec.~4]{Schulman2017Proximal}. In case further interest
 arises, we refer to the original paper~\cite{Schulman2017Proximal}.
 With the probability ratio $r_k(\theta)$ between the current policy $\pi_\theta$ and the policy
-$\pi_{\theta_{\mathrm{old}}}$ that collected the data, the clipped objective becomes
+$\pi_{\theta_{\mathrm{old}}}$ that collected the data, the clipped objective~\cite[Sec.~3, Eq.~(7)]{Schulman2017Proximal} becomes
 \begin{equation}
     \label{eq:ppo-clip}
     \begin{aligned}
@@ -44,15 +44,15 @@ and can influence the effectiveness of it in practice. For our construction, we 
 the architecture provided by Stable-Baselines3 (SB3)~\cite{StableBaselines2026PPO}.
 As the standard architecture, for our Fully-connected PPO (\emph{MLP}), we use the standard two-layer multilayer perceptron (MLP) with 64 neurons
 per layer for both the actor and the critic~\cite{StableBaselines2026Policy}. \Cref{tab:app-rl-sb3-parameters} in
-\cref{sec:app-rl-parameters} lists all deviations from the default parameters. After evaluating different values, we settled on the
+\cref{sec:app-rl-sb3-parameters} lists all deviations from the default parameters. After evaluating different values, we settled on the
 learning rates in \cref{tab:app-rl-learning-rates}, which differ by inflation size.
 
 After initial runs with this basic setup, we could observe some divergence behavior, which
 led us to consider additional implementation improvements, as suggested by Huang et al.~\cite{Huang2022Implementation}.
-Specifically, we modified the discount factor to $\gamma = 0.999$ instead of $0.99$
-and used the reward normalization implementation from SB3~\cite{StableBaselines2026VecNormalize}, based
-on a discounted moving average~\cite[continuous-action Detail~8]{Huang2022Implementation}. Two additional
-helpful changes were:
+Specifically, we modified the discount factor to $\gamma = 0.999$ instead of $0.99$, which gives us an effective horizon
+of $1/(1-\gamma) = 1000$ steps, and used the reward normalization implementation from SB3~\cite{StableBaselines2026VecNormalize} based
+on a discounted moving average~\cite[continuous-action Detail~8]{Huang2022Implementation}, which
+also clips the normalized reward to $[-10, 10]$. Two additional helpful changes were:
 \begin{enumerate}
     \item Using learning-rate annealing instead of a fixed rate~\cite[Detail~4]{Huang2022Implementation}. Now the learning
     rate is decreased with every update, such that at the end of the step budget (\cref{tab:rl-step-caps}) it is equal
@@ -128,24 +128,24 @@ we want. So, we introduce another encoder, which offers this scalability, and ca
 is based on the results of Jonschkowski and Brock~\cite{Jonschkowski2015Learning} and Botteghi et al.~\cite{Botteghi2021LowDimensional}, which use robotic priors. Robotic priors, simply described,
 are prior knowledge, like physical laws, from which we define loss functions. By adding them to the training process, and optimizing for them, we can
 ensure that the learned representation is in line with these laws. As mentioned in \cref{sec:approach}, this allows us to make use of the embodiment
-to improve our controller architecture. Here, we will use the following priors~\cite{Botteghi2021LowDimensional}:
+to improve our controller architecture. Here, we will use the following priors~\cite[Sec.~IV-B]{Botteghi2021LowDimensional}:
 \begin{itemize}
     \item simplicity: the relevant information is lower in dimensionality than the observation,
     \item temporal coherence: state changes are rather slow,
-    \item proportionality: similar actions should show similar output magnitudes,
+    \item proportionality: similar actions should cause changes of similar magnitudes,
     \item repeatability: similar actions in similar states should show similar state changes,
     \item causality: prevents the trivial solution of mapping every observation to the same point.
 \end{itemize}
 
 The translation of these principles into loss calculations can be found in detail in the
-paper~\cite{Botteghi2021LowDimensional}. We modify their total loss calculation slightly,
+paper~\cite[Sec.~IV-B]{Botteghi2021LowDimensional}. We modify their total loss calculation slightly,
 by dropping the $\mathcal{L}_{\mathrm{reg}}$ term, and thus obtain
 \begin{equation}
     \label{eq:prior-loss}
     \mathcal{L} = \omega_1 \mathcal{L}_{\mathrm{temp}} + \omega_2 \mathcal{L}_{\mathrm{prop}} + \omega_3 \mathcal{L}_{\mathrm{rep}}
         + \omega_4 \mathcal{L}_{\mathrm{caus}} ,
 \end{equation}
-with $\omega_1 = \omega_2 = \omega_3 = 1$ and $\omega_4 = 2$.
+with $\omega_1 = \omega_2 = \omega_3 = 1$ and $\omega_4 = 2$, as in~\cite[Eq.~(9)]{Botteghi2021LowDimensional}.
 
 As this encoder must be trained first, we pretrain it for $20$ epochs on $20\,000$
 collected environment steps, before freezing its parameters and prepending
@@ -207,8 +207,9 @@ whether the projection of \eqref{eq:ortho-bottleneck} has any positive effect, o
 \label{sec:rl-comparison}
 
 Looking at achieved suboptimality during training, we overall see a learning process in almost all
-of our architectures (\cref{fig:rl-large-curves}). Noticeable, however, is the long stagnation in the beginning of the learning,
-before decreasing towards the end. Significant is also \emph{Lin}, which does not achieve an
+of our architectures (\cref{fig:rl-large-curves}). Most of the improvement happens within the first $5 \cdot 10^{6}$ of the
+$3 \cdot 10^{7}$ total steps, where the median suboptimality falls from around $5$ to between $0.3$ and $1.1$, after which it only decreases slowly.
+\emph{Lin} also stands out, as it does not achieve an
 improvement under \emph{large}, but this was expected, given its unsuccessful learning-rate search results
 (\cref{fig:app-rl-learning-rate-ppo-linear-large}). Also, when looking at the spread, we see that in some seeds
 \emph{ScE} also rather increases in cost.
@@ -334,7 +335,7 @@ each which experiences only a fourfold relative cost increase, compared to the t
 Under control noise, we can observe that trained controllers degrade in relation to how well they performed on the nominal
 loop. This can be seen from the fact that the order of relative degradation in \cref{fig:rl-noise-large-control-divergent} is roughly the same as for the clean plant, which
 is the exact opposite of what we found in \cref{chap:lqr}.
-Generally, however, we can see that all trained controllers except \emph{Lin} are more robust on average than the baseline in relative terms (\cref{fig:rl-noise-large-control-relative}).
+Generally, however, we can see that all trained controllers except \emph{Lin} are more robust on average than the baseline in relative terms (\cref{fig:rl-noise-large-control-divergent}).
 In absolute terms, \emph{ScE} shows a worse degradation, which mainly stems from one seed. Also, in relative degradation, its seeds are
 spread further apart than those of the other controllers. There, in three out of the nine stable seeds,
 \emph{ScE} degrades less than the other controllers (excluding \emph{Lin}), but then
@@ -352,9 +353,9 @@ robustness properties for the larger controllers.
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.49\linewidth}
     \centering
-    \generatedhalffigure{ch5_noise}{ch5_noise_large_tradeoff_relative_control}
-    \caption{Relative degradation $\kappa$ over the intensities.}
-    \label{fig:rl-noise-large-control-relative}
+    \generatedhalffigure{ch5_noise}{ch5_noise_large_tradeoff_absolute_control}
+    \caption{Absolute degradation $\Delta \hat{J} / \hat{J}^{*}$ over the intensities.}
+    \label{fig:rl-noise-large-control-absolute}
   \end{subfigure}
   \caption{Degradation of the PPO variants under \emph{large} inflation and control noise.}
   \label{fig:rl-noise-large-control}
@@ -395,35 +396,36 @@ and better than \emph{OrB}, as it uses far fewer parameters than both.
 \section{Discussion}
 \label{sec:rl-discussion}
 
-What we notice in our experiments is that under \emph{large} inflation, larger policies generally perform better than smaller ones
-on the clean loop. \emph{FcE} and \emph{OrB} are nearly identical here, and also better than the other controllers if we look at the median,
-rejecting our hypothesis that the low-dimensional latent state potentially improves performance here. What is indeed noticeable
+What we notice in our experiments is that under \emph{large} inflation, the largest policies (by the number of trainable parameters)
+generally perform better than smaller ones on the clean loop, with \emph{StE} being an exception.
+\emph{FcE} and \emph{OrB} are nearly identical here, and also better than the other controllers if we look at the median,
+which tells us that the low-dimensional latent state neither improves nor hurts performance here. What is indeed noticeable
 is that \emph{Lin}, which is much smaller than those, becomes more unstable the larger the inflation grows. However,
-if we take a look at \emph{StE}, which has only half the parameters of \emph{Lin} or \emph{MLP}, we can see that its performance beats both under the
-clean loop, and performs only slightly worse in absolute degradation under control noise than \emph{MLP}, while across the other noise channels
+if we take a look at \emph{StE}, which has only half the parameters of \emph{Lin} or \emph{MLP}, we can see that it beats both on the
+clean loop and performs only slightly worse in absolute degradation under control noise than \emph{MLP}, while across the other noise channels
 it remains more robust than it. Noticeable is also \emph{ScE}, which also produces one unstable test seed, and performs worse than
 the others on the clean loop (excluding \emph{Lin}).
-If looking at its parameters, its total is similar to \emph{FcE} or \emph{OrB}, but the trainable parameters are comparable to \emph{StE}. Taking a
+Looking at its parameters, its total is similar to \emph{FcE} or \emph{OrB}, but the trainable parameters are comparable to \emph{StE}. Taking a
 look at its robustness, we can actually see that in absolute degradation, it does not perform much differently than the other
 architectures, except for control noise, where it does seem that robustness correlates here with the number of parameters
 available for training.
 
 Overall, we can see that a low-dimensional latent state does not generally guarantee performance or robustness improvement. Instead,
 under control noise more parameters generally help the controller stay slightly more robust. However, certain low-dimensional structures,
-especially pretrained, or model-informed ones, as seen in \emph{StE} or \emph{ScE}, can perform similarly to fully parameterized controllers, while
-drastically improving training time, and in the case of \emph{StE} also the parameter count (a reduction of more than $90\,\%$ compared to \emph{FcE} and \emph{OrB}).
+as seen with \emph{StE}, can perform similarly to fully parameterized controllers, while
+containing far fewer parameters (a reduction of more than $90\,\%$ compared to \emph{FcE} and \emph{OrB}).
 Especially under measurement noise and external disturbance, this low-dimensionality offers good robustness properties which are similar to
-larger controllers, and at or below the baseline. At parametric uncertainty, they also do not increase as much as controllers which do not show
-low-dimensionality in either parameters or latent state.
+larger controllers, and, under measurement noise, below the baseline from \emph{strong} intensity on.
+Under parametric uncertainty, all policies degrade similarly, except for \emph{Lin}, which degrades less.
 
 Comparing that to our previous chapter, where we also already noticed that controllers with more parameters are more robust, this explains also
 why the order in comparison to the clean loop was inverted there---as the worse controllers did not apply any control, this order was flipped, while
 in our experiment all controllers are acting, and \emph{OrB} and \emph{FcE} were already the best on the clean loop, and thus kept their position.
-We can also see that the robustness in relation to measurement noise for low-dimensional controllers does indeed still hold;
-however, it seems as if a very large number of parameters can compensate that.
+We can also see that \emph{StE}, as a low-dimensional controller, degrades less than the baseline under \emph{strong} and \emph{divergent} measurement noise;
+however, it seems as if a very large number of parameters can compensate for that as well, with \emph{FcE} achieving similar absolute degradation.
 What also stands out is that a hybrid approach of pretraining a large extractor and then a smaller model is comparable with the indirect
 approaches of our previous chapter. Even closer is using the pseudoinverse of the output matrix like we did in \emph{StE}, which also
-performed great in relation to its parameter count and training time.
+performed great in relation to its parameter count.
 
 So, to conclude this chapter, we again emphasize that the low-dimensional architecture one chooses indeed plays a major
 role in whether the controller can achieve comparable performances, and how robust it is. However, as we have only validated

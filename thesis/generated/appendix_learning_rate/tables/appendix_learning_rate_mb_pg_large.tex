@@ -1,19 +1,18 @@
 \begin{table}[htbp]
 \centering
-\caption{TrP under \emph{large} inflation, over the seeds.}
+\caption{TrP under \emph{large} inflation, mean and standard deviation over the seeds.}
 \label{tab:appendix-learning-rate-mb-pg-large}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrr}
 \toprule
-Learning rate & 1e-06 & 3e-06 & 1e-05 & 3e-05 & 0.0001 & 0.0012 \\
+Learning rate $\eta$ & Training suboptimality & Iterations & Iterations to $1\,\%$ \\
 \midrule
-True cost $J$ & $5858 \pm 0.001042$ & $5852 \pm 0.0003911$ & $5849 \pm 0.0001285$ & $5848 \pm 0.001456$ & $1.243 \times 10^{4} \pm 1.059$ & $1.243 \times 10^{4} \pm 1.059$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.00173 \pm 1.78 \times 10^{-7}$ & $0.000605 \pm 6.69 \times 10^{-8}$ & $0.000163 \pm 2.2 \times 10^{-8}$ & $4.04 \times 10^{-5} \pm 2.49 \times 10^{-7}$ & $1.13 \pm 0.000181$ & $1.13 \pm 0.000181$ \\
-Test cost & $5978 \pm 5281$ & $5972 \pm 5276$ & $5969 \pm 5273$ & $5968 \pm 5273$ & $1.276 \times 10^{4} \pm 1.147 \times 10^{4}$ & $1.276 \times 10^{4} \pm 1.147 \times 10^{4}$ \\
-Iterations & $2390$ & $1123$ & $454$ & $1306 \pm 1$ & $64$ & $20000$ \\
-Iterations to 1\,\% & $1039$ & $342$ & $84$ & $1040 \pm 1$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
-Env.\ steps to 1\,\% & $0$ & $0$ & $0$ & $0$ & \multicolumn{1}{c}{--} & \multicolumn{1}{c}{--} \\
-Env.\ steps & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ \\
+$10^{-6}$ & $0.00173$ & $2\,390$ & $1\,039$ \\
+$3 \times 10^{-6}$ & $6.05 \times 10^{-4}$ & $1\,123$ & $342$ \\
+$10^{-5}$ & $1.63 \times 10^{-4}$ & $454$ & $84$ \\
+$3 \times 10^{-5}$ & $(4.04 \pm 0.02) \times 10^{-5}$ & $1\,306 \pm 1$ & $1\,040 \pm 1$ \\
+$10^{-4}$ & $1.13$ & $64$ & \multicolumn{1}{c}{--} \\
+$1.2 \times 10^{-3}$ & $1.13$ & $20\,000$ & \multicolumn{1}{c}{--} \\
 \bottomrule
 \end{tabular}
 }

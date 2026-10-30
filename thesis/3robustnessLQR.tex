@@ -9,7 +9,7 @@ and thus do not need to estimate gradients but can calculate them exactly. This 
 us to clearly separate the benefits of a low-dimensional controller from estimation
 errors.
 
-\subsection{Setting}
+\subsection{Solvers on the True Model}
 \label{subsec:known-model-setting}
 
 % mb pg
@@ -28,7 +28,7 @@ $\Sigma_{K_j}$ then follows from solving a second Lyapunov equation,
     \Sigma_{K_j} = (A - B K_j) \Sigma_{K_j} (A - B K_j)\T + \Sigma_0 ,
 \end{equation}
 where, for initial states drawn uniformly from $[-10, 10] \times [-1, 1]$ as described in \cref{subsec:protocol},
-the second moment is $\Sigma_0 = \operatorname{diag}\left( 10^2/3, \, 1^2/3 \right)$. The policy gradient
+the second moment is $\Sigma_0 = \operatorname{diag}\left( 10^2/3, \, 1^2/3 \right)$. The policy gradient~\cite[Lemma~1]{Fazel2018Global}
 \begin{equation}
     \label{eq:pg-gradient}
     \nabla f(K_j) = 2 \left( \left( R + B\T P_{K_j} B \right) K_j - B\T P_{K_j} A \right) \Sigma_{K_j}
@@ -62,7 +62,7 @@ such that the resulting gain is $K \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in
 
 Now we also want to implement a solver that produces a low-dimensional controller. As in our
 case the controller is characterized by the gain matrix, and for matrices dimensionality is ``often
-[\ldots] expressed by means of the rank''~\cite{Recht2010Guaranteed}, we aim at learning a low-rank
+[\ldots] expressed by means of the rank''~\cite[Sec.~1]{Recht2010Guaranteed}, we aim at learning a low-rank
 gain matrix. However, to make this comparable later to RL approaches that rely on the number of parameters,
 we measure the complexity of a gain by its policy size $\lvert K \rvert$ from \cref{def:policy-size}, which uses
 the more efficient version between the full and the factored parameterization.
@@ -77,7 +77,7 @@ with small adaptations in the following way.
 % Def mb_spi
 We reuse the computation of the gradient $\nabla f(K_j)$ from \cref{alg:mb-pg}.
 For inducing the structure, we optimize the regularized cost $f(K) + \lambda \lVert K \rVert_{*}$,
-where the nuclear norm $\lVert \cdot \rVert_{*}$ can be reduced by eliminating singular values of $K$,
+where the nuclear norm $\lVert \cdot \rVert_{*}$ can be reduced by eliminating singular values of $K$~\cite[Sec.~2.2]{Park2020Structured},
 and $\lambda$ is its weight in the whole cost. It further uses an adaptive learning rate,
 combined with a line search criterion, consisting of a stability and a sufficient decrease condition.
 Starting from the initial step size $\eta = 1 / (2 \lambda)$, following the paper's recommendation of $\mathcal{O}(1/\lambda)$,
@@ -85,11 +85,11 @@ each iteration takes a gradient step and applies the
 proximal operator of the nuclear norm, which soft-thresholds the singular values,
 \begin{equation}
     \label{eq:spi-prox}
-    K^{+} = U \operatorname{diag} \left( \max\{\sigma_1 - \eta \lambda, 0\}, \dots,
-    \max\{\sigma_{\bar{r}} - \eta \lambda, 0\} \right) V\T ,
+    K^{+} = \Phi \operatorname{diag} \left( \max\{\chi_1 - \eta \lambda, 0\}, \dots,
+    \max\{\chi_{\bar{r}} - \eta \lambda, 0\} \right) \Psi\T ,
     \qquad \bar{r} \coloneqq \min\{d_{\mathrm{out}}, d_{\mathrm{in}}\} ,
 \end{equation}
-where $U \operatorname{diag}(\sigma_1, \dots, \sigma_{\bar{r}}) V\T$ is the singular value decomposition of
+where $\Phi \operatorname{diag}(\chi_1, \dots, \chi_{\bar{r}}) \Psi\T$ is the singular value decomposition of
 the gradient step $K_j - \eta \nabla f(K_j)$. The candidate $K^{+}$ is accepted if it is stabilizing, $\spr(A - B K^{+}) < 1$, and
 satisfies the sufficient decrease condition
 \begin{equation}
@@ -125,7 +125,7 @@ stopped earlier if the criterion $\lVert K_{j+1} - K_j \rVert_F < \varepsilon$ i
 \end{algorithm}
 
 As one can see, there are a lot of parameters that can be modified here. We set $\varepsilon = 10^{-8}$,
-and use the same $\beta = 0.5$ as in the experiments section of Park et al.~\cite{Park2020Structured}.
+and use the same $\beta = 0.5$ as in the experiments section of Park et al.~\cite[Sec.~4.2]{Park2020Structured}.
 For $\lambda$, as it defines the learning rate as well, we have run an experiment with various values,
 which can be found in \cref{sec:app-spi-lambda}. A value of $\lambda = 5$ has shown the most promising results across the sizes.
 
@@ -136,7 +136,7 @@ to stabilize, the loop runs until the update produces no effect at all.
 Now that we have defined our controllers and how they learn, we test them in comparison to the DARE-calculated
 solution \eqref{eq:dare} from \cref{subsubsec:lqr-optimal}.
 
-\subsection{Results}
+\subsection{Performance across Inflation Sizes}
 \label{subsec:known-model-results}
 
 We apply our solvers to the \emph{base} and inflated versions of the true model, for now noise-free, as described in
@@ -145,7 +145,7 @@ Specifically, as in \cref{subsec:protocol}, we train ten controllers per solver,
 The results are then pooled.
 
 The most interesting finding is how much faster \emph{TrS} converges compared to \emph{TrP}. While it achieves its best training
-suboptimality within around 50 iterations, \emph{TrP} still falls short of it after 450 iterations. We can also see in
+suboptimality within around 50 iterations, \emph{TrP} still falls short of it after 450 iterations (\cref{fig:app-true-curves}). We can also see in
 \cref{tab:ch4-true-across-sizes} that the reduction in complexity for all inflation sizes has worked well with \emph{TrS}.
 For our test suboptimality, \emph{TrS} also outperforms \emph{TrP} here by at least one order of magnitude. \Cref{fig:true-across-sizes-subopt}
 visualizes this.
@@ -162,7 +162,7 @@ visualizes this.
 
 Overall, this looks very promising for \emph{TrS}; still, our goal is to find out whether it is also a robust controller.
 
-\subsection{Noise Experiments}
+\subsection{Robustness under \emph{Large} Inflation}
 \label{subsec:true-model-noise}
 
 Now, we reuse the controllers we trained in \cref{subsec:known-model-results} and evaluate them under the test protocol
@@ -188,11 +188,11 @@ are noticeable differences for the others.
     \label{fig:true-noise-large-all-absolute}
   \end{subfigure}
   \caption{Degradation of the solvers on the true model under \emph{large} inflation and all noise channels at once,
-  over the intensities.}
+  over the intensities. Due to very similar values, they are superimposed in the plots, and therefore not all visible.}
   \label{fig:true-noise-large-all}
 \end{figure}
 
-For parametric uncertainty the distribution is also nearly identical, so here no difference can be noticed. When looking
+For parametric uncertainty the distribution is also nearly identical (\cref{fig:true-noise-large-parametric-divergent}), so here no difference can be noticed. When looking
 at measurement noise, however, we can notice that \emph{TrP} degrades slightly less than the baseline (median at $9.96$ vs.\ $9.98$),
 and \emph{TrS} is even further below (median at $9.88$, \cref{fig:true-noise-large-measurement-divergent}).
 
@@ -200,18 +200,30 @@ and \emph{TrS} is even further below (median at $9.88$, \cref{fig:true-noise-lar
   \centering
   \begin{subfigure}[t]{0.49\linewidth}
     \centering
+    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_relative_degradation_parametric-divergent}
+    \caption{Parametric uncertainty.}
+    \label{fig:true-noise-large-parametric-divergent}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
     \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_relative_degradation_measurement-divergent}
     \caption{Measurement noise.}
     \label{fig:true-noise-large-measurement-divergent}
-  \end{subfigure}\hfill
+  \end{subfigure}\par\medskip
   \begin{subfigure}[t]{0.49\linewidth}
     \centering
     \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_relative_degradation_disturbance-divergent}
     \caption{External disturbance.}
     \label{fig:true-noise-large-disturbance-divergent}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_relative_degradation_control-divergent}
+    \caption{Control noise.}
+    \label{fig:true-noise-large-control-divergent}
   \end{subfigure}
   \caption{Relative degradation $\kappa$ of the solvers on the true model under \emph{large} inflation at intensity
-  \emph{divergent}. The boxes indicate the interquartile range over the ten seeds, the line marks the
+  \emph{divergent}, per noise channel. The boxes indicate the interquartile range over the ten seeds, the line marks the
   median, and the whiskers span the $5$th to $95$th percentile. Points show the individual seeds.}
   \label{fig:true-noise-large-divergent}
 \end{figure}
@@ -223,18 +235,6 @@ baseline, with \emph{TrP} being the worst here (median at $10.09$ vs.\ $9.96$ fo
 The most noticeable difference is under control noise, where \emph{TrP} noticeably degrades less than \emph{TrS} or the baseline
 (median at $6.49$ vs.\ baseline at $6.61$, \cref{fig:true-noise-large-control-divergent}). \emph{TrS} also stays below the baseline
 (median $6.59$), but does not show as much robustness as \emph{TrP}.
-
-\begin{figure}[htbp]
-  \centering
-  \generatedhalffigure{ch4_true_model_noise}{ch4_true_model_noise_large_relative_degradation_control-divergent}
-  \caption{Relative degradation $\kappa$ of the solvers on the true model under \emph{large} inflation and control noise
-  at intensity \emph{divergent}. The boxes indicate the interquartile range over the ten seeds, the line marks the
-  median, and the whiskers span the $5$th to $95$th percentile. Points show the individual seeds.}
-  \label{fig:true-noise-large-control-divergent}
-\end{figure}
-
-\subsection{Discussion}
-\label{subsec:true-model-discussion}
 
 Judging from our results, it is difficult to draw significant conclusions in relation to robustness of the controllers.
 It seems like a trained, larger controller could be more robust to control noise; however, we need to verify this in
@@ -250,15 +250,15 @@ Now we take a look at the more realistic case, where we do not know the underlyi
 Before we can get into the results, we first take a deeper look at the solvers that we use and how the experiments are
 set up.
 
-\subsection{Setting}
+\subsection{System Identification and Model-Free Solvers}
 \label{subsec:unknown-model-setting}
 
 First, we introduce our basis for the indirect approaches, which is based on system identification. N4SID,
 introduced by Van Overschee and De Moor~\cite{VanOverschee1994N4SID}, uses ``the projection of the future outputs [of the system]
 onto the past and future inputs and the past outputs''~\cite[Sec.~3]{VanOverschee1994N4SID}. These projections can then be
 described as ``a function of the system matrices and the input-output block Hankel matrices''~\cite[Sec.~3]{VanOverschee1994N4SID}, which
-allows us to reconstruct exactly that from the results. Important are further the assumptions that the systems are
-observable and controllable~\cite[pp.~127--128]{Werner2021Control}. For simplicity, we rely on the
+allows us to reconstruct exactly that from the results. Further, the method assumes that the systems are
+observable and controllable~\cite[Sec.~2.1]{VanOverschee1994N4SID}. For simplicity, we rely on the
 implementation of N4SID from SIPPY~\cite{SIPPY2026N4SID}, which we integrate into our own setup. This implementation allows us
 to recover estimates $A_{\mathrm{id}}$, $B_{\mathrm{id}}$ and $C_{\mathrm{id}}$ of the system matrices, whereas the cost
 matrices $\tilde{Q}$ and $\tilde{R}$ are choices of the controller design (\cref{subsec:protocol}), and thus already known beforehand. To the identified matrices
@@ -273,6 +273,8 @@ $\hat{C} \in \R^{d_{\mathrm{in}} \times \hat{n}}$ and $\Theta \in \R^{\hat{n} \t
 such that $\hat{C}$ has orthonormal columns. This makes sense, as we have the knowledge that
 the output matrix $C$ of our true model is also of this construction, but also allows us to
 get the pseudoinverse of $\hat{C}$ as $\hat{C}\T$, since $\hat{C}\T \hat{C} = I_{\hat{n}}$.
+N4SID determines those system matrices only ``up to within a similarity transformation''~\cite[Sec.~2.1]{VanOverschee1994N4SID},
+such that \eqref{eq:identified-basis} does not change our underlying system~\cite[pp.~10--11]{Werner2021Control}.
 
 The collection of observation and action data runs the plant for $T$ steps under the initial gain, with a randomly
 sampled excitation added on top of it,
@@ -282,7 +284,7 @@ sampled excitation added on top of it,
     \qquad k = 0, \dots, T - 1 .
 \end{equation}
 
-The paper mentions that the approximation error becomes smaller as the number of block rows of the Hankel matrices
+The paper mentions that a part of the result becomes exact as the number of block rows of the Hankel matrices
 grows~\cite[Sec.~5.3]{VanOverschee1994N4SID}. With the number of columns being dependent on our trajectory length $T$,
 we aim to find the best combination of both. Denoting the number of block rows as the ``Hankel horizon'', we evaluated different
 combinations to find the optimal setting to use in our experiment. The full results of the selection can be found in
@@ -324,7 +326,7 @@ settle this, we evaluated different combinations of them in \cref{sec:app-sample
 trade-off between computational efficiency and quality gave $N_{\mathrm{traj}} = 200$ and $l = 500$.
 
 % mf npg
-We use the model-free natural policy gradient (NPG) estimation described by Fazel et al.~\cite{Fazel2018Global},
+We use the model-free natural policy gradient (NPG) estimation described by Fazel et al.~\cite[Sec.~4.2]{Fazel2018Global},
 which at its core consists of the loop in \cref{alg:mf-gradient}. Instead of the proposed single-point estimator,
 we use a two-point estimator inspired by Duchi et al. and Mania et al.~\cite{Duchi2015Optimal,Mania2018Simple},
 as this drastically reduced the variance of the estimates, and thus the instability of the controller.
@@ -334,9 +336,9 @@ as this drastically reduced the variance of the estimates, and thus the instabil
     \label{alg:mf-gradient}
     \begin{algorithmic}[1]
         \REQUIRE gain $K \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$, number of perturbation pairs $N_{\mathrm{traj}}$,
-        rollout length $l$, smoothing radius $r$
+        rollout length $l$, smoothing radius $\zeta$
         \FOR{$i = 1, \dots, N_{\mathrm{traj}}$}
-            \STATE sample $\Xi_i$ uniformly from the matrices with $\lVert \Xi_i \rVert_F = r$
+            \STATE sample $\Xi_i$ uniformly from the matrices with $\lVert \Xi_i \rVert_F = \zeta$
             \STATE sample an initial state $x_0 \sim \mathcal{D}$
             \STATE simulate $K + \Xi_i$ and $K - \Xi_i$ for $l$ steps from $x_0$, with stage costs $c_k^{\pm}$ and
             observations $y_k^{\pm}$
@@ -346,7 +348,7 @@ as this drastically reduced the variance of the estimates, and thus the instabil
         \ENDFOR
         \STATE $\bar{\delta} = \frac{1}{N_{\mathrm{traj}}} \sum_{i=1}^{N_{\mathrm{traj}}} \delta_i$
         \STATE $\widehat{\nabla f}(K) = \frac{1}{N_{\mathrm{traj}}} \sum_{i=1}^{N_{\mathrm{traj}}}
-        \frac{d_{\mathrm{out}} d_{\mathrm{in}}}{2 r^2} \left( \delta_i - \bar{\delta} \right) \Xi_i$
+        \frac{d_{\mathrm{out}} d_{\mathrm{in}}}{2 \zeta^2} \left( \delta_i - \bar{\delta} \right) \Xi_i$
         \STATE $\hat{\Sigma}_K = \frac{1}{N_{\mathrm{traj}}} \sum_{i=1}^{N_{\mathrm{traj}}} \left( \hat{\Sigma}_i^{+} + \hat{\Sigma}_i^{-} \right)$
         \STATE $\hat{f}(K) = \frac{1}{N_{\mathrm{traj}}} \sum_{i=1}^{N_{\mathrm{traj}}} \frac{1}{2} \left( \hat{J}_i^{+} + \hat{J}_i^{-} \right)$
         \RETURN $\widehat{\nabla f}(K)$, $\hat{\Sigma}_K$, $\hat{f}(K)$
@@ -354,8 +356,10 @@ as this drastically reduced the variance of the estimates, and thus the instabil
 \end{algorithm}
 
 We further aim to clarify a couple of things about the given loop.
-Subtracting the mean difference $\bar{\delta}$ does not change the expected value of the estimate, since
-$\E[\Xi_i] = 0$, but lowers its variance. We count a rollout as diverged once its observation exceeds
+Subtracting the mean difference $\bar{\delta}$ here helps us lower the variance of the estimate.
+As $\bar{\delta}$ contains $\delta_i$, it scales the expectation by $1 - 1/N_{\mathrm{traj}}$,
+which is negligible for our $N_{\mathrm{traj}} = 200$.
+We count a rollout as diverged once its observation exceeds
 $\lVert y_k \rVert = 10^{5}$. It is therefore ended early and charged a penalty cost of $10^{10}$.
 Additionally, for inflated dimensions, $\hat{\Sigma}_K$ is singular, so we precondition with its
 truncated pseudoinverse $\hat{\Sigma}_K^{\dagger}$ instead, which discards singular values below $10^{-6}$ times the largest one.
@@ -365,7 +369,7 @@ Our full learning algorithm, which we refer to as Model-free NPG (\emph{MfN}), i
     \caption{Model-free NPG}
     \label{alg:mf-npg}
     \begin{algorithmic}[1]
-        \REQUIRE stabilizing gain $K_0 \in \mathcal{K}$, $N_{\mathrm{traj}}$, $l$, $r$, step size $\eta$
+        \REQUIRE stabilizing gain $K_0 \in \mathcal{K}$, $N_{\mathrm{traj}}$, $l$, $\zeta$, step size $\eta$
         \FOR{$j = 0, 1, 2, \dots$}
             \STATE compute $\widehat{\nabla f}(K_j)$ and $\hat{\Sigma}_{K_j}$ by \cref{alg:mf-gradient}
             \STATE update the gain by $K_{j+1} = K_j - \eta \, \widehat{\nabla f}(K_j) \, \hat{\Sigma}_{K_j}^{\dagger}$
@@ -377,7 +381,7 @@ We use the natural gradient $\widehat{\nabla f} \, \hat{\Sigma}^{\dagger}$ here,
 preconditions the update with the pseudoinverse of the state correlation instead of applying
 the update directly like the standard model-free version~\cite{Fazel2018Global}. In initial
 experiments it consequently showed better stability, which is why we selected it.
-In the same process we decided on a smoothing parameter of $r = 0.5$, and, based
+In the same process we decided on a smoothing radius of $\zeta = 0.5$, and, based
 on separate results in \cref{sec:app-learning-rate-mf-npg}, have chosen a learning rate of $\eta_{\mathrm{base}} = 0.1$,
 $\eta_{\mathrm{small}} = 0.03$, $\eta_{\mathrm{medium}} = 0.01$ and $\eta_{\mathrm{large}} = 0.01$.
 
@@ -405,33 +409,48 @@ and $\lambda$, we define our learning loop in \cref{alg:mf-spi}.
 \end{algorithm}
 
 Now to the selection of the parameters. Park et al.\ already note the difficulty of finding a fixed step size
-that does not produce divergence of the method~\cite{Park2020Structured}. Also, the example shown only
-uses the model-based approach and the regularizer to induce sparse structure, not the model-free variant combined
+that does not produce divergence of the method~\cite[Sec.~3.2]{Park2020Structured}. Also, the example shown only
+uses the model-based approach and the regularizer to induce sparse structure~\cite[Sec.~4]{Park2020Structured}, not the model-free variant combined
 with low dimensionality. So during our first tests, we often ran into either unstable controllers, or ones that
 did not induce any structure at all, hinting at a $\lambda$ that is too low. If we remember the proximal step
 \eqref{eq:spi-prox}, we can see that it depends on both the step size and $\lambda$, as every singular value is
 mapped to
 \begin{equation}
     \label{eq:spi-threshold}
-    \sigma_i \mapsto \max\{ \sigma_i - \eta \lambda, 0 \} .
+    \chi_i \mapsto \max\{ \chi_i - \eta \lambda, 0 \} .
 \end{equation}
 Even after some improvement by using the two-point estimator (\cref{alg:mf-gradient}), it remained quite a difficult
 topic. So rather extensive experiments on the variation of $\lambda$ and the step size can be found in \cref{sec:app-spi-mf}.
 Based on those, we selected $\lambda_{\mathrm{base}} = 4$ and $\eta_{\mathrm{base}} = 3.5 \times 10^{-6}$, $\lambda_{\mathrm{small}} = 400$ and $\eta_{\mathrm{small}} = 3.5 \times 10^{-5}$,
 $\lambda_{\mathrm{medium}} = 400$ and $\eta_{\mathrm{medium}} = 3.5 \times 10^{-5}$; and $\lambda_{\mathrm{large}} = 40\,000$ and $\eta_{\mathrm{large}} = 3.5 \times 10^{-8}$.
 
-\subsection{Results}
+\subsection{Performance with an Identified Model}
 \label{subsec:unknown-model-results}
 
-% TODO - check values again
 Looking at the time until convergence, as well as the achieved training suboptimality, we notice that \emph{MfS}
-produced under \emph{large} inflation a very expensive gain, while still not achieving a strong reduction in rank. As this was the same problem
+produced a very expensive gain under \emph{large} inflation, while still not achieving a strong reduction in rank. As this was the same problem
 we observed during our parameter search (\cref{sec:app-spi-mf}), we accept it as an unsuccessful attempt and difficult to implement. Apart from
-this, it is noticeable that \emph{MfN} takes longer to converge the larger the inflation gets, with an increase from $167$ at \emph{base} to $390$ at \emph{large}.
-This makes it slower than \emph{IdS} (around $25$) and \emph{IdP} (around $350$), where \emph{IdS} again is still much faster than \emph{IdP}. The fastest approach here is \emph{IdD}, as it only
+this, it is noticeable that \emph{MfN} takes longer to converge the larger the inflation gets, with an increase from $167$ at \emph{base} to $610$ at \emph{large} (\cref{tab:identified-iterations}).
+This makes it slower than \emph{IdS} and \emph{IdP}, where \emph{IdS} (at most $90$ across the sizes) again is still much faster than \emph{IdP} (around $350$). The fastest approach here is \emph{IdD}, as it only
 requires the identification step, and no iteration.
 
-% here table?
+\begin{table}[htbp]
+  \centering
+  \caption{Iterations until convergence of the solvers without the model, as mean and standard deviation over the ten seeds,
+  for each inflation size.}
+  \label{tab:identified-iterations}
+  \begin{tabular}{@{}lrrrr@{}}
+    \toprule
+    Solver & \emph{base} & \emph{small} & \emph{medium} & \emph{large} \\
+    \midrule
+    IdD & $1$            & $1$            & $1$             & $1$             \\
+    IdP & $346$          & $346 \pm 3$    & $346 \pm 1$     & $346$           \\
+    IdS & $34 \pm 1$     & $90 \pm 5$     & $76 \pm 0.3$      & $68$            \\
+    MfN & $167 \pm 9$    & $216 \pm 43$   & $356 \pm 46$    & $610 \pm 104$   \\
+    MfS & $368 \pm 58$   & $216 \pm 32$   & $186 \pm 116$   & $451 \pm 5$     \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 Looking at the policy sizes, we can see that \emph{IdS} indeed produces the smallest policy, with \emph{IdD}
 being slightly larger in some cases (\cref{fig:identified-across-sizes-complexity}), but still a lot smaller
@@ -444,10 +463,8 @@ than the full-rank gains.
   \label{fig:identified-across-sizes-complexity}
 \end{figure}
 
-Analyzing the resulting test suboptimality, we see the expected worse performance of \emph{MfS}, but also that the direct approaches
-underperform the indirect (identification) approaches. Here, we can also notice a difference: with increasing inflation size,
-\emph{MfN} trains for more iterations, with an increase from $167$ at \emph{base} to $610$ at \emph{large},
-while for the identification-based policies it stays similar. What also jumps out is that \emph{IdD} matches
+Analyzing the resulting test suboptimality, we see the expected worse performance of \emph{MfS} from \emph{medium} onwards, but also that the direct approaches
+underperform the indirect (identification) approaches. What also jumps out is that \emph{IdD} matches
 the optimal performance within $2 \cdot 10^{-7}$ across every size (\cref{fig:identified-across-sizes-subopt}),
 indicating that N4SID is able to almost perfectly identify the underlying system.
 
@@ -455,18 +472,19 @@ indicating that N4SID is able to almost perfectly identify the underlying system
   \centering
   \generatedfigure{ch4_identified_model}{ch4_identified_across_sizes_subopt}
   \caption{Suboptimality $S$ of the solvers without the model for each inflation size. The boxes indicate the interquartile
-  range, the line marks the median, and the whiskers span the $5$th to $95$th percentile. Points show episodes outside this range.}
+  range, the line marks the median, and the whiskers span the $5$th to $95$th percentile. Points show episodes outside this range.
+  The ordering of the controllers for each size is the same and follows (from left to right) \emph{IdD}, \emph{IdP}, \emph{IdS}, \emph{MfN} and \emph{MfS}.}
   \label{fig:identified-across-sizes-subopt}
 \end{figure}
 
-\subsection{Noise Experiments on Large Inflation}
+\subsection{Robustness of Indirect and Direct Model-Free Approaches}
 \label{subsec:noise-large-inflation}
 
 Again, we investigate our system inflated to \emph{large} size and repeat our experiments from the
 true model section (\cref{subsec:true-model-noise}).
 
-We first start by taking a look at parametric uncertainty. As it is a multiplicative noise type, already
-worse performance is magnified even more. For \emph{MfS}, this can clearly be seen, as
+We first start by taking a look at parametric uncertainty. As it affects the model matrices directly, already
+worse performance on the clean plant is magnified even more if the dynamics change. For \emph{MfS}, this can clearly be seen, as
 under \emph{divergent} intensity, even the least relative degradation amounts to $7714$,
 with the majority being above $10^5$ (\cref{tab:noise-large-parametric}).
 
@@ -565,7 +583,8 @@ around tenfold increase in cost (with \emph{MfN} even slightly higher) similar t
 the intensities at a relative degradation of one. However, this time we cannot fully attribute this to
 its higher nominal cost. Under \emph{weak} and \emph{standard} intensity, measurement noise does not increase its cost
 measurably (\cref{fig:noise-large-measurement-absolute}) and under higher intensities it remains much
-more robust than the other approaches.
+more robust than the other approaches. This, however, is most likely caused by its inability to translate inputs
+to meaningful output on the clean loop already, and therefore is not influenced by changes to those inputs at all.
 
 \begin{figure}[htbp]
   \centering
@@ -586,25 +605,31 @@ more robust than the other approaches.
   \label{fig:noise-large-measurement}
 \end{figure}
 
-When now taking a look at the other architectures in more detail, we notice that the larger
-controllers are indeed more affected by the noise. \emph{MfN} sits above all the model-based approaches,
+When now taking a look at the other architectures in more detail, we notice that \emph{MfN} sits above all the model-based approaches,
 and \emph{IdP} also degrades slightly more than \emph{IdS}, with the baseline sitting between both. We
 already noticed a similar pattern in the previous experiment, where \emph{TrS} performed slightly better
-than \emph{TrP}, indicating that fewer parameters might make a controller more robust against measurement noise.
+than \emph{TrP}, for which we suspected that fewer parameters might make a controller more robust against measurement noise.
+However, by the construction of our initial gain $\tilde{K}_0$ and the policy gradient updates, we know that \emph{TrP} incurs
+an additional cost each step under measurement noise, which it cannot remove from its gain, while \emph{TrS} can remove it
+through the soft-thresholding of singular values. The same holds true for \emph{IdP} and \emph{IdS} respectively. The
+full proof behind it can be found in \cref{sec:app-perf-trp-measurement-noise}. While this does not uniquely determine differences
+in the cost, the removal of it makes the difference in absolute degradation between \emph{IdP} and \emph{IdS} barely noticeable,
+so we cannot conclude any improved robustness of the low-dimensional controllers.
 
-\subsection{Discussion}
-\label{subsec:id-model-discussion}
+\section{Discussion}
+\label{sec:lqr-discussion}
 
 From our results, we can see that on the clean loop the identification-based approaches perform much better
 than the direct approaches, achieving a performance similar to that of the optimal controller. Here, \emph{IdD} seems to
 be the best solution, as it does not require any training iterations, achieves the lowest suboptimality,
 and is of a similar size as \emph{IdS}. When looking at our model-free approaches, nothing speaks in favor of them---they
-require more iterations, in the case of \emph{MfS} perform horribly on the clean loop and do not even
-achieve a rank reduction.
+require more iterations and, in the case of \emph{MfS} under \emph{large} inflation, perform poorly on the clean loop, while not even
+achieving a strong rank reduction.
 
 This worse performance is then amplified under parametric uncertainty, penalizing them even
 more, while \emph{IdD}, \emph{IdP} and \emph{IdS} degrade the same as the baseline. External disturbance affects
-all controllers the same, so this is not something where direct approaches show more robustness.
+all indirect approaches the same, while among the direct approaches, \emph{MfN} shows more
+and \emph{MfS} less robustness than those, judging from the absolute degradation.
 
 When looking at control noise, it might seem like this is where \emph{MfS} is much more robust than the
 others, and \emph{MfN} slightly as well. But when taking a look at \cref{fig:identified-large-trajectories}, we
@@ -625,26 +650,12 @@ degradation here. If the gain matrix was not able to control the mass without no
 mapping inputs to effective outputs, then a change to these named inputs could have any effect on
 the cost. In this case, it seems to help reduce its degradation.
 
-One interesting thing however remains. Again, for measurement noise, \emph{IdS} seems to sit slightly
-below \emph{IdP}, hinting again at a better resistance of smaller policies to measurement noise,
-like we hypothesized in \cref{subsec:noise-large-inflation}. One might say that \emph{MfS} also shows this; however,
-this is incorrect. Based on the nearly non-existent size reduction, and the difficulties controlling
-the mass under the clean loop, it would be an inconsistent comparison. But, comparing \emph{IdS} to
-\emph{IdP} and \emph{MfN}, we can indeed see that \emph{IdS} is slightly more robust to measurement noise, while
-being much smaller than those other two.
+Again, for measurement noise, for \emph{IdS} its slight improvement over \emph{IdP} can be attributed
+to a partial removal of the cost associated with the part of the gain located outside the range of
+our observation lift $U_1$ (\cref{sec:app-perf-trp-measurement-noise}). Still, if we account for this,
+both perform fairly similarly.
 
-
-\section{Discussion}
-\label{sec:lqr-discussion}
-
-This chapter has shown us that smaller-sized policies can indeed achieve performances similar to
-fully parameterized controllers, while maintaining similar or partially better robustness properties.
-The main side note here, though, is that it depends on the choice of the algorithm that creates such a policy.
-As we have noticed, direct approaches perform generally worse, and require more training time, compared
-with a mixed approach of system identification and policy iteration. Unbeaten is clearly \emph{IdD}, which
-requires just the system identification step, and performs on par with the optimal controller throughout.
-
-As this system is a very simple case, and system identification is not scalable to larger inflation as we
-show in \cref{chap:perception}, we cannot rely on these approaches for real-world applications. We
+As this system is a very simple case, and system identification is not scalable to larger inflation
+(as we will mention in \cref{chap:perception}), we cannot rely on these approaches for real-world applications. We
 therefore take these learnings and indications with us, and try to use them for choosing RL-based algorithms
 in \cref{chap:inflation}.

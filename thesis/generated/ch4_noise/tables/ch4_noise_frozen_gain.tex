@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering
+\caption{Part of the final gain outside $\operatorname{range}(U_1)$ under \emph{large} inflation, the control cost it adds per test episode of $T$ steps under measurement noise at intensity \emph{divergent}, and the measured absolute degradation. Both costs are relative to the clean cost $\hat{J}^{*}$ of the optimal gain. Mean $\pm$ standard deviation over the seeds.}
+\label{tab:app-frozen-gain}
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+Model & Solver & $\lVert \tilde{K} P_{\perp} \rVert_F$ & $\sigma_{\mathrm{m}}^{2} T \lVert \tilde{K} P_{\perp} \rVert_F^2 / \hat{J}^{*}$ & $\Delta \hat{J} / \hat{J}^{*}$ \\
+\midrule
+True & Baseline & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ & $8.97 \pm 0.03$ \\
+ & TrP & $0.498 \pm 0.000$ & $0.552 \pm 0.000$ & $8.95 \pm 0.03$ \\
+ & TrS & $0.043 \pm 0.003$ & $0.004 \pm 0.001$ & $8.87 \pm 0.03$ \\
+\midrule
+Identified & IdD & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ & $8.97 \pm 0.03$ \\
+ & IdP & $0.498 \pm 0.000$ & $0.552 \pm 0.000$ & $9.26 \pm 0.03$ \\
+ & IdS & $0.039 \pm 0.002$ & $0.003 \pm 0.000$ & $8.85 \pm 0.03$ \\
+\bottomrule
+\end{tabular}
+\end{table}

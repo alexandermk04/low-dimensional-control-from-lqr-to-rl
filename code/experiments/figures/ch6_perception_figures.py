@@ -151,7 +151,7 @@ def main():
         save(ax.figure, f"ch6_perception_{metric}", EXPERIMENT)
 
     # Half width figures
-    for metric in ("off_screen_rate", "null_waste_mean"):
+    for metric in ("terminated_rate", "null_waste_mean"):
         save_variants(
             lambda metric=metric, **size: box_metric(
                 learned, "solver", metric, order=ORDER, log=False, **size
@@ -167,7 +167,7 @@ def main():
             rows, "solver",
             metrics=("J_final", "training_subopt_final", "subopt",
                      "r2_position", "r2_velocity", "r2_control", "latent_dim",
-                     "off_screen_rate", "null_waste_mean",
+                     "off_screen_rate", "terminated_rate", "null_waste_mean",
                      "policy_complexity", "iterations", "total_env_steps", "best_env_steps", "total_time"),
             column_order=ORDER,
         ),

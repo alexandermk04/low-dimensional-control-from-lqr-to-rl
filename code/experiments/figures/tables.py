@@ -10,6 +10,7 @@ from experiments.figures.style import table_dir
 __all__ = [
     "metric_table",
     "setting_table",
+    "sweep_table",
     "write_table",
 ]
 
@@ -53,9 +54,23 @@ METRIC_ROWS = {
     "r2_velocity": (r"Probe $R^2$, velocity", "{:.3f}"),
     "r2_control": (r"Probe $R^2$, optimal control", "{:.3f}"),
     "iters_to_thresh_1pct": (r"Iterations to 1\,\%", "{:.0f}"),
+    "terminated_rate": (r"Episodes exiting the screen", "{:.3f}"),
 }
 
 DEFAULT_METRICS = ("J_final", "training_subopt_final", "subopt")
+
+SWEEP_HEADERS = {
+    "training_subopt_final": r"Training suboptimality",
+    "iters_to_thresh_1pct": r"Iterations to $1\,\%$",
+    "steps_to_thresh_1pct": r"Env.\ steps to $1\,\%$",
+}
+
+COUNT_METRICS = {"iterations", "iters_to_thresh_1pct", "steps_to_thresh_1pct",
+                 "total_env_steps", "best_env_steps", "policy_complexity"}
+FIXED_DECIMALS = {"rank_final": 1}
+
+THRESHOLD_METRICS = {"iters_to_thresh_1pct", "steps_to_thresh_1pct"}
+THRESHOLD_NOTE = " Times to $1\\,\\%$ average over the seeds that reach it."
 
 
 def _escape(text: str) -> str:
@@ -167,6 +182,72 @@ def _cell(stats: dict, fmt: str, show_spread: bool, scale: float = 1.0) -> str:
         return f"${mean}$"
 
     return f"${mean} \\pm {_math(scale * stats['std'], fmt.replace('+', ''))}$"
+
+
+def _grouped(text: str) -> str:
+    r"""Separate the thousands of a formatted number by thin spaces, ``1\,250``."""
+    sign, text = ("-", text[1:]) if text.startswith("-") else ("", text)
+    whole, _, fraction = text.partition(".")
+    if len(whole) > 3:
+        whole = f"{int(whole):,}".replace(",", r"\,")
+    return sign + whole + ("." + fraction if fraction else "")
+
+
+def _rounded(stats: dict, metric: str, digits: int = 3) -> str:
+    r"""Mean and standard deviation of one cell, rounded to the same decimal place.
+    """
+    if stats is None or stats["n"] == 0:
+        return r"\multicolumn{1}{c}{--}"
+
+    mean = stats["mean"]
+    std = stats["std"] if stats["n"] > 1 else 0.0
+
+    if mean == 0:
+        return "$0$"
+
+    exponent = int(f"{mean:.{digits - 1}e}".split("e")[1])
+    scientific = exponent >= 5 or exponent < -3
+
+    if metric in FIXED_DECIMALS:
+        decimals, scientific = FIXED_DECIMALS[metric], False
+    elif scientific:
+        decimals = digits - 1
+        mean, std = mean / 10 ** exponent, std / 10 ** exponent
+    elif metric in COUNT_METRICS:
+        decimals = 0
+    else:
+        decimals = max(0, digits - 1 - exponent)
+
+    text = _grouped(f"{mean:.{decimals}f}")
+    spread = f"{std:.{decimals}f}"
+    if float(spread) != 0:
+        text = f"{text} \\pm {_grouped(spread)}"
+
+    if scientific:
+        text = f"({text})" if r"\pm" in text else text
+        text = f"{text} \\times 10^{{{exponent}}}"
+
+    return f"${text}$"
+
+
+def _swept(values) -> dict:
+    """Math-mode labels of the swept values of one column.
+    """
+    numbers = [abs(v) for v in values if isinstance(v, (int, float)) and v]
+    wide = bool(numbers) and max(numbers) / min(numbers) >= 1e3
+
+    out = {}
+    for value in values:
+        if not isinstance(value, (int, float)):
+            out[value] = _escape(str(label_for(value)))
+        elif value and (wide or "e" in f"{value:g}"):
+            mantissa, exponent = f"{value:e}".split("e")
+            mantissa = mantissa.rstrip("0").rstrip(".")
+            power = f"10^{{{int(exponent)}}}"
+            out[value] = f"${power}$" if mantissa == "1" else f"${mantissa} \\times {power}$"
+        else:
+            out[value] = f"${_grouped(f'{value:g}')}$"
+    return out
 
 
 def _share(count: int, total: int) -> str:
@@ -491,6 +572,144 @@ def setting_table(
         return tabular
 
     full_caption = (caption or "") + (CENSUS_NOTE_STABLE_ONLY if show_census else "")
+
+    return "\n".join([
+        r"\begin{table}[htbp]",
+        r"\centering",
+        rf"\caption{{{full_caption}}}" if caption else "",
+        rf"\label{{{label}}}" if label else "",
+        tabular,
+        r"\end{table}",
+    ])
+
+
+def sweep_table(
+    rows: list[dict],
+    row_by,
+    metrics,
+    row_order=None,
+    row_header=None,
+    caption: str | None = None,
+    label: str | None = None,
+    census: bool | None = None,
+    headers: dict | None = None,
+    metric_header: str | None = None,
+    fit: bool = True,
+) -> str:
+    r"""Render a hyperparameter sweep with one row per swept value.
+
+    Parameters
+    ----------
+    rows : list[dict]
+        From :func:`~experiments.figures.aggregate.tidy`.
+    row_by : str or tuple of str
+        The swept condition keys, one leading column each. With several, the
+        first one is printed once per group, and groups are set apart by a rule.
+    metrics : sequence of str
+        Columns of the table, in order.
+    row_order : sequence or None, optional
+        Order of the rows, as values of ``row_by``.
+    row_header : str, tuple of str or None, optional
+        Header of each leading column.
+    caption, label : str or None, optional
+        Wrap the tabular in a ``table`` float with this caption and
+        ``\\label``.
+    census : bool or None, optional
+        Lead with a column counting the stable seeds. By default, only when
+        a seed is unstable.
+    headers : dict or None, optional
+        Column header per metric, replacing :data:`SWEEP_HEADERS`.
+    metric_header : str or None, optional
+        Header spanning all metric columns.
+    fit : bool, optional
+        Whether to wrap the tabular in the shrink-to-fit box of :func:`_fit`.
+
+    Returns
+    -------
+    str
+        Ready to ``\\input``.
+    """
+    by = (row_by,) if isinstance(row_by, str) else tuple(row_by)
+    header = (row_header,) if isinstance(row_header, str) or row_header is None else tuple(row_header)
+
+    counts = _census(rows, by)
+    show_census = any(
+        stable != total for _, stable, total in counts.values()
+    ) if census is None else census
+
+    kept = [row for row in rows if usable(row)]
+    stats = {metric: aggregate(kept, by, metric) for metric in metrics}
+
+    keys = list(counts)
+    if row_order is not None:
+        wanted = [(k,) if not isinstance(k, tuple) else k for k in row_order]
+        known = [k for k in wanted if k in counts]
+        keys = known + [k for k in keys if k not in known]
+    else:
+        try:
+            keys.sort()
+        except TypeError:
+            pass
+
+    labels = [_swept([key[i] for key in keys]) for i in range(len(by))]
+    names = {**SWEEP_HEADERS, **(headers or {})}
+    columns = (["Stable"] if show_census else []) + [
+        names.get(m, METRIC_ROWS.get(m, (_escape(m),))[0]) for m in metrics
+    ]
+
+    lead, n = len(by), len(columns)
+    lines = [
+        r"\begin{tabular}{" + "l" * lead + "r" * n + "}",
+        r"\toprule",
+    ]
+    if metric_header:
+        first = lead + 1 + (1 if show_census else 0)
+        lines += [
+            " & ".join([""] * (first - 1) + [
+                rf"\multicolumn{{{lead + n - first + 1}}}{{c}}{{{metric_header}}}"
+            ]) + r" \\",
+            rf"\cmidrule(lr){{{first}-{lead + n}}}",
+        ]
+    lines += [
+        " & ".join([h or "" for h in header] + [""] * (lead - len(header)) + columns) + r" \\",
+        r"\midrule",
+    ]
+
+    for index, key in enumerate(keys):
+        new_group = index == 0 or key[0] != keys[index - 1][0]
+        if lead > 1 and new_group and index:
+            lines.append(r"\midrule")
+
+        leading = [
+            labels[i][part] if i or new_group or lead == 1 else ""
+            for i, part in enumerate(key)
+        ]
+        identified, stable, total = counts[key]
+        cells = ([f"${stable}/{total}$"] if show_census else []) + [
+            _rounded(stats[m].get(key), m) for m in metrics
+        ]
+        lines.append(" & ".join(leading + cells) + r" \\")
+
+    lines += [r"\bottomrule", r"\end{tabular}"]
+
+    tabular = "\n".join(lines)
+
+    if fit:
+        tabular = _fit(tabular)
+
+    if caption is None and label is None:
+        return tabular
+
+    partial = any(
+        0 < cell["n"] < len([r for r in group(kept, by).get(key, [])])
+        for m in metrics if m in THRESHOLD_METRICS
+        for key, cell in stats[m].items()
+    )
+    full_caption = (
+        (caption or "")
+        + (THRESHOLD_NOTE if partial else "")
+        + (CENSUS_NOTE_STABLE_ONLY if show_census else "")
+    )
 
     return "\n".join([
         r"\begin{table}[htbp]",

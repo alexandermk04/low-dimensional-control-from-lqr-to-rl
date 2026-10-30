@@ -1,4 +1,5 @@
-\chapter{Nomenclature}\label{app:nomenclature}
+\chapter{Nomenclature}
+\label{app:nomenclature}
 
 \section{Notation}
 \label{sec:notation}
@@ -19,11 +20,11 @@ used throughout this thesis, together with the place where each is defined:
 \endfoot
 \multicolumn{3}{@{}l}{\emph{Sets and operators}} \\[2pt]
 $\R$, $\C$, $\mathbb{N}_0$ & real numbers, complex numbers, natural numbers including zero & \\
-$I_n$, $\mathbf{1}_n$, $e_1$ & identity matrix and all-ones vector of dimension $n$, first unit vector & \\
+$I_n$, $\mathbf{1}_n$, $e_i$ & identity matrix and all-ones vector of dimension $n$, $i$-th unit vector & \\
 $M\T$, $M^{\dagger}$ & transpose and (truncated) pseudoinverse of $M$ & \cref{alg:mf-npg} \\
 $\tr$, $\rank$, $\operatorname{diag}$ & trace, rank, diagonal matrix & \\
-$\lambda_i(M)$, $\sigma_i(M)$ & $i$-th eigenvalue and $i$-th singular value of $M$ & \\
-$U \Sigma V\T$ & singular value decomposition, $\Sigma = \operatorname{diag}(\sigma_1, \dots, \sigma_r)$ & \eqref{eq:svd} \\
+$\lambda_i(M)$, $\chi_i(M)$ & $i$-th eigenvalue and $i$-th singular value of $M$ & \\
+$\Phi$, $\Psi$ & factors with orthonormal columns of the singular value decomposition $\Phi \operatorname{diag}(\chi_1, \dots, \chi_r) \Psi\T$ & \eqref{eq:svd} \\
 $\spr(M)$ & spectral radius, $\max_i \lvert \lambda_i(M) \rvert$ & \cref{subsec:double-integrator} \\
 $M \succeq 0$, $M \succ 0$ & $M$ symmetric positive semi-definite / positive definite & \\
 $\lVert \cdot \rVert$, $\lVert \cdot \rVert_F$, $\lVert \cdot \rVert_{*}$ & Euclidean (spectral) norm, Frobenius norm, nuclear norm & \\
@@ -39,7 +40,7 @@ $t$, $k$, $h$ & continuous time, discrete step index, sampling period & \eqref{e
 $x_k \in \R^{n}$ & state & \eqref{eq:ss-disc} \\
 $u_k \in \R^{m}$ & control input of the plant & \eqref{eq:ss-disc} \\
 $y_k \in \R^{q}$ & observed output & \eqref{eq:ss-cont} \\
-$p$, $v$ & position and velocity of the double integrator, $x = [\,p,\ v\,]\T$ & \eqref{eq:di-first-order} \\
+$p$, $\dot{p}$ & position and velocity of the double integrator, $x = [\,p,\ \dot{p}\,]\T$ & \eqref{eq:di-first-order} \\
 $A_c$, $B_c$ & continuous-time system and input matrix & \eqref{eq:ss-cont} \\
 $A$, $B$ & their zero-order-hold discretizations & \eqref{eq:zoh-matrices} \\
 $C$, $D$ & output and feedthrough matrix; $D = 0$ throughout & \eqref{eq:ss-cont} \\
@@ -60,11 +61,11 @@ $f(K)$ & expected cost of a gain, $\tr(P_K \Sigma_0)$ & \eqref{eq:cost-of-gain} 
 \midrule
 \multicolumn{3}{@{}l}{\emph{Inflated system}} \\[2pt]
 $d_{\mathrm{in}}$, $d_{\mathrm{out}}$ & inflated dimension of the controller input and output & \eqref{eq:lifts} \\
-$U_1$, $U_2$ & lifts with orthonormal columns and rows & \eqref{eq:lifts} \\
+$U_1$, $U_2$ & lift with orthonormal columns and projection with orthonormal rows & \eqref{eq:lifts} \\
 $K \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$ & inflated feedback gain, $v_k = -K y_k$ & \eqref{eq:inflated-loop} \\
 $v_k$, $\tilde{v}_k \in \R^{d_{\mathrm{out}}}$ & controller output, before and after control noise & \eqref{eq:inflated-loop}, \eqref{eq:control-noise} \\
 $\tilde{Q}$, $\tilde{R}$ & inflated state and input cost, $\tilde{Q} = I_{d_{\mathrm{in}}}$, $\tilde{R} = I_{d_{\mathrm{out}}}$; $U_1\T \tilde{Q} U_1 = Q = I_n$ & \eqref{eq:inflated-cost} \\
-$\tilde{K}_0$, $N$ & inflated initial gain $U_2\T K_0 U_1\T + N$ and its full-rank component, $U_2 N U_1 = 0$ & \eqref{eq:initial-gain} \\
+$\tilde{K}_0$, $K_{\perp}$ & inflated initial gain $U_2\T K_0 U_1\T + K_{\perp}$ and its full-rank component, $U_2 K_{\perp} U_1 = 0$ & \eqref{eq:initial-gain} \\
 $\tilde{A}$, $\tilde{B}$, $\tilde{\Sigma}_0$ & model in the inflated coordinates, $U_1 A U_1\T$, $U_1 B U_2$, $U_1 \Sigma_0 U_1\T$ & \cref{sec:known-model} \\
 \midrule
 \multicolumn{3}{@{}l}{\emph{Noise}} \\[2pt]
@@ -78,12 +79,13 @@ $\ell$, $c_{\ell}$, $\kappa_{\ell}$ & noise intensity, a channel at intensity $\
 \multicolumn{3}{@{}l}{\emph{Evaluation and training protocol}} \\[2pt]
 $T$ & horizon of a rollout & \eqref{eq:empirical-return} \\
 $s$, $i$ & index of the seed and of the episode & \eqref{eq:empirical-return} \\
-$M$, $N$ & number of seeds and of episodes per seed & \eqref{eq:divergence-rate} \\
+$N$ & number of episodes per seed & \eqref{eq:divergence-rate} \\
+$\mathcal{S}$ & set of seeds whose controller is stable on the clean loop & \eqref{eq:divergence-rate} \\
 $J^{(i,s)}_T(K; c)$ & empirical cost of one episode & \eqref{eq:empirical-return} \\
 $\hat{J}_T(K; c)$, $\mathcal{F}$ & mean empirical cost, set of finite episodes & \eqref{eq:empirical-cost} \\
 $S^{(i,s)}(K; c)$, $\hat{S}(K; c)$ & suboptimality of one episode and its mean & \eqref{eq:suboptimality} \\
-$\hat{J}^{(s)}_T(K; c)$, $\kappa^{(s)}(K; c)$ & mean empirical cost of seed $s$, its ratio to the clean loop & \eqref{eq:clean-ratio} \\
-$\kappa(K; c)$ & cost ratio to the clean loop over all seeds, $\kappa_{\ell} = \kappa(K^{*}; c_{\ell})$ & \eqref{eq:clean-ratio-pooled} \\
+$\hat{J}^{(s)}_T(K; c)$, $\kappa^{(s)}(K; c)$ & mean empirical cost of seed $s$, its ratio to the clean loop & \eqref{eq:relative-degradation} \\
+$\kappa(K; c)$ & cost ratio to the clean loop over all seeds, $\kappa_{\ell} = \kappa(K^{*}; c_{\ell})$ & \eqref{eq:relative-degradation-pooled} \\
 $\Delta \hat{J} / \hat{J}^{*}(K; c)$ & absolute degradation, cost increase under noise in units of the clean cost of $K^{*}$ & \eqref{eq:absolute-degradation} \\
 $D(K; c)$ & divergence rate & \eqref{eq:divergence-rate} \\
 $\lvert K \rvert$, $r$ & size and rank of a linear policy & \cref{def:policy-size} \\
@@ -103,7 +105,7 @@ $A_{\mathrm{id}}$, $B_{\mathrm{id}}$, $C_{\mathrm{id}}$ & system matrices return
 $\hat{A}$, $\hat{B}$, $\hat{C}$, $\hat{n}$ & identified model in the basis with orthonormal $\hat{C}$, and its order & \eqref{eq:identified-basis} \\
 $\Theta$ & upper triangular factor of the QR decomposition $C_{\mathrm{id}} = \hat{C} \Theta$ & \eqref{eq:identified-basis} \\
 $\hat{x}_k$ & encoded state $\hat{C}\T y_k$ & \eqref{eq:state-encoder} \\
-$N_{\mathrm{traj}}$, $l$, $r$ & number of perturbation pairs, rollout length, smoothing radius & \cref{alg:mf-gradient} \\
+$N_{\mathrm{traj}}$, $l$, $\zeta$ & number of perturbation pairs, rollout length, smoothing radius & \cref{alg:mf-gradient} \\
 $\Xi_i$ & perturbation of the gain & \cref{alg:mf-gradient} \\
 $c_k^{\pm}$, $\hat{J}_i^{\pm}$ & stage cost and rollout cost of $K \pm \Xi_i$ & \cref{alg:mf-gradient} \\
 $\delta_i$, $\bar{\delta}$ & cost difference of a pair and its mean & \cref{alg:mf-gradient} \\
@@ -116,18 +118,24 @@ $r_k(\theta)$, $\hat{A}_k$ & probability ratio and advantage estimate & \eqref{e
 $L^{\mathrm{CLIP}}$, $\varepsilon_{\mathrm{clip}}$ & clipped surrogate objective and clip range & \eqref{eq:ppo-clip} \\
 $\gamma$ & discount factor & \cref{subsec:rl-training} \\
 $\eta_0$, $N_{\mathrm{env}}$, $N_{\max}$ & initial learning rate, environment steps so far, step budget & \eqref{eq:lr-annealing} \\
+$\eta_0^{\mathrm{large}}$, $\eta_0^{\mathrm{pixel}}$ & initial learning rate at the \emph{large} and \emph{pixel} size & \eqref{eq:pixel-learning-rate} \\
 $W$ & weight matrix of \emph{Lin}, $W = -K$ & \eqref{eq:linear-ppo} \\
 $f_\psi$, $\psi$ & scalable encoder and its parameters & \cref{alg:encoder-pretraining} \\
 $a_{\max}$ & action bound & \cref{alg:encoder-pretraining} \\
 $\mathcal{L}$, $\omega_1, \dots, \omega_4$ & prior loss and its weights & \eqref{eq:prior-loss} \\
 $z_k$, $d_{\mathrm{z}}$ & output of the bottleneck extractor and its dimension & \eqref{eq:ortho-bottleneck} \\
 $U_{\mathrm{b}}$, $d_{\mathrm{b}}$ & orthonormal bottleneck projection and bottleneck dimension & \eqref{eq:ortho-bottleneck} \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Perception environment}} \\[2pt]
+$b_i$, $b$, $b_{\max}$ & effectiveness of thruster $i$, all of them as a vector, scaling factor & \cref{subsec:pixelated-environment} \\
+$\hat{p}_k$, $\hat{\dot{p}}_k$, $\alpha$ & latent position and velocity state of \emph{PVE}, inverse time between agent steps & \cref{subsec:pve} \\
+$\xi_k$, $\hat{\xi}_k$, $\bar{\xi}$, $\mathcal{I}_{\mathrm{test}}$ & probed feature, its prediction and training mean, test steps & \eqref{eq:probe-r2} \\
 \end{longtable}
 
-\section{Noise Intensities}
+\section{Calibrated Noise Intensities}
 \label{sec:app-noise-levels}
 
-The settings used for the different noise intensities, obtained by the
+\Cref{tab:noise-levels} lists the settings used for the different noise intensities, obtained by the
 calibration \eqref{eq:noise-calibration} on the non-inflated system.
 It is important to note that parametric noise is resampled at every step,
 and that the disturbance noise uses its sinusoidal variant \eqref{eq:dist-sin}.
@@ -137,23 +145,49 @@ and that the disturbance noise uses its sinusoidal variant \eqref{eq:dist-sin}.
 \section{Noise Intensities of the Perception Environment}
 \label{sec:app-pixel-noise-levels}
 
-The settings used for the different noise intensities in the perception-based environment
+\Cref{tab:pixel-noise-levels} lists the settings used for the different noise intensities in the perception-based environment
 of \cref{sec:pixel-env}, obtained by the calibration \eqref{eq:noise-calibration}
-with the optimal controller acting on the true state as reference. Measurement
-noise is not calibrated but set by hand (\cref{subsec:perception-noise-setting}).
+with the optimal controller acting on the true state as reference. As measurement
+noise is not calibrated but set by hand (\cref{subsec:perception-noise-setting}), its values
+indicate the standard deviation $\sigma_{\mathrm{m}}$ of the noise drawn. Pixel brightness is scaled to
+$[0, 1]$, so after applying the noise, the image will be clipped to this range. We
+chose a value of $0.5$ for \emph{divergent} based on visual inspection, and then halved the value
+for each lower intensity.
 
 \input{generated/appendix_calibrate_pixel_noise/tables/pixel_noise_levels.tex}
+
+\section{Deviations from SB3 Standard Parameters}
+\label{sec:app-rl-sb3-parameters}
+
+\Cref{tab:app-rl-sb3-parameters} lists the parameters of the PPO solvers in \cref{chap:inflation} that differ
+from the defaults of SB3 (version~2.9.0)~\cite{StableBaselines2026PPO,StableBaselines2026Policy,StableBaselines2026VecNormalize}.
+All other parameters keep their default values.
+\begin{table}[htbp]
+  \centering
+  \caption{Parameters of the PPO solvers that differ from the SB3 defaults.}
+  \label{tab:app-rl-sb3-parameters}
+  \begin{tabular}{@{}llp{0.36\linewidth}@{}}
+    \toprule
+    Parameter & SB3 default & Used here \\
+    \midrule
+    Discount factor $\gamma$ & $0.99$ & $0.999$ \\
+    Learning rate & $3 \times 10^{-4}$, constant & \cref{tab:app-rl-learning-rates}, annealed by \eqref{eq:lr-annealing} \\
+    Target KL divergence & none & $0.02$ \\
+    Initial log standard deviation & $0$ & $-2$ \\
+    Orthogonal initialization & yes & no \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 \section{Policy Architectures}
 \label{sec:app-ppo-architectures}
 
-The actor architectures of the PPO variants introduced in \cref{subsec:rl-architectures}.
+\Cref{fig:ppo-architectures} shows the actor architectures of the PPO variants introduced in \cref{subsec:rl-architectures}.
 
 \begin{figure}[htbp]
     \centering
     \input{figures/ppo-architectures.tex}
     \caption{Actor architectures of our PPO variants. For each layer, the number below indicates its neurons.
-    The critic receives the same encoder structure and uses its own 64-64 tanh perceptron with a scalar output.
-    Visualization created with Claude Code.}
+    The critic receives the same encoder structure and uses its own 64-64 tanh perceptron with a scalar output.}
     \label{fig:ppo-architectures}
 \end{figure}

@@ -1247,11 +1247,11 @@
 \pgfsetmiterjoin%
 \definecolor{currentfill}{rgb}{0.000000,0.447059,0.698039}%
 \pgfsetfillcolor{currentfill}%
-\pgfsetfillopacity{0.450000}%
+\pgfsetfillopacity{0.800000}%
 \pgfsetlinewidth{0.000000pt}%
 \definecolor{currentstroke}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{currentstroke}%
-\pgfsetstrokeopacity{0.450000}%
+\pgfsetstrokeopacity{0.800000}%
 \pgfsetdash{}{0pt}%
 \pgfpathmoveto{\pgfqpoint{2.459138in}{2.577778in}}%
 \pgfpathlineto{\pgfqpoint{2.681360in}{2.577778in}}%
@@ -1272,11 +1272,11 @@
 \pgfsetmiterjoin%
 \definecolor{currentfill}{rgb}{0.000000,0.619608,0.450980}%
 \pgfsetfillcolor{currentfill}%
-\pgfsetfillopacity{0.450000}%
+\pgfsetfillopacity{0.800000}%
 \pgfsetlinewidth{0.000000pt}%
 \definecolor{currentstroke}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{currentstroke}%
-\pgfsetstrokeopacity{0.450000}%
+\pgfsetstrokeopacity{0.800000}%
 \pgfsetdash{}{0pt}%
 \pgfpathmoveto{\pgfqpoint{3.194139in}{2.577778in}}%
 \pgfpathlineto{\pgfqpoint{3.416361in}{2.577778in}}%

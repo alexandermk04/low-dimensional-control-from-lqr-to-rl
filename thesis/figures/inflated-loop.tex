@@ -1,0 +1,39 @@
+% Schematic of the inflated loop, created with Claude Code
+
+\begin{tikzpicture}[
+        block/.style={draw, minimum height=0.9cm, inner sep=4pt, line width=0.4pt, font=\small},
+        proj/.style={draw, fill=gray!35, line width=0.4pt},
+        link/.style={-{Stealth[length=1.6mm]}, line width=0.4pt},
+        lbl/.style={font=\footnotesize},
+        sig/.style={font=\footnotesize, inner sep=2pt},
+    ]
+    % trapezoid widths and edge heights: d_out, m, n, d_in
+    \def\w{0.5}\def\hout{0.65}\def\hm{0.22}\def\hn{0.3}\def\hin{0.75}
+
+    % low-dimensional system
+    \node[block, fill=white, minimum width=3.0cm] (plant) at (0,0) {$x_{k+1} = A x_k + B u_k$};
+
+    % projection U_2 (d_out -> m) and lift U_1 (n -> d_in)
+    \def\xu{-4.1}\def\xy{4.1}
+    \draw[proj] (\xu-\w,-\hout) -- (\xu-\w,\hout) -- (\xu+\w,\hm) -- (\xu+\w,-\hm) -- cycle;
+    \node[font=\small] at (\xu-0.1,0) {$U_2$};
+    \draw[proj] (\xy-\w,-\hn) -- (\xy-\w,\hn) -- (\xy+\w,\hin) -- (\xy+\w,-\hin) -- cycle;
+    \node[font=\small] at (\xy+0.1,0) {$U_1$};
+    \node[lbl, anchor=north] at (\xu,-\hin-0.1) {projection};
+    \node[lbl, anchor=north] at (\xy,-\hin-0.1) {lift};
+    \node[lbl, anchor=north] at (0,-0.55) {low-dimensional system};
+
+    % inflated system
+    \draw[dashed, black!60, line width=0.4pt] (-5.0,-1.35) rectangle (5.0,1.25);
+    \node[lbl, anchor=north west, black!70] at (-5.0,1.25) {inflated system};
+
+    % controller
+    \node[block, fill=blue!25, minimum width=3.0cm] (ctrl) at (0,-2.9) {$v_k = -K y_k$};
+    \node[lbl, anchor=north] at (0,-3.4) {controller, $K \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$};
+
+    % signals
+    \draw[link] (\xu+\w,0) -- node[sig, above] {$u_k \in \R^{m}$} (plant.west);
+    \draw[link] (plant.east) -- node[sig, above] {$x_k \in \R^{n}$} (\xy-\w,0);
+    \draw[link] (\xy+\w,0) -- (5.6,0) -- node[sig, left, pos=0.7] {$y_k \in \R^{d_{\mathrm{in}}}$} (5.6,-2.9) -- (ctrl.east);
+    \draw[link] (ctrl.west) -- (-5.6,-2.9) -- node[sig, right, pos=0.3] {$v_k \in \R^{d_{\mathrm{out}}}$} (-5.6,0) -- (\xu-\w,0);
+\end{tikzpicture}

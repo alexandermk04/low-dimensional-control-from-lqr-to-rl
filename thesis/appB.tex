@@ -1,228 +1,154 @@
-\chapter{Complete Simulation Results}
-\label{app:complete-results}
+\chapter{Supplementary Results}
+\label{app:supplementary-results}
 
-Here the results from some hyperparameter tuning are shown.
-For simplicity, mostly the ones under \emph{large} inflation
-are shown, unless named otherwise, as this is the most challenging setting from what
-we have observed. The remaining plots and tables can be found in
-the repository\needcite{https://collaborating.tuhh.de/ccf6681/low-dimensional-control-from-lqr-to-rl}.
+\section{Training Curves of \emph{TrP} and \emph{TrS}}
+\label{sec:app-true-curves}
 
-\section{Learning Rate of \emph{TrP}}
-\label{sec:app-learning-rate-mb-pg}
-
-\Cref{fig:app-learning-rate-mb-pg-large,tab:appendix-learning-rate-mb-pg-large} show the results for
-\emph{large} inflation.
-
-\input{generated/appendix_learning_rate/tables/appendix_learning_rate_mb_pg_large.tex}
+\Cref{fig:app-true-curves} shows the training suboptimality of \emph{TrP} and \emph{TrS} on the true model
+over the solver iterations under \emph{large} inflation (\cref{subsec:known-model-results}). The curves of the
+other inflation sizes look similar and can be found in the repository~\cite{Kranz2026LowDimControl}.
 
 \begin{figure}[htbp]
   \centering
-  \generatedfigure{appendix_learning_rate}{appendix_learning_rate_mb_pg_large}
-  \caption{Training suboptimality of \emph{TrP} over the solver iterations for each learning rate
+  \generatedfigure{ch4_true_model}{ch4_true_large_curves_iterations}
+  \caption{Training suboptimality of \emph{TrP} and \emph{TrS} on the true model over the solver iterations
     under \emph{large} inflation. Median and range over ten seeds.}
-  \label{fig:app-learning-rate-mb-pg-large}
+  \label{fig:app-true-curves}
 \end{figure}
 
-\section{Nuclear-Norm Weight of S-PI}
-\label{sec:app-spi-lambda}
+\section{Reasoning for the Performance of \emph{TrP} and \emph{IdP} under Measurement Noise}
+\label{sec:app-perf-trp-measurement-noise}
 
-\Cref{tab:appendix-spi-lambda-spi-large,fig:app-spi-lambda-spi-large} show the results for
-\emph{large} inflation.
+\subsection{Proof}
+\label{subsec:app-perf-trp-proof}
 
-\input{generated/appendix_spi_lambda/tables/appendix_spi_lambda_spi_large.tex}
-
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{appendix_spi_lambda}{appendix_spi_lambda_spi_large}
-  \caption{Training suboptimality of \emph{TrS} over the solver iterations for each nuclear-norm weight
-    $\lambda$ under \emph{large} inflation. Median and range over ten seeds.}
-  \label{fig:app-spi-lambda-spi-large}
-\end{figure}
-
-% TODO: Instead replace with figures for all sizes, remove table
-
-\section{N4SID Identification Length}
-\label{sec:app-identification}
-
-\Cref{fig:app-identification-large,fig:app-identification-medium} show the results for
-\emph{large} and \emph{medium} inflation over all trajectory lengths and Hankel horizons,
-\cref{tab:appendix-identification-mb-est-medium-h5,tab:appendix-identification-mb-est-large-h5}
-the detailed results for a Hankel horizon of five.
-
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{appendix_identification_length}{appendix_identification_mb_est_large_map}
-  \caption{Median training suboptimality of \emph{IdP} per trajectory length $T$ and
-    Hankel horizon under \emph{large} inflation.}
-  \label{fig:app-identification-large}
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{appendix_identification_length}{appendix_identification_mb_est_medium_map}
-  \caption{Median training suboptimality of \emph{IdP} per trajectory length $T$ and
-    Hankel horizon under \emph{medium} inflation.}
-  \label{fig:app-identification-medium}
-\end{figure}
-
-\input{generated/appendix_identification_length/tables/appendix_identification_mb_est_medium_h5.tex}
-
-\input{generated/appendix_identification_length/tables/appendix_identification_mb_est_large_h5.tex}
-
-\section{Sample Size}
-\label{sec:app-sample-size}
-
-\Cref{fig:app-sample-size-mf-npg-large-curves,fig:app-sample-size-mf-npg-large-subopt} show the
-results of \emph{MfN} for \emph{large} inflation, \cref{tab:appendix-sample-size-mf-npg} the
-training suboptimality for all inflation sizes.
-
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{appendix_sample_size}{appendix_sample_size_mf_npg_large_curves}
-  \caption{Training suboptimality of \emph{MfN} over the environment steps for each rollout
-    length $l$ and number of trajectories $N_{\mathrm{traj}}$ under \emph{large} inflation. Median and range over ten
-    seeds.}
-  \label{fig:app-sample-size-mf-npg-large-curves}
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{appendix_sample_size}{appendix_sample_size_mf_npg_large_subopt}
-  \caption{Final training suboptimality of \emph{MfN} for each rollout length $l$ and number of
-    trajectories $N_{\mathrm{traj}}$ under \emph{large} inflation.}
-  \label{fig:app-sample-size-mf-npg-large-subopt}
-\end{figure}
-
-\input{generated/appendix_sample_size/tables/appendix_sample_size_mf_npg.tex}
-
-\section{Learning Rate of \emph{MfN}}
-\label{sec:app-learning-rate-mf-npg}
-
-\Cref{fig:app-learning-rate-mf-npg-large,tab:appendix-learning-rate-mf-npg-large} show the results for
-\emph{large} inflation.
-
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{appendix_learning_rate}{appendix_learning_rate_mf_npg_large}
-  \caption{Training suboptimality of \emph{MfN} over the environment steps for each learning rate
-    under \emph{large} inflation. Median and range over ten seeds.}
-  \label{fig:app-learning-rate-mf-npg-large}
-\end{figure}
-
-\input{generated/appendix_learning_rate/tables/appendix_learning_rate_mf_npg_large.tex}
-
-\section{Step Size and Nuclear-Norm Weight of \emph{MfS}}
-\label{sec:app-spi-mf}
-
-Here, we show different combinations of values for the stepsize
-and $\lambda$ under \emph{large} inflation. Excluded are the tables
-for $\lambda = 400$, as no rank reduction could be observed ($\lambda$ too low),
-as well as $\lambda = 4 \times 10^{6}$, as here all produced
-controllers were unstable ($\lambda$ too high).
-
-From the remainders, we picked a value that exhibits rank reduction, while
-at the same time having a low suboptimality.
-\Cref{tab:appendix-spi-mf-large-4000,tab:appendix-spi-mf-large-40000,tab:appendix-spi-mf-large-400000}
-show the results for the remaining values of $\lambda$.
-
-\input{generated/appendix_spi_mf/tables/appendix_spi_mf_large_4000.tex}
-
-\input{generated/appendix_spi_mf/tables/appendix_spi_mf_large_40000.tex}
-
-\input{generated/appendix_spi_mf/tables/appendix_spi_mf_large_400000.tex}
-
-\section{Parameters for the RL Solvers}
-\label{sec:app-rl-parameters}
-
-\subsection{Deviations from SB3 Standard Parameters}
-\label{subsec:app-rl-sb3-parameters}
-
-\Cref{tab:app-rl-sb3-parameters} lists the parameters of the PPO solvers in \cref{chap:inflation} that differ
-from the defaults of SB3 (version~2.9.0)~\cite{StableBaselines2026PPO,StableBaselines2026Policy,StableBaselines2026VecNormalize}.
-All other parameters keep their default values.
-\begin{table}[htbp]
-  \centering
-  \caption{Parameters of the PPO solvers that differ from the SB3 defaults.}
-  \label{tab:app-rl-sb3-parameters}
-  \begin{tabular}{@{}llp{0.36\linewidth}@{}}
-    \toprule
-    Parameter & SB3 default & Used here \\
-    \midrule
-    Discount factor $\gamma$ & $0.99$ & $0.999$ \\
-    Learning rate & $3 \cdot 10^{-4}$, constant & \cref{tab:app-rl-learning-rates}, annealed by \eqref{eq:lr-annealing} \\
-    Target KL divergence & none & $0.02$ \\
-    Initial log standard deviation & $0$ & $-2$ \\
-    Orthogonal initialization & yes & no \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-\subsection{Learning Rates for the RL Solvers}
-\label{subsec:app-rl-learning-rate}
-
-For each solver and inflation size, we train three seeds with each initial learning rate
+Throughout this section, $\tilde{K}_j$ denotes the iterates of \emph{TrP},
+started from the stable initial gain $\tilde{K}_0$ as in \eqref{eq:initial-gain}. As mentioned below \eqref{eq:initial-gain}, $K_j \coloneqq U_2 \tilde{K}_j U_1$
+denotes the effective gain on the uninflated loop. We now define the projector onto the complement of $\operatorname{range}(U_1)$ as
 \begin{equation}
-  \label{eq:app-rl-learning-rate-grid}
-  \eta_0 \in 3 \cdot 10^{-4} \sqrt{\frac{10}{d_{\mathrm{in}}}} \cdot \left\{ 0.01,\ \tfrac{1}{30},\ 0.1,\ \tfrac{1}{3},\ 1 \right\} ,
+    \label{eq:app-projector}
+    P_{\perp} \coloneqq I_{d_{\mathrm{in}}} - U_1 U_1\T ,
 \end{equation}
-rounded to two digits. The final rates were then chosen based on inspection of the training curves (\cref{tab:app-rl-learning-rates}).
-For \emph{Lin} under \emph{large} every gain becomes unstable during training (\cref{fig:app-rl-learning-rate-ppo-linear-large}).
+which satisfies $U_1\T P_{\perp} = 0$ and $P_{\perp} U_1 = 0$ as $U_1\T U_1 = I_n$. We can therefore
+separate any $\tilde{K}_j$ into $\tilde{K}_j = \tilde{K}_j U_1 U_1\T + \tilde{K}_j P_{\perp}$, where the second component only acts on
+directions outside $\operatorname{range}(U_1)$.
+\begin{lemma}
+\label{thm:app-trp-invisible-gain}
+As long as all iterates of \emph{TrP} are stabilizing, they satisfy
+\begin{equation*}
+    \tilde{K}_j P_{\perp} = K_{\perp} P_{\perp} \qquad \text{for all } j \in \mathbb{N}_0 .
+\end{equation*}
+\end{lemma}
+\begin{proof}
+We start by looking at the clean loop. Here, any $y_k = U_1 x_k$ lies in $\operatorname{range}(U_1)$ by construction,
+and its initial second moment is therefore
+\begin{equation*}
+    \tilde{\Sigma}_0 = \E_{x_0 \sim \mathcal{D}} \left[ y_0 y_0\T \right] = U_1 \E_{x_0 \sim \mathcal{D}} \left[ x_0 x_0\T \right] U_1\T
+    = U_1 \Sigma_0 U_1\T .
+\end{equation*}
+For the closed loop of the inflated model, $U_1\T U_1 = I_n$ gives
+\begin{equation*}
+    \left( \tilde{A} - \tilde{B} \tilde{K}_j \right) U_1
+    = U_1 A U_1\T U_1 - U_1 B U_2 \tilde{K}_j U_1
+    = U_1 \left( A - B K_j \right) ,
+\end{equation*}
+so inserting
+$U_1 \Sigma_{K_j} U_1\T$, where $\Sigma_{K_j}$ is the solution of \eqref{eq:state-correlation} on the uninflated loop, into the
+inflated version of \eqref{eq:state-correlation} yields
+\begin{align*}
+    &\left( \tilde{A} - \tilde{B} \tilde{K}_j \right) U_1 \Sigma_{K_j} U_1\T \left( \tilde{A} - \tilde{B} \tilde{K}_j \right)\T + \tilde{\Sigma}_0 \\
+    &\qquad = U_1 \left( \left( A - B K_j \right) \Sigma_{K_j} \left( A - B K_j \right)\T + \Sigma_0 \right) U_1\T
+    = U_1 \Sigma_{K_j} U_1\T .
+\end{align*}
+Hence $\tilde{\Sigma}_{\tilde{K}_j} = U_1 \Sigma_{K_j} U_1\T$, which is the unique solution, as the iterates are stabilizing.
 
-\begin{table}[htbp]
-  \centering
-  \caption{Initial learning rate $\eta_0$ of the PPO solvers per inflation size.}
-  \label{tab:app-rl-learning-rates}
-  \begin{tabular}{@{}lrrr@{}}
-    \toprule
-    Solver & \emph{small} & \emph{medium} & \emph{large} \\ 
-    \midrule
-    Lin & $1 \cdot 10^{-4}$ & $4.5 \cdot 10^{-6}$ & $2.2 \cdot 10^{-6}$ \\
-    OrB & $3 \cdot 10^{-5}$ & $4.5 \cdot 10^{-5}$ & $6.7 \cdot 10^{-6}$ \\
-    StE & $1 \cdot 10^{-4}$ & $4.5 \cdot 10^{-5}$ & $6.7 \cdot 10^{-6}$ \\
-    ScE & $1 \cdot 10^{-4}$ & $1.3 \cdot 10^{-5}$ & $2.2 \cdot 10^{-6}$ \\
-    MLP & $3 \cdot 10^{-5}$ & $1.3 \cdot 10^{-5}$ & $6.7 \cdot 10^{-6}$ \\
-    FcE & $3 \cdot 10^{-5}$ & $1.3 \cdot 10^{-5}$ & $6.7 \cdot 10^{-6}$ \\
-    \bottomrule
-  \end{tabular}
-\end{table}
+If we now take a look at the update of the second component $\tilde{K}_j P_{\perp}$ in \cref{alg:mb-pg}, we get
+$\tilde{K}_{j+1} P_{\perp} = \tilde{K}_j P_{\perp} - \eta \nabla f(\tilde{K}_j) P_{\perp}$. The policy gradient
+\eqref{eq:pg-gradient} on the inflated model then turns into
+\begin{equation*}
+    \nabla f(\tilde{K}_j) P_{\perp}
+    = 2 \left( \left( \tilde{R} + \tilde{B}\T \tilde{P}_{\tilde{K}_j} \tilde{B} \right) \tilde{K}_j
+    - \tilde{B}\T \tilde{P}_{\tilde{K}_j} \tilde{A} \right) \tilde{\Sigma}_{\tilde{K}_j} P_{\perp} ,
+\end{equation*}
+where
+\begin{align*}
+    \tilde{\Sigma}_{\tilde{K}_j} P_{\perp}
+    &= U_1 \Sigma_{K_j} U_1\T \left( I_{d_{\mathrm{in}}} - U_1 U_1\T \right) \\
+    &= U_1 \Sigma_{K_j} U_1\T - U_1 \Sigma_{K_j} \left( U_1\T U_1 \right) U_1\T \\
+    &= U_1 \Sigma_{K_j} U_1\T - U_1 \Sigma_{K_j} U_1\T = 0 .
+\end{align*}
+Plugging this back into the gradient, we also have $\nabla f(\tilde{K}_j) P_{\perp} = 0$, and therefore
+$\tilde{K}_{j+1} P_{\perp} = \tilde{K}_j P_{\perp} - 0$ holds for all $j$, meaning $\tilde{K}_j P_{\perp} = \tilde{K}_0 P_{\perp}$,
+i.e.\ this component is never updated by the policy gradient. With the construction of $\tilde{K}_0$ in \eqref{eq:initial-gain},
+we finally have
+\begin{equation*}
+    \tilde{K}_0 P_{\perp} = U_2\T K_0 U_1\T P_{\perp} + K_{\perp} P_{\perp} = 0 + K_{\perp} P_{\perp} .
+    \qedhere
+\end{equation*}
+\end{proof}
 
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{appendix_rl_learning_rate}{appendix_rl_learning_rate_ppo_linear_large}
-  \caption{Training suboptimality for different learning rates for \emph{Lin} under \emph{large} inflation.}
-  \label{fig:app-rl-learning-rate-ppo-linear-large}
-\end{figure}
+For any $d_{\mathrm{in}} > n$, this component is not zero, as $K_{\perp}$ is drawn randomly, and $U_2 K_{\perp} U_1 = 0$
+from \eqref{eq:initial-gain} only restricts how it acts on $\operatorname{range}(U_1)$. Only under
+\emph{base} inflation is $d_{\mathrm{in}} = n$, so $P_{\perp} = 0$ and the lemma holds trivially.
 
+That the gradient equals zero for this part of the gain also makes sense, as it is not associated with any commanded
+actuation on the clean loop as $K_{\perp} P_{\perp} U_1 x_k = 0$. However, under measurement noise \eqref{eq:measurement-noise},
+where $y_k = U_1 x_k + n^{\mathrm{m}}_k$, this part becomes non-zero, and instead contributes
+$-K_{\perp} P_{\perp} n^{\mathrm{m}}_k$ to $v_k$. Overall, we have
+\begin{equation}
+    \label{eq:app-noisy-input}
+    v_k = -\tilde{K}_j y_k = -\tilde{K}_j U_1 x_k - \tilde{K}_j U_1 U_1\T n^{\mathrm{m}}_k - K_{\perp} P_{\perp} n^{\mathrm{m}}_k ,
+\end{equation}
+for which the control cost, with $\tilde{R} = I_{d_{\mathrm{out}}}$, is
+\begin{equation}
+    \label{eq:app-noisy-control-cost}
+    \E \left[ v_k\T \tilde{R}\, v_k \right]
+    = \E \left[ \lVert \tilde{K}_j U_1 x_k \rVert^2 \right]
+    + \sigma_{\mathrm{m}}^{2} \lVert \tilde{K}_j U_1 U_1\T \rVert_F^2
+    + \sigma_{\mathrm{m}}^{2} \lVert K_{\perp} P_{\perp} \rVert_F^2 .
+\end{equation}
 
-\subsection{Stopping Rule of the RL Solvers}
-\label{subsec:app-rl-convergence}
+Above, we can drop the cross terms, as $x_k$ is independent of $n^{\mathrm{m}}_k$, and our noise is isotropic and has zero mean.
+Separating this, we can see that \emph{TrP} always incurs the additional cost
+$\sigma_{\mathrm{m}}^{2} \lVert K_{\perp} P_{\perp} \rVert_F^2$ per step, which by \cref{thm:app-trp-invisible-gain} it
+cannot remove from its gain via gradient optimization.
 
-\begin{table}[htbp]
-  \centering
-  \caption{Stopping-rule settings with the lowest median regret.}
-  \label{tab:app-rl-convergence-grid}
-  \input{generated/appendix_rl_convergence/tables/appendix_rl_convergence.tex}
-\end{table}
+The same argument holds for \emph{IdP}. On the identified model of \cref{subsec:unknown-model-setting}, $\hat{C}$, which
+also has orthonormal columns, is used instead of $U_1$, $U_2$ becomes $I_{d_{\mathrm{out}}}$, and $\tilde{\Sigma}_0 = \hat{C} \hat{C}\T$.
+With $\hat{P}_{\perp} \coloneqq I_{d_{\mathrm{in}}} - \hat{C} \hat{C}\T$, every iterate thus satisfies
+$\tilde{K}_j \hat{P}_{\perp} = \tilde{K}_0 \hat{P}_{\perp}$, and \emph{IdP} incurs the additional cost
+$\sigma_{\mathrm{m}}^{2} \lVert \tilde{K}_0 \hat{P}_{\perp} \rVert_F^2$ per step.
 
-\begin{table}[htbp]
-  \centering
-  \caption{RL runs best policy, as a share of the step budget, and the regret
-    of the policy after $75\,\%$ of the budget, of the final policy, and of the policy with the best
-    $\bar{g}_j$.}
-  \label{tab:app-rl-convergence-cells}
-  \input{generated/appendix_rl_convergence/tables/appendix_rl_convergence_cells.tex}
-\end{table}
+For \emph{TrS} or \emph{IdS}, the gradient will also not remove the $\tilde{K}_0 \hat{P}_{\perp}$ part, as the same argument as above holds.
+However, the soft-thresholding of the singular values \eqref{eq:spi-prox} is
+applied to the whole matrix, so it can also affect this part, and thus reduce or completely eliminate the additional cost.
+With $\Psi e_i$ being the $i$-th column of $\Psi$ in \eqref{eq:spi-prox}, and $\Phi$ having orthonormal columns, the gain update here satisfies
+\begin{equation}
+    \label{eq:app-prox-shrink}
+    \begin{aligned}
+    \lVert \tilde{K}_{j+1} P_{\perp} \rVert_F^2
+    &= \sum_{i=1}^{\bar{r}} \max\{\chi_i - \eta \lambda, 0\}^2 \lVert P_{\perp} \Psi e_i \rVert^2
+    \leq \sum_{i=1}^{\bar{r}} \chi_i^2 \lVert P_{\perp} \Psi e_i \rVert^2 \\
+    &= \lVert \left( \tilde{K}_j - \eta \nabla f(\tilde{K}_j) \right) P_{\perp} \rVert_F^2
+    = \lVert \tilde{K}_j P_{\perp} \rVert_F^2 ,
+    \end{aligned}
+\end{equation}
+i.e.\ the additional cost can only shrink or stay the same at every update step.
 
-\begin{figure}[htbp]
-  \centering
-  \generatedfigure{appendix_rl_convergence}{appendix_rl_convergence_large_curves_steps}
-  \caption{Training suboptimality of the RL solvers over the environment steps under \emph{large}
-    inflation.}
-  \label{fig:app-rl-convergence-large}
-\end{figure}
+\subsection{Empirical Verification}
+\label{subsec:app-perf-trp-empirical}
 
-\subsection{Additional Plots for the Perception Experiments}
-\label{subsec:app-perc-plots}
+We check whether \cref{thm:app-trp-invisible-gain} can be observed during our experiments with the final
+gains under \emph{large} inflation and \emph{divergent} measurement noise. We notice that for \emph{TrP} and \emph{IdP}
+$\lVert \tilde{K} P_{\perp} \rVert_F$ keeps the same value as $\tilde{K}_0$ on every seed, while \emph{TrS} and \emph{IdS}
+reduce it around tenfold. This shows that \cref{thm:app-trp-invisible-gain} indeed applies here. In \cref{tab:app-frozen-gain} 
+we can see that a removal of the associated cost would make both \emph{TrP} and \emph{IdP} the best-performing solvers
+in their experiments.
+
+\input{generated/ch4_noise/tables/ch4_noise_frozen_gain.tex}
+
+\section{Additional Plots for the Perception Experiments}
+\label{sec:app-perc-plots}
 
 \begin{figure}[htbp]
   \centering
@@ -230,3 +156,12 @@ For \emph{Lin} under \emph{large} every gain becomes unstable during training (\
   \caption[Example trajectories of the PPO variants.]{Trajectories of the PPO variants for one sampled episode under one seed.}
   \label{fig:app-perc-trajectories}
 \end{figure}
+
+
+\section{Exit Rates of the Perception Experiments under Noise}
+\label{sec:app-perc-noise-terminated}
+
+\Cref{tab:perc-noise-terminated} notes how often the mass leaves the screen under each noise type and
+intensity in \cref{subsec:perception-noise-results}.
+
+\input{generated/ch6_noise/tables/ch6_noise_terminated.tex}

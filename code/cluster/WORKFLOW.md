@@ -1,19 +1,43 @@
-# Running experiments on the TUHH HPC cluster
+# Running the experiments
 
-How it works: **code travels through git** (GitLab on collaborating.tuhh.de), **results travel through `cluster/sync.sh`** (rsync), and **each experiment runs as a SLURM job array** via `cluster/submit.sh`.
+Every number, figure and table in the thesis comes from the experiment scripts in `code/experiments/`. Each script
+trains a grid of runs and stores them in `code/experiment_results/<experiment>/`. Then a figure script in
+`code/experiments/figures/` turns the stored runs into the figures and tables in `thesis/generated/<experiment>/`.
 
-Why it helps: each run is independent and single-threaded, so on the Mac they run one after another on 1 of 10 cores. On the cluster a whole experiment runs in parallel, so it takes about as long as its slowest single run plus queue time. A single run is *not* faster there; the M5 core is about as fast as an EPYC core, or faster.
+The state-space experiments are cheap, but the RL and camera experiments add up to thousands of CPU hours (§2). So the
+experiments run on the TUHH HPC cluster, and the figures are made on the local machine:
 
-Placeholders: `<rz-user>` is your RZ account name. Everything below `$WORK` on the cluster refers to your `/work` directory (5 TB quota; `$HOME` has only 20 GB).
+- **Code travels through git** (GitLab on collaborating.tuhh.de).
+- **Results travel through `cluster/sync.sh`** (rsync).
+- **Each experiment runs as a SLURM job array**, submitted with `cluster/submit.sh`.
+
+Each run is independent and single-threaded. On the cluster a whole experiment runs in parallel, so it takes about as
+long as its slowest shard plus the queue time. A single run is *not* faster there; an M-series Mac core is about as
+fast as an EPYC core, or faster.
+
+Placeholders: `<rz-user>` is your RZ account name. `$WORK` is your `/work` directory on the cluster (5 TB quota;
+`$HOME` has only 20 GB). All commands run from `code/` unless stated otherwise.
 
 ---
 
 ## 0. One-time setup
 
-### 0.1 SSH from the Mac to the cluster
+### 0.1 Local environment (Python ≥ 3.12)
 ```bash
-# on the Mac
-ssh-keygen -t ed25519 -C "mac -> tuhh hpc"          # accept the default path, set a passphrase
+# local machine, in the repository root
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cd code
+python -c "import numpy, scipy, control, sippy_unipi, torch, stable_baselines3, gymnasium, tqdm; print('ok')"
+```
+Locally you need this for the figure scripts, for the helper scripts in `cluster/`, and for any experiment you run
+locally (`python -m experiments.<experiment>`; on macOS it keeps the machine awake while it runs).
+
+### 0.2 SSH from the local machine to the cluster
+```bash
+# local machine
+ssh-keygen -t ed25519 -C "local -> tuhh hpc"       # accept the default path, set a passphrase
 ```
 Add to `~/.ssh/config`:
 ```
@@ -31,13 +55,15 @@ Host hpc
 ssh-copy-id hpc          # asks for your RZ password one last time
 ssh hpc                  # should now log in without a password
 ```
-Off campus, connect to the TUHH VPN first; the login nodes are only reachable from the TUHH network. If ssh warns about the host key, add the known_hosts entry from the RZ page "Access and first steps".
+Off campus, connect to the TUHH VPN first; the login nodes are only reachable from the TUHH network. If ssh warns
+about the host key, add the known_hosts entry from the RZ page "Access and first steps". `UseKeychain` is macOS only;
+drop it on Linux.
 
 `ControlMaster` reuses one connection for up to 4 h, so `sync.sh` and repeated `ssh hpc ...` don't re-authenticate.
 
-### 0.2 Git access from the cluster
+### 0.3 Git access from the cluster
 ```bash
-# on the cluster (ssh hpc)
+# cluster (ssh hpc)
 ssh-keygen -t ed25519 -C "tuhh hpc -> gitlab"
 cat ~/.ssh/id_ed25519.pub
 ```
@@ -49,10 +75,11 @@ git clone git@collaborating.tuhh.de:ccf6681/low-dimensional-control-from-lqr-to-
 ```
 The path is now `$WORK/low-dimensional-control-from-lqr-to-rl`, which `sync.sh` expects.
 
-### 0.3 Python environment (Python ≥ 3.12)
-The cluster has no Python ≥ 3.12 module (`anaconda/2023.07-1` has 3.11, `anaconda/2020.11` has 3.8). Use the Anaconda module's `conda` only to get a bare Python 3.12, and build the venv from it:
+### 0.4 Python environment on the cluster
+The cluster has no Python ≥ 3.12 module (`anaconda/2023.07-1` has 3.11). Use the Anaconda module's `conda` only to get
+a bare Python 3.12, and build the venv from it:
 ```bash
-# on the cluster
+# cluster
 module load anaconda/2023.07-1
 export CONDA_PKGS_DIRS=$WORK/conda/pkgs         # keep conda's package cache off $HOME
 
@@ -67,85 +94,95 @@ cd $WORK/low-dimensional-control-from-lqr-to-rl
 pip install torch --index-url https://download.pytorch.org/whl/cpu   # CPU torch, no 2 GB CUDA download
 pip install -r requirements.txt
 ```
-The `torch` line comes first on purpose: `requirements.txt` lists `torch`, and installing it from
-the CPU index beforehand stops pip from pulling the ~2 GB CUDA wheel. Everything else the code needs
-(`tqdm`, `control`) is now in `requirements.txt`, so the extra `pip install` step from the earlier
-version of this file is no longer needed.
+The `torch` line comes first on purpose: `requirements.txt` lists `torch`, and installing it from the CPU index
+beforehand stops pip from pulling the ~2 GB CUDA wheel.
 
-No `conda init` / `conda activate` is needed; ignore conda if it suggests it. If `conda create` fails, install Miniforge instead and create the same env with it:
+No `conda init` / `conda activate` is needed; ignore conda if it suggests it. If `conda create` fails, install
+Miniforge instead and create the same env with it:
 ```bash
 wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
 bash Miniforge3-Linux-x86_64.sh -b -p $WORK/miniforge
 $WORK/miniforge/bin/conda create -y -p $WORK/conda/py312 python=3.12
 ```
-then continue with the `venv` line above.
+then continue with the `venv` line above. Test it with the `import` line from §0.1.
 
-Test it:
-```bash
-cd code
-python -c "import numpy, scipy, control, sippy_unipi, torch, stable_baselines3, gymnasium, tqdm; print('ok')"
-```
+The venv points directly at `$WORK/conda/py312/bin/python3`, so jobs need **no `module load`** and nothing in
+`~/.bashrc`; `submit.sh` only activates the venv. **Don't delete `$WORK/conda/py312`**, the venv breaks without it.
 
-The venv points directly at `$WORK/conda/py312/bin/python3`, so jobs need **no `module load`** and nothing in `~/.bashrc`; `submit.sh` only activates the venv. **Don't delete `$WORK/conda/py312`**, the venv breaks without it.
+The scripts in `cluster/` are committed as executable. If they aren't after cloning, run `chmod +x cluster/*.sh` once.
 
-### 0.4 Partition limits
+### 0.5 Partition limits
 Queried with `sinfo -s` and `sinfo -o "%P %l %c %m %G" | sort -u`:
 
 | Partition | Max time | Nodes | Cores / memory per node | Use |
 |---|---|---|---|---|
 | `smp` | 21 days | 180 (`g161-228`, `n001-112`) | 24+ cores, 128 GB+ | **all our jobs** |
 | `mpp` | 21 days | 112 (`n001-112`, subset of `smp`) | 64 cores, 385 GB+ | multi-node MPI, not needed |
-| `gpu` | 7 days | 5 (`u008-012`) | 64–128 cores, 4× A100/H100/H200 | not needed (see step G) |
+| `gpu` | 7 days | 5 (`u008-012`) | 64–128 cores, 4× A100/H100/H200 | not needed |
 | `routing` (default), `ether`, `ib` | – | 0 | – | no own nodes |
 
-What this means:
-- `submit.sh` requests `--partition=smp` explicitly (override with `PARTITION=... cluster/submit.sh ...`). The default `routing` partition has no nodes of its own.
-- **Time limits never bind.** Even the largest request below (a few hours per task) is far under 21 days. Still request a realistic time with about 1.5× safety rather than days: short jobs are backfilled into gaps and start sooner, and a hanging run doesn't block a slot for weeks.
-- **Memory and cores aren't a constraint either.** Every `smp` node has at least 24 cores and 128 GB, so the largest request (4 cores, 16 GB) fits on any node.
-- **More shards are cheap.** At query time about 30 `smp` nodes (> 700 cores) were idle, so a 40-task array of single-core jobs usually starts right away. What limits parallelism is any per-user job cap, not the hardware: if `squeue --me` shows many tasks pending with reason `QOSMaxJobsPerUserLimit` / `AssocGrpCPULimit`, more shards won't help.
-
-### 0.5 Make the scripts executable on the cluster
-They're executable locally already. Once they're committed, git keeps that. Otherwise run `chmod +x code/cluster/*.sh` once after cloning.
+- `submit.sh` requests `--partition=smp` explicitly (override with `PARTITION=... cluster/submit.sh ...`). The default
+  `routing` partition has no nodes of its own.
+- **The 21-day limit never binds**, even for the camera runs (about 4 days each). Still request a realistic time of
+  about 1.5× the expected one: short jobs are backfilled into gaps and start sooner, and a hanging run doesn't block a
+  slot for weeks.
+- **Memory and cores aren't a constraint either.** Every `smp` node has at least 24 cores and 128 GB, so the largest
+  request (4 cores, 16 GB) fits on any node.
+- **More shards are cheap**, as long as there is no per-user job cap. If `squeue --me` shows many tasks pending with
+  reason `QOSMaxJobsPerUserLimit` / `AssocGrpCPULimit`, more shards won't help.
 
 ---
 
 ## 1. The loop for every experiment
 
 ```text
-Mac:      edit settings.py   →  git commit + git push          (you do this)
+Local:    edit settings.py   →  git commit + git push
 Cluster:  git pull           →  cluster/submit.sh ...          (ssh hpc)
           squeue / logs      →  wait
-Mac:      cluster/sync.sh pull <experiment>  →  figures/tables locally
+Local:    cluster/sync.sh pull <experiment>  →  figure script  →  thesis/generated/<experiment>/
 ```
 
 Concretely:
 ```bash
-# Mac
+# local
 git add -A && git commit -m "..." && git push
 
-# Cluster
+# cluster
 ssh hpc
 cd $WORK/low-dimensional-control-from-lqr-to-rl && git pull
 cd code
 source $WORK/venvs/thesis/bin/activate
 cluster/submit.sh <experiment> <shards> <time> [cpus] [mem] [extra sbatch args]
 
-# Mac, once finished
-code/cluster/sync.sh pull <experiment>
+# local, once finished
+cluster/sync.sh pull <experiment>
+python -m experiments.figures.<figure script>      # see §3.6
 ```
 
 **Rules that matter:**
-- **`settings.py` must be identical on both sides.** The manifest check raises `SettingsChangedError` otherwise. Git takes care of this as long as you commit before pulling on the cluster.
-- **Don't run the same experiment on the Mac and on the cluster at the same time.** The runs aren't lost, but they're computed twice. When both sides have runs, `pull` merges them: run directories are unique, and the newest record per run wins.
-- To **continue on the cluster** an experiment that was started on the Mac: `code/cluster/sync.sh push <experiment>` first, then submit. Finished runs are skipped.
-- **Timeouts are harmless.** Resubmit the same command; finished runs are skipped.
+- **`settings.py` must be identical on both sides.** Each experiment stores the settings it used in its manifest, and
+  a mismatch raises `SettingsChangedError`. Git takes care of this as long as you commit before pulling on the cluster.
+- **A value stored in the manifest of a pending or running experiment must not change**, or its next task raises
+  `SettingsChangedError`. Only push a new value once every experiment that stores it has finished. If you change a
+  value on purpose for an experiment that already has runs, update its manifest with
+  `python cluster/patch_manifest.py <experiment> <entry>` (dry run, then again with `--write`).
+- **Finished runs are always skipped.** Shard `i` of `N` trains the grid entries `i, i+N, i+2N, ...` (grid order = the
+  loop order in `build_specs`) and skips the ones already stored. So a timed-out task is fixed by resubmitting the same
+  command. A run that was cut off restarts from zero, though; only finished runs are kept.
+- **Don't run the same experiment locally and on the cluster at the same time.** The runs aren't lost, but they're
+  computed twice. When both sides have runs, `pull` merges them: run directories are unique, and the newest record per
+  run wins. To **continue on the cluster** an experiment started locally, `cluster/sync.sh push <experiment>` first,
+  then submit.
+- **`sync.sh pull` never deletes.** To start an experiment over, delete `experiment_results/<experiment>/` on both
+  sides.
 - **Don't run experiments on the login node** (`python -m experiments...` directly). Always use `submit.sh`.
 
-### How to choose `<shards>` and `<time>`
-- Shard `i` of `N` trains grid entries `i, i+N, i+2N, ...` (grid order = the loop order in `build_specs`). Entries that are already finished are skipped.
-- **Shards:** at most the number of grid entries. More shards means more parallel work, but also more jobs waiting in the queue.
-- **Time:** (sum of run times in the largest shard) × 1.5. The per-run times below were measured on the Mac.
-- Count grid entries with: `python -c "from experiments.<exp> import build_specs; print(len(build_specs()))"`
+### Choosing `<shards>` and `<time>`
+- **Shards:** at most the number of grid entries. More shards means more parallel work, but also more jobs in the queue.
+- **Time:** (sum of the run times in the largest shard) × 1.5. §2 lists the run times, §3 the values that worked.
+- Count grid entries with `python -c "from experiments.<experiment> import build_specs; print(len(build_specs()))"`.
+  The calibration and noise experiments have no `build_specs`. They shard over noise channels (calibration) or over
+  the source runs they score (noise experiments).
 
 ### Monitoring
 ```bash
@@ -155,404 +192,209 @@ sacct -j <jobid> --format=JobID,State,Elapsed,MaxRSS
 tail -f cluster/logs/<experiment>_<jobid>_<task>.out
 scancel <jobid>                                # whole array;  <jobid>_<task> for one task
 ```
-Chain experiments with `--dependency=afterok:<jobid>` as an extra argument to `submit.sh`.
 
----
-
-## 2. Measured run times (one core)
-
-Taken from the `total_time` of the stored records (September 2026, **before** the cost moved to the controller space; refresh after wave A). `total_time` leaves out the probe overhead, so wall time is about 1.5–2× these numbers.
-
-| Solver | Per run |
-|---|---|
-| `mf_npg` / `spi_mf` at (800, 100) | ≈ 0.7 h (base), 0.8 h (small), 1.1 h (medium), **3.4 h (large)** |
-| `baseline`, `mb_pg`, `spi`, `ce_dare`, `mb_est`, `spi_est` | < 20 s (plus the test protocol); since the cost moved to the controller space, `mb_pg`/`spi` solve p-dim Lyapunov equations: ≈ 7 s / 13 s at *large* (Mac, October 2026) |
-| ch5 sizes, per 1 M steps | `ppo_linear` ≈ 1 000 s, `ppo_encoder` ≈ 750 s, `ppo_encoder_scalable` / `ppo_mlp` ≈ 500 s |
-| ch5 pixel, per 1 M steps | `ppo_linear` ≈ 2.5 h, `ppo_mlp` ≈ 0.7–1.2 h, `ppo_encoder_scalable` ≈ 1.6–2.2 h, **`ppo_bottleneck` ≈ 5.5 h** |
-| `ppo_fc_extractor` | not timed yet; same 512–256–256 trunk as `ppo_bottleneck`, so expect the same time |
-| `ppo_pixel_*` (ch6) | ≈ 1–1.3 h per 1 M agent steps, including probes and pretraining |
-| noise cell, state space (`ch4_noise`, `ch4_true_model_noise`) | ≈ 1.6 s at base, 3 s at large (test protocol + figure trajectory) |
-| noise calibration, camera env (`appendix_calibrate_pixel_noise`) | ≈ 1.4 h per level (`measurement`) to ≈ 2 h per level (`control`, `disturbance`) on the cluster (bisection, each step 10 seeds × 100 episodes of `oracle_coarse`), so **6–8 h per channel** (job 6432675). Since 10-07 only `control`, `parametric`, `disturbance` are calibrated; measurement noise acts on the image and its levels are set by hand |
-| noise cell, camera env (`ch6_noise`) | ≈ 65–80 s per `ppo_pixel_*` policy, `oracle_coarse` is no longer scored (100 episodes × 800 agent steps; measured with untrained policies of the same architecture) |
-
-`RL_MAX_TIMESTEPS` is a cap per inflation size (small 10 M, medium 15 M, large 30 M, pixel 10 M env steps; pixel was 30 M until 2026-10-14, see §5), and the learning rate anneals to zero at it. Chapter 6 uses `RL_MAX_TIMESTEPS["pixel"]` as well, counted in agent decisions (× 30 action repeat = 300 M plant steps); its learning curves are in decisions too (since 2026-10-14). On the cluster (2 cores), wall time was about 2× `total_time`: the slowest `ppo_encoder` runs needed ≈ 5.9 h for 10 M steps, and every `ppo_bottleneck` / `ppo_encoder_scalable` run hit the 6 h limit at 10 M. At 30 M (*large*), `ppo_encoder` in `appendix_rl_learning_rate` took 15–19 h wall time (job 6430657, October 2026). **Request generously:** a run that times out restarts from zero on resubmission (only finished runs are skipped).
-
----
-
-## 3. To do — restart from zero (cost in the controller space)
-
-Status as of **2026-10-06**. The stage cost is now charged in the controller's space (`Q`: p×p on the clean `U₁x`,
-`R`: q×q on `v`), see `Planning/Inflated_Cost_Restructure.md`. **Every earlier result is invalid** and all
-experiments are rerun in the order below. Each wave starts once the values it needs have been pasted into
-`settings.py`, committed, pushed and pulled on the cluster. All values marked *Filled from* in `settings.py` are
-reset to `None` (and `SIZE_HYPERPARAMS` is empty, with no global fallback for `gradient_lr`, `lambda_`, `stepsize`),
-so a wave started too early stops with a "Run: ..." error instead of using a stale value. The sweep grids are kept
-as they were, centred on the pre-restructure choices. Wave A runs `mf_npg` / `mb_est` at a fixed learning rate
-(`GRADIENT_LR` in `appendix_sample_size.py` / `appendix_identification_length.py`), because the learning-rate
-sweep needs the budget Wave A chooses.
-
-**0. Remove all old results** (once, before wave A), on the Mac **and** on the cluster (`sync.sh pull` never deletes):
+**Chaining:** `submit.sh` passes extra arguments on to `sbatch`. With `--parsable` it prints only the job id, and
+`--dependency=afterok:<jobid>` starts a job once another has finished:
 ```bash
-# Mac (in code/) and cluster (in $WORK/low-dimensional-control-from-lqr-to-rl/code)
-rm -rf experiment_results/*
+jid=$(cluster/submit.sh ch4_true_model 12 01:00:00 1 4G --parsable)
+cluster/submit.sh ch4_true_model_noise 6 01:00:00 1 4G --dependency=afterok:$jid
 ```
-Also delete the old generated figures/tables of the thesis when the new ones are rendered.
+`afterok` needs *every* task to succeed. If one times out, the dependent job stays pending with
+`DependencyNeverSatisfied`: `scancel` it, resubmit the timed-out experiment, and submit the dependent job again. Only
+chain jobs that don't need a value pasted into `settings.py` in between.
 
-| Wave | Experiment | Needs | Produces (paste into `settings.py`) | Shards / time / cpus / mem |
-|---|---|---|---|---|
-| A | `appendix_sample_size` | – | `CHOSEN_SAMPLE_CELL` | 240 entries; 40 / 12 h / 1 / 4G |
-| A | `appendix_identification_length` | – | `CHOSEN_IDENTIFICATION` | 600 entries; 30 / 6 h / 1 / 4G |
-| A | `appendix_calibrate_noise` | – | `NOISE_STD` | 4 / 6 h / 1 / 4G |
-| A | `appendix_calibrate_pixel_noise` | – | `CH6_NOISE_STD` (3 channels) | 3 / 12 h / 1 / 4G |
-| B | `appendix_learning_rate` | A | PG learning rates (`SIZE_HYPERPARAMS`) | 800 entries; 40 / 12 h / 1 / 4G |
-| B | `appendix_spi_lambda` | A | SPI `lambda_` (`SIZE_HYPERPARAMS`) | 480 entries; 30 / 6 h / 1 / 4G |
-| B | `appendix_spi_mf` | A | `spi_mf` `lambda_`, `stepsize` (`SIZE_HYPERPARAMS`) | 1000 entries; 50 / 24 h / 1 / 4G |
-| B | `appendix_rl_learning_rate` | A | RL `learning_rate` (`SIZE_HYPERPARAMS`) | 225 entries; 225 / 72 h / 2 / 8G |
-| C | `ch4_true_model` | B | Ch. 4 track A | 120 entries; 12 / 2 h / 1 / 4G |
-| C | `ch4_identified_model` | B | Ch. 4 track B | 30 / 12 h / 1 / 4G |
-| C | `appendix_rl_convergence` | B | `CONVERGENCE["rl"]` | 45 / 72 h / 2 / 8G |
-| D | `ch4_true_model_noise` | `ch4_true_model` | Ch. 4 noise (true model) | 6 / 1 h / 1 / 4G |
-| D | `ch4_noise` | `ch4_identified_model` | Ch. 4 noise | 12 / 1 h / 1 / 4G |
-| D | `ch5_inflation_sizes` | C (`CONVERGENCE["rl"]`) | Ch. 5 | 180 / 72 h / 2 / 8G |
-| D | `ch6_solver_comparison` | C | Ch. 6 comparison | 40 / 72 h / 2 / 16G |
-| D | `ch6_perception` | C | Ch. 6 | 50 / 24 h / 4 / 16G |
-| E | `ch5_noise` | `ch5_inflation_sizes` | Ch. 5 noise | 15 / 1 h / 2 / 8G |
-| E | `ch6_noise` | `ch6_perception`, `CH6_NOISE_STD` | Ch. 6 noise, without the oracle | 40 / 2 h / 2 / 8G |
+---
 
-Shard counts and times for the experiments that had not been timed on the cluster before (`appendix_sample_size`,
-`appendix_identification_length`, `appendix_calibrate_noise`, `appendix_learning_rate`, `appendix_spi_lambda`,
-`appendix_spi_mf`, `appendix_rl_learning_rate`, `ch4_true_model`) are estimates from §2. Check them against the first
-finished tasks and adjust. Count grid entries with `build_specs` (§1).
+## 2. Expected run times
 
-**Wave A** (no dependencies, submit together):
+Per run, from the `total_time` of the stored records (October 2026, on the cluster with the cores listed in §3).
+`total_time` counts only the training loop: it leaves out the test protocol, the learning-curve probes, and for the
+RL solvers the encoder pretraining and the N4SID identification. So the wall time of a run is longer. The last column
+is the CPU time of the whole experiment, i.e. roughly how long it would take on one local core.
+
+| Experiment | Per run (median / max) | Whole experiment |
+|---|---|---|
+| `appendix_sample_size` | `mf_npg`: base 0.3 / 1.2 h, small 0.3 / 1.0 h, medium 0.5 / 1.7 h, **large 3.7 / 9.5 h** | 286 h |
+| `appendix_identification_length` | `mb_est`: seconds, up to 9 min at *large* | 3 h |
+| `appendix_learning_rate` | `mb_pg`, `mb_est`: seconds, up to 34 min at *large*; `mf_npg`: 0.5–0.8 h, **large 5.0 / 7.2 h** | 309 h |
+| `appendix_spi_lambda` | `spi`, `spi_est`: under 2 min | 1 h |
+| `appendix_spi_mf` | `spi_mf`: 5 min (base) to 25 min (*large*) | 141 h |
+| `appendix_rl_learning_rate` | small 3–8 h, medium 4–12 h, large 6–24 h; slowest `ppo_bottleneck` and `ppo_fc_extractor` | 2030 h |
+| `appendix_rl_convergence` | as above, 3 seeds | 370 h |
+| `ch4_true_model` | seconds | 0.2 h |
+| `ch4_identified_model` | `mf_npg` / `spi_mf`: up to 1 h, **large 4 / 6 h**; the rest seconds | 108 h |
+| `ch5_inflation_sizes` | small 1–8 h, medium 2–17 h, large 7–22 h; slowest `ppo_fc_extractor` | 1210 h |
+| `ch6_solver_comparison` | `ppo_mlp` 8 / 10 h, `ppo_encoder_scalable` 23 / 24 h, `ppo_fc_extractor` 46 / 55 h, **`ppo_bottleneck` 56 / 85 h** | 1310 h |
+| `ch6_perception` | `ppo_pixel_estimator` 17 / 19 h, `ppo_pixel_posvel` 23 / 24 h, **`ppo_pixel_fc` 83 / 85 h, `ppo_pixel_ortho` 85 / 94 h** | 1960 h |
+| `appendix_calibrate_noise` | not timed; one bisection of the baseline per channel, the 6 h in §3.1 was enough | – |
+| `appendix_calibrate_pixel_noise` | ≈ 1.5–2 h per level (bisection, each step 10 seeds × 100 episodes of `oracle_coarse`), so **6–8 h per channel** | ≈ 20 h |
+| `ch4_true_model_noise`, `ch4_noise` | ≈ 1.6 s (base) to 3 s (*large*) per noise cell | < 1 h |
+| `ch5_noise` | per source policy, 21 cells | < 1 h per shard |
+| `ch6_noise` | ≈ 65–80 s per policy and cell, so ≈ 25 min per policy | ≈ 17 h |
+
+The RL budgets are set by `RL_MAX_TIMESTEPS` in `settings.py` (small 10 M, medium 15 M, large 30 M env steps; the
+camera runs 10 M agent decisions, i.e. 300 M plant steps at 30× action repeat). The RL runs have no stopping rule
+and always train to that cap (`appendix_rl_convergence` shows why), with the learning rate annealing to zero at it.
+So their time is predictable, and a run that is cut off loses everything: **request generously.**
+
+---
+
+## 3. Full progression, from an empty `experiment_results/`
+
+The experiments depend on each other in two ways: through **values in `settings.py`** that one experiment chooses and
+later ones read, and through **stored policies** that the noise experiments score. That gives four waves. Within a
+wave everything can be submitted at once.
+
+```text
+Wave A   sample size, identification length, noise calibrations          (no dependencies)
+            │  CHOSEN_SAMPLE_CELL, CHOSEN_IDENTIFICATION, NOISE_STD, CH6_NOISE_STD
+            ▼
+Wave B   hyperparameter sweeps (PG, S-PI, model-free S-PI, PPO)
+            │  SIZE_HYPERPARAMS
+            ▼
+Wave C   main experiments: Ch. 3 (ch4_*), Ch. 4 (ch5_*), Ch. 5 (ch6_*), RL convergence
+            │  stored policies
+            ▼
+Wave D   noise experiments, one per main experiment
+```
+
+(Code chapters `ch4`/`ch5`/`ch6` are thesis chapters 3/4/5.)
+
+**About the values in `settings.py`.** The repository ships with the values the thesis uses, each marked with a
+*Filled from* comment naming the script that chooses it. After each wave, run that figure script: it prints its
+choice. If the choice matches the value in `settings.py`, go on. If not, paste the printed value, commit, push and
+`git pull` on the cluster before submitting the next wave. To force a wave to wait for its inputs, set the values to
+`None`: an experiment that needs a missing value stops with a `Run: ...` error instead of using a stale one.
+
+### 3.1 Wave A: budgets and noise levels
+No dependencies; submit all four together.
+
+| Experiment | Chooses (paste into `settings.py`) | Figure script that prints it |
+|---|---|---|
+| `appendix_sample_size` | `CHOSEN_SAMPLE_CELL` (rollout length, trajectory count per size) | `appendix_sample_size_figures` |
+| `appendix_identification_length` | `CHOSEN_IDENTIFICATION` (trajectory length, Hankel horizon per size) | `appendix_identification_figures` |
+| `appendix_calibrate_noise` | `NOISE_STD` (state-space noise, 4 channels × 5 levels) | `appendix_calibrate_noise_figures` |
+| `appendix_calibrate_pixel_noise` | `CH6_NOISE_STD` for `control`, `parametric`, `disturbance` | `appendix_calibrate_pixel_noise_figures` |
+
 ```bash
 # cluster
-cluster/submit.sh appendix_sample_size 40 12:00:00 1 4G
-cluster/submit.sh appendix_identification_length 30 06:00:00 1 4G
+cluster/submit.sh appendix_sample_size 40 24:00:00 1 4G
+cluster/submit.sh appendix_identification_length 30 02:00:00 1 4G
 cluster/submit.sh appendix_calibrate_noise 4 06:00:00 1 4G
 cluster/submit.sh appendix_calibrate_pixel_noise 3 12:00:00 1 4G
 ```
-Then on the Mac: `sync.sh pull` each, run its figure script (`python -m experiments.figures.<experiment>_figures`),
-paste the printed values into `settings.py`, commit, push, `git pull` on the cluster. Update §2 with the new run times.
+`appendix_sample_size` and `appendix_identification_length` train at the fixed learning rate `GRADIENT_LR` in their
+script, because the learning-rate sweep (wave B) needs the budget they choose. The camera's `measurement` levels in
+`CH6_NOISE_STD` are not calibrated: that noise acts on the image, and its levels are set by hand.
 
-**Wave B** (needs A pasted and pulled):
-```bash
-cluster/submit.sh appendix_learning_rate 40 12:00:00 1 4G
-cluster/submit.sh appendix_spi_lambda 30 06:00:00 1 4G
-cluster/submit.sh appendix_spi_mf 50 24:00:00 1 4G
-cluster/submit.sh appendix_rl_learning_rate 225 72:00:00 2 8G
-```
-`mf_npg` at *large* diverged from the first step with the old learning rate (0.03) in the restructure smoke test,
-so check that the learning-rate grid of `appendix_learning_rate` still covers stable values at *large*.
+### 3.2 Wave B: hyperparameters
+Needs `CHOSEN_SAMPLE_CELL` and `CHOSEN_IDENTIFICATION` from wave A.
 
-**Wave C** (needs B pasted and pulled):
-```bash
-jid4a=$(cluster/submit.sh ch4_true_model 12 02:00:00 1 4G --parsable)
-jid4b=$(cluster/submit.sh ch4_identified_model 30 12:00:00 1 4G --parsable)
-cluster/submit.sh appendix_rl_convergence 45 72:00:00 2 8G
-```
-
-**Wave D** (Ch. 4 noise right after C; the RL runs need `CONVERGENCE["rl"]` pasted and pulled):
-```bash
-cluster/submit.sh ch4_true_model_noise 6 01:00:00 1 4G --dependency=afterok:$jid4a
-cluster/submit.sh ch4_noise 12 01:00:00 1 4G --dependency=afterok:$jid4b
-jid5=$(cluster/submit.sh ch5_inflation_sizes 180 72:00:00 2 8G --parsable)
-cluster/submit.sh ch6_solver_comparison 40 72:00:00 2 16G
-jid6=$(cluster/submit.sh ch6_perception 50 24:00:00 4 16G --parsable)
-```
-
-**Wave E**:
-```bash
-cluster/submit.sh ch5_noise 15 01:00:00 2 8G --dependency=afterok:$jid5
-cluster/submit.sh ch6_noise 40 02:00:00 2 8G --dependency=afterok:$jid6
-```
-
-**Chaining:** `submit.sh` passes extra arguments to `sbatch`, so `--parsable` makes it print only the job id.
-`afterok` needs *every* task to succeed. If one times out, the dependent job stays pending with
-`DependencyNeverSatisfied`: `scancel` it, resubmit the timed-out experiment, and submit the dependent job again.
-
-**Settings changes between waves:** a value stored in the manifest of a *pending or running* experiment must not
-change, or its next task raises `SettingsChangedError`. Only pull a pasted value once every experiment that stores it
-has finished, or first run `python cluster/patch_manifest.py <experiment> <key>` (dry run, then `--write`).
-
-**Figures** (after each wave, on the Mac): `sync.sh pull <experiment>`, then
-`python -m experiments.figures.<experiment>_figures`. Rebuild the thesis with `latexmk` in `thesis/`.
-
----
-
-## 4. Overview
-
-| Wave | Experiments | Status 06.10. |
+| Experiment | Chooses (into `SIZE_HYPERPARAMS`) | Figure script that prints it |
 |---|---|---|
-| 0 | delete old results (Mac + cluster) | open |
-| A | appendix_sample_size, appendix_identification_length, appendix_calibrate_noise, appendix_calibrate_pixel_noise | open |
-| B | appendix_learning_rate, appendix_spi_lambda, appendix_spi_mf, appendix_rl_learning_rate | waits for A |
-| C | ch4_true_model, ch4_identified_model, appendix_rl_convergence | waits for B |
-| D | ch4_true_model_noise, ch4_noise, ch5_inflation_sizes, ch6_solver_comparison, ch6_perception | waits for C |
-| E | ch5_noise, ch6_noise | waits for D |
-| §5 A | FC-Extractor + PPO: lr sweep → paste → pixel-rate check → ch5_inflation_sizes → ch5_noise; ch6_solver_comparison at 10 M | sweep and ch6_solver_comparison running, 15.10. |
-| §5 B | ch6 protocol (`d30a6b2`): pull → calibrate_pixel_noise + ch6_perception → paste → ch6_noise | open (not pulled on the cluster), 15.10. |
-| §5 C | recount policy sizes, figures | after A and B |
+| `appendix_learning_rate` | `gradient_lr` of `mb_pg`, `mb_est`, `mf_npg` | `appendix_learning_rate_figures` |
+| `appendix_spi_lambda` | `lambda_` of `spi`, `spi_est` | `appendix_spi_lambda_figures` |
+| `appendix_spi_mf` | `lambda_`, `stepsize` of `spi_mf` | `appendix_spi_mf_figures` |
+| `appendix_rl_learning_rate` | `learning_rate` of every PPO solver at small, medium, large | `appendix_rl_learning_rate_figures` |
 
-Cluster times don't include queue waiting. Timed-out tasks: resubmit the same command; finished runs are skipped.
-
----
-
-## 5. Reruns after the 2026-10-14 changes (status 2026-10-15)
-
-Two changes from 2026-10-14 each force reruns. They are independent except where a chapter 6 solver borrows
-the FC-Extractor's learning rate (§5.3, step A3).
-
-### 5.1 What changed
-
-**A. FC-Extractor + PPO and the policy-size recount** (commits `84f5435`, `c43c25b`, see
-`Planning/Improvements/Ch4_Artificial_Inflation.md`, C5-30):
-
-- **Policy size now counts the feature extractor.** `policy_complexity` used to count only the actor's head
-  (`mlp_extractor.policy_net` + `action_net`). It now includes the actor's feature extractor and, for
-  `ppo_encoder`, the identified encoder $\hat{C}^\top$. The new summary field `policy_complexity_frozen` holds the part
-  that PPO did not train (the pretrained `ppo_encoder_scalable` / `ppo_pixel_estimator` / `ppo_pixel_posvel`
-  extractors and $\hat{C}^\top$). The policy-size bar plots hatch that part. New runs store both fields. Older runs
-  are fixed with `cluster/recount_policy_size.py`, which reads each run's `policy.zip`, so **no training is rerun**.
-- **New solver `ppo_fc_extractor` ("FC-Extractor + PPO")**: Bottleneck PPO's trunk without the projection $B$, so
-  equally large (327 140 vs. 310 884 parameters at *large*). It is appended to `CH5_SOLVERS` (so it joins
-  `appendix_rl_learning_rate`, `appendix_rl_convergence`, `ch5_inflation_sizes`, `ch5_noise`) and to
-  `CH6_COMPARISON_SOLVERS`. Its *pixel* learning rate is **borrowed** (`7e-07`, from `ppo_bottleneck`) until its own
-  sweep is done. Through `CH6_LEARNING_RATE_FROM`, chapter 6's `ppo_pixel_fc` uses the same borrowed rate.
-- `RL_MAX_TIMESTEPS["pixel"]` dropped from 30 M to 10 M (see §5.5). The value is stored in
-  every RL manifest, hence the `timesteps` / `rl_timesteps` patches below. None of these experiments train at
-  *pixel*, so patching changes nothing for their runs.
-
-Adding the solver changes the manifests of those experiments, so each one needs `patch_manifest.py` before its
-next submission (otherwise `SettingsChangedError`). Always patch **on the cluster**: its manifest is the one that
-counts, and `sync.sh pull` copies it to the Mac afterwards. Run the dry run first and check that only the listed
-entries change.
-
-**B. Chapter 6 protocol aligned with chapters 4/5** (commit `d30a6b2`):
-
-- Horizons are the chapter 4 plant-step settings converted to agent decisions (`/ 30` action repeat, rounded up):
-  train and probe 27, test 67, figure 27. Before, the camera environment used `TRAIN_HORIZON` = 800 *decisions*
-  for training, probes **and** the test protocol.
-- Each `(seed, purpose)` gets its own seeded environment (`_pixel_env`), so every solver of a seed sees the same
-  test, probe and figure episodes. Test costs are stored per episode, pretraining data comes from $K_0$ instead
-  of the optimal gain, and budget and learning curves are counted in decisions.
-- Pixel presets reuse the chapter 4/5 PPO setup (heads [64, 64], log std −2, minibatch 64) and the *pixel* learning
-  rate of their counterpart (`CH6_LEARNING_RATE_FROM`). Only γ differs.
-
-**Every chapter 6 camera result made before `d30a6b2` is invalid**: `ch6_perception`, `ch6_noise` and
-`appendix_calibrate_pixel_noise`. That includes the calibration of job 6541755 (§5.2). `ch6_solver_comparison` is
-not affected: it runs the inflated state-space plant at size *pixel*, not the camera environment.
-
-### 5.2 Status 2026-10-15, 08:00
-
-**The cluster is still on `c43c25b`.** `d30a6b2` (and the thesis-only `203cac1`) has not been pulled there, so
-nothing on the cluster runs the new chapter 6 protocol yet.
-
-| Experiment | Job | Status |
-|---|---|---|
-| `appendix_rl_learning_rate` (45 `ppo_fc_extractor` runs) | 6538190 | *small* and *medium*: 30/30 done. *Large*: 15 tasks (30–44) running for 23 h, limit 72 h |
-| `ch6_solver_comparison` at 10 M | 6538235 | `baseline` 10/10 (≈ 1.2 h each), `ppo_mlp` 10/10 (10–17 h); `ppo_bottleneck`, `ppo_encoder_scalable`, `ppo_fc_extractor` (tasks 10–29, 40–49) running for 23 h, limit 6 days |
-| `appendix_calibrate_pixel_noise` | 6541755 | Ran on the **old** code. `control`, `disturbance` finished; `parametric` timed out at 12 h after only `weak`, which missed its target after all 60 bisection steps (ratio 1.102 vs. 1.2). Invalid, rerun |
-| `ch6_perception` | 6533093 | Old protocol, cancelled 10-14 14:47; its runs are gone from `experiment_results/`. Nothing running |
-| `ch6_noise` | – | Old results in `experiment_results/_archive_2026-10-13/`. Waits |
-| `ch5_inflation_sizes`, `ch5_noise`, `appendix_rl_convergence` | – | Wait for the FC-Extractor learning rate |
-
-`CH6_NOISE_STD["control"]` in `settings.py` already holds the values of job 6541755 (1.31 / 2.09 / 4.15 / 8.78).
-Those come from the old protocol and must be replaced after the rerun.
-
-The `parametric` miss needs a look before the rerun is trusted: a bisection that runs all 60 steps without
-hitting 1.2 ± tolerance means the cost ratio jumps across the target, e.g. when episodes start to leave the frame
-and pick up the exit penalty. Check the per-level ratios of the new run (step B3).
-
-### 5.3 Order
-
-```text
-A  FC-Extractor LR    A1 sweep (running) ─ A2 paste ─ A3 pixel-rate check ─┬─ A4 ch5_inflation_sizes ─ A5 ch5_noise
-                                                                           │   (+ optional appendix_rl_convergence)
-                                                                           └─ decides whether ppo_pixel_fc / ch6 ppo_fc_extractor rerun
-B  ch6 protocol       B1 git pull ─┬─ B2a appendix_calibrate_pixel_noise ─ B3 paste CH6_NOISE_STD ─┐
-                                   └─ B2b ch6_perception ──────────────────────────────────────────┴─ B4 ch6_noise  (after A3)
-C  at the end         C1 recount policy sizes ─ C2 figures
-```
-
-Running in parallel right now: A1 and `ch6_solver_comparison`. B1 and B2 can start **today**; they don't wait for A.
-B4 waits for A3, because `ch6_noise` scores the `ppo_pixel_fc` policies and those may be retrained in A3.
-
-### 5.4 Steps
-
-#### B1. Pull the chapter 6 code (cluster, now)
 ```bash
-# Mac: push the thesis commit too, so both sides are on the same HEAD
-git push
-# cluster
-cd $WORK/low-dimensional-control-from-lqr-to-rl && git pull && cd code
-source $WORK/venvs/thesis/bin/activate
+cluster/submit.sh appendix_learning_rate 40 24:00:00 1 4G
+cluster/submit.sh appendix_spi_lambda 30 02:00:00 1 4G
+cluster/submit.sh appendix_spi_mf 50 08:00:00 1 4G
+cluster/submit.sh appendix_rl_learning_rate 270 72:00:00 2 8G
 ```
-Safe while 6538190 and 6538235 run: every task of both arrays is already running and has imported its code, and
-`d30a6b2` changes none of the settings their manifests store.
+**The camera learning rates are set by hand.** The camera size is far too large to sweep, so the `pixel` entries of
+`ppo_bottleneck`, `ppo_encoder_scalable`, `ppo_mlp` and `ppo_fc_extractor` are their *large* rate scaled by
+√(200 / 18432) ≈ 0.104, the same square-root rule by which `RL_LEARNING_RATES` scales the sweep grid between sizes.
+Chapter 5's camera solvers borrow these rates through `CH6_LEARNING_RATE_FROM`. Update them by hand whenever the
+*large* rates change.
 
-#### B2. Calibration and perception (cluster, together)
-Archive the old calibration first (on the Mac too, it has a copy; `sync.sh pull` never deletes):
-```bash
-mv experiment_results/appendix_calibrate_pixel_noise experiment_results/_archive_2026-10-14/
-cluster/submit.sh appendix_calibrate_pixel_noise 3 06:00:00 1 4G
-cluster/submit.sh ch6_perception 50 48:00:00 4 16G
-```
-- Calibration: the test episode is now 67 instead of 800 decisions, so each bisection step is ≈ 12× cheaper than
-  in §2 (≈ 10 min per level instead of 1.4–2 h). 6 h leaves room for a `parametric` channel that again runs all
-  60 steps.
-- `ch6_perception`: new folder, no manifest patch. 50 entries (5 solvers × 10 seeds, `oracle_coarse` first,
-  `ppo_pixel_fc` at 10–19), one per task. The probes now run 27 instead of 800 decisions, which made up most of the
-  old 14–18 h per run, so 48 h is generous. `ppo_pixel_fc` trains with the borrowed rate (see A3).
+### 3.3 Wave C: main experiments
+Needs every value from waves A and B. All six are independent of each other.
 
-#### B3. Paste the noise levels (Mac)
-```bash
-code/cluster/sync.sh pull appendix_calibrate_pixel_noise
-python -m experiments.figures.appendix_calibrate_pixel_noise_figures
-```
-Replace `control`, `parametric` and `disturbance` in `CH6_NOISE_STD` (`measurement` stays hand-set). Check that
-every printed ratio is close to its target (`NOISE_COST_TARGETS`); see the `parametric` note in §5.2. Commit, push,
-`git pull` on the cluster. `ch6_noise` refuses to start until all four channels are filled.
-
-#### A1. Learning-rate sweep (cluster, running)
-Submitted as job 6538190 after
-```bash
-python cluster/patch_manifest.py appendix_rl_learning_rate solvers timesteps --write
-cluster/submit.sh appendix_rl_learning_rate 45 72:00:00 2 8G
-```
-The grid has 270 entries, the new ones at 225–269, one per task. Wait for tasks 30–44 (*large*). If any times out,
-resubmit the same `submit.sh` line; finished runs are skipped.
-
-#### A2. Paste the learning rate (Mac)
-```bash
-code/cluster/sync.sh pull appendix_rl_learning_rate
-python -m experiments.figures.appendix_rl_learning_rate_figures
-```
-Paste **only** the printed `ppo_fc_extractor` values (`small`, `medium`, `large`) into `SIZE_HYPERPARAMS` in
-`settings.py`, next to its `pixel` entry. Leave the other solvers' values as they are. Until this is pasted,
-`ch5_inflation_sizes` stops on the new solver with a "Run: ..." error.
-
-#### A3. Check the borrowed *pixel* rate (Mac)
-The other solvers' *pixel* rate is their *large* rate × √(200 / 18 432) ≈ *large* × 0.104.
-- *large* = `6.7e-06` (as for `ppo_bottleneck` and `ppo_mlp`): the rule gives `7e-07`, the borrowed value. Nothing
-  to rerun; drop the "TODO: placeholder" comment in `settings.py`.
-- Anything else: two experiments used the borrowed rate, `ch6_solver_comparison` (`ppo_fc_extractor`, 70–120 h
-  per run) and `ch6_perception` (`ppo_pixel_fc`). Either state in the thesis that the rate is borrowed from the
-  identical trunk, or set the extrapolated value and rerun only those runs, once each experiment has finished:
-  ```bash
-  # cluster, after git pull of the new value
-  mv experiment_results/ch6_solver_comparison/ch6_solver_comparison__ppo_fc_extractor__* experiment_results/_archive_<date>/
-  python cluster/patch_manifest.py ch6_solver_comparison size_hyperparams --write
-  cluster/submit.sh ch6_solver_comparison 50 6-00:00:00 2 16G
-  mv experiment_results/ch6_perception/ch6_perception__ppo_pixel_fc__* experiment_results/_archive_<date>/
-  python cluster/patch_manifest.py ch6_perception learning_rates --write
-  cluster/submit.sh ch6_perception 50 48:00:00 4 16G
-  ```
-  Finished runs of the other solvers are skipped. Do the same on the Mac copy if it has those folders. This is a
-  decision for the thesis, so settle it before submitting.
-
-Commit, push, `git pull` on the cluster.
-
-#### A4. The inflation runs, plus optional convergence (cluster)
-```bash
-python cluster/patch_manifest.py ch5_inflation_sizes solvers size_hyperparams hyperparams rl_timesteps          # dry run
-python cluster/patch_manifest.py ch5_inflation_sizes solvers size_hyperparams hyperparams rl_timesteps --write
-jid5=$(cluster/submit.sh ch5_inflation_sizes 30 72:00:00 2 8G --parsable)
-```
-Expected dry-run changes: `rl_timesteps[pixel]` 30 M → 10 M, `solvers` gains `ppo_fc_extractor`,
-`size_hyperparams[ppo_fc_extractor]` and `hyperparams[ppo_fc_extractor]` appear, and the other solvers gain their
-`pixel` learning rate (added after the run, and unused at these sizes). `patch_manifest.py` rewrites the whole
-`size_hyperparams` entry, so if the dry run lists any **other** change for a solver, check that the stored runs were
-trained with the new value before writing. The grid has 210 entries, new at 180–209, so 30 shards give one new run
-each.
-
-Optional, so the appendix shows the new solver's plateau as well (9 new runs, at 45–53):
-```bash
-python cluster/patch_manifest.py appendix_rl_convergence solvers size_hyperparams timesteps          # dry run
-python cluster/patch_manifest.py appendix_rl_convergence solvers size_hyperparams timesteps --write
-cluster/submit.sh appendix_rl_convergence 9 72:00:00 2 8G
-```
-Expected: only `ppo_fc_extractor`, the unused `pixel` learning rates and `timesteps[pixel]`. (The Mac's old copy,
-with `ppo_encoder_scalable` at *small* on `1e-05`, was replaced by the cluster's run on 2026-10-14; the old one is in
-`experiment_results/_archive_2026-10-14/`.)
-
-#### A5. Chapter 5 noise (cluster)
-```bash
-cluster/submit.sh ch5_noise 15 01:00:00 2 8G --dependency=afterok:$jid5
-```
-No manifest patch needed: `ch5_noise` stores only the noise settings. Finished cells are skipped, so only the new
-solver is scored.
-
-#### B4. Chapter 6 noise (cluster)
-Once B3 is pulled, `ch6_perception` has finished and A3 is settled (including any `ppo_pixel_fc` rerun):
-```bash
-cluster/submit.sh ch6_noise 40 02:00:00 2 8G
-```
-New folder, no patch (the old one is archived). The test episode is 67 instead of 800 decisions, so the 2 h that
-were too short for 14 of 40 tasks in job 6476055 are now ample.
-
-#### C1. Recount the policy size of older runs (cluster)
-Run once every experiment holding PPO runs has finished (idempotent, so rerunning is harmless). Source experiments
-come before their noise experiments, because a noise run copies the count of its source run. Runs made after
-`84f5435` already store both counts, so this only matters for the older chapter 5 runs and the appendix sweeps:
-```bash
-srun --partition=smp --time=01:00:00 --mem=16G \
-  python cluster/recount_policy_size.py ch5_inflation_sizes ch5_noise appendix_rl_learning_rate \
-    appendix_rl_convergence ch6_solver_comparison ch6_perception ch6_noise           # dry run
-# same command with --write
-```
-Do this on the cluster, not on the Mac: `sync.sh pull` overwrites a `record.json` recounted on the Mac with the
-cluster's older version. (If you do recount on the Mac, rerun it after every pull.)
-
-#### C1b. Count runaway test episodes of older runs
-Since 2026-10-17 a nonlinear controller also counts as unstable if any clean test episode ends with the position
-outside the initial range $[-10, 10]$ (`runaway_episodes`, `experiments/evaluate.py`; filtered in `tables.usable`).
-Linear gains keep the spectral-radius rule and store `None`. New runs store the count. Older runs get it by replaying their clean test protocol (checked against the stored `test_costs`); the same
-order applies, source experiments before their noise experiments:
-```bash
-python cluster/recount_runaway.py ch4_true_model ch4_identified_model ch5_inflation_sizes \
-  appendix_rl_convergence appendix_rl_learning_rate ch4_noise ch4_true_model_noise ch5_noise --write
-```
-This was run on the Mac on 2026-10-17, so the same caveat holds: rerun it after every `sync.sh pull` of these
-experiments, or run it once on the cluster as well. The pixel chapter keeps its own `terminated_rate` instead.
-
-#### C2. Figures (Mac)
-```bash
-code/cluster/sync.sh pull        # or each experiment by name
-python -m experiments.figures.appendix_rl_learning_rate_figures
-python -m experiments.figures.appendix_rl_convergence_figures
-python -m experiments.figures.ch5_inflation_figures
-python -m experiments.figures.ch5_noise_figures
-python -m experiments.figures.ch6_solver_comparison_figures
-python -m experiments.figures.appendix_calibrate_pixel_noise_figures
-python -m experiments.figures.ch6_perception_figures
-python -m experiments.figures.ch6_noise_figures
-```
-Then rebuild the thesis. The text that depends on the counts: §4.2 complexity paragraph, §4.4 discussion
-("half the parameters"), `def:policy-size` (frozen parameters count), and the policy-size discussion of chapter 5.
-
-### 5.5 `ch6_solver_comparison`: rerun at 10 M steps (running, job 6538235)
-At 30 M steps this experiment could not finish: the `ppo_mlp` runs took 46.6 h each on the cluster (job 6476056,
-167 604 s for 30 M, so ≈ 1.55 h per 1 M steps, 1.3–2.2× the Mac time of §2), and `ppo_bottleneck` /
-`ppo_encoder_scalable` were still running at the 72 h limit. `RL_MAX_TIMESTEPS["pixel"]` is therefore 10 M.
-Cluster wall time per run at 10 M (`ppo_fc_extractor` has the same trunk as `ppo_bottleneck`, 9.67 M vs. 9.66 M
-parameters at *pixel*):
-
-| Solver | Per run at 10 M |
+| Experiment | Thesis place |
 |---|---|
-| `baseline` | ≈ 1.2 h (job 6538235; the test protocol at *pixel*) |
-| `ppo_mlp` | 10–17 h (job 6538235) |
-| `ppo_encoder_scalable` | ≈ 20–50 h (estimate) |
-| `ppo_bottleneck`, `ppo_fc_extractor` | ≈ 70–120 h (estimate) |
+| `ch4_true_model` | Ch. 3, true model |
+| `ch4_identified_model` | Ch. 3, unknown model |
+| `ch5_inflation_sizes` | Ch. 4 |
+| `appendix_rl_convergence` | App. B, why the RL runs have no stopping rule |
+| `ch6_solver_comparison` | Ch. 5 §5.1, the Ch. 4 solvers on the camera |
+| `ch6_perception` | Ch. 5, the perception-based solvers |
 
-The learning rate anneals to zero at the cap (§2), so a 10 M run is **not** the first third of a 30 M run: every
-PPO run was retrained, and the 30 M runs (in `_archive_2026-10-14/` on the cluster) must not be mixed in. The
-`pixel` learning rates stay as they are (they scale with the input dimension, not the budget). The grid has 50
-entries, solver by solver, ten seeds each, `ppo_fc_extractor` last at 40–49, submitted as
 ```bash
-cluster/submit.sh ch6_solver_comparison 50 6-00:00:00 2 16G
+jid_true=$(cluster/submit.sh ch4_true_model 12 01:00:00 1 4G --parsable)
+jid_ident=$(cluster/submit.sh ch4_identified_model 30 12:00:00 1 4G --parsable)
+jid_rl=$(cluster/submit.sh ch5_inflation_sizes 210 72:00:00 2 8G --parsable)
+cluster/submit.sh appendix_rl_convergence 54 72:00:00 2 8G
+cluster/submit.sh ch6_solver_comparison 50 7-00:00:00 2 16G
+jid_cam=$(cluster/submit.sh ch6_perception 50 7-00:00:00 4 16G --parsable)
 ```
-When the remaining tasks finish, update the table above from `sacct -j 6538235 --format=JobID,State,Elapsed`.
+The RL and camera experiments use one shard per run, since each run takes hours to days. `ch6_perception` takes
+about four days, so it decides when the whole progression finishes.
 
-**For the thesis:** chapter 5's solver comparison now trains for 10 M steps at *pixel*, a third of the *large*
-budget (30 M). Say so where the budget is introduced, and that the cut is for compute reasons.
+After `ch4_noise` (wave D), look at its figures and set `CHOSEN_NOISE_LEVEL` and `CHOSEN_NOISE_CHANNEL`, the level and
+channel the per-channel and per-level comparisons of Ch. 3 are drawn at. They only change figures, not runs.
+
+### 3.4 Wave D: noise
+Each noise experiment scores the stored policies of one main experiment under every noise channel and level, at test
+time only. It needs that experiment finished and `NOISE_STD` / `CH6_NOISE_STD` from wave A, so it can be chained
+directly to wave C (the job ids from §3.3):
+
+| Experiment | Scores the policies of | Thesis place |
+|---|---|---|
+| `ch4_true_model_noise` | `ch4_true_model` | Ch. 3 |
+| `ch4_noise` | `ch4_identified_model` | Ch. 3 |
+| `ch5_noise` | `ch5_inflation_sizes` (at *large*) | Ch. 4 |
+| `ch6_noise` | `ch6_perception` (without the oracle, which needs the true state) | Ch. 5 |
+
+```bash
+cluster/submit.sh ch4_true_model_noise 6 01:00:00 1 4G --dependency=afterok:$jid_true
+cluster/submit.sh ch4_noise 12 01:00:00 1 4G --dependency=afterok:$jid_ident
+cluster/submit.sh ch5_noise 15 01:00:00 2 8G --dependency=afterok:$jid_rl
+cluster/submit.sh ch6_noise 40 02:00:00 2 8G --dependency=afterok:$jid_cam
+```
+If a wave-C task timed out, its noise job stays pending (see *Chaining* in §1). Resubmit the main experiment, then the
+noise job; a noise job that ran before all its sources existed can simply be submitted again, since it skips the
+cells it already scored.
+
+### 3.5 Overview
+
+| Wave | Experiments | Needs | Takes about |
+|---|---|---|---|
+| A | `appendix_sample_size`, `appendix_identification_length`, `appendix_calibrate_noise`, `appendix_calibrate_pixel_noise` | – | 1 day |
+| B | `appendix_learning_rate`, `appendix_spi_lambda`, `appendix_spi_mf`, `appendix_rl_learning_rate` | A pasted | 1–2 days |
+| C | `ch4_true_model`, `ch4_identified_model`, `ch5_inflation_sizes`, `appendix_rl_convergence`, `ch6_solver_comparison`, `ch6_perception` | B pasted | 4–5 days |
+| D | `ch4_true_model_noise`, `ch4_noise`, `ch5_noise`, `ch6_noise` | its C experiment | hours |
+
+So about 1.5 weeks from an empty `experiment_results/` to the last figure, without queue time.
+
+### 3.6 Figures, tables and the thesis
+After each experiment, locally: `cluster/sync.sh pull <experiment>`, then its figure script. Each one writes to
+`thesis/generated/<experiment>/{figures,tables}/`.
+
+| Experiment | Figure script (`python -m experiments.figures.<…>`) |
+|---|---|
+| `appendix_sample_size` | `appendix_sample_size_figures` |
+| `appendix_identification_length` | `appendix_identification_figures` |
+| `appendix_calibrate_noise` | `appendix_calibrate_noise_figures` |
+| `appendix_calibrate_pixel_noise` | `appendix_calibrate_pixel_noise_figures` |
+| `appendix_learning_rate` | `appendix_learning_rate_figures` |
+| `appendix_spi_lambda` | `appendix_spi_lambda_figures` |
+| `appendix_spi_mf` | `appendix_spi_mf_figures` |
+| `appendix_rl_learning_rate` | `appendix_rl_learning_rate_figures` |
+| `appendix_rl_convergence` | `appendix_rl_convergence_figures` |
+| `ch4_true_model` | `ch4_true_model_figures` |
+| `ch4_identified_model` | `ch4_identified_model_figures` |
+| `ch4_true_model_noise` | `ch4_true_model_noise_figures` |
+| `ch4_noise` | `ch4_noise_figures` |
+| `ch5_inflation_sizes` | `ch5_inflation_figures` |
+| `ch5_noise` | `ch5_noise_figures` |
+| `ch6_solver_comparison` | `ch6_solver_comparison_figures` |
+| `ch6_perception` | `ch6_perception_figures` |
+| `ch6_noise` | `ch6_noise_figures` |
+
+Then rebuild the thesis with `latexmk` in `thesis/`.
+
+The other scripts in `cluster/` (`recount_policy_size.py`, `recount_runaway.py`, `reprobe_control.py`) add fields
+to records written before the experiments stored them. Fresh runs store `policy_complexity_frozen`,
+`runaway_episodes` and `r2_control` themselves, so a fresh progression doesn't need them.

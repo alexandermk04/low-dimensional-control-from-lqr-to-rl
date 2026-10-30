@@ -39,6 +39,7 @@ METRIC_LABELS = {
     "r2_velocity": r"Linear probe $R^2$, velocity",
     "r2_control": r"Linear probe $R^2$, optimal control",
     "off_screen_rate": r"Fraction of steps off screen",
+    "terminated_rate": r"Share of episodes exiting the screen",
     "null_waste_mean": r"Thrust wasted in the null space",
     "thruster_energy_mean": r"Thruster energy per step",
     "policy_complexity": r"Policy parameters",
@@ -519,8 +520,14 @@ def degradation_curves(
     return ax
 
 
-def _label_runs(ax, keys: list, color_by: int, box_colors: list, extra: tuple = ()):
-    """Coloring for x-ticks, with ``extra`` legend handles appended."""
+def _label_runs(
+    ax, keys: list, color_by: int, box_colors: list, extra: tuple = (),
+    alpha: float = 0.45,
+):
+    """Coloring for x-ticks, with ``extra`` legend handles appended.
+
+    ``alpha`` matches the legend patches to the drawn boxes or bars.
+    """
     from matplotlib.patches import Patch
 
     rest = [key[:color_by] + key[color_by + 1:] for key in keys]
@@ -542,7 +549,7 @@ def _label_runs(ax, keys: list, color_by: int, box_colors: list, extra: tuple = 
     handles = {}
     for key, color in zip(keys, box_colors):
         handles.setdefault(
-            key[color_by], Patch(facecolor=color, alpha=0.45, label=label_for(key[color_by]))
+            key[color_by], Patch(facecolor=color, alpha=alpha, label=label_for(key[color_by]))
         )
     handles = list(handles.values()) + list(extra)
     ax.legend(
@@ -560,7 +567,7 @@ def learning_bands(
     ax=None,
     width: float = 1.0,
     aspect: float = 0.55,
-    logx: bool = True,
+    logx: bool = False,
 ):
     """Plot the training process, median and range over the ten seeds.
 
@@ -842,7 +849,7 @@ def complexity_bars(
         if extra:
             ax.legend(handles=extra, frameon=False, loc="best")
     else:
-        _label_runs(ax, keys, color_by, bar_colors, extra)
+        _label_runs(ax, keys, color_by, bar_colors, extra, alpha=0.8)
 
     ax.set_ylabel(METRIC_LABELS.get(metric, metric))
     ax.set_xlim(0.4, len(keys) + 0.6)

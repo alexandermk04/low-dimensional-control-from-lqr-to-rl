@@ -1,17 +1,17 @@
 \begin{table}[htbp]
 \centering
-\caption{StE under \emph{large} inflation, over the seeds.}
+\caption{StE under \emph{large} inflation, mean and standard deviation over the seeds.}
 \label{tab:appendix-rl-learning-rate-ppo-encoder-large}
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
-\begin{tabular}{lrrrrr}
+\begin{tabular}{lrr}
 \toprule
-Learning rate & 6.7e-05 & 2.2e-05 & 6.7e-07 & 2.2e-06 & 6.7e-06 \\
+Learning rate $\eta_0$ & Training suboptimality & Env.\ steps to best policy \\
 \midrule
-True cost $J$ & $6153 \pm 837.6$ & $6115 \pm 938.6$ & $9677 \pm 1339$ & $7736 \pm 934.4$ & $6168 \pm 854.3$ \\
-Training suboptimality $(J-J^*)/J^*$ & $0.0819 \pm 0.0127$ & $0.0736 \pm 0.0124$ & $0.702 \pm 0.0787$ & $0.363 \pm 0.0809$ & $0.0843 \pm 0.0157$ \\
-Test cost & $6488 \pm 5640$ & $6420 \pm 5640$ & $1.198 \times 10^{4} \pm 8351$ & $1.087 \times 10^{4} \pm 6308$ & $6570 \pm 5673$ \\
-Env.\ steps to best policy & $2.8 \times 10^{7} \pm 1.26 \times 10^{6}$ & $2.71 \times 10^{7} \pm 2.86 \times 10^{6}$ & $2.71 \times 10^{7} \pm 2.86 \times 10^{6}$ & $2.45 \times 10^{7} \pm 5.4 \times 10^{6}$ & $2.36 \times 10^{7} \pm 5.09 \times 10^{6}$ \\
-Env.\ steps & $3 \times 10^{7}$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ & $3 \times 10^{7}$ \\
+$6.7 \times 10^{-7}$ & $0.702 \pm 0.079$ & $(2.71 \pm 0.29) \times 10^{7}$ \\
+$2.2 \times 10^{-6}$ & $0.363 \pm 0.081$ & $(2.45 \pm 0.54) \times 10^{7}$ \\
+$6.7 \times 10^{-6}$ & $0.0843 \pm 0.0157$ & $(2.36 \pm 0.51) \times 10^{7}$ \\
+$2.2 \times 10^{-5}$ & $0.0736 \pm 0.0124$ & $(2.71 \pm 0.29) \times 10^{7}$ \\
+$6.7 \times 10^{-5}$ & $0.0819 \pm 0.0127$ & $(2.80 \pm 0.13) \times 10^{7}$ \\
 \bottomrule
 \end{tabular}
 }

@@ -1,4 +1,5 @@
 \documentclass[12pt,final,twoside]{report}
+\usepackage[a-2b]{pdfx}                 % PDF/A-2b; loads hyperref, metadata from thesis.xmpdata
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Some credits:
 % The template initially was created by Prof. Dr. Holger Karl/Uni Paderborn '2006
@@ -6,7 +7,7 @@
 % Suggestions for changes are always welcome.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Meta information:
-\newcommand{\trtitle}{Low-dimensional Control under Embodiment Constraints: From LQR to Reinforcement Learning}
+\newcommand{\trtitle}{Low-Dimensional Control under Embodiment Constraints: From LQR to Reinforcement Learning}
 \newcommand{\trtype}{Bachelor's Thesis}
 \newcommand{\trauthor}{Alexander Michael Kranz}
 \newcommand{\trauthortitle}{} %{Dipl.-Inform.\ }
@@ -14,8 +15,8 @@
 \newcommand{\trmatrikelnummer}{590156}
 \newcommand{\trbirth}{09.02.2004}
 \newcommand{\trstudies}{Data Science}
-\newcommand{\trgutachterA}{\href{mailto:nihat.ay@tuhh.de}{Prof. Dr. N. Ay}}
-\newcommand{\trgutachterB}{\href{mailto:manfred.eppe@tuhh.de}{Dr. Manfred Eppe}}
+\newcommand{\trgutachterA}{\href{mailto:nihat.ay@tuhh.de}{Prof. Dr. Nihat Ay}}
+\newcommand{\trgutachterB}{\href{mailto:adwait.datar@tuhh.de}{Dr. Adwait Datar}}
 \newcommand{\trbetreuung}{\href{mailto:adwait.datar@tuhh.de}{Dr. Adwait Datar}}
 \newcommand{\trfach}{Data Science Foundations}
 \newcommand{\trdate}{31.10.2026}
@@ -55,10 +56,10 @@
 %\usepackage{fancyheadings}             % Nicer numbering of headlines
 \usepackage[body={5.8in,9in}]{geometry} % Type area (size, margins...)
 
-%\geometry{a4paper,outer=3.35cm}        % !!!Release version (Normal margins)
+\geometry{a4paper,outer=3.35cm}        % !!!Release version (Normal margins)
 %\geometry{a4paper,outer=2.5cm}         % !!!Print version (Additional margin on the left for the binding)
 %\geometry{a4paper}                     % !!!Proofread version (Additional margin on the right for corrections)
-\geometry{a4paper,outer=3.15cm}         % !!!Draft version (Same margins on left and right)
+%\geometry{a4paper,outer=3.15cm}         % !!!Draft version (Same margins on left and right)
 %\geometry{paperheight=10.0in,paperwidth=6.4in,top=0.51in,left=0.3in}  % !!!Developer version (Minimal margins)
 
 \usepackage{graphicx}                   % Inclusion of graphics
@@ -81,25 +82,17 @@
 % PDF Information und Definitions:
 \author{\trauthor}
 
-\ifx\pdftexversion\undefined
-\usepackage{hyperref}
-\else
-\usepackage[colorlinks=false,           % link is colores (true) or has colored frame (false)
+% hyperref is loaded by pdfx; title, author, subject and keywords come from thesis.xmpdata
+\hypersetup{colorlinks=false,           % link is colores (true) or has colored frame (false)
             linkcolor=uhhRed,           % case colorlinks=true: define color.
             urlcolor=uhhRed,
             citecolor=uhhRed,
-            bookmarks,                  % Place bookmarks erstellen
             bookmarksopen=true,         % Bookmarks will be shown at start (true/false)
-            pdfpagemode=UseOutlines,    
+            pdfpagemode=UseOutlines,
             bookmarksopenlevel=1,       % Define the depth of shown links
             bookmarksnumbered,          % Numbers of chapers in Bookmarks
-            pdftitle={\trtitle},
-            pdfsubject={\trtype},
-            pdfkeywords={\trkeywords},
-            pdfauthor={\trauthor},
             plainpages=false
-            ]{hyperref}
-\fi
+            }
 
 \ifx\pdftexversion\undefined
 \else
@@ -161,7 +154,7 @@
 \newtheorem{definition}{Definition}[chapter]
 
 %Additional types of axioms:
-\newtheorem{lemma}[axiom]{Lemma}
+\newtheorem{lemma}{Lemma}[chapter]
 \newtheorem{observation}[axiom]{Observation}
 
 %Additional types of definitions:
@@ -237,7 +230,7 @@
     \begin{center}
     \begin{tabular}{ll}
     Erstprüfer: & \trgutachterA \\
-    Zweitprüfer & \trgutachterB \\
+    Zweitprüfer: & \trgutachterB \\
     Betreuung:  & \trbetreuung \\    	% Adviser are not allowed to demand getting credited, but are happy getting credited by the students initiative
     \end{tabular}
     \end{center}
@@ -260,28 +253,53 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Abstract:
-\section*{Abstract}\label{sec:abstract}
-%\fancyhead[LE,RO]{\it Abstract}
+\section*{Abstract}
+\label{sec:abstract}
+\fancyhead[LE,RO]{\it Abstract}
 %\addcontentsline{toc}{chapter}{\numberline{}Abstract}
 %Your English abstract here (mandatory if written in English and recommended otherwise).
-This thesis investigates the effect of low-dimensional structures in the control architectures for
-embodied agents, starting from simple LQR-based solvers and expanding to RL-approaches implemented using proximal
-policy optimization. As the basis serves the double integrator, which is first artificially overparameterized by
-having the controller act in a higher dimension and use projection matrices to apply control to the underlying
-system. Afterwards, we also introduce a system with camera-based observations and a more complex actuation structure.
-Throughout our experiments, we notice that low-dimensional systems are difficult to implement successfully, and
-require careful consideration during design. However, if done right, a combination of fixed, pretrained encoders
-together with a smaller, longer trained actor can perform similarly to a fully connected one. In some cases
-we even notice improved robustness to measurement noise, but not under our perception-based experiments.
-In comparison, a fully trained controller seems to be more robust to control noise.
+This thesis investigates the effects of low-dimensional structures in the control architectures for
+embodied agents, starting from simple LQR-based solvers and expanding to RL approaches implemented using proximal
+policy optimization. The double integrator serves as the basis. It is first artificially overparameterized by
+having the controller observe and act in a higher dimension and use a lift and a projection matrix to change between it and the
+dimension of the underlying system. Afterwards, we also introduce a system with camera-based observations and a more complex actuation structure.
+Throughout our experiments, we notice that low-dimensional controllers are difficult to implement successfully and
+require careful consideration during design. However, if done right, a combination of a fixed encoding matrix
+together with a smaller, longer-trained actor can perform similarly to a fully connected one. With regard to noise,
+no significant improvement in robustness for low-dimensional controllers could be observed.
+However, a fully trained controller seems to be more robust to control noise.
 
 % If the abstract ist not longer than half a page, then the German Zusammenfassung can be places on the same page
 %\cleardoublepage
 \vfill
-\section*{Zusammenfassung}\label{sec:zusammenfassung}
+\section*{Zusammenfassung}
+\label{sec:zusammenfassung}
 %\addcontentsline{toc}{chapter}{\numberline{}Zusammenfassung} %Add the Zusammenfassung to the TOC
-Hier die deutsche Zusammenfassung einf\"ugen (notwendig).
-\fancyhead[LE,RO]{\it Abstract}
+%Hier die deutsche Zusammenfassung einf\"ugen (notwendig).
+%\fancyhead[LE,RO]{\it Abstract}
+Diese Arbeit untersucht die Effekte von niederdimensionalen Strukturen in der Regelungsarchitektur von
+Agenten mit einem Körper. Hierfür beginnen wir mit LQR-basierten Reglern und erweitern unsere Ansätze
+danach zu Reinforcement Learning, für welches wir Proximal Policy Optimization verwenden. Die Basis
+bildet der Doppelintegrator, welchen wir künstlich überparametrisieren, indem wir den Regler in einer
+höheren Dimension beobachten und agieren lassen, und mit Hilfe von Projektionsmatrizen zwischen dieser
+und der echten Dimension des Systems transferieren. Danach stellen wir ein kamerabasiertes System vor,
+welches eine komplexere Motorenstruktur besitzt. In unseren Experimenten erkennen wir, dass es schwierig
+ist, niederdimensionale Regler effektiv zu implementieren, und dass ihr Aufbau in jedem Fall eine genaue Planung
+benötigt. Bei korrekter Umsetzung können Kombinationen aus statischen Codiermatrizen und kleineren,
+länger trainierten neuronalen Netzen jedoch Leistungen erzielen, die vergleichbar mit einem ganzheitlich trainierten
+Netz sind. In Bezug auf Rauschen konnten keine signifikanten Verbesserungen in der Robustheit niederdimensionaler Regler
+beobachtet werden. Allerdings scheint ein ganzheitlich trainierter Regler robuster
+gegenüber Regelungsstörungen zu sein.
+
+\cleardoublepage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Acknowledgements:
+\section*{Acknowledgements}
+\label{sec:acknowledgements}
+\fancyhead[LE,RO]{\it Acknowledgements}
+I want to thank Dr.~Adwait Datar for his guidance and expertise, as well as my friends and family for their
+continuous support during my thesis.
 
 \cleardoublepage
 
@@ -335,14 +353,20 @@ Hier die deutsche Zusammenfassung einf\"ugen (notwendig).
 % Make plots stick to their headings in the appendix
 \let\appendixsection\section
 \renewcommand{\section}{\FloatBarrier\appendixsection}
+\let\appendixsubsection\subsection
+\renewcommand{\subsection}{\FloatBarrier\appendixsubsection}
 \fancyhead[LO,RE]{}                      % Define the header style for the appendixpages
 
-\fancyhead[LE,RO]{\it Anhang A. Nomenclature}                %Adapt letter!
+\fancyhead[LE,RO]{\it Appendix A. Nomenclature}
   \input{appA.tex}
 \cleardoublepage
 
-\fancyhead[LE,RO]{\it Anhang B. Complete Simulation Results}%Adapt letter!
+\fancyhead[LE,RO]{\it Appendix B. Supplementary Results}
   \input{appB.tex}
+\cleardoublepage
+
+\fancyhead[LE,RO]{\it Appendix C. Calibration Results}
+  \input{appC.tex}
 \cleardoublepage
 
 % ... add as much appendices as you need (one can also add source code, for example)
@@ -356,17 +380,42 @@ Hier die deutsche Zusammenfassung einf\"ugen (notwendig).
 \cleardoublepage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Formal page 1
 \vspace{2cm}
-\chapter*{Erkl\"arung der Urheberschaft}
-\label{sec:urheber}
-\fancyhead[LE]{\it Erkl\"arung der Urheberschaft}
-Ich versichere an Eides statt, dass ich die \trtype{} im Studiengang \trstudies{} selbstst\"andig verfasst und keine anderen als die angegebenen Hilfsmittel -- insbesondere keine im Quellenverzeichnis nicht benannten Internet-Quellen -- benutzt habe. Es wurden keine Quellen genutzt, die nicht genannt wurden. Alle Stellen, die w\"ortlich oder sinngem\"a{\ss} aus Ver\"offentlichungen entnommen wurden, sind als solche kenntlich gemacht. Ich versichere weiterhin, dass ich die Arbeit vorher nicht in einem anderen Pr\"ufungsverfahren eingereicht habe und die eingereichte schriftliche Fassung der auf dem elektronischen Speichermedium entspricht.
+\chapter*{Use of Tools}
+\label{sec:tool-usage-en}
+\fancyhead[LE]{\it Declaration on the Use of Tools}
+Generative artificial intelligence, as part of the tools listed below, was used for the stated
+purposes in the creation of this thesis. The author thoroughly reviewed all generated output and
+takes full responsibility for it. The independence of the ideas presented and of their implementation
+was ensured at all times.
 
-%Ich versichere an Eides statt, dass ich die vorliegende \trtype{} selbstst\"andig und ohne unerlaubte Hilfe Dritter angefertigt habe. Alle Stellen, die inhaltlich oder w\"ortlich aus anderen Ver\"offentlichungen stammen, sind kenntlich gemacht. Diese Arbeit lag in gleicher oder \"ahnlicher Weise noch keiner Pr\"ufungsbeh\"orde vor und wurde bisher noch nicht ver\"offentlicht.
+In detail, the following were used:
 
-\vspace{4cm}
-\noindent Ort, Datum \hfill Unterschrift
+GitHub Copilot, integrated into Visual Studio Code, for:
+\begin{itemize}
+  \item Automatic completion of code lines (``inline suggestions'') to support
+  \LaTeX{} formatting and the Python-based experiments
+\end{itemize}
+
+Claude Code, with the models Opus 4.8, Opus 5 and Opus 5.5, for:
+\begin{itemize}
+  \item Correction of grammar, punctuation and typos
+  \item Formatting of \LaTeX{} code
+  \item Literature suggestions
+  \item Automatically adding sources to the \LaTeX{} bibliography
+  \item Schematic \LaTeX{} visualizations of code implementations
+  \item Support in writing scripts for the automatic generation of figures and tables based
+  on the experimental results
+  \item Writing a guide and a script for simplified data transfer between the TUHH high-performance computing cluster and
+  the local machine
+  \item Pointing out inconsistencies and logical errors in the written text
+  \item Challenging positions and implementation (``sparring'')
+  \item Checking the proof in \cref{subsec:app-perf-trp-proof} for mathematical correctness and suggesting individual steps
+  \item Detecting errors in the Python code
+  \item Documenting the code repository
+\end{itemize}
 
 %The backcover is always empty
 \newpage
@@ -375,15 +424,43 @@ Ich versichere an Eides statt, dass ich die \trtype{} im Studiengang \trstudies{
 \newpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Formal page 2
 \vspace{2cm}
-\chapter*{Erkl\"arung zur Ver\"offentlichung}
-\label{sec:veroeffentlichung}
-\fancyhead[LE]{\it Erkl\"arung zur Ver\"offentlichung}
-Ich erkl\"are mein Einverst\"andnis mit der Einstellung dieser \trtype{} in den Bestand der Bibliothek.
+\chapter*{Verwendete Hilfsmittel}
+\label{sec:tool-usage-de}
+\fancyhead[LE]{\it Erkl\"arung zur Benutzung von Hilfsmitteln}
+Für die Erstellung dieser Bachelorarbeit wurde generative künstliche Intelligenz innerhalb
+der im Folgenden genannten Hilfsmittel für die angeführten Zwecke verwendet. Der Autor
+hat jegliche produzierten Ausgaben ausführlich geprüft und übernimmt Verantwortung für diese.
+Die Selbstständigkeit der dargelegten Ideen sowie deren Umsetzung war zu jeder
+Zeit gewährleistet.
 
-\vspace{4cm}
-\noindent Ort, Datum \hfill Unterschrift
+Im Detail wurde genutzt:
+
+GitHub Copilot, integriert in Visual Studio Code, für:
+\begin{itemize}
+  \item Automatische Vervollständigung von Codezeilen (\glqq Inline Suggestions\grqq{}) zur Unterstützung
+  bei der \LaTeX-Formatierung sowie bei den Python-basierten Experimenten
+\end{itemize}
+
+Claude Code, mit den Modellen Opus 4.8, Opus 5 und Opus 5.5, für:
+\begin{itemize}
+  \item Korrektur von Grammatik, Zeichensetzung und Tippfehlern
+  \item Formatierung von \LaTeX-Code
+  \item Quellenvorschläge
+  \item Automatisches Einpflegen von Quellen in die \LaTeX-Bibliografie
+  \item Schematische \LaTeX-Visualisierungen von Code-Implementierungen
+  \item Unterstützung bei der Erstellung von Skripten für die automatische Generierung von Abbildungen und Tabellen basierend
+  auf den Experimentergebnissen
+  \item Erstellung einer Anleitung sowie eines Skripts für vereinfachte Datentransfers zwischen dem HPC-Cluster der TUHH und
+  dem lokalen Gerät
+  \item Anmerkung von Inkonsistenzen und Logikfehlern in der textlichen Ausarbeitung
+  \item Herausfordern von Standpunkten und Umsetzung (\glqq Sparring\grqq{})
+  \item Überprüfung des Beweises in \cref{subsec:app-perf-trp-proof} auf mathematische Korrektheit und Vorschlag von einzelnen Schritten
+  \item Erkennen von Fehlern im Python-Code
+  \item Dokumentierung des Code-Repositorys
+\end{itemize}
 
 %The backcover is always empty
 \newpage
