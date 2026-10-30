@@ -1,14 +1,21 @@
-# Core: needed by lqr_base/, lqr_solvers/, evaluation/ and visualization.py
-numpy>=1.24
-scipy>=1.10
-matplotlib>=3.7
-tqdm>=4.66
+# Python >= 3.12. The versions in the comments are the ones the thesis results were produced with.
 
-# Reinforcement learning: only needed by reinforcement_learning/ and evaluation/latent_probe.py
-gymnasium>=0.29
-stable-baselines3>=2.0
-torch>=2.2
-pygame>=2.5
+# Core: the plant, the LQR solvers, the experiment pipeline and the figure scripts
+numpy>=1.24             # 2.4.6
+scipy>=1.10             # 1.17.1
+matplotlib>=3.7         # 3.10.9
+tqdm>=4.66              # 4.68.3
+# Imported by every experiment (evaluation/latent_probe.py, experiments/registry.py).
+# On a machine without a GPU, install the CPU build first (see README).
+torch>=2.2              # 2.12.1
 
-# System identification: only needed by lqr_solvers/system_identification.py
-sippy_unipi>=1.0.1
+# Reinforcement learning: the PPO solvers and the Gymnasium environments
+gymnasium>=0.29         # 1.3.0
+stable-baselines3>=2.0  # 2.9.0
+
+# System identification (N4SID) for the identified-model solvers; pulls in `control` and `casadi`
+sippy_unipi>=1.0.1      # 1.0.1
+
+# Optional: only for render_mode="human" in reinforcement_learning/{lqr_env,pixel_env}.py,
+# which no experiment uses. `pygame-ce` works as a drop-in replacement.
+# pygame>=2.5
