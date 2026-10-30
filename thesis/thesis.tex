@@ -268,7 +268,7 @@
 This thesis investigates the effects of low-dimensional structures in the control architectures for
 embodied agents, starting from simple LQR-based solvers and expanding to RL approaches implemented using proximal
 policy optimization. The double integrator serves as the basis. It is first artificially overparameterized by
-having the controller observe and act in a higher dimension and use projection matrices to change between it and the
+having the controller observe and act in a higher dimension and use a lift and a projection matrix to change between it and the
 dimension of the underlying system. Afterwards, we also introduce a system with camera-based observations and a more complex actuation structure.
 Throughout our experiments, we notice that low-dimensional controllers are difficult to implement successfully and
 require careful consideration during design. However, if done right, a combination of fixed, briefly pretrained encoders

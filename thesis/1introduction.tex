@@ -28,7 +28,7 @@ This is where we aim to contribute the following:
 
 To be able to quantify performance and optimality, we rely on the very well-researched LQR~\cite{Kalman1960Contributions,Hu2023Toward}, which,
 together with some related work, we will introduce in \cref{chap:background}. We use the well-known double integrator~\cite{Rao2001Naive} as our environment,
-and artificially inflate it to higher input and output dimensions via projection for our controllers to train on, to simulate overparameterization.
+and artificially inflate it to higher input and output dimensions via a lift and a projection for our controllers to train on, to simulate overparameterization.
 In \cref{chap:lqr}, we compare LQR-based approaches on this system, followed by introducing noise to the environment during testing
 and comparing the robustness between the trained controllers. The next step consists of moving from these simpler, gain-matrix-based controllers
 to RL approaches based on PPO~\cite{Schulman2017Proximal} (\cref{chap:inflation}), while still

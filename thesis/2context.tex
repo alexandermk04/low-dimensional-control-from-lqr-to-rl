@@ -441,11 +441,11 @@ our evaluation procedure.
 To allow us to investigate a controller that has many redundant inputs and outputs, acting on a
 system with low-dimensional dynamics, we first need to create such a setup for our previously introduced
 double integrator. We do this by keeping the dynamics, so the state progression, like the loop in \cref{subsec:double-integrator},
-but projecting the observation into a higher dimension, as well as projecting actuation down from such.
+but lifting the observation into a higher dimension, as well as projecting actuation down from such.
 
 More specifically, we show the modification to our loop with two random orthonormal matrices $U_1$
 and $U_2$. For an inflated input dimension $d_{\mathrm{in}}$ and output dimension $d_{\mathrm{out}}$,
-the two lifts are constructed the following way:
+the lift $U_1$ and the projection $U_2$ are constructed the following way:
 \begin{equation}
     \label{eq:lifts}
     U_1 \in \R^{d_{\mathrm{in}} \times n}, \quad U_1\T U_1 = I_n,
@@ -467,6 +467,15 @@ A single step of the loop then becomes
 \end{subequations}
 Compared with \eqref{eq:ss-cont}, the output matrix thus becomes $C = U_1$, so that $q = d_{\mathrm{in}}$,
 and the controller acts through the input matrix $B U_2 \in \R^{n \times d_{\mathrm{out}}}$.
+\Cref{fig:inflated-loop} visualizes this loop.
+
+\begin{figure}[htbp]
+    \centering
+    \input{figures/inflated-loop.tex}
+    \caption[Schematic of the inflated loop.]{Schematic of the inflated loop. The low-dimensional system is artificially inflated by the fixed random
+    matrices $U_2$ and $U_1$, so that the controller only acts in the inflated dimensions.}
+    \label{fig:inflated-loop}
+\end{figure}
 
 This way, the controller only sees the inflated observation and acts in a higher dimension. As any actuation
 effort is penalized, its weight $\tilde{R}$ acts on the inflated actuation and therefore has the dimension
