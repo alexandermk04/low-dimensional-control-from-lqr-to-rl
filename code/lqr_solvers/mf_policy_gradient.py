@@ -166,7 +166,6 @@ def estimate_gradient(lqr: LQRDiscrete, K: np.ndarray, m: int, l: int, r: float,
       rollout and restored before the ``K - U`` one, so both see *identical*
       noise and initial conditions. The difference between them is then
       attributable to the perturbation rather than to the sampling.
-      TODO: This is not realistic in practice, so should maybe be removed
     - **Mean centering.** Subtracting the mean cost before correlating removes
       the common offset, which would otherwise contribute pure variance.
 

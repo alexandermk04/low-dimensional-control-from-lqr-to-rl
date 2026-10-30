@@ -145,11 +145,11 @@ PARAMETRIC_TIME_INVARIANT = False
 DISTURBANCE_TYPE = "sinusoidal"  # "gaussian" | "sinusoidal" | "constant"
 
 # The single level the per-channel comparison (table 4, plot 5) is drawn at.
-# TODO: set after inspecting the results of `python -m experiments.ch4_noise`
+# set after inspecting the results of `python -m experiments.ch4_noise`
 CHOSEN_NOISE_LEVEL = "strong"
 
 # The single channel the per-level comparison (table 3, plot 4) is drawn for.
-# TODO: set after inspecting the results of `python -m experiments.ch4_noise`
+# set after inspecting the results of `python -m experiments.ch4_noise`
 CHOSEN_NOISE_CHANNEL = "measurement"
 
 

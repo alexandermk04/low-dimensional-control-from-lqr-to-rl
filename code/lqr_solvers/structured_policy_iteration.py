@@ -290,7 +290,7 @@ def calculate_next_K(
     grad_K = compute_gradient(model, K_t, P_k, sigma_k)
 
     # Paper suggests O(1/lambda) for initial stepsize
-    stepsize = 1 / settings.lambda_ * 0.5 # TODO: better here
+    stepsize = 1 / settings.lambda_ * 0.5 # works better here
 
     f_K = np.linalg.trace(model.sigma_0 @ P_k)
 
@@ -304,7 +304,7 @@ def calculate_next_K(
         if linesearch_criterion_satisfied(model, K_t, K_plus, f_K, f_K_plus, grad_K, stepsize):
             break
 
-        # TODO: Check if is correct to descrease AFTER first iteration, or if should be before
+        # We decrease AFTER first iteration
         linsearch_iter += 1
         stepsize *= settings.beta
 
@@ -486,7 +486,7 @@ def calculate_next_K_mf(
         if f_K_plus <= part_1 + part_2:
             break
 
-        # TODO: Check if is correct to descrease AFTER first iteration, or if should be before
+        # We decrease AFTER first iteration
         linsearch_iter += 1
         step *= settings.beta
         #print(f"Line search step decreased to {step}")
