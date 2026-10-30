@@ -207,8 +207,9 @@ whether the projection of \eqref{eq:ortho-bottleneck} has any positive effect, o
 \label{sec:rl-comparison}
 
 Looking at achieved suboptimality during training, we overall see a learning process in almost all
-of our architectures (\cref{fig:rl-large-curves}). Noticeable, however, is the long stagnation in the beginning of the learning,
-before decreasing towards the end. \emph{Lin} also stands out, as it does not achieve an
+of our architectures (\cref{fig:rl-large-curves}). Most of the improvement happens within the first $5 \cdot 10^{6}$ of the
+$3 \cdot 10^{7}$ total steps, where the median suboptimality falls from around $5$ to between $0.3$ and $1.1$, after which it only decreases slowly.
+\emph{Lin} also stands out, as it does not achieve an
 improvement under \emph{large}, but this was expected, given its unsuccessful learning-rate search results
 (\cref{fig:app-rl-learning-rate-ppo-linear-large}). Also, when looking at the spread, we see that in some seeds
 \emph{ScE} also rather increases in cost.
