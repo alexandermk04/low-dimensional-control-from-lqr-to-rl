@@ -247,9 +247,9 @@ incurred from any state $x$ onwards with
 
 Whether \eqref{eq:dare} has such a solution at all depends on two structural
 properties of the system, stabilizability and
-detectability~\cite[p.~442, Thm.~8]{Kucera1972Discrete}:
+detectability:
 
-\begin{theorem}[Existence and uniqueness]
+\begin{theorem}[Existence and uniqueness~{\cite[p.~442, Thm.~8]{Kucera1972Discrete}}]
 \label{thm:dare-existence}
 Let $(A, B)$ be stabilizable and $(A, Q^{1/2})$ detectable. Then the DARE
 \eqref{eq:dare} has a unique symmetric positive semi-definite solution $P$
@@ -556,9 +556,10 @@ drawn independently at every step.
 \paragraph{Control noise.}
 As the name says, it acts on the applied control input. With it,
 we try to model the difference between the intended movement of an actuator
-and its actual action due to different factors. Here we deal with
-\emph{multiplicative} noise, which scales with the input. In
-detail this means that the applied controller output $\tilde{v}_k$ is obtained as
+and its actual action due to different factors, for example due to varying supply voltage.
+Here we deal with \emph{multiplicative} noise, which scales with the input and is drawn
+independently at every step. In detail this means that the applied controller
+output $\tilde{v}_k$ is obtained as
 \begin{equation}
     \label{eq:control-noise}
     n^{\mathrm{c}}_k \sim \mathcal{N}\!\left(0, \sigma_{\mathrm{c}}^{2} I_{d_{\mathrm{out}}}\right),
@@ -672,7 +673,7 @@ from the origin, we apply it on the inflated state \emph{before} any noise is
 applied. This way we can evaluate the actual position of the mass, as shown
 in \eqref{eq:lifted-state-cost}. For $\tilde{R}$, we handle it differently. Here,
 every actuation energy adds to the cost, irrespective of its origin (so whether the
-controller commanded it or it is noise).
+controller commanded it or it is noise), so we evaluate \emph{after} noise is applied.
 
 We first define the set of pairs $(s,i)$ whose episode stayed finite under both the
 trained controller and the baseline,
@@ -843,7 +844,7 @@ For each algorithm, we train ten different controllers, each under a different f
 until convergence. We define convergence for LQR solvers as follows:
 \begin{definition}[Convergence]
 \label{def:convergence}
-Let $g_j$ be the signal that a solver observes at iteration $j$, and let $\bar{g}_j$ be its
+Let $g_j$ be the signal that a solver observes at iteration $j$ and tries to minimize, and let $\bar{g}_j$ be its
 mean over the last $N_{\mathrm{w}}$ iterations. The solver has \emph{converged} at the first
 iteration $j$ for which
 \begin{equation*}
@@ -861,8 +862,8 @@ version of it for solvers introducing structure. Some also have
 additional early-stopping criteria. They will be introduced
 in detail in \cref{chap:lqr}.
 
-For all of them, we use the best iterate by
-$\bar{g}_j$ to identify the policy we want to use.
+For all of them, we keep the iterate with the lowest
+$\bar{g}_j$ as the policy we use.
 
 The parameters of \cref{def:convergence} for the model-based and the model-free solvers are
 listed in \cref{tab:convergence-lqr}.
@@ -976,8 +977,10 @@ we force the trained controller to be linear, which allows us to extract
 it as a gain matrix that we can closely compare with our LQR approaches (Linear PPO, \emph{Lin}). The fully connected, standard version is named
 Fully-connected PPO (\emph{MLP}), and will also be evaluated. Additionally, we will introduce structures that force the observations through a low-dimensional latent
 space. Here, we will reuse the N4SID system identifier from before to identify the output matrix $\hat{C}$, before applying a change of
-basis to it, to achieve orthonormality in its columns. We project
-the high-dimensional observation through $\hat{C}\T$ into a lower dimension, and then train PPO with this as the input. Therefore, the name for it is State encoder + PPO (\emph{StE}).
+basis to it, to achieve orthonormality in its columns~\eqref{eq:identified-basis}. 
+Then $\hat{C}\T$ is the pseudoinverse of $\hat{C}$, so projecting
+the high-dimensional observation through it~\eqref{eq:state-encoder} reverses the lift of $U_1$ up to a change of basis.
+We train PPO with this as the input and call it State encoder + PPO (\emph{StE}).
 A similar approach is used for Scalable encoder + PPO (\emph{ScE}), which is based on Jonschkowski and Brock~\cite{Jonschkowski2015Learning} and
 Botteghi et al.~\cite{Botteghi2021LowDimensional}, and uses
 robotic priors to derive a low-dimensional latent state via a trainable encoder. Again, the construction following this encoder is PPO. Lastly, we
