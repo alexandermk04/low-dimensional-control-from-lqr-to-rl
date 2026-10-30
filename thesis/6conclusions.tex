@@ -1,34 +1,6 @@
 \chapter{Conclusion}
 \label{chap:conclusion}
 
-% Template
-
-% You generally cover three things in the Conclusions section, and each of these usually merits a separate subsection:
-
-% \begin{enumerate}
-% 	\item Conclusions
-% 	\item Summary of Contributions
-% 	\item Future Research
-% \end{enumerate}
-
-% Conclusions are not a rambling summary of the thesis: they are short, concise statements of the inferences that you have made because of your work. It helps to organize these as short numbered paragraphs, ordered from most to least important. All conclusions should be directly related to the research question stated in the introduction. Examples:
-
-% \begin{enumerate}
-% 	\item The problem stated in the introduction has been solved: as shown in Sections ? to ??, an algorithm capable of handling large-scale Zylon problems in reasonable time has been developed.
-% 	\item The principal mechanism needed in the improved Zylon algorithm is the Grooty mechanism.
-% 	\item Etc.
-% \end{enumerate}
-
-% The Summary of Contributions will be much sought and carefully read by the examiners. Here you list the contributions of new knowledge that your thesis makes. Of course, the thesis itself must substantiate any claims made here. There is often some overlap with the Conclusions, but that's okay. Concise numbered paragraphs are again best. Organize from most to least important. Examples:
-
-% \begin{enumerate}
-% 	\item Developed a much quicker algorithm for large-scale Zylon problems.
-% 	\item Demonstrated the first use of the Grooty mechanism for Zylon calculations.
-% 	\item Etc.
-% \end{enumerate}
-
-% The Future Research subsection is included so that researchers picking up this work in future have the benefit of the ideas that you generated while you were working on the project. Again, concise numbered paragraphs are usually best. 
-
 \section{Main Findings}
 \label{sec:conclusions}
 
@@ -49,13 +21,11 @@ policy gradient solver cannot remove (\cref{sec:app-perf-trp-measurement-noise})
 tendency is insignificant compared to the spread of the seeds, while for the camera environment we could not observe
 it at all.
 
-Regarding the latent state, it is also important to ensure that not only control information is carried
-here, but also information about the observed state. Otherwise, robustness to control noise might worsen.
-
-In relation to that, we also note that a low degradation under control noise can also hint at a barely acting
-controller, and is not always a sign of robustness. Still, in our experiments, low-dimensional controllers
-were affected slightly more by it than fully parameterized ones, which we observed on the true model in
-\cref{chap:lqr} and in \cref{chap:inflation,chap:perception}.
+In our experiments, low-dimensional controllers were affected slightly more by control noise than fully parameterized ones,
+which we observed on the true model in \cref{chap:lqr} and in \cref{chap:inflation,chap:perception}. Regarding the latent state,
+it is therefore important to ensure that not only control information is carried here, but also information about the observed state.
+Otherwise, robustness to control noise might worsen. We also note that a low degradation under control noise can also hint at a barely acting
+controller, and is not always a sign of robustness.
 
 \section{Summary of Contributions}
 \label{sec:contributions}
@@ -63,9 +33,9 @@ were affected slightly more by it than fully parameterized ones, which we observ
 With this thesis, we contributed
 
 \begin{enumerate}
-	\item a systematic comparison of low-dimensional LQR solvers with known and estimated models under four unique noise channels of varying intensities;
-	\item an extension of it to RL, evaluating PPO-based controllers with linear, bottleneck and encoder architectures;
-	\item a perception-based double-integrator environment with redundant thrusters for more realistic results.
+	\item a systematic comparison of low-dimensional LQR solvers with known and estimated models under four unique noise channels of varying intensities (\cref{chap:lqr});
+	\item an extension of it to RL, evaluating PPO-based controllers with linear, bottleneck and encoder architectures (\cref{chap:inflation});
+	\item a perception-based double-integrator environment with redundant thrusters for more realistic results (\cref{chap:perception}).
 \end{enumerate}
 
 Especially the environment can be either used for additional experiments on the double-integrator
