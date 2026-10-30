@@ -38,7 +38,6 @@ def render():
             ax = learning_bands(
                 cell, "lr", x="env_steps",
                 order=[(lr,) for lr in settings.RL_LEARNING_RATES[size]],
-                logx=False,
             )
             ax.set_title(f"{label_for(solver)}, {size} inflation")
             save(ax.figure, f"{EXPERIMENT}_{solver}_{size}", EXPERIMENT)

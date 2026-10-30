@@ -155,7 +155,7 @@ def render():
     for size in settings.CH5_INFLATION_SIZES:
         subset = [r for r in records if r.condition.get("size") == size]
         if subset:
-            ax = learning_bands(subset, "solver", x="env_steps", order=order, logx=False)
+            ax = learning_bands(subset, "solver", x="env_steps", order=order)
             save(ax.figure, f"{EXPERIMENT}_{size}_curves_steps", EXPERIMENT)
     plt.close("all")
 

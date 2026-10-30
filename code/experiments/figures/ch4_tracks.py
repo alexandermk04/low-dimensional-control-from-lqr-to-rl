@@ -51,8 +51,7 @@ def render_size(
     if curves:
         save_variants(
             lambda **size: learning_bands(
-                learned_records, "solver", x=curve_x, order=order,
-                logx=curve_x != "iteration", **size,
+                learned_records, "solver", x=curve_x, order=order, **size,
             ),
             f"{stem}_curves_{CURVE_SUFFIX.get(curve_x, curve_x)}",
             experiment,
